@@ -13,7 +13,7 @@ import java.util.UUID
 
 @RunWith(AndroidJUnit4::class)
 class EnvelopeInstrumentedTest {
-    @Test fun androidProviderReadsAllPublicVectorsIncludingExactUnicodePassphrase() = runBlocking {
+    @Test fun androidProviderReadsAllPublicVectorsIncludingExactUnicodePassphrase(): Unit = runBlocking {
         val instrumentation = InstrumentationRegistry.getInstrumentation()
         val root = File(instrumentation.targetContext.noBackupFilesDir,"envelope-test-${UUID.randomUUID()}")
         try {
@@ -35,7 +35,7 @@ class EnvelopeInstrumentedTest {
         } finally { root.deleteRecursively() } // Only this randomly named test-owned directory.
     }
 
-    @Test fun androidAuthenticationFailureLeavesNoStagingFileOrPayload() = runBlocking {
+    @Test fun androidAuthenticationFailureLeavesNoStagingFileOrPayload(): Unit = runBlocking {
         val instrumentation = InstrumentationRegistry.getInstrumentation()
         val root = File(instrumentation.targetContext.noBackupFilesDir,"envelope-test-${UUID.randomUUID()}")
         try {

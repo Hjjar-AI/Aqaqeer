@@ -94,13 +94,13 @@ class SnapshotRefreshInstrumentedTest {
         try { return db.catalogDao().history() } finally { db.close() }
     }
 
-    @Test fun demoAndUnconfiguredRefreshRejectBeforeNetwork() = runBlocking {
+    @Test fun demoAndUnconfiguredRefreshRejectBeforeNetwork(): Unit = runBlocking {
         var calls=0
         val error=rejects<RefreshException> { refresh(transport(pin={ calls++; document })).refresh() }
         assertEquals(if (BuildConfig.IS_DEMO) RefreshError.DEMO else RefreshError.UNCONFIGURED,error.error)
         assertEquals(0,calls)
     }
-    @Test fun unchangedRefreshUsesValidatedCacheUpdatesOnlyLocalTimeAndPreservesHistory() = runBlocking {
+    @Test fun unchangedRefreshUsesValidatedCacheUpdatesOnlyLocalTimeAndPreservesHistory(): Unit = runBlocking {
         assumeFalse(BuildConfig.IS_DEMO); activate(); var downloads=0; var pins=0
         val remote=FakeSnapshotReadTransport(BotIdentity(123456),{ pins++; document },{
             downloads++; throw AssertionError("Unchanged document downloaded")
@@ -110,7 +110,7 @@ class SnapshotRefreshInstrumentedTest {
         assertEquals(checkedAt.plusSeconds(60),ready().lastSuccessfulRefreshAt)
         assertEquals(F.time,ready().publishedAt); assertEquals(F.catalog(),ready().catalog)
     }
-    @Test fun descendantAppliesAllFieldsAndRecordsOnlyObservedChangesOnce() = runBlocking {
+    @Test fun descendantAppliesAllFieldsAndRecordsOnlyObservedChangesOnce(): Unit = runBlocking {
         assumeFalse(BuildConfig.IS_DEMO); activate()
         val changed=F.catalog().copy(medications=F.catalog().medications.map { it.copy(nameEn="Remote name",note="New note") })
         val repository=refresh(remote(next(changed)))
@@ -124,7 +124,7 @@ class SnapshotRefreshInstrumentedTest {
         assertEquals(RefreshOutcome.UNCHANGED,repository.refresh()); assertEquals(3,history().size)
         assertEquals(F.otherPharmacyId,state().publishId)
     }
-    @Test fun sameMessageMediaChangeCannotReuseSamePublicationWithDifferentContents() = runBlocking {
+    @Test fun sameMessageMediaChangeCannotReuseSamePublicationWithDifferentContents(): Unit = runBlocking {
         assumeFalse(BuildConfig.IS_DEMO); activate()
         val original=state(); val changed=F.catalog().copy(medications=F.catalog().medications.map { it.copy(note="Reused publication ID") })
         val repository=refresh(remote(F.snapshot(changed)))
@@ -134,7 +134,7 @@ class SnapshotRefreshInstrumentedTest {
         assertTrue(recovery.newValue!!.contains("Reused publication ID"))
         rejects<RefreshException> { repository.refresh() }; assertEquals(1,history().size)
     }
-    @Test fun branchesGapsAndRegressionAreDurablyRetainedWithoutReplacingTheBase() = runBlocking {
+    @Test fun branchesGapsAndRegressionAreDurablyRetainedWithoutReplacingTheBase(): Unit = runBlocking {
         assumeFalse(BuildConfig.IS_DEMO); activate()
         val original=state()
         for (payload in listOf(next(revision=1,parent=F.editor.id).let { JsonObject(it+("parentPublishId" to JsonNull)) },
@@ -147,7 +147,7 @@ class SnapshotRefreshInstrumentedTest {
         assertEquals(RefreshError.PUBLICATION_RECOVERY,rejects<RefreshException> { refresh(transport()).refresh() }.error)
         assertEquals(2L,state().revision); assertEquals(F.otherPharmacyId,state().publishId)
     }
-    @Test fun failedNetworkAuthenticationAndReadbackLeaveCatalogHistoryAndRefreshTimeUntouched() = runBlocking {
+    @Test fun failedNetworkAuthenticationAndReadbackLeaveCatalogHistoryAndRefreshTimeUntouched(): Unit = runBlocking {
         assumeFalse(BuildConfig.IS_DEMO); activate(); val original=state()
         var calls=0
         val failures=listOf(
@@ -160,7 +160,7 @@ class SnapshotRefreshInstrumentedTest {
             assertEquals(original,state()); assertEquals(F.catalog(),ready().catalog); assertTrue(history().isEmpty())
         }
     }
-    @Test fun unsupportedObservationRetainsUsableCacheAndPersistsRestrictionsAcrossRestart() = runBlocking {
+    @Test fun unsupportedObservationRetainsUsableCacheAndPersistsRestrictionsAcrossRestart(): Unit = runBlocking {
         assumeFalse(BuildConfig.IS_DEMO); activate(); val original=state()
         assertEquals(RefreshError.UPDATE_REQUIRED,rejects<RefreshException> {
             refresh(remote(F.snapshot(schema=2,minimum=100))).refresh()
@@ -171,7 +171,7 @@ class SnapshotRefreshInstrumentedTest {
         assertEquals(RefreshError.UPDATE_REQUIRED,rejects<RefreshException> { refresh(transport()).refresh() }.error)
         assertEquals(SnapshotRequirements(2,100),requirements.read(F.pharmacyId)); assertEquals(F.catalog(),ready().catalog)
     }
-    @Test fun pendingAndUncertainAttemptsArePreservedAndChangedRemoteCandidateIsRetained() = runBlocking {
+    @Test fun pendingAndUncertainAttemptsArePreservedAndChangedRemoteCandidateIsRetained(): Unit = runBlocking {
         assumeFalse(BuildConfig.IS_DEMO); activate(); val original=state()
         val db=factory.open()
         try {
@@ -190,7 +190,7 @@ class SnapshotRefreshInstrumentedTest {
             assertEquals(1,history().count { it.field=="recoveryCandidate" })
         } finally { db.close() }
     }
-    @Test fun sqlFailureAfterHistoryInsertionRollsBackCatalogHistoryAndTimestamps() = runBlocking {
+    @Test fun sqlFailureAfterHistoryInsertionRollsBackCatalogHistoryAndTimestamps(): Unit = runBlocking {
         assumeFalse(BuildConfig.IS_DEMO); activate(); val original=state()
         val changed=F.catalog().copy(medications=F.catalog().medications.map { it.copy(note="New data") })
         val db=factory.open()
@@ -203,7 +203,7 @@ class SnapshotRefreshInstrumentedTest {
             assertEquals(changed,ready().catalog); assertEquals(2,history().size)
         } finally { db.close() }
     }
-    @Test fun overlappingRefreshRequestsShareNetworkAndOneCancelledWaiterCannotAbortTheOther() = runBlocking {
+    @Test fun overlappingRefreshRequestsShareNetworkAndOneCancelledWaiterCannotAbortTheOther(): Unit = runBlocking {
         assumeFalse(BuildConfig.IS_DEMO); activate()
         val entered=CompletableDeferred<Unit>(); val release=CompletableDeferred<Unit>(); var pins=0
         val repository=refresh(remote(next(),pin={ if (++pins==1) { entered.complete(Unit); release.await() } }))
@@ -212,7 +212,7 @@ class SnapshotRefreshInstrumentedTest {
         first.cancelAndJoin(); release.complete(Unit)
         assertEquals(RefreshOutcome.APPLIED,second.await()); assertEquals(2,pins); assertEquals(2L,state().revision)
     }
-    @Test fun localStateChangedDuringNetworkCannotBeSilentlyOverwritten() = runBlocking {
+    @Test fun localStateChangedDuringNetworkCannotBeSilentlyOverwritten(): Unit = runBlocking {
         assumeFalse(BuildConfig.IS_DEMO); activate()
         val entered=CompletableDeferred<Unit>(); val release=CompletableDeferred<Unit>(); var pins=0
         val request=async { try { refresh(remote(next(),pin={ if (++pins==1) { entered.complete(Unit); release.await() } })).refresh(); null }
@@ -224,7 +224,7 @@ class SnapshotRefreshInstrumentedTest {
         assertEquals(RefreshError.LOCAL_STATE_CHANGED,request.await()); assertEquals("local replacement",state().documentFileId)
         assertEquals(F.catalog(),ready().catalog)
     }
-    @Test fun changedPinVerifierRevokesAuthorizationButPreservesDeviceIdentity() = runBlocking {
+    @Test fun changedPinVerifierRevokesAuthorizationButPreservesDeviceIdentity(): Unit = runBlocking {
         assumeFalse(BuildConfig.IS_DEMO); activate()
         val db=factory.open()
         val device=try { db.catalogDao().deviceIdentity()!!.also { db.catalogDao().updateDeviceIdentity(it.copy(adminMode=true)) } } finally { db.close() }
@@ -234,7 +234,7 @@ class SnapshotRefreshInstrumentedTest {
         try { assertEquals(device.id,check.catalogDao().deviceIdentity()!!.id); assertFalse(check.catalogDao().deviceIdentity()!!.adminMode) }
         finally { check.close() }
     }
-    @Test fun remoteDeletionReplacesAvailabilityAndTombstonesWhileKeepingPriorLocalHistory() = runBlocking {
+    @Test fun remoteDeletionReplacesAvailabilityAndTombstonesWhileKeepingPriorLocalHistory(): Unit = runBlocking {
         assumeFalse(BuildConfig.IS_DEMO); activate()
         val changed=F.catalog().copy(medications=F.catalog().medications.map { it.copy(note="Observed before deletion") })
         refresh(remote(next(changed))).refresh()

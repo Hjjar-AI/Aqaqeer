@@ -9,7 +9,7 @@ import org.junit.Test
 import java.nio.file.Files
 
 class EnvelopeWriterTest {
-    @Test fun productionSnapshotRoundTripsAndUsesFreshNonces() = runBlocking {
+    @Test fun productionSnapshotRoundTripsAndUsesFreshNonces(): Unit = runBlocking {
         val folder = Files.createTempDirectory("writer").toFile()
         try {
             val wire = Json.decodeFromString<SnapshotWire>(F.snapshot().toString())
@@ -20,7 +20,7 @@ class EnvelopeWriterTest {
             assertEquals(wire.supported().confirmedJson(), decoded.confirmedJson())
         } finally { folder.deleteRecursively() }
     }
-    @Test fun exportedConnectionRoundTripsWithoutAuthorizationAndClearsPassword() = runBlocking {
+    @Test fun exportedConnectionRoundTripsWithoutAuthorizationAndClearsPassword(): Unit = runBlocking {
         val folder = Files.createTempDirectory("connection-writer").toFile()
         try {
             val wire = Json.decodeFromString<ConnectionWire>(F.connection().toString())

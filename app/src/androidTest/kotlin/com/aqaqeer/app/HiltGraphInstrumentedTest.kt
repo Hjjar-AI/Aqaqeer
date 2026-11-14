@@ -41,7 +41,7 @@ class HiltGraphInstrumentedTest {
     @Inject internal lateinit var transport: SnapshotReadTransport
     @Before fun inject() { hilt.inject() }
     @After fun cleanup() { if (::profile.isInitialized) profile.close() }
-    @Test fun fullGraphUsesReplacementStorageClockAndTransportBindings() = runBlocking {
+    @Test fun fullGraphUsesReplacementStorageClockAndTransportBindings(): Unit = runBlocking {
         assertSame(profile.factory, factory); assertSame(profile.secure, secure)
         assertEquals(profile.clock.instant(), clock.instant()); assertTrue(transport is SuiteRemote)
         assertNotNull(backups); assertNotNull(history); assertNotNull(reports); assertNotNull(imports); assertNotNull(maintenance); assertNotNull(pins)

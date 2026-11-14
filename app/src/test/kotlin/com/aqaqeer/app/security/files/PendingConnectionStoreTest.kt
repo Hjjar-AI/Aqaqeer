@@ -8,7 +8,7 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class PendingConnectionStoreTest {
-    @Test fun stagedCredentialsReopenWithoutPasswordAndExposeMetadataOnly() = runBlocking {
+    @Test fun stagedCredentialsReopenWithoutPasswordAndExposeMetadataOnly(): Unit = runBlocking {
         val secure = MemorySecureStore(); val store = PendingConnectionStore(secure)
         val info = F.candidate().use { store.stage(it) }
         assertEquals(info, PendingConnectionStore(secure).info())
@@ -22,7 +22,7 @@ class PendingConnectionStoreTest {
         assertThrows(IllegalStateException::class.java) { loaded!!.copySecrets() }
         assertTrue(secure.lastRead!!.all { it == 0.toByte() })
     }
-    @Test fun existingCandidateAndStaleIdsCannotBeOverwrittenOrUsed() = runBlocking {
+    @Test fun existingCandidateAndStaleIdsCannotBeOverwrittenOrUsed(): Unit = runBlocking {
         val secure = MemorySecureStore(); val store = PendingConnectionStore(secure)
         val info = F.candidate().use { store.stage(it) }; val original = secure.entries.values.single().copyOf()
         F.candidate().use { candidate -> assertThrows(IllegalStateException::class.java) { store.stage(candidate) } }
@@ -59,7 +59,7 @@ class PendingConnectionStoreTest {
         val copy = candidate.copySecrets(); assertArrayEquals(F.key, copy.snapshotKey)
         copy.snapshotKey.fill(0); candidate.close(); assertEquals(0, secure.writes)
     }
-    @Test fun cancellationInsideCredentialScopeClosesCandidateWithoutDiscardingRecord() = runBlocking {
+    @Test fun cancellationInsideCredentialScopeClosesCandidateWithoutDiscardingRecord(): Unit = runBlocking {
         val secure = MemorySecureStore(); val store = PendingConnectionStore(secure)
         val info = F.candidate().use { store.stage(it) }; var loaded: ConnectionCandidate? = null
         val entered = CompletableDeferred<Unit>()
@@ -70,7 +70,7 @@ class PendingConnectionStoreTest {
         assertThrows(IllegalStateException::class.java) { loaded!!.copySecrets() }
         assertEquals(info, store.info())
     }
-    @Test fun activeJournalUsesIndependentEntryAndRetainsTheExactStagingId() = runBlocking {
+    @Test fun activeJournalUsesIndependentEntryAndRetainsTheExactStagingId(): Unit = runBlocking {
         val secure=MemorySecureStore(); val pending=PendingConnectionStore(secure)
         val info=F.candidate().use { pending.stage(it) }
         val active=PendingConnectionStore(secure,"active-connection")

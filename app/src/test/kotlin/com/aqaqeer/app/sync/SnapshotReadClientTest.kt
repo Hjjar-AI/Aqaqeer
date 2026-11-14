@@ -23,7 +23,7 @@ class SnapshotReadClientTest {
     private suspend fun rejects(code: SnapshotReadError, action: suspend () -> Unit) {
         try { action(); fail("Expected $code") } catch (e: SnapshotReadException) { assertEquals(code,e.error) }
     }
-    @Test fun verifiesAuthenticatedCatalogAndPublicationWithSeparateObservationTime() = runBlocking {
+    @Test fun verifiesAuthenticatedCatalogAndPublicationWithSeparateObservationTime(): Unit = runBlocking {
         var pins = 0; val stream = Tracked(F.snapshotEnvelope())
         val transport = FakeSnapshotReadTransport(BotIdentity(123456),{ pins++; document },{ stream })
         F.candidate().use { candidate ->
@@ -35,14 +35,14 @@ class SnapshotReadClientTest {
         }
         assertFalse(temporary.root.walk().any { it.extension == "stage" })
     }
-    @Test fun captionMismatchFailsBeforePinReadback() = runBlocking {
+    @Test fun captionMismatchFailsBeforePinReadback(): Unit = runBlocking {
         var pins = 0; val stream = Tracked(F.snapshotEnvelope())
         val bad = document.copy(publication = publication.copy(revision = 2))
         val transport = FakeSnapshotReadTransport(BotIdentity(1),{ pins++; bad },{ stream })
         F.candidate().use { rejects(SnapshotReadError.CAPTION_MISMATCH) { client(transport).read(it,3) } }
         assertEquals(1,pins); assertTrue(stream.closed)
     }
-    @Test fun detectsMediaOrCaptionReplacementEvenOnSamePinnedMessage() = runBlocking {
+    @Test fun detectsMediaOrCaptionReplacementEvenOnSamePinnedMessage(): Unit = runBlocking {
         for (after in listOf(document.copy(fileId = "changed"),document.copy(fileUniqueId = "changed"),
             document.copy(messageId = 13),document.copy(publication = publication.copy(publishedAt = F.time.plusSeconds(1))))) {
             var pins = 0
@@ -50,7 +50,7 @@ class SnapshotReadClientTest {
             F.candidate().use { rejects(SnapshotReadError.CHANGED_DURING_READ) { client(transport).read(it,3) } }
         }
     }
-    @Test fun authenticatedFutureSchemaStillRequiresCaptionAgreementAndReadback() = runBlocking {
+    @Test fun authenticatedFutureSchemaStillRequiresCaptionAgreementAndReadback(): Unit = runBlocking {
         val future = JsonObject(F.snapshot(schema = 2) + ("medications" to JsonPrimitive("future layout")))
         var pins = 0
         val transport = FakeSnapshotReadTransport(BotIdentity(1),{ pins++; document },{ F.snapshotEnvelope(future).inputStream() })
@@ -59,7 +59,7 @@ class SnapshotReadClientTest {
         val bad = FakeSnapshotReadTransport(BotIdentity(1),{ document.copy(publication = publication.copy(revision = 2)) },{ F.snapshotEnvelope(future).inputStream() })
         F.candidate().use { rejects(SnapshotReadError.CAPTION_MISMATCH) { client(bad).read(it,3) } }
     }
-    @Test fun wrongPharmacyAndWrongKeyCannotReturnAnyObservation() = runBlocking {
+    @Test fun wrongPharmacyAndWrongKeyCannotReturnAnyObservation(): Unit = runBlocking {
         val wrong = F.snapshot(F.catalog().copy(pharmacy = F.catalog().pharmacy!!.copy(pharmacyId = F.otherPharmacyId)))
         val transport = FakeSnapshotReadTransport(BotIdentity(1),{ document },{ F.snapshotEnvelope(wrong).inputStream() })
         F.candidate().use {
@@ -73,7 +73,7 @@ class SnapshotReadClientTest {
             catch (e: EnvelopeException) { assertEquals(EnvelopeError.AUTHENTICATION,e.error) }
         }
     }
-    @Test fun downloadFailureClosesStreamSanitizesIoAndReleasesReadGate() = runBlocking {
+    @Test fun downloadFailureClosesStreamSanitizesIoAndReleasesReadGate(): Unit = runBlocking {
         val broken = object : java.io.InputStream() {
             var closed = false
             override fun read(): Int = throw IOException("secret URL must not escape")
@@ -87,7 +87,7 @@ class SnapshotReadClientTest {
             assertTrue(broken.closed); assertNotNull(reader.read(it,3))
         }
     }
-    @Test fun cancellationDuringTransportReadPreservesCallerCandidateAndAllowsRetry() = runBlocking {
+    @Test fun cancellationDuringTransportReadPreservesCallerCandidateAndAllowsRetry(): Unit = runBlocking {
         val entered = CompletableDeferred<Unit>(); var pins = 0
         val transport = FakeSnapshotReadTransport(BotIdentity(1),{
             if (++pins == 1) { entered.complete(Unit); awaitCancellation() }
@@ -110,7 +110,7 @@ class SnapshotReadClientTest {
         }
     }
     private suspend fun cache() = ValidatedSnapshotCache.fromConfirmed(document,F.pharmacyId,1,3,F.snapshot().toString())!!
-    @Test fun unchangedValidatedDocumentAvoidsDownloadButStillRechecksPin() = runBlocking {
+    @Test fun unchangedValidatedDocumentAvoidsDownloadButStillRechecksPin(): Unit = runBlocking {
         var pins=0
         val reader=client(FakeSnapshotReadTransport(BotIdentity(1),{ pins++; document },{ throw AssertionError("Unchanged document downloaded") }))
         F.candidate().use { candidate ->
@@ -119,7 +119,7 @@ class SnapshotReadClientTest {
             assertEquals(2,pins); assertEquals(F.time.plusSeconds(60),result.observedAt)
         }
     }
-    @Test fun mediaIdentityOrCaptionChangeForcesDownloadEvenOnTheSameMessage() = runBlocking {
+    @Test fun mediaIdentityOrCaptionChangeForcesDownloadEvenOnTheSameMessage(): Unit = runBlocking {
         var downloads=0
         val reader=client(FakeSnapshotReadTransport(BotIdentity(1),{ document.copy(fileUniqueId="replacement") },{
             downloads++; F.snapshotEnvelope().inputStream()
@@ -127,7 +127,7 @@ class SnapshotReadClientTest {
         F.candidate().use { reader.readWithCache(it,3,cache()) }
         assertEquals(1,downloads)
     }
-    @Test fun cachedShortcutRejectsChangedPinAndInvalidConfirmedPayload() = runBlocking {
+    @Test fun cachedShortcutRejectsChangedPinAndInvalidConfirmedPayload(): Unit = runBlocking {
         var pins=0
         val reader=client(FakeSnapshotReadTransport(BotIdentity(1),{ if (++pins==1) document else document.copy(fileId="changed") },{
             throw AssertionError("Cache downloaded")

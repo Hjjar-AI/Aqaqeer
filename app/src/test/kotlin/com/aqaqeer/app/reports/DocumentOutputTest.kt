@@ -11,7 +11,7 @@ import java.io.ByteArrayOutputStream
 import java.io.IOException
 
 class DocumentOutputTest {
-    @Test fun providerCloseFailurePropagatesInsteadOfReportingSuccess() = runBlocking {
+    @Test fun providerCloseFailurePropagatesInsteadOfReportingSuccess(): Unit = runBlocking {
         val context = mockk<Context>(); val resolver = mockk<ContentResolver>(); val uri = mockk<Uri>()
         every { context.contentResolver } returns resolver; every { uri.scheme } returns "content"
         var closed = false
@@ -20,7 +20,7 @@ class DocumentOutputTest {
         val error = assertThrows(IOException::class.java) { runBlocking { DocumentOutput(context).write(uri) { it.write(42) } } }
         assertEquals("provider close", error.message); assertTrue(closed); assertArrayEquals(byteArrayOf(42), stream.toByteArray())
     }
-    @Test fun writerFailureStillClosesProviderAndFileUrisNeverOpen() = runBlocking {
+    @Test fun writerFailureStillClosesProviderAndFileUrisNeverOpen(): Unit = runBlocking {
         val context = mockk<Context>(); val resolver = mockk<ContentResolver>(); val uri = mockk<Uri>()
         every { context.contentResolver } returns resolver; every { uri.scheme } returns "content"
         var closed = false

@@ -32,7 +32,7 @@ class BackupEnvelopeTest {
             assertThrows(Exception::class.java) { plain.input().use { it.readBytes() } }
         }
     }
-    @Test fun freshSaltNonceExactUnicodePasswordAndWrongPasswordAuthentication() = runBlocking {
+    @Test fun freshSaltNonceExactUnicodePasswordAndWrongPasswordAuthentication(): Unit = runBlocking {
         val codec = V1BackupEnvelope { Long.MAX_VALUE }; val a = temporary.newFile(); val b = temporary.newFile()
         val bytes = "{\"history\":\"سجل 😀\"}".toByteArray()
         spool(bytes).use { plain -> codec.write(plain, a, password); codec.write(plain, b, password) }
@@ -51,7 +51,7 @@ class BackupEnvelopeTest {
             }.error)
         }
     }
-    @Test fun malformedUnsupportedAndResourceFailuresCleanStagingAndCloseInput() = runBlocking {
+    @Test fun malformedUnsupportedAndResourceFailuresCleanStagingAndCloseInput(): Unit = runBlocking {
         val file = temporary.newFile(); val codec = V1BackupEnvelope { Long.MAX_VALUE }
         spool("payload".toByteArray()).use { codec.write(it, file, password) }
         val valid = file.readText()
@@ -67,7 +67,7 @@ class BackupEnvelopeTest {
             runBlocking { V1BackupEnvelope { 0 }.read(file.inputStream(), temporary.root, password) }
         }.error)
     }
-    @Test fun completeEnvelopeExact64MiBAcceptsAndOneExtraByteRejectsUnknownLengthStream() = runBlocking {
+    @Test fun completeEnvelopeExact64MiBAcceptsAndOneExtraByteRejectsUnknownLengthStream(): Unit = runBlocking {
         val file = temporary.newFile(); val codec = V1BackupEnvelope { Long.MAX_VALUE }
         spool("{}".toByteArray()).use { codec.write(it, file, password) }
         fun padded(extra: Int): InputStream {
@@ -87,7 +87,7 @@ class BackupEnvelopeTest {
         codec.read(padded(0), temporary.root, password).use { assertEquals("{}", it.input().reader().use { r -> r.readText() }) }
         assertEquals(EnvelopeError.TOO_LARGE, assertThrows(EnvelopeException::class.java) { runBlocking { codec.read(padded(1), temporary.root, password) } }.error)
     }
-    @Test fun zeroBulkReadsMakeProgressAndCancellationCleansResources() = runTest {
+    @Test fun zeroBulkReadsMakeProgressAndCancellationCleansResources(): Unit = runTest {
         val stream = object : ByteArrayInputStream(byteArrayOf(1)) {
             override fun read(b: ByteArray, off: Int, len: Int) = 0
         }
@@ -99,7 +99,7 @@ class BackupEnvelopeTest {
             job.join(); assertTrue(job.isCancelled)
         }
     }
-    @Test fun historyPayloadLargerThanSnapshotLimitRoundTrips() = runBlocking {
+    @Test fun historyPayloadLargerThanSnapshotLimitRoundTrips(): Unit = runBlocking {
         val bytes = ByteArray(11 * 1024 * 1024) { (it % 251).toByte() }
         val file = temporary.newFile(); val codec = V1BackupEnvelope { Long.MAX_VALUE }
         spool(bytes).use { codec.write(it, file, password) }

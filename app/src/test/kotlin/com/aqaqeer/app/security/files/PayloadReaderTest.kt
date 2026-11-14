@@ -17,7 +17,7 @@ class PayloadReaderTest {
     private suspend fun rejects(code: PayloadError, action: suspend () -> Unit) {
         try { action(); fail("Expected $code") } catch (e: PayloadException) { assertEquals(code, e.error); assertNull(e.cause) }
     }
-    @Test fun encryptedConnectionAndSnapshotReachValidCandidates() = runBlocking {
+    @Test fun encryptedConnectionAndSnapshotReachValidCandidates(): Unit = runBlocking {
         val envelopes = EnvelopeReader(temporary.root) { Long.MAX_VALUE }
         reader.connection(envelopes.password(F.connectionEnvelope().inputStream(), EnvelopeDomain.CONNECTION, "١٢٣٤٥٦".toCharArray())).use {
             assertEquals(F.pharmacyId, it.pharmacyId)
@@ -29,7 +29,7 @@ class PayloadReaderTest {
         assertEquals(F.time, result.publication.publishedAt)
         assertFalse(temporary.root.walk().any { it.extension == "stage" })
     }
-    @Test fun connectionRejectsUnknownMissingWrongTypedAndForbiddenAuthorizationFields() = runBlocking {
+    @Test fun connectionRejectsUnknownMissingWrongTypedAndForbiddenAuthorizationFields(): Unit = runBlocking {
         val valid = F.connection()
         val invalid = listOf(JsonObject(valid - "createdBy"), JsonObject(valid + ("adminMode" to JsonPrimitive(true))),
             JsonObject(valid + ("groupId" to JsonPrimitive("-123"))), JsonObject(valid + ("schemaVersion" to JsonPrimitive(1.0))),
@@ -37,15 +37,15 @@ class PayloadReaderTest {
             JsonObject(valid + ("pharmacyName" to JsonPrimitive(" padded "))))
         for (json in invalid) rejects(PayloadError.INVALID_PAYLOAD) { reader.connection(authenticated(json, EnvelopeDomain.CONNECTION)) }
     }
-    @Test fun unsupportedConnectionSchemaAndWrongReplacementPharmacyAreSeparateFailures() = runBlocking {
+    @Test fun unsupportedConnectionSchemaAndWrongReplacementPharmacyAreSeparateFailures(): Unit = runBlocking {
         rejects(PayloadError.UNSUPPORTED_SCHEMA) { reader.connection(authenticated(JsonObject(F.connection() + ("schemaVersion" to JsonPrimitive(2))), EnvelopeDomain.CONNECTION)) }
         rejects(PayloadError.WRONG_PHARMACY) { reader.connection(authenticated(F.connection(), EnvelopeDomain.CONNECTION), F.otherPharmacyId) }
     }
-    @Test fun wrongDomainsCannotReachEitherPayloadType() = runBlocking {
+    @Test fun wrongDomainsCannotReachEitherPayloadType(): Unit = runBlocking {
         rejects(PayloadError.INVALID_PAYLOAD) { reader.connection(authenticated(F.connection(), EnvelopeDomain.BACKUP)) }
         rejects(PayloadError.INVALID_PAYLOAD) { reader.snapshot(authenticated(F.snapshot(), EnvelopeDomain.CONNECTION), F.pharmacyId, 1, 3) }
     }
-    @Test fun plaintextIsWipedAndClosedOnSuccessFailureAndResourceRejection() = runBlocking {
+    @Test fun plaintextIsWipedAndClosedOnSuccessFailureAndResourceRejection(): Unit = runBlocking {
         for (invalid in listOf(false, true)) {
             val bytes = (if (invalid) JsonObject(F.snapshot() - "sections") else F.snapshot()).toString().toByteArray()
             val payload = AuthenticatedJson(bytes, EnvelopeDomain.SNAPSHOT)
@@ -58,7 +58,7 @@ class PayloadReaderTest {
         rejects(PayloadError.RESOURCE_LIMIT) { PayloadReader { 0 }.snapshot(AuthenticatedJson(bytes, EnvelopeDomain.SNAPSHOT), F.pharmacyId, 1, 3) }
         assertTrue(bytes.all { it == 0.toByte() })
     }
-    @Test fun cancellationBeforeDispatchStillClosesPlaintext() = runBlocking {
+    @Test fun cancellationBeforeDispatchStillClosesPlaintext(): Unit = runBlocking {
         val bytes = F.snapshot().toString().toByteArray()
         val cancelled = Job().apply { cancel() }
         try { withContext(cancelled) { snapshot() }; fail("Expected cancellation") } catch (_: CancellationException) { }
@@ -70,20 +70,20 @@ class PayloadReaderTest {
         job.join()
         assertTrue(bytes.all { it == 0.toByte() })
     }
-    @Test fun futureSchemaSkipsChangedEntityShapesButRequiresStablePublication() = runBlocking {
+    @Test fun futureSchemaSkipsChangedEntityShapesButRequiresStablePublication(): Unit = runBlocking {
         val future = JsonObject(F.snapshot(schema = 2) + ("medications" to buildJsonObject { put("future", true) }))
         val result = snapshot(future) as SnapshotCandidate.RequiresUpdate
         assertEquals(2, result.compatibility.schemaVersion)
         assertEquals(F.publishId, result.publication.publishId)
         rejects(PayloadError.INVALID_PAYLOAD) { snapshot(JsonObject(future - "publishedAt")) }
     }
-    @Test fun newerMinimumAppReturnsUpdateObservationAndIdentityChecksPrecedeIt() = runBlocking {
+    @Test fun newerMinimumAppReturnsUpdateObservationAndIdentityChecksPrecedeIt(): Unit = runBlocking {
         val future = F.snapshot(minimum = 100)
         assertTrue(snapshot(future) is SnapshotCandidate.RequiresUpdate)
         rejects(PayloadError.WRONG_PHARMACY) { snapshot(future, F.otherPharmacyId) }
         rejects(PayloadError.WRONG_KEY_VERSION) { snapshot(future, keyVersion = 2) }
     }
-    @Test fun malformedCompatibilityAndMetadataDisagreementAreRejected() = runBlocking {
+    @Test fun malformedCompatibilityAndMetadataDisagreementAreRejected(): Unit = runBlocking {
         val root = F.snapshot()
         for (bad in listOf(JsonObject(root - "compatibility"), JsonObject(root + ("compatibility" to buildJsonObject {
             put("schemaVersion", "1"); put("minVersionCode", 1); put("keyVersion", 1)
@@ -91,7 +91,7 @@ class PayloadReaderTest {
             rejects(PayloadError.INVALID_PAYLOAD) { snapshot(bad) }
         }
     }
-    @Test fun invalidReferencesScientificNamesEditorsAndPinVerifierCannotReturnSupportedCatalog() = runBlocking {
+    @Test fun invalidReferencesScientificNamesEditorsAndPinVerifierCannotReturnSupportedCatalog(): Unit = runBlocking {
         val catalog = F.catalog(); val med = catalog.medications.single(); val pharmacy = catalog.pharmacy!!
         val invalid = listOf(catalog.copy(medications = listOf(med.copy(categoryId = F.otherPharmacyId))),
             catalog.copy(medications = listOf(med.copy(genericAr = null, genericEn = null))),
@@ -100,7 +100,7 @@ class PayloadReaderTest {
             catalog.copy(availability = catalog.availability + catalog.availability))
         for (value in invalid) rejects(PayloadError.INVALID_PAYLOAD) { snapshot(F.snapshot(value)) }
     }
-    @Test fun publicationLineageAndUnexpectedLocalFieldsAreRejected() = runBlocking {
+    @Test fun publicationLineageAndUnexpectedLocalFieldsAreRejected(): Unit = runBlocking {
         val root = F.snapshot()
         for ((field, value) in listOf("revision" to JsonPrimitive(0), "basedOnRevision" to JsonPrimitive(1),
             "parentPublishId" to JsonPrimitive(F.publishId), "history" to JsonArray(emptyList()), "revision" to JsonPrimitive("1"))) {

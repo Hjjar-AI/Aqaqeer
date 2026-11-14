@@ -71,7 +71,7 @@ class ReaderActivationInstrumentedTest {
         KeyStore.getInstance("AndroidKeyStore").apply { load(null); deleteEntry(protected.keyAlias) }
     }
 
-    @Test fun activationRechecksLiveDataAndCommitsReaderBaselineWithoutImportedHistory() = runBlocking {
+    @Test fun activationRechecksLiveDataAndCommitsReaderBaselineWithoutImportedHistory(): Unit = runBlocking {
         assumeFalse(BuildConfig.IS_DEMO)
         val info = stage()
         val before = ready()
@@ -113,7 +113,7 @@ class ReaderActivationInstrumentedTest {
             assertEquals(F.time, Json.decodeFromString<SnapshotWire>(state.confirmedPayloadJson!!).publishedAt)
         } finally { check.close() }
     }
-    @Test fun existingObserverSeesAtomicActivationThroughSeparateDatabaseHandle() = runBlocking {
+    @Test fun existingObserverSeesAtomicActivationThroughSeparateDatabaseHandle(): Unit = runBlocking {
         assumeFalse(BuildConfig.IS_DEMO)
         val info=stage(); val initial=CompletableDeferred<Unit>(); val result=CompletableDeferred<CatalogState.Ready>()
         val observer=launch(Dispatchers.Default) {
@@ -128,7 +128,7 @@ class ReaderActivationInstrumentedTest {
             assertEquals(F.catalog(),current.catalog)
         } finally { observer.cancelAndJoin() }
     }
-    @Test fun futureSchemaObservationPersistsRestrictionWithoutApplyingCatalog() = runBlocking {
+    @Test fun futureSchemaObservationPersistsRestrictionWithoutApplyingCatalog(): Unit = runBlocking {
         assumeFalse(BuildConfig.IS_DEMO)
         val info=stage()
         val error=rejects<PayloadException> { repository(transport({ F.snapshot(schema=2) })).activate(info.id) }
@@ -136,7 +136,7 @@ class ReaderActivationInstrumentedTest {
         assertUnconfigured(info); assertNull(active.info())
         assertEquals(SnapshotRequirements(2,1),SnapshotRequirementsStore(store).read(F.pharmacyId))
     }
-    @Test fun retainedRequirementsRejectOlderLiveContentBeforeNetworkAndSurviveRestart() = runBlocking {
+    @Test fun retainedRequirementsRejectOlderLiveContentBeforeNetworkAndSurviveRestart(): Unit = runBlocking {
         assumeFalse(BuildConfig.IS_DEMO)
         val info=stage(); requirements.observe(F.pharmacyId,SnapshotCompatibility(1,Int.MAX_VALUE,1))
         var calls=0
@@ -145,7 +145,7 @@ class ReaderActivationInstrumentedTest {
         assertUnconfigured(info); assertNull(active.info())
         assertTrue(SnapshotRequirementsStore(store).read(F.pharmacyId)!!.requiresUpdate(BuildConfig.VERSION_CODE))
     }
-    @Test fun networkIdentityCaptionAndMediaFailuresLeaveSeedAndPendingIntact() = runBlocking {
+    @Test fun networkIdentityCaptionAndMediaFailuresLeaveSeedAndPendingIntact(): Unit = runBlocking {
         assumeFalse(BuildConfig.IS_DEMO)
         val info=stage(); var pins=0
         val wrong=F.snapshot(F.catalog().copy(pharmacy=F.catalog().pharmacy!!.copy(pharmacyId=F.otherPharmacyId)))
@@ -167,7 +167,7 @@ class ReaderActivationInstrumentedTest {
             assertUnconfigured(info); assertNull(active.info()); assertNull(requirements.read(F.pharmacyId))
         }
     }
-    @Test fun staleStageAndDemoActivationCannotStartNetwork() = runBlocking {
+    @Test fun staleStageAndDemoActivationCannotStartNetwork(): Unit = runBlocking {
         val info=stage(); var calls=0
         val repository=repository(transport(pin={ calls++; document }))
         if (BuildConfig.IS_DEMO) {
@@ -175,7 +175,7 @@ class ReaderActivationInstrumentedTest {
         } else rejects<PendingConnectionChanged> { repository.activate("stale") }
         assertEquals(0,calls); assertEquals(info,pending.info())
     }
-    @Test fun configuredActivationIsRejectedWithoutNetworkOrCatalogReplacement() = runBlocking {
+    @Test fun configuredActivationIsRejectedWithoutNetworkOrCatalogReplacement(): Unit = runBlocking {
         assumeFalse(BuildConfig.IS_DEMO)
         val info=stage(); repository().activate(info.id)
         var calls=0
@@ -183,14 +183,14 @@ class ReaderActivationInstrumentedTest {
         assertEquals(ConnectionImportError.CONFIGURED,error.error); assertEquals(0,calls)
         assertEquals(F.catalog(),ready().catalog); assertEquals(info,active.info())
     }
-    @Test fun cancellationDuringNetworkPreservesPendingWithoutActiveCredentials() = runBlocking {
+    @Test fun cancellationDuringNetworkPreservesPendingWithoutActiveCredentials(): Unit = runBlocking {
         assumeFalse(BuildConfig.IS_DEMO)
         val info=stage(); val entered=CompletableDeferred<Unit>()
         val operation=launch { repository(transport(pin={ entered.complete(Unit); awaitCancellation() })).activate(info.id) }
         entered.await(); operation.cancelAndJoin()
         assertUnconfigured(info); assertNull(active.info()); assertNull(requirements.read(F.pharmacyId))
     }
-    @Test fun activeCredentialWriteFailureLeavesSeedAndRetrySucceeds() = runBlocking {
+    @Test fun activeCredentialWriteFailureLeavesSeedAndRetrySucceeds(): Unit = runBlocking {
         assumeFalse(BuildConfig.IS_DEMO)
         val info=stage()
         beforeWrite={ name,_ -> if (name=="active-connection") throw StorageRecoveryRequired() }
@@ -199,7 +199,7 @@ class ReaderActivationInstrumentedTest {
         beforeWrite={ _,_ -> }; repository().activate(info.id)
         assertEquals(F.catalog(),ready().catalog); assertNull(pending.info())
     }
-    @Test fun failureAfterActiveWriteRollsBackCatalogAndCanBeRetried() = runBlocking {
+    @Test fun failureAfterActiveWriteRollsBackCatalogAndCanBeRetried(): Unit = runBlocking {
         assumeFalse(BuildConfig.IS_DEMO)
         val info=stage()
         afterWrite={ name -> if (name=="active-connection") throw StorageRecoveryRequired() }
@@ -208,7 +208,7 @@ class ReaderActivationInstrumentedTest {
         afterWrite={}; repository().activate(info.id)
         assertEquals(F.catalog(),ready().catalog); assertNull(pending.info())
     }
-    @Test fun pendingCleanupFailureKeepsCommittedCatalogAndReopensWithoutNetwork() = runBlocking {
+    @Test fun pendingCleanupFailureKeepsCommittedCatalogAndReopensWithoutNetwork(): Unit = runBlocking {
         assumeFalse(BuildConfig.IS_DEMO)
         val info=stage()
         beforeWrite={ name,value -> if (name=="pending-connection" && value.size==5) throw StorageRecoveryRequired() }
@@ -218,7 +218,7 @@ class ReaderActivationInstrumentedTest {
         val offline=repository(transport(pin={ throw AssertionError("Cleanup must be local") }))
         assertNull(offline.loadPending().info); assertNull(pending.info()); assertEquals(F.catalog(),ready().catalog)
     }
-    @Test fun cancellationAtActiveWriteCompletesCommitAndCleanupWithoutAdminPromotion() = runBlocking {
+    @Test fun cancellationAtActiveWriteCompletesCommitAndCleanupWithoutAdminPromotion(): Unit = runBlocking {
         assumeFalse(BuildConfig.IS_DEMO)
         val info=stage(); lateinit var operation: Job
         afterWrite={ name -> if (name=="active-connection") operation.cancel() }
@@ -229,7 +229,7 @@ class ReaderActivationInstrumentedTest {
         val db=factory.open()
         try { assertFalse(db.catalogDao().deviceIdentity()!!.adminMode) } finally { db.close() }
     }
-    @Test fun startupFinishesInterruptedPostCommitCleanupLocally() = runBlocking {
+    @Test fun startupFinishesInterruptedPostCommitCleanupLocally(): Unit = runBlocking {
         assumeFalse(BuildConfig.IS_DEMO)
         val info=stage(); ready()
         F.candidate().use { candidate ->
@@ -242,7 +242,7 @@ class ReaderActivationInstrumentedTest {
         assertNull(offline.loadPending().info)
         assertEquals(F.catalog(),ready().catalog)
     }
-    @Test fun discardingPreCommitJournalClearsCredentialsButRetainsKnownRequirements() = runBlocking {
+    @Test fun discardingPreCommitJournalClearsCredentialsButRetainsKnownRequirements(): Unit = runBlocking {
         assumeFalse(BuildConfig.IS_DEMO)
         val info=stage(); requirements.observe(F.pharmacyId,SnapshotCompatibility(1,1,1))
         F.candidate().use { active.retain(it,info.id) }
@@ -250,7 +250,7 @@ class ReaderActivationInstrumentedTest {
         assertNull(pending.info()); assertNull(active.info()); assertNull(ready().catalog.pharmacy)
         assertEquals(SnapshotRequirements(1,1),requirements.read(F.pharmacyId))
     }
-    @Test fun reopenedCachedCatalogRetainsFutureRequirementAndNeverUsesNetwork() = runBlocking {
+    @Test fun reopenedCachedCatalogRetainsFutureRequirementAndNeverUsesNetwork(): Unit = runBlocking {
         assumeFalse(BuildConfig.IS_DEMO)
         val info=stage(); repository().activate(info.id)
         requirements.observe(F.pharmacyId,SnapshotCompatibility(2,100,1))
@@ -259,7 +259,7 @@ class ReaderActivationInstrumentedTest {
         assertEquals(F.catalog(),current.catalog); assertTrue(current.requiresUpdate)
         assertEquals(checkedAt,current.lastSuccessfulRefreshAt); assertEquals(F.time,current.publishedAt)
     }
-    @Test fun corruptedActiveCredentialsFailClosedWithoutDeletingCatalog() = runBlocking {
+    @Test fun corruptedActiveCredentialsFailClosedWithoutDeletingCatalog(): Unit = runBlocking {
         assumeFalse(BuildConfig.IS_DEMO)
         val info=stage(); repository().activate(info.id)
         store.write("active-connection",byteArrayOf(1))
@@ -268,13 +268,13 @@ class ReaderActivationInstrumentedTest {
         val db=factory.open()
         try { assertEquals(F.pharmacyId,db.catalogDao().pharmacy()!!.pharmacyId) } finally { db.close() }
     }
-    @Test fun corruptedRequirementsRejectActivationBeforeNetwork() = runBlocking {
+    @Test fun corruptedRequirementsRejectActivationBeforeNetwork(): Unit = runBlocking {
         assumeFalse(BuildConfig.IS_DEMO)
         val info=stage(); store.write("snapshot-requirements-${F.pharmacyId}",byteArrayOf(1)); var calls=0
         rejects<StorageRecoveryRequired> { repository(transport(pin={ calls++; document })).activate(info.id) }
         assertEquals(0,calls); assertUnconfigured(info); assertNull(active.info())
     }
-    @Test fun initialActivationRefusesEveryKindOfExistingLocalWorkWithoutDeletingIt() = runBlocking {
+    @Test fun initialActivationRefusesEveryKindOfExistingLocalWorkWithoutDeletingIt(): Unit = runBlocking {
         assumeFalse(BuildConfig.IS_DEMO)
         val info=stage(); ready()
         val db=factory.open()
@@ -299,7 +299,7 @@ class ReaderActivationInstrumentedTest {
         } finally { db.close() }
     }
 
-    @Test fun cancellationAfterRequirementObservationStopsBeforeCatalogCommit() = runBlocking {
+    @Test fun cancellationAfterRequirementObservationStopsBeforeCatalogCommit(): Unit = runBlocking {
         assumeFalse(BuildConfig.IS_DEMO)
         val info=stage(); lateinit var operation: Job
         afterWrite={ name -> if (name.startsWith("snapshot-requirements-")) operation.cancel() }
@@ -311,7 +311,7 @@ class ReaderActivationInstrumentedTest {
         assertEquals(F.catalog(),ready().catalog)
     }
 
-    @Test fun databaseFailureAfterSeedReplacementRollsBackAllCatalogAndIdentityChanges() = runBlocking {
+    @Test fun databaseFailureAfterSeedReplacementRollsBackAllCatalogAndIdentityChanges(): Unit = runBlocking {
         assumeFalse(BuildConfig.IS_DEMO)
         val info=stage(); val original=ready()
         val db=factory.open()

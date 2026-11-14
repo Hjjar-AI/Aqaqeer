@@ -40,7 +40,7 @@ class RemoteObservationHistoryTest {
         assertNotEquals(first.id,record(F.otherPharmacyId,"payload").id)
         assertEquals("payload",first.newValue); assertEquals("recoveryCandidate",first.field); assertNull(first.operationId)
     }
-    @Test fun knownPublisherIsRetainedAsPublicationAttributionRatherThanFieldAuthorship() = runBlocking {
+    @Test fun knownPublisherIsRetainedAsPublicationAttributionRatherThanFieldAuthorship(): Unit = runBlocking {
         val snapshot=PayloadReader { Long.MAX_VALUE }.snapshot(AuthenticatedJson(F.snapshot().toString().toByteArray(),
             EnvelopeDomain.SNAPSHOT),F.pharmacyId,1,3) as SnapshotCandidate.Supported
         val event=RemoteObservationHistory.publication(F.otherPharmacyId,snapshot,F.time.plusSeconds(60))

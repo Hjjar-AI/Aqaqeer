@@ -16,11 +16,11 @@ class RefreshPolicyTest {
         return PayloadReader { Long.MAX_VALUE }.snapshot(AuthenticatedJson(payload.toString().toByteArray(),EnvelopeDomain.SNAPSHOT),
             F.pharmacyId,1,3) as SnapshotCandidate.Supported
     }
-    @Test fun exactPublicationAndReorderedArraysAreUnchanged() = runBlocking {
+    @Test fun exactPublicationAndReorderedArraysAreUnchanged(): Unit = runBlocking {
         val base=snapshot()
         assertEquals(RefreshOutcome.UNCHANGED,publicationDecision(base,snapshot(catalog=F.catalog().copy(forms=F.catalog().forms.reversed()))))
     }
-    @Test fun onlyDirectDescendantAutomaticallyAdvancesConfirmedState() = runBlocking {
+    @Test fun onlyDirectDescendantAutomaticallyAdvancesConfirmedState(): Unit = runBlocking {
         val base=snapshot()
         assertEquals(RefreshOutcome.APPLIED,publicationDecision(base,snapshot(2,F.otherPharmacyId,F.publishId)))
         for (incoming in listOf(snapshot(1,F.otherPharmacyId),snapshot(3,F.otherPharmacyId,F.editor.id),
@@ -32,7 +32,7 @@ class RefreshPolicyTest {
         assertThrows(RefreshException::class.java) { publicationDecision(ahead,base) }
         Unit
     }
-    @Test fun concurrentWaitersShareOneRequestAndCancellationDoesNotCancelTheOther() = runBlocking {
+    @Test fun concurrentWaitersShareOneRequestAndCancellationDoesNotCancelTheOther(): Unit = runBlocking {
         val owner=CoroutineScope(SupervisorJob()+Dispatchers.Default)
         try {
             val flight=RefreshFlight(owner); val entered=CompletableDeferred<Unit>(); val release=CompletableDeferred<Unit>()
@@ -46,7 +46,7 @@ class RefreshPolicyTest {
             assertEquals(2,calls)
         } finally { owner.cancel() }
     }
-    @Test fun sharedFailureDoesNotPoisonNextRefresh() = runBlocking {
+    @Test fun sharedFailureDoesNotPoisonNextRefresh(): Unit = runBlocking {
         val owner=CoroutineScope(SupervisorJob()+Dispatchers.Default)
         try {
             val flight=RefreshFlight(owner)

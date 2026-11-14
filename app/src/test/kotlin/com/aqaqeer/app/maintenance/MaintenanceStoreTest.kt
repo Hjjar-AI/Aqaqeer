@@ -12,7 +12,7 @@ import org.junit.Test
 
 class MaintenanceStoreTest {
     private fun journal() = MaintenanceJournal(id = F.publishId, pharmacyId = F.pharmacyId, kind = MaintenanceKind.REPLACEMENT)
-    @Test fun writesReopenAndNotifyWhileTemporarySecretBuffersAreErased() = runTest {
+    @Test fun writesReopenAndNotifyWhileTemporarySecretBuffersAreErased(): Unit = runTest {
         val secure = mockk<SecureStore>(); var retained: ByteArray? = null; var passed: ByteArray? = null
         every { secure.write(any(), any()) } answers { passed = secondArg(); retained = passed!!.copyOf() }
         every { secure.read(any()) } answers { retained?.copyOf() }

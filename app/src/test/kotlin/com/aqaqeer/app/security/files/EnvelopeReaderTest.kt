@@ -39,7 +39,7 @@ class EnvelopeReaderTest {
         assertTrue(temporary.root.walk().none { it.name.endsWith(".stage") })
     }
 
-    @Test fun fixedConnectionBackupAndSnapshotVectorsMatchAndPreserveCallerCredentials() = runBlocking {
+    @Test fun fixedConnectionBackupAndSnapshotVectorsMatchAndPreserveCallerCredentials(): Unit = runBlocking {
         for (v in vectors.map { it.jsonObject }) {
             val domain = EnvelopeDomain.entries.single { it.marker == v["domain"]!!.jsonPrimitive.content }
             val bytes = v["envelope"]!!.toString().toByteArray()
@@ -54,7 +54,7 @@ class EnvelopeReaderTest {
         }
         assertTrue(temporary.root.walk().none { it.name.endsWith(".stage") })
     }
-    @Test fun connectionNormalizesArabicAndPersianDigits() = runBlocking {
+    @Test fun connectionNormalizesArabicAndPersianDigits(): Unit = runBlocking {
         for (password in listOf("١٢٣٤٥٦", "۱۲۳۴۵۶")) {
             reader.password(encoded("aqz:v1").inputStream(), EnvelopeDomain.CONNECTION, password.toCharArray()).close()
         }
@@ -100,7 +100,7 @@ class EnvelopeReaderTest {
             fails(EnvelopeError.INVALID_FORMAT) { reader.snapshot(encodePlain(json.toByteArray()).inputStream(), key) }
         }
     }
-    @Test fun distinctObjectsMayReuseKeysAndAllJsonValueKindsAreSupported() = runBlocking {
+    @Test fun distinctObjectsMayReuseKeysAndAllJsonValueKindsAreSupported(): Unit = runBlocking {
         val json = "{\"items\":[{\"a\":1},{\"a\":2}],\"v\":[true,false,null,-1.25e+2,\"\\ud83d\\udc8a\"]}"
         reader.snapshot(encodePlain(json.toByteArray()).inputStream(), key).use {
             assertEquals(json,it.withUtf8Reader { r -> r.readText() })
@@ -112,7 +112,7 @@ class EnvelopeReaderTest {
         }
         fails(EnvelopeError.INVALID_FORMAT) { reader.snapshot(encodePlain(byteArrayOf(123,34,97,34,58,34,0xc3.toByte(),0x28,34,125)).inputStream(), key) }
     }
-    @Test fun jsonDepthLimitIncludesRootObject() = runBlocking {
+    @Test fun jsonDepthLimitIncludesRootObject(): Unit = runBlocking {
         val valid = "{\"a\":" + "[".repeat(63) + "0" + "]".repeat(63) + "}"
         reader.snapshot(encodePlain(valid.toByteArray()).inputStream(), key).close()
         val deep = "{\"a\":" + "[".repeat(64) + "0" + "]".repeat(64) + "}"
@@ -157,7 +157,7 @@ class EnvelopeReaderTest {
         }
         override fun close() { closed = true }
     }
-    @Test fun exactSnapshotCapSucceedsAndOneExtraByteStopsReadingAndClosesStream() = runBlocking {
+    @Test fun exactSnapshotCapSucceedsAndOneExtraByteStopsReadingAndClosesStream(): Unit = runBlocking {
         val cap = EnvelopeDomain.SNAPSHOT.byteLimit
         val exact = PaddedInput(encoded("aqsnapshot:v1"),cap)
         reader.snapshot(exact,key).close()
@@ -166,7 +166,7 @@ class EnvelopeReaderTest {
         fails(EnvelopeError.TOO_LARGE) { reader.snapshot(excess,key) }
         assertEquals(cap+1, excess.count); assertTrue(excess.closed)
     }
-    @Test fun backupHasSeparate64MiBCapAndSnapshotLimitRemains10MiB() = runBlocking {
+    @Test fun backupHasSeparate64MiBCapAndSnapshotLimitRemains10MiB(): Unit = runBlocking {
         val bytes = encoded("aqbak:v1")
         val input = PaddedInput(bytes,EnvelopeDomain.BACKUP.byteLimit)
         reader.password(input,EnvelopeDomain.BACKUP,"  اختبار Passé  ".toCharArray()).close()
@@ -177,14 +177,14 @@ class EnvelopeReaderTest {
     @Test fun resourcePreflightRejectsBeforeDerivingOrAllocatingPayloadAndCleansStage() {
         fails(EnvelopeError.RESOURCE_LIMIT) { EnvelopeReader(temporary.root) { 1 }.snapshot(encoded("aqsnapshot:v1").inputStream(),key) }
     }
-    @Test fun cleanupRemovesOnlyOwnedStagingFiles() = runBlocking {
+    @Test fun cleanupRemovesOnlyOwnedStagingFiles(): Unit = runBlocking {
         val directory = File(temporary.root,"aqaqeer-envelope-stage").apply { mkdirs() }
         val old = File(directory,"envelope-abandoned.stage").apply { writeText("encrypted fixture") }
         val other = File(directory,"other-file").apply { writeText("keep") }
         reader.cleanupAbandoned()
         assertFalse(old.exists()); assertTrue(other.exists())
     }
-    @Test fun cancelledReadClosesInputRemovesStageAndReleasesGlobalLock() = runBlocking {
+    @Test fun cancelledReadClosesInputRemovesStageAndReleasesGlobalLock(): Unit = runBlocking {
         val parent = Job()
         val stream = object : InputStream() {
             var closed = false
@@ -207,13 +207,13 @@ class EnvelopeReaderTest {
         fails(EnvelopeError.IO) { reader.snapshot(input,key) }
         assertTrue(closed)
     }
-    @Test fun closedPayloadCannotBeReadAgain() = runBlocking {
+    @Test fun closedPayloadCannotBeReadAgain(): Unit = runBlocking {
         val payload = reader.snapshot(encoded("aqsnapshot:v1").inputStream(),key)
         payload.close()
         assertThrows(IllegalStateException::class.java) { payload.withUtf8Reader { it.read() } }
         Unit
     }
-    @Test fun fragmentedZeroLengthReadsAndMisreportedAvailableDoNotChangeTheResult() = runBlocking {
+    @Test fun fragmentedZeroLengthReadsAndMisreportedAvailableDoNotChangeTheResult(): Unit = runBlocking {
         val input = object : ByteArrayInputStream(encoded("aqsnapshot:v1")) {
             var zero = true
             override fun available() = Int.MAX_VALUE
@@ -233,7 +233,7 @@ class EnvelopeReaderTest {
         fails(EnvelopeError.INVALID_CREDENTIAL) { reader.snapshot(encoded("aqsnapshot:v1").inputStream(),ByteArray(31)) }
         fails(EnvelopeError.INVALID_CREDENTIAL) { reader.password(encoded("aqbak:v1").inputStream(),EnvelopeDomain.BACKUP,"short".toCharArray()) }
     }
-    @Test fun cancellingAQueuedReadDoesNotDeleteTheActiveReadersStage() = runBlocking {
+    @Test fun cancellingAQueuedReadDoesNotDeleteTheActiveReadersStage(): Unit = runBlocking {
         val entered = CompletableDeferred<Unit>()
         val release = CountDownLatch(1)
         val firstInput = object : ByteArrayInputStream(encoded("aqsnapshot:v1")) {

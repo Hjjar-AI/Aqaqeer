@@ -32,7 +32,7 @@ class StorageInstrumentedTest {
         KeyStore.getInstance("AndroidKeyStore").apply { load(null); deleteEntry(store.keyAlias) }
     }
 
-    @Test fun encryptedRoomDatabaseReopensWithTheSameKeystoreWrappedKey() = runBlocking {
+    @Test fun encryptedRoomDatabaseReopensWithTheSameKeystoreWrappedKey(): Unit = runBlocking {
         val first = factory.open().also { db = it }
         val seed = CatalogSeeds.unconfigured()
         first.withTransaction {
@@ -68,7 +68,7 @@ class StorageInstrumentedTest {
         assertFalse(info.isUserAuthenticationRequired)
     }
 
-    @Test fun aWrongDatabaseKeyCannotDeleteExistingData() = runBlocking {
+    @Test fun aWrongDatabaseKeyCannotDeleteExistingData(): Unit = runBlocking {
         val original = factory.open().also { db = it }
         original.withTransaction {
             original.catalogDao().insertCategories(CatalogSeeds.categories)

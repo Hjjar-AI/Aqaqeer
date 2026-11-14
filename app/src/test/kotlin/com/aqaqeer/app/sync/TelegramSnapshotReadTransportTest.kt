@@ -63,7 +63,7 @@ class TelegramSnapshotReadTransportTest {
     private suspend fun rejects(code: SnapshotReadError, action: suspend () -> Unit) {
         try { action(); fail("Expected $code") } catch (e: SnapshotReadException) { assertEquals(code,e.error); assertNull(e.cause); assertEquals(code.name,e.message) }
     }
-    @Test fun realAdapterParsesBotAndPrivateGroupAndSetsSafeConnectionOptions() = runBlocking {
+    @Test fun realAdapterParsesBotAndPrivateGroupAndSetsSafeConnectionOptions(): Unit = runBlocking {
         val h = Harness(response(bot()),response(chat()))
         val identity = h.transport.bot(F.token)
         assertEquals(doc,h.transport.pinned(F.token,F.groupId,identity))
@@ -75,32 +75,32 @@ class TelegramSnapshotReadTransportTest {
         }
         assertEquals("chat_id=-1001234567890",h.connections.last().posted.toString("UTF-8"))
     }
-    @Test fun downloadRemainsReadableAfterIoDispatcherReturnsAndDisconnectsOnClose() = runBlocking {
+    @Test fun downloadRemainsReadableAfterIoDispatcherReturnsAndDisconnectsOnClose(): Unit = runBlocking {
         val h = Harness(response(file()),Response("encrypted bytes".toByteArray()))
         val input = h.transport.document(F.token,doc)
         assertFalse(h.connections.last().disconnected)
         assertEquals("encrypted bytes",withContext(Dispatchers.IO) { input.readBytes().toString(Charsets.UTF_8) })
         input.close(); assertTrue(h.connections.last().disconnected)
     }
-    @Test fun downloadCapStopsAtOneExcessByteAndDisconnects() = runBlocking {
+    @Test fun downloadCapStopsAtOneExcessByteAndDisconnects(): Unit = runBlocking {
         val h = Harness(response(file()),Response(ByteArray(10*1024*1024+2)))
         val input = h.transport.document(F.token,doc)
         rejects(SnapshotReadError.RESPONSE_TOO_LARGE) { input.use { it.copyTo(ByteArrayOutputStream()) } }
         assertTrue(h.connections.last().disconnected)
     }
-    @Test fun metadataCapAndStrictJsonRejectOversizeDuplicateKeysAndMalformedUtf8() = runBlocking {
+    @Test fun metadataCapAndStrictJsonRejectOversizeDuplicateKeysAndMalformedUtf8(): Unit = runBlocking {
         for (bytes in listOf(ByteArray(256*1024+1){32}, "{\"ok\":true,\"\\u006fk\":false,\"result\":{}}".toByteArray(), byteArrayOf(0xc3.toByte(),0x28))) {
             val h = Harness(Response(bytes))
             rejects(if (bytes.size > 256*1024) SnapshotReadError.RESPONSE_TOO_LARGE else SnapshotReadError.INVALID_RESPONSE) { h.transport.bot(F.token) }
             assertTrue(h.connections.single().disconnected)
         }
     }
-    @Test fun exactMetadataCapIsAcceptedWithUnknownReportedLength() = runBlocking {
+    @Test fun exactMetadataCapIsAcceptedWithUnknownReportedLength(): Unit = runBlocking {
         val prefix = response(bot()).bytes
         val bytes = ByteArray(256*1024) { if (it < prefix.size) prefix[it] else 32 }
         assertEquals(BotIdentity(123456),Harness(Response(bytes)).transport.bot(F.token))
     }
-    @Test fun cancellationOnReturnedStreamClosesConnection() = runBlocking {
+    @Test fun cancellationOnReturnedStreamClosesConnection(): Unit = runBlocking {
         val h = Harness(response(file()),Response(byteArrayOf(1)))
         val operation = launch {
             val input = h.transport.document(F.token,doc)
@@ -109,7 +109,7 @@ class TelegramSnapshotReadTransportTest {
         }
         operation.join(); assertTrue(h.connections.last().disconnected)
     }
-    @Test fun returnedStreamReadErrorsAreSanitizedAndDisconnected() = runBlocking {
+    @Test fun returnedStreamReadErrorsAreSanitizedAndDisconnected(): Unit = runBlocking {
         var closed = false
         val stream = object : InputStream() {
             override fun read(): Int = throw IOException("secret-token-in-error")
@@ -120,13 +120,13 @@ class TelegramSnapshotReadTransportTest {
         rejects(SnapshotReadError.NETWORK) { input.read() }
         assertTrue(closed); assertTrue(h.connections.last().disconnected)
     }
-    @Test fun quotedNumericAndBooleanFieldsAreRejectedButUnknownApiFieldsAreAllowed() = runBlocking {
+    @Test fun quotedNumericAndBooleanFieldsAreRejectedButUnknownApiFieldsAreAllowed(): Unit = runBlocking {
         for (bad in listOf(JsonObject(bot() + ("id" to JsonPrimitive("123456"))),JsonObject(bot() + ("is_bot" to JsonPrimitive("true"))))) {
             rejects(SnapshotReadError.INVALID_RESPONSE) { Harness(response(bad)).transport.bot(F.token) }
         }
         assertEquals(BotIdentity(123456),Harness(response(JsonObject(bot() + ("future_field" to JsonPrimitive(true))))).transport.bot(F.token))
     }
-    @Test fun httpErrorsAndApiErrorsAreSanitizedWithoutForwardingDescriptions() = runBlocking {
+    @Test fun httpErrorsAndApiErrorsAreSanitizedWithoutForwardingDescriptions(): Unit = runBlocking {
         for ((status,code) in listOf(401 to SnapshotReadError.INVALID_CREDENTIALS,403 to SnapshotReadError.ACCESS_DENIED,429 to SnapshotReadError.RATE_LIMITED,302 to SnapshotReadError.NETWORK)) {
             val h = Harness(Response("secret response".toByteArray(),status))
             rejects(code) { h.transport.bot(F.token) }; assertTrue(h.connections.single().disconnected)
@@ -135,7 +135,7 @@ class TelegramSnapshotReadTransportTest {
         rejects(SnapshotReadError.RATE_LIMITED) { Harness(Response(error.toByteArray())).transport.bot(F.token) }
         rejects(SnapshotReadError.NETWORK) { Harness(Response(byteArrayOf(),failure=true)).transport.bot(F.token) }
     }
-    @Test fun compressedMetadataAndPathInjectionAreRejectedBeforeDownload() = runBlocking {
+    @Test fun compressedMetadataAndPathInjectionAreRejectedBeforeDownload(): Unit = runBlocking {
         rejects(SnapshotReadError.INVALID_RESPONSE) { Harness(Response(response(bot()).bytes,encoding="gzip")).transport.bot(F.token) }
         for (path in listOf("../secret","/absolute","a//b","a/%2e%2e/b","https://elsewhere/file","file?token=secret")) {
             val h = Harness(response(file(path)))
@@ -143,12 +143,12 @@ class TelegramSnapshotReadTransportTest {
             assertEquals(1,h.connections.size)
         }
     }
-    @Test fun invalidTokenCannotOpenAnyConnection() = runBlocking {
+    @Test fun invalidTokenCannotOpenAnyConnection(): Unit = runBlocking {
         val h = Harness()
         for (token in listOf("bad", "123:token/../other", "123:token?x=1")) rejects(SnapshotReadError.INVALID_CREDENTIALS) { h.transport.bot(token) }
         assertTrue(h.connections.isEmpty())
     }
-    @Test fun missingPublicWrongSenderForwardedAndNonDocumentPinsAreUnavailable() = runBlocking {
+    @Test fun missingPublicWrongSenderForwardedAndNonDocumentPinsAreUnavailable(): Unit = runBlocking {
         val valid = chat(); val pin = valid["pinned_message"]!!.jsonObject
         val badPins = listOf(JsonObject(valid - "pinned_message"),JsonObject(valid + ("username" to JsonPrimitive("public_group"))),
             JsonObject(valid + ("pinned_message" to JsonObject(pin - "document"))),

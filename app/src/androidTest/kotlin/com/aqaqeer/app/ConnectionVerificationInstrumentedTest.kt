@@ -51,7 +51,7 @@ class ConnectionVerificationInstrumentedTest {
         root.deleteRecursively()
         KeyStore.getInstance("AndroidKeyStore").apply { load(null); deleteEntry(protected.keyAlias) }
     }
-    @Test fun startupImportSummaryMakesNoNetworkCallAndConfiguredOrDemoCommandsAreRejected() = runBlocking {
+    @Test fun startupImportSummaryMakesNoNetworkCallAndConfiguredOrDemoCommandsAreRejected(): Unit = runBlocking {
         val info = stage(); var calls = 0
         val repository = repository(transport(pin = { calls++; document }))
         val state = repository.loadPending()
@@ -65,7 +65,7 @@ class ConnectionVerificationInstrumentedTest {
         assertEquals(0,calls)
         if (BuildConfig.IS_DEMO) assertEquals(info,pending.info()) else assertNull(pending.info())
     }
-    @Test fun supportedVerificationReturnsMetadataWithoutActivatingPharmacy() = runBlocking {
+    @Test fun supportedVerificationReturnsMetadataWithoutActivatingPharmacy(): Unit = runBlocking {
         assumeFalse(BuildConfig.IS_DEMO)
         val info = stage(); val repository = repository(transport())
         val result = repository.verify(info.id)
@@ -76,7 +76,7 @@ class ConnectionVerificationInstrumentedTest {
         assertEquals(info,repository.loadPending().info)
         assertEquals(info,PendingConnectionStore(KeystoreSecureStore(context,namespace)).info())
     }
-    @Test fun actualContentUriImportRejectsWrongPasswordThenStagesWithoutNetwork() = runBlocking {
+    @Test fun actualContentUriImportRejectsWrongPasswordThenStagesWithoutNetwork(): Unit = runBlocking {
         assumeFalse(BuildConfig.IS_DEMO)
         val authority = InstrumentationRegistry.getInstrumentation().context.packageName + ".m3-import"
         val uri = Uri.parse("content://$authority/valid")
@@ -91,7 +91,7 @@ class ConnectionVerificationInstrumentedTest {
         catch (e: ConnectionImportException) { assertEquals(ConnectionImportError.PENDING_EXISTS,e.error) }
         assertEquals(state.info,pending.info()); assertFalse(root.walk().any { it.extension == "stage" })
     }
-    @Test fun actualProviderIgnoresFalseSizeAndRejectsInvalidAndOversizedInputWithoutSaving() = runBlocking {
+    @Test fun actualProviderIgnoresFalseSizeAndRejectsInvalidAndOversizedInputWithoutSaving(): Unit = runBlocking {
         assumeFalse(BuildConfig.IS_DEMO)
         val authority = InstrumentationRegistry.getInstrumentation().context.packageName + ".m3-import"
         val repository = repository(transport())
@@ -101,7 +101,7 @@ class ConnectionVerificationInstrumentedTest {
             assertNull(pending.info()); assertFalse(root.walk().any { it.extension == "stage" })
         }
     }
-    @Test fun futureRequirementsSurviveProtectedReopenDiscardReimportAndOlderLiveSnapshot() = runBlocking {
+    @Test fun futureRequirementsSurviveProtectedReopenDiscardReimportAndOlderLiveSnapshot(): Unit = runBlocking {
         assumeFalse(BuildConfig.IS_DEMO)
         var payload = F.snapshot(schema=2,minimum=100)
         val repository = repository(transport(payload = { payload }))
@@ -112,7 +112,7 @@ class ConnectionVerificationInstrumentedTest {
         assertTrue(repository.verify(next.id).requiresUpdate)
         assertEquals(SnapshotRequirements(2,100),repository.loadPending().requirements)
     }
-    @Test fun networkWrongPharmacyCaptionAndMediaRaceDoNotPersistRequirementsOrLosePendingState() = runBlocking {
+    @Test fun networkWrongPharmacyCaptionAndMediaRaceDoNotPersistRequirementsOrLosePendingState(): Unit = runBlocking {
         assumeFalse(BuildConfig.IS_DEMO)
         val info = stage()
         val wrong = F.snapshot(F.catalog().copy(pharmacy=F.catalog().pharmacy!!.copy(pharmacyId=F.otherPharmacyId)))
@@ -128,14 +128,14 @@ class ConnectionVerificationInstrumentedTest {
             assertEquals(info,pending.info()); assertNull(requirements.read(F.pharmacyId))
         }
     }
-    @Test fun stalePendingIdCannotStartNetworkVerification() = runBlocking {
+    @Test fun stalePendingIdCannotStartNetworkVerification(): Unit = runBlocking {
         assumeFalse(BuildConfig.IS_DEMO)
         stage(); var calls = 0
         try { repository(transport(pin={ calls++; document })).verify("stale"); fail("Stale pending accepted") }
         catch (_: PendingConnectionChanged) { }
         assertEquals(0,calls)
     }
-    @Test fun cancellationBeforeObservationPreservesPendingAndClosesCredentialScope() = runBlocking {
+    @Test fun cancellationBeforeObservationPreservesPendingAndClosesCredentialScope(): Unit = runBlocking {
         assumeFalse(BuildConfig.IS_DEMO)
         val info=stage(); val entered=CompletableDeferred<Unit>()
         val repository=repository(transport(pin={ entered.complete(Unit); awaitCancellation() }))
@@ -144,7 +144,7 @@ class ConnectionVerificationInstrumentedTest {
         assertEquals(info,pending.info()); assertNull(requirements.read(F.pharmacyId))
         assertFalse(root.walk().any { it.extension == "stage" })
     }
-    @Test fun cancellationAtSecurityWriteRetainsAuthenticatedUpdateRequirements() = runBlocking {
+    @Test fun cancellationAtSecurityWriteRetainsAuthenticatedUpdateRequirements(): Unit = runBlocking {
         assumeFalse(BuildConfig.IS_DEMO)
         val info=stage(); lateinit var operation: Job
         afterWrite={ name -> if (name.startsWith("snapshot-requirements-")) operation.cancel() }
@@ -154,7 +154,7 @@ class ConnectionVerificationInstrumentedTest {
         assertTrue(operation.isCancelled); assertEquals(info,pending.info())
         assertEquals(SnapshotRequirements(2,100),requirements.read(F.pharmacyId))
     }
-    @Test fun corruptProtectedRequirementBlocksFreshObservationWithoutReplacingEitherRecord() = runBlocking {
+    @Test fun corruptProtectedRequirementBlocksFreshObservationWithoutReplacingEitherRecord(): Unit = runBlocking {
         assumeFalse(BuildConfig.IS_DEMO)
         val info=stage(); store.write("snapshot-requirements-${F.pharmacyId}",byteArrayOf(1))
         var calls=0

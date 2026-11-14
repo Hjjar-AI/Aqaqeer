@@ -11,7 +11,7 @@ class ConfirmedSnapshotTest {
     private suspend fun decode(payload: JsonObject) = PayloadReader { Long.MAX_VALUE }.snapshot(
         AuthenticatedJson(payload.toString().toByteArray(),EnvelopeDomain.SNAPSHOT),F.pharmacyId,1,3) as SnapshotCandidate.Supported
 
-    @Test fun initialConfirmedBaseRetainsFullCatalogAndPublicationWithoutCredentials() = runBlocking {
+    @Test fun initialConfirmedBaseRetainsFullCatalogAndPublicationWithoutCredentials(): Unit = runBlocking {
         val first=decode(F.snapshot())
         val encoded=first.confirmedJson()
         val restored=decode(Json.parseToJsonElement(encoded).jsonObject)
@@ -23,7 +23,7 @@ class ConfirmedSnapshotTest {
         assertFalse(encoded.contains(F.token)); assertFalse(encoded.contains("snapshotKey"))
         assertFalse(encoded.contains("adminMode")); assertFalse(encoded.contains("history"))
     }
-    @Test fun confirmedBasePreservesLineageTombstonesAndPublicationTimeExactly() = runBlocking {
+    @Test fun confirmedBasePreservesLineageTombstonesAndPublicationTimeExactly(): Unit = runBlocking {
         val catalog=F.catalog().copy(tombstones=listOf(Tombstone("medication",F.otherPharmacyId,F.time,F.editor.id)))
         val source=JsonObject(F.snapshot(catalog)+mapOf(
             "revision" to JsonPrimitive(2),"parentPublishId" to JsonPrimitive(F.otherPharmacyId),

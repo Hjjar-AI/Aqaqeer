@@ -26,7 +26,7 @@ class MaintenanceInstrumentedTest {
         coordinator().begin(MaintenanceKind.ROTATION)
         val journal = coordinator().journal(); assertNotNull(journal.stateDigest)
         assertEquals(MaintenancePhase.PREPARING, journal.phase)
-        assertThrows(IllegalStateException::class.java) { runBlocking { p.medication("blocked") } }
+        assertThrows(AdminProblem::class.java) { runBlocking { p.medication("blocked") } }
         assertEquals(journal, coordinator().journal())
         coordinator().cancel()
         assertNull(MaintenanceStore(p.secure).read())
@@ -38,7 +38,7 @@ class MaintenanceInstrumentedTest {
         assertThrows(IllegalStateException::class.java) { runBlocking { coordinator().begin(MaintenanceKind.ROTATION) } }
         assertNull(MaintenanceStore(p.secure).read())
         p.admin.transaction { it.updateDeviceIdentity(it.deviceIdentity()!!.copy(adminMode = false)) }
-        assertThrows(IllegalStateException::class.java) { runBlocking { coordinator().begin(MaintenanceKind.MIGRATION) } }
+        assertThrows(AdminProblem::class.java) { runBlocking { coordinator().begin(MaintenanceKind.MIGRATION) } }
         assertEquals(1, remote.uploads)
     }
     @Test fun sourcePreparationRequiresFreshSuccessfulBackupBeforeTokenGuide(): Unit = runBlocking {

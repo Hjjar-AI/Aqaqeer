@@ -85,7 +85,7 @@ class PharmacySharingInstrumentedTest {
         p.context.deleteDatabase(p.factory.databaseName); p.root.deleteRecursively()
         KeyStore.getInstance("AndroidKeyStore").apply { load(null); deleteEntry(p.secure.keyAlias) }
     } }
-    @Test fun createEditPublishExportJoinUpdatePublishAndRefreshAcrossTwoInstallations() = runBlocking {
+    @Test fun createEditPublishExportJoinUpdatePublishAndRefreshAcrossTwoInstallations(): Unit = runBlocking {
         assumeFalse(BuildConfig.IS_DEMO)
         val owner = profile(); owner.create(); val med = medicine(owner)
         assertTrue(owner.ready().admin); assertEquals("LOCAL_DRAFT", owner.ready().lifecycle)
@@ -137,7 +137,7 @@ class PharmacySharingInstrumentedTest {
         assertEquals(0, owner.ready().pendingCount)
         assertEquals(10L, remote.current!!.messageId)
     }
-    @Test fun lostPinResponseReconcilesWithoutDuplicatePublication() = runBlocking {
+    @Test fun lostPinResponseReconcilesWithoutDuplicatePublication(): Unit = runBlocking {
         assumeFalse(BuildConfig.IS_DEMO)
         val p = profile(); p.create(); medicine(p); val remote = Remote(); val sharing = p.sharing(remote); p.setup(remote, sharing)
         remote.loseResponse = true; sharing.publish()
@@ -147,7 +147,7 @@ class PharmacySharingInstrumentedTest {
         assertFalse(p.ready().uncertain); assertEquals(0, p.ready().pendingCount)
         assertEquals(id, remote.current!!.publication.publishId); assertEquals(1, remote.uploads); assertEquals(1, remote.writes)
     }
-    @Test fun editsDuringUploadRemainPendingForNextPublication() = runBlocking {
+    @Test fun editsDuringUploadRemainPendingForNextPublication(): Unit = runBlocking {
         assumeFalse(BuildConfig.IS_DEMO)
         val p = profile(); p.create(); val med = medicine(p); val remote = Remote(); val sharing = p.sharing(remote); p.setup(remote, sharing)
         remote.duringUpload = { p.admin.saveMedication(med.copy(note = "created during upload")) }
@@ -157,13 +157,13 @@ class PharmacySharingInstrumentedTest {
         assertEquals(1, p.ready().pendingCount)
         remote.duringUpload = {}; sharing.publish(); assertEquals(0, p.ready().pendingCount)
     }
-    @Test fun appearingPinBlocksBootstrapAndRetainsWork() = runBlocking {
+    @Test fun appearingPinBlocksBootstrapAndRetainsWork(): Unit = runBlocking {
         assumeFalse(BuildConfig.IS_DEMO)
         val p = profile(); p.create(); medicine(p); val remote = Remote(); val sharing = p.sharing(remote); p.setup(remote, sharing)
         remote.duringUpload = { remote.foreign = true }; sharing.publish()
         assertEquals(0, remote.writes); assertTrue(p.ready().uncertain); assertTrue(p.ready().pendingCount > 0)
     }
-    @Test fun authorizationRestrictionAndDraftPersistAcrossRepositoryRecreation() = runBlocking {
+    @Test fun authorizationRestrictionAndDraftPersistAcrossRepositoryRecreation(): Unit = runBlocking {
         assumeFalse(BuildConfig.IS_DEMO)
         val p = profile(); p.create(); val med = medicine(p)
         assertEquals("LOCAL_DRAFT", p.ready().lifecycle); assertTrue(p.ready().admin)
@@ -172,7 +172,7 @@ class PharmacySharingInstrumentedTest {
         try { p.admin.saveMedication(med.copy(note = "blocked")) } catch (_: Exception) { rejected = true }
         assertTrue(rejected); assertNull(p.ready().catalog.medications.single().note)
     }
-    @Test fun versionOneMigrationRetainsExistingCatalogAndMarksItShared() = runBlocking {
+    @Test fun versionOneMigrationRetainsExistingCatalogAndMarksItShared(): Unit = runBlocking {
         assumeFalse(BuildConfig.IS_DEMO)
         val p = profile(); p.ready()
         var db = p.factory.open()
@@ -191,7 +191,7 @@ class PharmacySharingInstrumentedTest {
             assertFalse(db.catalogDao().deviceIdentity()!!.adminMode)
         } finally { db.close() }
     }
-    @Test fun repeatedEditsReturningToBaseLeaveHistoryWithoutNetPendingChanges() = runBlocking {
+    @Test fun repeatedEditsReturningToBaseLeaveHistoryWithoutNetPendingChanges(): Unit = runBlocking {
         assumeFalse(BuildConfig.IS_DEMO)
         val p = profile(); p.create(); val med = medicine(p)
         val remote = Remote(); val sharing = p.sharing(remote); p.setup(remote, sharing); sharing.publish()
@@ -203,7 +203,7 @@ class PharmacySharingInstrumentedTest {
         val db = p.factory.open()
         try { assertTrue(db.catalogDao().historyCount() >= 3) } finally { db.close() }
     }
-    @Test fun creatingEditingAndDeletingAnUnpublishedMedicationRemovesNetWorkOnly() = runBlocking {
+    @Test fun creatingEditingAndDeletingAnUnpublishedMedicationRemovesNetWorkOnly(): Unit = runBlocking {
         assumeFalse(BuildConfig.IS_DEMO)
         val p = profile(); p.create(); val med = medicine(p)
         p.admin.saveMedication(med.copy(note = "edited"))
@@ -303,7 +303,7 @@ class PharmacySharingInstrumentedTest {
         assertEquals("Reader connection replacement must not upload",uploadsBefore,owned.size)
     }
 
-    @Test fun editDuringConflictResolvedUploadCanBeReviewedAfterVerifiedRemoteWrite() = runBlocking {
+    @Test fun editDuringConflictResolvedUploadCanBeReviewedAfterVerifiedRemoteWrite(): Unit = runBlocking {
         assumeFalse(BuildConfig.IS_DEMO)
         val p = profile(); p.create(); val med = medicine(p); val remote = Remote(); val sharing = p.sharing(remote)
         p.setup(remote, sharing); sharing.publish()
@@ -331,7 +331,7 @@ class PharmacySharingInstrumentedTest {
         sharing.publish(); assertTrue(sharing.status.value.verified); assertEquals(0, p.ready().pendingCount)
     }
 
-    @Test fun pendingOrderUsesInsertionRatherThanDeviceTimeOrUuid() = runBlocking {
+    @Test fun pendingOrderUsesInsertionRatherThanDeviceTimeOrUuid(): Unit = runBlocking {
         assumeFalse(BuildConfig.IS_DEMO)
         val p = profile(); p.create(); val med = medicine(p)
         val db = p.factory.open()
