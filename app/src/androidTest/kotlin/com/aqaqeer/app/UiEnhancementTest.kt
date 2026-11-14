@@ -8,6 +8,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.unit.Density
@@ -48,7 +49,7 @@ class UiEnhancementTest {
         val c = F.catalog(); val med = c.medications.single()
         var selected by mutableStateOf(false); var opened = 0
         compose.setContent { AqaqeerTheme(ThemeChoice.DARK) {
-            MedicationCard(c, med, c.sections.first().id, HomePreferences(), LocalDate.of(2026,11,12), null,
+            MedicationCard(MedicationRowUi(med, c.formsById[med.formId], c.categoriesById[med.categoryId]!!.nameAr, AvailabilityStatus.AVAILABLE, emptyList(), false), c.sections.first().id, HomePreferences(), LocalDate.of(2026,11,12), null,
                 selected, { selected = !selected }, { opened++ })
         } }
         compose.onAllNodes(SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Checkbox)).assertCountEquals(1)
@@ -71,8 +72,8 @@ class UiEnhancementTest {
                 { state = state.copy(sectionId=it) }, {}, {}, {}, {}, {}, {},
                 saveAvailability = { _,_,_ -> }, saveBulk = { _,_,_ -> }, projection = homeProjection(c, state))
         } }
-        compose.onNodeWithContentDescription("تحديد أدوية للتعديل الجماعي", substring = true).performScrollTo()
-        compose.onNodeWithContentDescription("تحديد أدوية للتعديل الجماعي", substring = true).performClick()
+        compose.onNodeWithTag("home").performScrollToNode(hasTestTag("med_Item 00"))
+        compose.onNodeWithTag("med_Item 00").performTouchInput { longClick() }
         compose.onNodeWithTag("home").performScrollToNode(hasTestTag("select_item0"))
         compose.onNodeWithTag("select_item0").performScrollTo().performClick()
         compose.onNodeWithTag("home").performScrollToNode(hasTestTag("med_Item 29"))
@@ -80,7 +81,7 @@ class UiEnhancementTest {
         compose.onNodeWithText("تعديل المحدد").assertIsEnabled()
         compose.runOnIdle { state = state.copy(appliedQuery = "no match") }
         compose.onNodeWithText("تعديل المحدد").performClick()
-        compose.onNodeWithText("حالة التوفر", substring = true).performClick()
+        compose.onNodeWithText("التوافر", useUnmergedTree = true).performClick()
         compose.onNodeWithText("غير متوفر", useUnmergedTree = true).performScrollTo().performClick()
         compose.onNodeWithText("معاينة").performClick()
         compose.onNodeWithText("Item 00", substring = true).assertExists()
@@ -92,12 +93,13 @@ class UiEnhancementTest {
             HomeScreen(CatalogState.Ready(c,false,admin=admin),state,F.time,
                 { state = state.copy(sectionId=it) }, {}, {}, {}, {}, {}, {}, saveAvailability = { _,_,_ -> }, saveBulk = { _,_,_ -> }, projection = homeProjection(c, state))
         } }
-        compose.onNodeWithContentDescription("تحديد أدوية للتعديل الجماعي", substring = true).performScrollTo()
-        compose.onNodeWithContentDescription("تحديد أدوية للتعديل الجماعي", substring = true).performClick()
+        compose.onNodeWithTag("home").performScrollToNode(hasTestTag("med_Item 00"))
+        compose.onNodeWithTag("med_Item 00").performTouchInput { longClick() }
         compose.runOnIdle { state = state.copy(sectionId="second") }
         compose.onNodeWithTag("bulk_selection_bar").assertDoesNotExist()
         compose.runOnIdle { admin = false }
-        compose.onNodeWithContentDescription("تحديد أدوية للتعديل الجماعي", substring = true).assertDoesNotExist()
+        compose.onNodeWithTag("home").performScrollToNode(hasTestTag("med_Item 00"))
+        compose.onNodeWithTag("med_Item 00").assert(SemanticsMatcher.keyNotDefined(SemanticsActions.OnLongClick))
     }
 
     @Test fun filterSummaryCountsSelectionsAndResetClearsBothGroups() {

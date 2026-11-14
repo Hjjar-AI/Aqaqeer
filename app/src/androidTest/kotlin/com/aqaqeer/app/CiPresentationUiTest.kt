@@ -52,12 +52,12 @@ class CiPresentationUiTest {
                 }
             }
             assertEquals(choice, runBlocking { preferences.theme.first() })
-            val medication = BuildSeed.catalog().medications.single { it.genericEn == "Paracetamol" }
+            val medication = BuildSeed.catalog().medications.single { it.genericEn == "Sertraline" }
             val cardTag = "med_${medication.nameEn ?: medication.id}"
             compose.onNodeWithTag("home").performScrollToNode(hasTestTag(cardTag))
             compose.onNodeWithTag(cardTag).assertIsDisplayed().performClick()
             compose.onNodeWithTag("medication_detail").assertIsDisplayed()
-            assertTrue(compose.onAllNodesWithText("باراسيتامول", substring = true).fetchSemanticsNodes().isNotEmpty())
+            assertTrue(compose.onAllNodesWithText("سيرترالين", substring = true).fetchSemanticsNodes().isNotEmpty())
             compose.onAllNodesWithText("حفظ").assertCountEquals(0)
             captureCiScreen("${choice.name.lowercase()}-large-arabic-detail")
             compose.activityRule.scenario.recreate()

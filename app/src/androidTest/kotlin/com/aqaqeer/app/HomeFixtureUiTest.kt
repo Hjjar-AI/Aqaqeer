@@ -48,7 +48,7 @@ class HomeFixtureUiTest {
                 AqaqeerTheme(ThemeChoice.LIGHT) { Box(Modifier.width(320.dp)) {
                     HomeScreen(CatalogState.Ready(catalog, false), state, now,
                         { state = state.copy(sectionId = it) }, {}, {},
-                        { state = state.copy(filters = HomeFilters(categoryIds = setOf(it))) }, {}, {}, {})
+                        { state = state.copy(filters = HomeFilters(categoryIds = setOf(it))) }, {}, {}, {}, projection = homeProjection(catalog, state))
                 } }
             }
         }
@@ -57,7 +57,7 @@ class HomeFixtureUiTest {
         compose.onNodeWithText("عرض النتائج").performClick()
         compose.onNodeWithTag("home").performScrollToNode(hasTestTag("med_English only"))
         compose.onNodeWithTag("tip_m", useUnmergedTree = true).performScrollTo().assertIsDisplayed()
-        compose.onNodeWithText("English only", substring = true).assertExists()
+        compose.onNodeWithTag("med_English only").assertTextContains("English only", substring = true)
         compose.onNodeWithTag("search").assertIsDisplayed()
         compose.onNodeWithContentDescription("الفلاتر", substring = true).performClick()
         compose.onNodeWithTag("status_filters").assertIsDisplayed()
@@ -73,7 +73,7 @@ class HomeFixtureUiTest {
         var now by mutableStateOf(Instant.parse("2026-11-09T20:59:59Z"))
         compose.setContent {
             AqaqeerTheme(ThemeChoice.DARK) {
-                HomeScreen(CatalogState.Ready(catalog, false), AppUiState(), now, {}, {}, {}, {}, {}, {}, {}, projection = homeProjection(catalog, state))
+                HomeScreen(CatalogState.Ready(catalog, false), AppUiState(), now, {}, {}, {}, {}, {}, {}, {}, projection = homeProjection(catalog))
             }
         }
         compose.onNodeWithTag("home").performScrollToNode(hasTestTag("med_English only"))
@@ -92,7 +92,7 @@ class HomeFixtureUiTest {
         compose.waitUntil(15_000) {
             compose.onAllNodesWithTag("home").fetchSemanticsNodes(atLeastOneRootRequired=false).isNotEmpty()
         }
-        compose.onNodeWithTag("home").performScrollToNode(hasText("يلزم إصدار متوافق من التطبيق"))
+        compose.onNodeWithText("يلزم إصدار متوافق من التطبيق").performScrollTo()
         compose.onNodeWithText("يلزم إصدار متوافق من التطبيق").assertIsDisplayed()
         compose.onNodeWithTag("home").performScrollToNode(hasTestTag("med_English only"))
         compose.onNodeWithTag("med_English only").assertIsDisplayed()

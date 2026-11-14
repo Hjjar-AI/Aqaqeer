@@ -5,7 +5,6 @@ import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import com.aqaqeer.app.data.*
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withTimeout
 import org.junit.After
 import org.junit.Before
 import org.junit.Rule
@@ -14,95 +13,75 @@ import org.junit.Assert.assertEquals
 
 @dagger.hilt.android.testing.HiltAndroidTest
 class HomeUiTest {
-    private fun homeNode(tag: String): SemanticsNodeInteraction {
-        compose.onNodeWithTag("home").performScrollToNode(hasTestTag(tag))
-        return compose.onNodeWithTag(tag)
-    }
-
     @get:Rule(order = 0) val hilt = dagger.hilt.android.testing.HiltAndroidRule(this)
     @get:Rule(order = 1) val compose = createAndroidComposeRule<MainActivity>()
     private val preferences get() = DisplayPreferences(compose.activity.applicationContext)
-    private fun defaults() = runBlocking {
-        preferences.setSort(HomeSort.ARABIC_NAME)
-        preferences.setLayout(CardLayout.COMPACT)
-        preferences.setNames(NameDisplay.BOTH)
-    }
+    private lateinit var original: HomePreferences
     @Before fun start() {
-        defaults()
+        original = runBlocking { preferences.home.first() }
         compose.waitUntil(15_000) { compose.onAllNodesWithTag("home").fetchSemanticsNodes().isNotEmpty() }
     }
-    @After fun reset() { defaults() }
-
+    @After fun reset(): Unit = runBlocking {
+        if (::original.isInitialized) {
+            preferences.setSort(original.sort); preferences.setLayout(original.layout); preferences.setNames(original.names)
+        }
+    }
+    private fun card(medication: Medication) = "med_${medication.nameEn ?: medication.id}"
+    private fun show(medication: Medication) {
+        compose.onNodeWithTag("home").performScrollToNode(hasTestTag(card(medication)))
+        compose.onNodeWithTag(card(medication)).assertIsDisplayed()
+    }
     private fun choosePreference(tag: String, saved: (HomePreferences) -> Boolean) {
         val row = tag.substringBefore('_') + "_preference"
         compose.onNodeWithTag("settings").performScrollToNode(hasTestTag(row))
-        compose.onNodeWithTag(row).performScrollTo().performClick()
-        // Scroll the row itself fully into view, then await its asynchronous persistence before
-        // scrolling to another card. A matched lazy item can still have a clipped clickable row.
-        compose.onNodeWithTag(tag).performScrollTo().assertIsDisplayed().performClick()
-        // Keep advancing Compose's clock while ViewModel callbacks and state collectors run.
-        // Blocking on Flow.first outside the test clock can leave frame-dispatched work queued.
-        var latest = runBlocking { preferences.home.first() }
-        try {
-            compose.waitUntil(15_000) {
-                latest = runBlocking { preferences.home.first() }
-                saved(latest)
-            }
-        } catch (error: Exception) {
-            throw AssertionError("Preference $tag was not saved; last value: $latest", error)
-        }
+        compose.onNodeWithTag(row).performClick()
+        compose.onNodeWithTag(tag).performScrollTo().performClick()
+        compose.waitUntil(15_000) { saved(runBlocking { preferences.home.first() }) }
     }
-
     @Test fun searchIsReachableDoesNotAutofocusAndClearRestoresBrowsing() {
-        if (!BuildConfig.IS_DEMO) return
-        homeNode("search").assertIsDisplayed().assertIsNotFocused()
-        homeNode("status_filters").assertIsDisplayed()
-        homeNode("category_filters").assertIsDisplayed()
-        homeNode("search").performTextInput("SALINE")
-        compose.waitUntil(5_000) { compose.onAllNodesWithTag("med_Saline nasal spray").fetchSemanticsNodes().isNotEmpty() }
-        compose.onNodeWithTag("med_Paracetamol").assertDoesNotExist()
+        org.junit.Assume.assumeTrue(BuildConfig.IS_DEMO)
+        val catalog = BuildSeed.catalog(); val target = catalog.medications.single { it.genericEn == "Sertraline" }
+        val other = catalog.medications.single { it.genericEn == "Fluoxetine" }
+        compose.onNodeWithTag("search").assertIsDisplayed().assertIsNotFocused().performTextInput("SERTRALINE")
+        compose.waitUntil(5_000) { compose.onAllNodesWithTag(card(target)).fetchSemanticsNodes().isNotEmpty() }
+        show(target); compose.onNodeWithTag(card(other)).assertDoesNotExist()
         compose.onNodeWithTag("clear_search").performClick()
-        compose.onNodeWithTag("home").performScrollToNode(hasTestTag("med_Paracetamol"))
-        compose.onNodeWithTag("med_Paracetamol").assertIsDisplayed()
-        homeNode("search").assertIsDisplayed()
-        homeNode("category_filters").assertIsDisplayed()
+        show(other); compose.onNodeWithTag("search").assertIsDisplayed()
     }
-
-    @Test fun unknownFilterIncludesMissingPairsAndOrSelectionRemainsVisibleWhileScrolling() {
-        if (!BuildConfig.IS_DEMO) return
-        homeNode("filter_UNKNOWN").performScrollTo().performClick()
-        compose.onNodeWithTag("home").performScrollToNode(hasTestTag("med_Saline nasal spray"))
-        compose.onNodeWithTag("med_Saline nasal spray").assertIsDisplayed()
-        compose.onNodeWithTag("med_Paracetamol").assertDoesNotExist()
-        homeNode("filter_OUT").performScrollTo().performClick()
-        compose.onNodeWithTag("home").performScrollToNode(hasTestTag("med_Cetirizine"))
-        compose.onNodeWithTag("med_Cetirizine").assertIsDisplayed()
-        homeNode("category_${CatalogSeeds.UNCATEGORIZED_ID}").performClick()
-        homeNode("search").assertIsDisplayed()
-        homeNode("status_filters").assertIsDisplayed()
-        homeNode("category_filters").assertIsDisplayed()
-        homeNode("clear_filters").performScrollTo().performClick()
-        compose.onNodeWithTag("home").performScrollToNode(hasTestTag("med_Paracetamol"))
-        compose.onNodeWithTag("med_Paracetamol").assertIsDisplayed()
+    @Test fun filterSheetExcludesUnknownAndAppliesOrWithinStatuses() {
+        org.junit.Assume.assumeTrue(BuildConfig.IS_DEMO)
+        val catalog = BuildSeed.catalog(); val section = catalog.sections.first().id
+        compose.onNodeWithTag("section_$section").performClick()
+        compose.onNodeWithContentDescription("الفلاتر", substring = true).performClick()
+        compose.onNodeWithTag("filter_UNKNOWN").assertDoesNotExist()
+        compose.onNodeWithTag("filter_OUT").performScrollTo().performClick()
+        compose.onNodeWithTag("filter_LOW").performScrollTo().performClick()
+        compose.onNodeWithText("عرض النتائج").performClick()
+        val expected = catalog.medications.filter { catalog.status(it.id, section) in setOf(AvailabilityStatus.OUT, AvailabilityStatus.LOW) }
+        org.junit.Assert.assertTrue(expected.isNotEmpty())
+        expected.take(3).forEach(::show)
+        val excluded = catalog.medications.first { catalog.status(it.id, section) == AvailabilityStatus.AVAILABLE }
+        compose.onNodeWithTag(card(excluded)).assertDoesNotExist()
+        compose.onNodeWithContentDescription("الفلاتر", substring = true).performClick()
+        compose.onNodeWithTag("clear_filters").performScrollTo().performClick()
+        compose.onNodeWithText("عرض النتائج").performClick()
+        show(excluded)
     }
-
     @Test fun savedSortLayoutAndNamesSurviveRecreationAndNewPreferenceReader() {
-        compose.onNodeWithTag("home_menu").performClick()
-        compose.onNodeWithTag("settings_menu").performClick()
+        compose.onNodeWithTag("home_menu").performClick(); compose.onNodeWithTag("settings_menu").performClick()
         choosePreference("sort_AVAILABILITY") { it.sort == HomeSort.AVAILABILITY }
         choosePreference("layout_EXPANDED") { it.layout == CardLayout.EXPANDED }
         choosePreference("names_ARABIC") { it.names == NameDisplay.ARABIC }
-        val expected = HomePreferences(HomeSort.AVAILABILITY, CardLayout.EXPANDED, NameDisplay.ARABIC)
-        runBlocking { withTimeout(5_000) { preferences.home.first { it == expected } } }
-        compose.activityRule.scenario.recreate()
+        val expected = original.copy(sort = HomeSort.AVAILABILITY, layout = CardLayout.EXPANDED, names = NameDisplay.ARABIC)
         assertEquals(expected, runBlocking { preferences.home.first() })
+        compose.activityRule.scenario.recreate()
+        compose.waitUntil(15_000) { compose.onAllNodesWithTag("settings").fetchSemanticsNodes().isNotEmpty() }
+        assertEquals(expected, runBlocking { DisplayPreferences(compose.activity.applicationContext).home.first() })
         compose.onNodeWithTag("back").performClick()
         if (BuildConfig.IS_DEMO) {
-            compose.onNodeWithTag("home").performScrollToNode(hasTestTag("med_Saline nasal spray"))
-            compose.onNodeWithTag("med_Saline nasal spray").assertTextContains("Saline nasal spray", substring = true)
-            compose.onNodeWithTag("home").performScrollToNode(hasTestTag("med_Paracetamol"))
-            compose.onNodeWithTag("med_Paracetamol").assertIsDisplayed()
-            compose.onNodeWithTag("med_Paracetamol").assertTextContains("١٣٬٠٠٠ ل.س", substring = true)
+            val medication = BuildSeed.catalog().medications.single { it.genericEn == "Sertraline" }
+            show(medication)
+            compose.onNodeWithTag(card(medication)).assertTextContains("سيرترالين", substring = true)
         }
     }
 }

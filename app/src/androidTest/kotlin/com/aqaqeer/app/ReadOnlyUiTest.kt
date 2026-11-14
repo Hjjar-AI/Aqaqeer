@@ -59,7 +59,7 @@ class ReadOnlyUiTest {
     @Test fun medicationDetailsRemainReadOnlyAndNavigateBack() {
         awaitHome()
         if (BuildConfig.IS_DEMO) {
-            val medication = BuildSeed.catalog().medications.single { it.genericEn == "Paracetamol" }
+            val medication = BuildSeed.catalog().medications.single { it.genericEn == "Sertraline" }
             val cardTag = "med_${medication.nameEn ?: medication.id}"
             compose.onNodeWithTag("home").performScrollToNode(hasTestTag(cardTag))
             compose.onNodeWithTag(cardTag).performClick()

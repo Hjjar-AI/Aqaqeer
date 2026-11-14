@@ -16,6 +16,7 @@ class MaintenanceStoreTest {
         val secure = mockk<SecureStore>(); var retained: ByteArray? = null; var passed: ByteArray? = null
         every { secure.write(any(), any()) } answers { passed = secondArg(); retained = passed!!.copyOf() }
         every { secure.read(any()) } answers { retained?.copyOf() }
+        every { secure.cacheScope } returns Any()
         val store = MaintenanceStore(secure)
         MaintenanceStore.changes.test {
             val before = awaitItem(); store.write(journal())
