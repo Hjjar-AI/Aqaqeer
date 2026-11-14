@@ -34,7 +34,7 @@ The complete walkthrough below expands these points with commands, settings, out
 
 | Component | Version |
 | --- | --- |
-| Gradle wrapper | 9.4.1; official distribution SHA-256 pinned |
+| Gradle wrapper | 9.8.2; official distribution SHA-256 pinned |
 | Android Gradle plugin | 9.5.1 |
 | Built-in Kotlin / Compose compiler | 2.4.21 |
 | KSP / Hilt | 2.3.13 / 2.60.1 |
