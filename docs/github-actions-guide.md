@@ -679,7 +679,7 @@ Review proposed updates, release notes and resulting hashes. Automated proposals
 | Hosted runner | `ubuntu-24.04` | [Workflow](../.github/workflows/android.yml) |
 | Trigger | Manual dispatch only | Workflow `on` declaration |
 | Module | `:app` | [Gradle settings](../settings.gradle.kts) |
-| Wrapper | Gradle 9.4.1 with distribution checksum | [Wrapper properties](../gradle/wrapper/gradle-wrapper.properties) |
+| Wrapper | Gradle 9.8.2 with distribution checksum | [Wrapper properties](../gradle/wrapper/gradle-wrapper.properties) |
 | Android plugin | AGP 9.5.1 | [Version catalog](../gradle/libs.versions.toml) |
 | Build runtime | Temurin JDK 21 | Workflow and [build documentation](build.md) |
 | Java/Kotlin target | 17 | [Module configuration](../app/build.gradle.kts) |

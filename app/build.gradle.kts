@@ -184,7 +184,7 @@ androidComponents {
             }
             // The artifact provider supplies the packaging dependency; a failed
             // package cannot trigger copying stale APKs from the output folder.
-            tasks.matching { it.name == "assemble$variantTaskName" || it.name == "install$variantTaskName" }
+            tasks.named { it == "assemble$variantTaskName" || it == "install$variantTaskName" }
                 .configureEach { dependsOn(exportApk) }
         }
     }
@@ -237,10 +237,11 @@ dependencies {
 
 // Main flavor processors share the canonical Room schema directory. Order only
 // main processors: test processors depend on main compilation and cannot precede it.
+// Filter names lazily: matching(Task) realizes unrelated AGP Compose Preview tasks.
 val roomSchemaWriters = setOf("kspDemoDebugKotlin", "kspStandardDebugKotlin", "kspStandardReleaseKotlin")
-tasks.matching { it.name in roomSchemaWriters }.configureEach {
+tasks.named { it in roomSchemaWriters }.configureEach {
     val currentName = name
-    mustRunAfter(tasks.matching { it.name in roomSchemaWriters && it.name < currentName })
+    mustRunAfter(tasks.named { it in roomSchemaWriters && it < currentName })
 }
 
 // Large boundary fixtures run sequentially; they must not compete for heap.
