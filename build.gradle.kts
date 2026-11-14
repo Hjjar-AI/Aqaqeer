@@ -11,7 +11,7 @@ buildscript {
             add("classpath", "org.apache.commons:commons-lang3:3.18.0") {
                 because("Fix GHSA-j288-q9x7-2f5v")
             }
-            add("classpath", "org.bitbucket.b_c:jose4j:0.9.6") {
+            add("classpath", "org.bitbucket.b_c:jose4j:0.9.7") {
                 because("Fix GHSA-3677-xxcr-wjqv")
             }
             for (module in listOf("bcprov-jdk18on", "bcpkix-jdk18on", "bcutil-jdk18on")) {
