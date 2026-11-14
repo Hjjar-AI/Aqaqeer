@@ -277,11 +277,11 @@ def check(path):
                     problem(name, 'cleanup command and event-specific defaults/guards required')
                 dispatch = triggers.get('workflow_dispatch') if isinstance(triggers, dict) else None
                 required_inputs = {
-                    'older_than_days': {'description': 'Delete completed runs older than this many days (0–365; 0 clears all completed runs)',
+                    'older_than_days': {'description': 'Integer from 0 to 365; 0 = all completed runs, 1-365 = completed runs older than that many days. Default: 7.',
                                         'type': 'number', 'default': 7, 'required': True},
-                    'scope': {'description': 'All workflows (including Dependabot), or emulator only',
+                    'scope': {'description': 'Options: all-workflows = every workflow including Dependabot; emulator = workflow 07 only. Default: all-workflows.',
                               'type': 'choice', 'options': ['all-workflows', 'emulator'], 'default': 'all-workflows'},
-                    'dry_run': {'description': 'Preview only; turn off to delete runs, logs and all attached artifacts (including APKs)',
+                    'dry_run': {'description': 'Options: true = preview only; false = delete eligible completed runs, logs and every attached artifact, including APKs. Default: true.',
                                 'type': 'boolean', 'default': True},
                 }
                 if not isinstance(dispatch, dict) or dispatch.get('inputs') != required_inputs:
