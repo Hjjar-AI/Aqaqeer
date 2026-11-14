@@ -96,6 +96,13 @@ class CatalogViewModel @Inject constructor(
             if (csvState.value.session?.id == session.id && exchangeEligible(session.pharmacyId)) csvState.value = current.copy(session = revised)
         }
     }
+    internal fun chooseCsvDuplicates(update: Boolean) = command(queueOffline = false) {
+        val current = csvState.value; val session = current.session ?: return@command
+        if (!current.finished && exchangeEligible(session.pharmacyId)) {
+            val revised = csvImports.chooseDuplicates(session, update)
+            if (csvState.value.session?.id == session.id) csvState.value = current.copy(session = revised)
+        }
+    }
     internal fun selectValidCsv() = command(queueOffline = false) {
         val current = csvState.value; val session = current.session ?: return@command
         if (!current.finished && exchangeEligible(session.pharmacyId)) csvState.value = current.copy(session = csvImports.selectValid(session))
@@ -104,10 +111,10 @@ class CatalogViewModel @Inject constructor(
         val current = csvState.value; val session = current.session ?: return@command
         if (current.finished) return@command
         try {
-            csvImports.commit(session) { result ->
-                if (csvState.value.session?.id != session.id || !exchangeEligible(session.pharmacyId)) throw CancellationException()
-                csvState.update { it.copy(results = it.results + (result.number to result)) }
-                if (!online && result.outcome in setOf(CsvOutcome.CREATED, CsvOutcome.UPDATED)) markReconnectSafely()
+            csvImports.commit(session) { results ->
+                if (csvState.value.session?.id != session.id) throw CancellationException()
+                csvState.update { it.copy(results = it.results + results.associateBy { result -> result.number }) }
+                if (!online && results.any { it.outcome in setOf(CsvOutcome.CREATED, CsvOutcome.UPDATED) }) markReconnectSafely()
             }
         } finally {
             if (csvState.value.session?.id == session.id) csvState.update { latest ->
@@ -179,7 +186,7 @@ class CatalogViewModel @Inject constructor(
             try { action(); if (queueOffline && !online) markReconnectSafely(); if (destination != null) navigate(destination) }
             catch (e: CancellationException) { throw e }
             catch (e: MaintenanceReview) { maintenance.conflicts.value = e.conflicts; adminMessage.value = uiText(R.string.ui_catalog_view_model_006) }
-            catch (e: Exception) { adminMessage.value = (e as? MaintenanceProblem)?.reason ?: (e as? CsvProblem)?.reason ?: when ((e as? com.aqaqeer.app.security.files.EnvelopeException)?.error) {
+            catch (e: Exception) { adminMessage.value = (e as? com.aqaqeer.app.admin.AdminProblem)?.reason ?: (e as? MaintenanceProblem)?.reason ?: (e as? CsvProblem)?.reason ?: when ((e as? com.aqaqeer.app.security.files.EnvelopeException)?.error) {
                 com.aqaqeer.app.security.files.EnvelopeError.AUTHENTICATION -> uiText(R.string.ui_catalog_view_model_007)
                 com.aqaqeer.app.security.files.EnvelopeError.TOO_LARGE -> uiText(R.string.ui_catalog_view_model_008)
                 com.aqaqeer.app.security.files.EnvelopeError.RESOURCE_LIMIT -> uiText(R.string.ui_catalog_view_model_009)

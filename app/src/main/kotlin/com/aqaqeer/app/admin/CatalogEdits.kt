@@ -14,22 +14,27 @@ internal data class MergeResult(val catalog: CatalogSnapshot, val conflicts: Lis
 
 /** Field comparison deliberately excludes derived attribution. Entity additions/deletions are indivisible. */
 internal object CatalogEdits {
-    fun rows(c: CatalogSnapshot): Map<String, JsonObject> = buildMap {
+    fun rows(c: CatalogSnapshot, unchangedFrom: CatalogSnapshot? = null): Map<String, JsonObject> = buildMap {
+        fun <T, K> different(values: List<T>, old: List<T>?, key: (T) -> K): List<T> {
+            if (old == null) return values
+            val previous = old.associateBy(key)
+            return values.filter { previous[key(it)] != it }
+        }
         fun putRows(type: String, values: List<JsonObject>, id: (JsonObject) -> String = { it.getValue("id").jsonPrimitive.content }) {
             values.forEach { put("$type:${id(it)}", it) }
         }
-        c.pharmacy?.let { put("pharmacy:${it.pharmacyId}", editJson.encodeToJsonElement(it).jsonObject) }
-        putRows("category", c.categories.map { editJson.encodeToJsonElement(it).jsonObject })
-        putRows("form", c.forms.map { editJson.encodeToJsonElement(it).jsonObject })
-        putRows("section", c.sections.map { editJson.encodeToJsonElement(it).jsonObject })
-        putRows("medication", c.medications.map { editJson.encodeToJsonElement(it).jsonObject })
-        putRows("availability", c.availability.map { editJson.encodeToJsonElement(it).jsonObject }) {
+        c.pharmacy?.takeUnless { unchangedFrom != null && it == unchangedFrom.pharmacy }?.let { put("pharmacy:${it.pharmacyId}", editJson.encodeToJsonElement(it).jsonObject) }
+        putRows("category", different(c.categories, unchangedFrom?.categories) { it.id }.map { editJson.encodeToJsonElement(it).jsonObject })
+        putRows("form", different(c.forms, unchangedFrom?.forms) { it.id }.map { editJson.encodeToJsonElement(it).jsonObject })
+        putRows("section", different(c.sections, unchangedFrom?.sections) { it.id }.map { editJson.encodeToJsonElement(it).jsonObject })
+        putRows("medication", different(c.medications, unchangedFrom?.medications) { it.id }.map { editJson.encodeToJsonElement(it).jsonObject })
+        putRows("availability", different(c.availability, unchangedFrom?.availability) { it.medicationId to it.sectionId }.map { editJson.encodeToJsonElement(it).jsonObject }) {
             it.getValue("medicationId").jsonPrimitive.content + "/" + it.getValue("sectionId").jsonPrimitive.content
         }
     }
     fun diff(before: CatalogSnapshot, after: CatalogSnapshot, author: EditorRef, at: Instant,
         baseId: String?, transaction: String = newId()): List<PendingOperation> {
-        val a = rows(before); val b = rows(after)
+        val a = rows(before, after); val b = rows(after, before)
         return (a.keys + b.keys).flatMap { key ->
             val old = a[key]; val next = b[key]
             val fields = if (old == null || next == null) setOf("@entity") else

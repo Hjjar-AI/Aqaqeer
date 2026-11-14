@@ -11,7 +11,7 @@ import java.util.UUID
 internal object RemoteObservationHistory {
     private val json = Json { encodeDefaults = true }
     fun changes(before: CatalogSnapshot, after: CatalogSnapshot, at: Instant, revision: Long): List<HistoryEntry> {
-        val old = records(before); val next = records(after)
+        val old = records(before, after); val next = records(after, before)
         return (old.keys + next.keys).flatMap { key ->
             val left = old[key]; val right = next[key]
             val fields = if (left == null || right == null) setOf("record")
@@ -40,15 +40,19 @@ internal object RemoteObservationHistory {
     }
     private fun display(record: JsonObject, fallback: String, forms: List<MedicationForm>): String =
         MedicationPresentation.recordIdentity(record, forms) ?: fallback
-    private fun records(catalog: CatalogSnapshot): Map<Pair<String,String>,JsonObject> = buildMap {
+    private fun records(catalog: CatalogSnapshot, unchangedFrom: CatalogSnapshot): Map<Pair<String,String>,JsonObject> = buildMap {
+        fun <T, K> different(values: List<T>, old: List<T>, key: (T) -> K): List<T> {
+            val previous = old.associateBy(key)
+            return values.filter { previous[key(it)] != it }
+        }
         fun add(type: String, id: String, record: JsonElement) { put(type to id, record.jsonObject) }
-        catalog.pharmacy?.let { add("pharmacy", it.pharmacyId, json.parseToJsonElement(json.encodeToString(it))) }
-        catalog.categories.forEach { add("category", it.id, json.parseToJsonElement(json.encodeToString(it))) }
-        catalog.forms.forEach { add("form", it.id, json.parseToJsonElement(json.encodeToString(it))) }
-        catalog.sections.forEach { add("section", it.id, json.parseToJsonElement(json.encodeToString(it))) }
-        catalog.medications.forEach { add("medication", it.id, json.parseToJsonElement(json.encodeToString(it))) }
-        catalog.availability.forEach { add("availability", "${it.medicationId}/${it.sectionId}", json.parseToJsonElement(json.encodeToString(it))) }
-        catalog.tombstones.forEach { add("tombstone", "${it.entityType}/${it.entityId}/${it.operationId}", json.parseToJsonElement(json.encodeToString(it))) }
+        catalog.pharmacy?.takeUnless { it == unchangedFrom.pharmacy }?.let { add("pharmacy", it.pharmacyId, json.parseToJsonElement(json.encodeToString(it))) }
+        different(catalog.categories, unchangedFrom.categories) { it.id }.forEach { add("category", it.id, json.parseToJsonElement(json.encodeToString(it))) }
+        different(catalog.forms, unchangedFrom.forms) { it.id }.forEach { add("form", it.id, json.parseToJsonElement(json.encodeToString(it))) }
+        different(catalog.sections, unchangedFrom.sections) { it.id }.forEach { add("section", it.id, json.parseToJsonElement(json.encodeToString(it))) }
+        different(catalog.medications, unchangedFrom.medications) { it.id }.forEach { add("medication", it.id, json.parseToJsonElement(json.encodeToString(it))) }
+        different(catalog.availability, unchangedFrom.availability) { it.medicationId to it.sectionId }.forEach { add("availability", "${it.medicationId}/${it.sectionId}", json.parseToJsonElement(json.encodeToString(it))) }
+        different(catalog.tombstones, unchangedFrom.tombstones) { it.entityType to it.entityId }.forEach { add("tombstone", "${it.entityType}/${it.entityId}/${it.operationId}", json.parseToJsonElement(json.encodeToString(it))) }
     }
     /** A durable encrypted-DB observation retains the incoming candidate without replacing the base.
      * Deterministic identity deduplicates repeated reads; it is never a pending/publish operation.

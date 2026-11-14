@@ -9,31 +9,58 @@ import java.util.UUID
 internal val clearableCsvFields = listOf("nameAr", "nameEn", "genericAr", "genericEn", "brand", "note", "expiryDate")
 internal object CsvRowPlanner {
     private val previewAuthor = EditorRef("00000000-0000-4000-8000-000000000099", "معاينة CSV")
-    fun names(medication: Medication) = listOfNotNull(medication.genericAr, medication.genericEn, medication.nameAr, medication.nameEn).map(::normalizedName).toSet()
-    private fun rawNames(table: CsvTable, record: CsvRecord): Set<String> = listOf("genericAr", "genericEn", "nameAr", "nameEn").mapNotNull { key ->
-        record.cells.getOrNull(table.headers.indexOf(key))?.trim()?.takeIf(String::isNotEmpty)?.let(::normalizedName)
-    }.toSet()
+    private fun candidate(id: String, baseline: CatalogSnapshot, table: CsvTable, record: CsvRecord, decision: CsvDecision): CsvRowPlan? =
+        try { plan(id, baseline, table, record, decision.copy(action = decision.action ?: CsvAction.CREATE)) }
+        catch (_: IllegalArgumentException) { null }
+        catch (_: java.time.DateTimeException) { null }
+        catch (_: CsvProblem) { null }
 
-    fun preview(id: String, baseline: CatalogSnapshot, table: CsvTable, decisions: Map<Int, CsvDecision>, checkpoint: () -> Unit): CsvImportSession {
-        val inputNames = table.records.associate { it.number to rawNames(table, it) }
-        val nameRows = mutableMapOf<String, MutableList<Int>>()
-        inputNames.forEach { (number, names) -> names.forEach { nameRows.getOrPut(it) { mutableListOf() }.add(number) } }
+    fun preview(id: String, baseline: CatalogSnapshot, table: CsvTable, decisions: Map<Int, CsvDecision>, checkpoint: () -> Unit,
+        previous: CsvImportSession? = null, changedRows: Set<Int>? = null): CsvImportSession {
+        val index = previous?.duplicateIndex ?: MedicationDuplicates.index(baseline.medications)
+        val candidates = if (previous != null && changedRows != null) previous.candidates.toMutableMap().also { cached ->
+            table.records.filter { it.number in changedRows }.forEach { record ->
+                checkpoint()
+                cached[record.number] = candidate(id, baseline, table, record, decisions[record.number] ?: CsvDecision())
+            }
+        } else table.records.associate { record ->
+            checkpoint()
+            record.number to candidate(id, baseline, table, record, decisions[record.number] ?: CsvDecision())
+        }
+        val identities = candidates.mapValues { (_, value) -> value?.medication?.let(MedicationDuplicates::keys).orEmpty() }
+        val identityRows = mutableMapOf<MedicationDuplicates.Key, MutableList<Int>>()
+        identities.forEach { (number, keys) -> keys.forEach { identityRows.getOrPut(it) { mutableListOf() }.add(number) } }
         val repeatedTargets = decisions.values.filter { it.action == CsvAction.UPDATE && it.targetId != null }
             .groupingBy { it.targetId }.eachCount().filterValues { it > 1 }.keys
+        val affected = changedRows?.toMutableSet()
+        if (affected != null && previous != null) {
+            val changedKeys = changedRows.flatMap { number -> identities[number].orEmpty() + previous.candidates[number]?.medication?.let(MedicationDuplicates::keys).orEmpty() }.toSet()
+            val changedTargets = changedRows.flatMap { number -> listOfNotNull(decisions[number]?.targetId, previous.rows.find { it.record.number == number }?.decision?.targetId) }.toSet()
+            val taxonomy = changedRows.flatMap { number -> listOfNotNull(candidates[number]?.category?.id, candidates[number]?.form?.id,
+                previous.candidates[number]?.category?.id, previous.candidates[number]?.form?.id) }.toSet()
+            table.records.forEach { record ->
+                val number = record.number
+                if (identities[number].orEmpty().any { it in changedKeys } || decisions[number]?.targetId in changedTargets ||
+                    listOfNotNull(candidates[number]?.category?.id, candidates[number]?.form?.id).any { it in taxonomy }) affected.add(number)
+            }
+        }
+        val oldRows = previous?.rows?.associateBy { it.record.number }.orEmpty()
         val rows = table.records.map { record ->
             checkpoint()
-            val duplicates = baseline.medications.filter { names(it).intersect(inputNames.getValue(record.number)).isNotEmpty() }.map { it.id }
-            val otherRows = inputNames.getValue(record.number).flatMap { nameRows[it].orEmpty() }.distinct().filter { it != record.number }
+            if (affected != null && record.number !in affected) return@map oldRows.getValue(record.number)
+            val initial = candidates[record.number]
+            val duplicates = initial?.medication?.let { MedicationDuplicates.find(it, index) }.orEmpty()
+            val otherRows = identities[record.number].orEmpty().flatMap { identityRows[it].orEmpty() }.distinct().filter { it != record.number }
             val decision = decisions[record.number] ?: CsvDecision(action = if (duplicates.isEmpty() && otherRows.isEmpty()) CsvAction.CREATE else null)
             val warnings = buildList {
-                if (duplicates.isNotEmpty()) add("توجد أسماء مطابقة بعد التطبيع؛ اختر قراراً صريحاً")
-                if (otherRows.isNotEmpty()) add("أسماء مطابقة داخل الملف في الصفوف: ${otherRows.joinToString()}")
+                if (duplicates.isNotEmpty()) add("يوجد دواء بالاسم والتركيز والشكل نفسه؛ اختر قراراً صريحاً")
+                if (otherRows.isNotEmpty()) add("دواء مطابق داخل الملف في الصفوف: ${otherRows.joinToString()}")
             }
             if (decision.action == CsvAction.SKIP) CsvPreviewRow(record, decision, duplicates = duplicates, warnings = warnings)
             else try {
                 if (decision.action == null) throw CsvProblem("اختر تخطّي أو إنشاء دواء آخر أو تحديث معرّف محدد")
                 if (decision.action == CsvAction.CREATE && (duplicates.isNotEmpty() || otherRows.isNotEmpty()))
-                    throw CsvProblem("يلزم اختيار إنشاء دواء آخر صراحة للأسماء المكررة")
+                    throw CsvProblem("يلزم اختيار إنشاء دواء آخر صراحة للتكرار")
                 if (decision.action == CsvAction.UPDATE && decision.targetId in repeatedTargets) throw CsvProblem("أكثر من صف يحدث معرّف الدواء نفسه؛ اختر صفاً واحداً")
                 val plan = plan(id, baseline, table, record, decision)
                 val next = plan.apply(baseline, previewAuthor, Instant.EPOCH)
@@ -47,14 +74,18 @@ internal object CsvRowPlanner {
                     fun bounded(value: String) = historyPreview(value).let { it.text.orEmpty() + if (it.shortened) "… (مختصر)" else "" }
                     CsvFieldChange(field, bounded(op.baseValueJson), bounded(op.intendedValueJson))
                 }
-                val finalDuplicates = baseline.medications.filter { it.id != plan.medication.id &&
-                    names(it).intersect(names(plan.medication)).isNotEmpty() }.map { it.id }
-                val duplicateWarning = if (finalDuplicates.isNotEmpty() && duplicates.isEmpty()) listOf("الدواء الناتج له أسماء مطابقة في الكتالوج") else emptyList()
-                CsvPreviewRow(record, decision, plan, changes, finalDuplicates, warnings + additions + duplicateWarning)
+                CsvPreviewRow(record, decision, plan, changes, MedicationDuplicates.find(plan.medication, index), warnings + additions)
             } catch (e: CsvProblem) { CsvPreviewRow(record, decision, duplicates = duplicates, warnings = warnings, error = e.reason) }
-            catch (_: Exception) { CsvPreviewRow(record, decision, duplicates = duplicates, warnings = warnings, error = "قيم غير صالحة؛ تحقق من الحقول والمراجع والتاريخ") }
+            catch (_: IllegalArgumentException) { CsvPreviewRow(record, decision, duplicates = duplicates, warnings = warnings, error = "قيم غير صالحة؛ تحقق من الحقول والمراجع") }
         }
-        return CsvImportSession(id, requireNotNull(baseline.pharmacy).pharmacyId, baseline, table, rows)
+        // Cache the effective decisions so generated create IDs stay stable across revisions.
+        val effectiveCandidates = candidates.toMutableMap()
+        rows.forEach { row ->
+            effectiveCandidates[row.record.number] = row.plan ?: candidates[row.record.number]?.let { value ->
+                value.copy(medication = value.medication.copy(id = if (row.decision.action == CsvAction.UPDATE) value.medication.id else row.decision.createdId))
+            }
+        }
+        return CsvImportSession(id, requireNotNull(baseline.pharmacy).pharmacyId, baseline, table, rows, index, effectiveCandidates)
     }
 
     fun plan(sessionId: String, catalog: CatalogSnapshot, table: CsvTable, record: CsvRecord, decision: CsvDecision): CsvRowPlan {
@@ -75,21 +106,34 @@ internal object CsvRowPlanner {
             orderIndex = (catalog.categories.maxOfOrNull { it.orderIndex } ?: 0) + 1) else null
         val form = if (formName != null && foundForm == null) MedicationForm(stableId("form", formName), formName,
             orderIndex = (catalog.forms.maxOfOrNull { it.orderIndex } ?: 0) + 1) else null
-        val expiry = optional("expiryDate", old?.expiryDate?.toString())?.let {
-            val ascii = MedicationPresentation.westernDigits(it)
+        fun <T> field(key: String, raw: String, parse: () -> T): T = try { parse() }
+            catch (_: IllegalArgumentException) { throw CsvProblem("قيمة غير صالحة في $key: ${raw.take(80)}") }
+            catch (_: java.time.DateTimeException) { throw CsvProblem("قيمة غير صالحة في $key: ${raw.take(80)}") }
+        val expiry = optional("expiryDate", old?.expiryDate?.toString())?.let { raw -> field("expiryDate", raw) {
+            val ascii = MedicationPresentation.westernDigits(raw)
             require(Regex("[0-9]{4}-[0-9]{2}-[0-9]{2}").matches(ascii))
-            LocalDate.parse(ascii).also { date -> require(date.year in 1..9999) }
-        }
-        val threshold = value("expirySoonThresholdDays")?.let {
-            val ascii = MedicationPresentation.westernDigits(it); require(Regex("[0-9]+").matches(ascii)); ascii.toInt()
-        } ?: old?.expirySoonThresholdDays ?: 60
+            LocalDate.parse(ascii).also { require(it.year in 1..9999) }
+        } }
+        val threshold = value("expirySoonThresholdDays")?.let { raw -> field("expirySoonThresholdDays", raw) {
+            val ascii = MedicationPresentation.westernDigits(raw)
+            require(Regex("[0-9]+").matches(ascii))
+            ascii.toInt().also { require(it in 0..3650) }
+        } } ?: old?.expirySoonThresholdDays ?: 60
+        val resolved = mutableSetOf<String>()
         val explicitStatuses = values.filterKeys { it.startsWith("section:") }.mapNotNull { (header, raw) ->
-            val id = header.removePrefix("section:")
-            if (catalog.sections.none { it.id == id }) throw CsvProblem("قسم غير معروف: $id")
-            raw.trim().takeIf(String::isNotEmpty)?.let { id to AvailabilityStatus.valueOf(it) }
+            val reference = header.removePrefix("section:")
+            val section = catalog.sections.find { it.id == reference } ?: catalog.sections.filter {
+                normalizedName(it.nameAr) == normalizedName(reference) || it.nameEn?.let(::normalizedName) == normalizedName(reference)
+            }.singleOrNull() ?: throw CsvProblem("قسم غير معروف أو ملتبس: ${reference.take(80)}")
+            if (!resolved.add(section.id)) throw CsvProblem("أعمدة متعددة للقسم نفسه: ${section.nameAr}")
+            raw.trim().takeIf(String::isNotEmpty)?.let { value ->
+                val status = AvailabilityStatus.entries.find { it.name.equals(value, ignoreCase = true) || MedicationPresentation.statusLabel(it) == value }
+                    ?: throw CsvProblem("قيمة غير صالحة في ${header.take(80)}: ${value.take(80)}")
+                section.id to status
+            }
         }.toMap()
         val statuses = if (old == null) catalog.sections.associate { it.id to AvailabilityStatus.AVAILABLE } + explicitStatuses else explicitStatuses
-        val medication = Medication(old?.id ?: decision.createdId, optional("nameEn", old?.nameEn), required("strength", old?.strength),
+        val medication = Medication(old?.id ?: decision.createdId, optional("nameEn", old?.nameEn), MedicationDuplicates.strength(required("strength", old?.strength)),
             foundForm?.id ?: form?.id ?: old?.formId ?: CatalogSeeds.defaultMedicationFormId(catalog.forms),
             foundCategory?.id ?: category?.id ?: old?.categoryId ?: CatalogSeeds.UNCATEGORIZED_ID,
             old?.createdAt ?: Instant.EPOCH, old?.updatedAt ?: Instant.EPOCH, old?.updatedBy ?: previewAuthor,

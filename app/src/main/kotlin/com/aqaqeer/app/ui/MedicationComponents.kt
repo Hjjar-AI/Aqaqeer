@@ -170,7 +170,7 @@ import java.time.LocalDate
             }
             MedicationBadges(medication, today, sectionId?.let { status }, onQuickEdit, name)
             if (!compact) LabeledValue(uiText(R.string.ui_pharmacy_admin_screen_073), row.category)
-            val elsewhere = if (compact) emptyList() else row.elsewhere
+            val elsewhere = row.elsewhere
             if (elsewhere.isNotEmpty()) Text(uiText(R.string.ui_medication_components_007) + elsewhere.joinToString(uiText(R.string.ui_medication_components_008)) { it.nameAr },
                 style = MaterialTheme.typography.bodyMedium, modifier = Modifier.testTag("tip_${medication.id}"))
         }

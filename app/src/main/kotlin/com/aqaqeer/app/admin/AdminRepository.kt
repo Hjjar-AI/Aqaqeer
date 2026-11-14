@@ -28,6 +28,36 @@ internal suspend fun CatalogDao.replace(catalog: CatalogSnapshot) {
     insertMedications(catalog.medications); insertAvailability(catalog.availability); insertTombstones(catalog.tombstones)
 }
 
+/** Apply only changed rows. Parent updates precede child reassignment; removals follow it. */
+internal suspend fun CatalogDao.applyChanges(before: CatalogSnapshot, after: CatalogSnapshot) {
+    CatalogRules.validate(after)
+    suspend fun <T, K> write(old: List<T>, next: List<T>, key: (T) -> K,
+        insert: suspend (List<T>) -> Unit, update: suspend (List<T>) -> Unit) {
+        val previous = old.associateBy(key)
+        val added = next.filter { key(it) !in previous }
+        val changed = next.filter { key(it) in previous && previous[key(it)] != it }
+        if (added.isNotEmpty()) insert(added)
+        if (changed.isNotEmpty()) update(changed)
+    }
+    suspend fun <T, K> remove(old: List<T>, next: List<T>, key: (T) -> K, delete: suspend (List<T>) -> Unit) {
+        val retained = next.map(key).toSet()
+        old.filter { key(it) !in retained }.takeIf { it.isNotEmpty() }?.let { delete(it) }
+    }
+    if (before.pharmacy != after.pharmacy) after.pharmacy?.let { if (before.pharmacy == null) insertPharmacy(it) else updatePharmacy(it) }
+    write(before.categories, after.categories, { it.id }, ::insertCategories, ::updateCategories)
+    write(before.forms, after.forms, { it.id }, ::insertForms, ::updateForms)
+    write(before.sections, after.sections, { it.id }, ::insertSections, ::updateSections)
+    remove(before.availability, after.availability, { it.medicationId to it.sectionId }, ::deleteAvailability)
+    write(before.medications, after.medications, { it.id }, ::insertMedications, ::updateMedications)
+    write(before.availability, after.availability, { it.medicationId to it.sectionId }, ::insertAvailability, ::updateAvailability)
+    remove(before.medications, after.medications, { it.id }, ::deleteMedications)
+    remove(before.sections, after.sections, { it.id }, ::deleteSections)
+    remove(before.categories, after.categories, { it.id }, ::deleteCategories)
+    remove(before.forms, after.forms, { it.id }, ::deleteForms)
+    remove(before.tombstones, after.tombstones, { it.entityType to it.entityId }, ::deleteTombstones)
+    write(before.tombstones, after.tombstones, { it.entityType to it.entityId }, ::insertTombstones, ::updateTombstones)
+}
+
 @Singleton
 class AdminRepository @Inject constructor(private val factory: DatabaseFactory,
     private val requirements: SnapshotRequirementsStore, private val secure: SecureStore, private val maintenanceStage: MaintenanceStage,
@@ -40,25 +70,25 @@ class AdminRepository @Inject constructor(private val factory: DatabaseFactory,
         try { db.withTransaction { block(db.catalogDao()) } } finally { lease.close() }
     }
     internal suspend fun guard(dao: CatalogDao, allowMaintenance: Boolean = false): DeviceIdentity {
-        if (!allowMaintenance) check(MaintenanceStore(secure).read() == null) { "أكمل مراجعة صيانة الاتصال أولاً" }
-        check(!BuildConfig.IS_DEMO) { "النسخة التجريبية للقراءة" }
-        check(dao.control()?.leaving != true && dao.control()?.restoreActivationId == null)
+        if (!allowMaintenance) adminCheck(MaintenanceStore(secure).read() == null) { "أكمل مراجعة صيانة الاتصال أولاً" }
+        adminCheck(!BuildConfig.IS_DEMO) { "النسخة التجريبية للقراءة" }
+        adminCheck(dao.control()?.leaving != true && dao.control()?.restoreActivationId == null)
         val pharmacy = requireNotNull(dao.pharmacy())
-        check(requirements.read(pharmacy.pharmacyId)?.requiresUpdate(BuildConfig.VERSION_CODE) != true) { "يلزم تحديث التطبيق" }
-        return requireNotNull(dao.deviceIdentity()).also { check(it.adminMode) { "يلزم تفويض الإدارة" } }
+        adminCheck(requirements.read(pharmacy.pharmacyId)?.requiresUpdate(BuildConfig.VERSION_CODE) != true) { "يلزم تحديث التطبيق" }
+        return requireNotNull(dao.deviceIdentity()).also { adminCheck(it.adminMode) { "يلزم تفويض الإدارة" } }
     }
     suspend fun create(name: String, timezone: String, editor: String, section: String, pin: CharArray, confirm: CharArray) {
         try {
             val normalized = PinSecurity.digits(pin); val confirmation = PinSecurity.digits(confirm)
-            try { require(normalized.contentEquals(confirmation)) { "رمزا الإدارة غير متطابقين" } }
+            try { adminRequire(normalized.contentEquals(confirmation)) { "رمزا الإدارة غير متطابقين" } }
             finally { normalized.fill('\u0000'); confirmation.fill('\u0000') }
-            require(name.trim().isNotEmpty() && editor.trim().isNotEmpty() && section.trim().isNotEmpty()) { "أكمل الحقول المطلوبة" }
+            adminRequire(name.trim().isNotEmpty() && editor.trim().isNotEmpty() && section.trim().isNotEmpty()) { "أكمل الحقول المطلوبة" }
             ZoneId.of(timezone)
             val verifier = withContext(Dispatchers.Default) { PinSecurity.create(pin) }
             transaction { dao ->
-                check(!BuildConfig.IS_DEMO && dao.pharmacy() == null && dao.pendingCount() == 0 && dao.attemptCount() == 0)
-                check(PendingConnectionStore(secure).info() == null) { "ألغِ ملف الاتصال المعلّق أولاً" }
-                val now = Instant.now()
+                adminCheck(!BuildConfig.IS_DEMO && dao.pharmacy() == null && dao.pendingCount() == 0 && dao.attemptCount() == 0)
+                adminCheck(PendingConnectionStore(secure).info() == null) { "ألغِ ملف الاتصال المعلّق أولاً" }
+                val now = clock.instant()
                 val p = Pharmacy(newId(), name.trim(), timezone, verifier)
                 val catalog = CatalogSeeds.unconfigured().copy(pharmacy = p,
                     sections = listOf(Section(CatalogSeeds.STARTER_SECTION_ID, section.trim())))
@@ -72,12 +102,12 @@ class AdminRepository @Inject constructor(private val factory: DatabaseFactory,
     }
     suspend fun promote(pin: CharArray, name: String) {
         try {
-            require(name.trim().isNotEmpty()) { "أدخل اسم المحرر" }
+            adminRequire(name.trim().isNotEmpty()) { "أدخل اسم المحرر" }
             // Failure count commits even when authorization fails.
             val authorized = transaction { dao ->
-                check(!BuildConfig.IS_DEMO)
+                adminCheck(!BuildConfig.IS_DEMO)
                 val c = requireNotNull(dao.control()); val p = requireNotNull(dao.pharmacy())
-                check(c.restorePaused || dao.snapshotState()?.confirmedPayloadJson != null) { "حدّث بيانات الصيدلية أولاً" }
+                adminCheck(c.restorePaused || dao.snapshotState()?.confirmedPayloadJson != null) { "حدّث بيانات الصيدلية أولاً" }
                 val now = clock.millis()
                 val throttle = pinThrottle.ready(p.pharmacyId, c.failedPins)
                 val verifier = c.observedPinVerifier?.let { Json.decodeFromString<PinVerifier>(it) } ?: p.adminPinVerifier
@@ -93,28 +123,32 @@ class AdminRepository @Inject constructor(private val factory: DatabaseFactory,
                 }
                 valid
             }
-            check(authorized) { "رمز الإدارة غير صحيح" }
+            adminCheck(authorized) { "رمز الإدارة غير صحيح" }
         } finally { pin.fill('\u0000') }
     }
     internal suspend fun verifyCurrentPin(expected: Pharmacy, pin: CharArray) {
         val valid = transaction { dao ->
             guard(dao)
-            check(dao.pharmacy() == expected) { "تغيرت بيانات الصيدلية؛ أعد المحاولة" }
+            adminCheck(dao.pharmacy() == expected) { "تغيرت بيانات الصيدلية؛ أعد المحاولة" }
             val throttle = pinThrottle.ready(expected.pharmacyId, dao.control()?.failedPins ?: 0)
             val matches = runCatching { PinSecurity.matches(pin, expected.adminPinVerifier) }.getOrDefault(false)
             pinThrottle.record(throttle, matches)
             dao.control(requireNotNull(dao.control()).copy(failedPins = if (matches) 0 else (throttle.failures + 1).coerceAtMost(30), retryPinAt = 0))
             matches
         }
-        check(valid) { "رمز الإدارة غير صحيح" }
+        adminCheck(valid) { "رمز الإدارة غير صحيح" }
     }
     internal suspend fun edit(pinIntent: String? = null, change: (CatalogSnapshot, EditorRef, Instant, String) -> CatalogSnapshot) = transaction { dao ->
-        val d = guard(dao); val author = EditorRef(d.id, requireNotNull(d.displayName)); val now = Instant.now(); val tx = newId()
+        editInTransaction(dao, pinIntent, change)
+    }
+    internal suspend fun editInTransaction(dao: CatalogDao, pinIntent: String? = null,
+        change: (CatalogSnapshot, EditorRef, Instant, String) -> CatalogSnapshot) {
+        val d = guard(dao); val author = EditorRef(d.id, requireNotNull(d.displayName)); val now = clock.instant(); val tx = newId()
         val before = dao.catalog(); var next = change(before, author, now, tx)
         CatalogRules.validate(next)
         val state = requireNotNull(dao.snapshotState())
         val changes = CatalogEdits.diff(before, next, author, now, state.publishId, tx)
-        if (changes.isEmpty()) return@transaction
+        if (changes.isEmpty()) return
         changes.filter { it.entityType == "pharmacy" && it.field == "adminPinVerifier" }.forEach { op ->
             bindPinChange(MaintenanceStore(secure), pinIntent, d, op)
         }
@@ -135,8 +169,9 @@ class AdminRepository @Inject constructor(private val factory: DatabaseFactory,
         // round trip leaves history but no net operation. Never cross an in-flight boundary.
         val rows = CatalogEdits.rows(next)
         val pending = dao.pending()
+        val pendingGroups = pending.filter { it.id !in attempts }.groupBy { it.entityType to it.targetId }
         pending.filter { it.field == "@entity" && it.baseValueJson == "null" && it.id !in attempts }.forEach { addition ->
-            val same = pending.filter { it.entityType == addition.entityType && it.targetId == addition.targetId && it.id !in attempts }
+            val same = pendingGroups[addition.entityType to addition.targetId].orEmpty()
             if (same.size > 1) {
                 dao.deletePending(same.map { it.id })
                 val row = rows["${addition.entityType}:${addition.targetId}"]
@@ -163,13 +198,16 @@ class AdminRepository @Inject constructor(private val factory: DatabaseFactory,
                     a.copy(updatedAt = old.updatedAt, updatedBy = old.updatedBy) else a
             })
         }
-        dao.replace(next)
+        dao.applyChanges(before, next)
     }
-    suspend fun saveMedication(value: Medication, expectedPharmacy: String? = null, requireExisting: Boolean = false) = edit { c, author, now, _ ->
-        if (expectedPharmacy != null) check(c.pharmacy?.pharmacyId == expectedPharmacy)
+    suspend fun saveMedication(value: Medication, expectedPharmacy: String? = null, requireExisting: Boolean = false, confirmedDuplicates: Set<String> = emptySet()) = edit { c, author, now, _ ->
+        if (expectedPharmacy != null) adminCheck(c.pharmacy?.pharmacyId == expectedPharmacy)
         val old = c.medications.firstOrNull { it.id == value.id }
-        check(!requireExisting || old != null) { "لم يعد هذا الدواء موجوداً" }
-        c.copy(medications = c.medications.filterNot { it.id == value.id } + value.copy(
+        val normalized = value.copy(strength = MedicationDuplicates.strength(value.strength))
+        val duplicates = MedicationDuplicates.find(normalized, MedicationDuplicates.index(c.medications)).toSet()
+        adminCheck(duplicates == confirmedDuplicates) { "يوجد دواء بالاسم والتركيز والشكل نفسه؛ راجع التكرار وأكد الحفظ" }
+        adminCheck(!requireExisting || old != null) { "لم يعد هذا الدواء موجوداً" }
+        c.copy(medications = c.medications.filterNot { it.id == value.id } + normalized.copy(
             createdAt = old?.createdAt ?: now, updatedAt = now, updatedBy = author),
             availability = if (old != null) c.availability else c.availability + c.sections.map {
                 Availability(value.id, it.id, AvailabilityStatus.AVAILABLE, now, author)
@@ -181,13 +219,13 @@ class AdminRepository @Inject constructor(private val factory: DatabaseFactory,
     /** One section and one edit transaction; stale previews fail before any rows change. */
     suspend fun bulkAvailability(medications: Set<String>, section: String, status: AvailabilityStatus,
         expected: Map<String, AvailabilityStatus>? = null, expectedPharmacy: String? = null) = edit { c, author, now, _ ->
-        if (expectedPharmacy != null) check(c.pharmacy?.pharmacyId == expectedPharmacy)
-        require(medications.isNotEmpty())
-        require(c.sections.any { it.id == section })
-        require(medications.all { id -> c.medications.any { it.id == id } })
+        if (expectedPharmacy != null) adminCheck(c.pharmacy?.pharmacyId == expectedPharmacy)
+        adminRequire(medications.isNotEmpty())
+        adminRequire(c.sections.any { it.id == section })
+        adminRequire(medications.all { id -> c.medications.any { it.id == id } })
         if (expected != null) {
-            require(expected.keys == medications)
-            check(medications.all { c.status(it, section) == expected.getValue(it) })
+            adminRequire(expected.keys == medications)
+            adminCheck(medications.all { c.status(it, section) == expected.getValue(it) })
         }
         // A missing legacy pair already displays UNKNOWN. Saving it unchanged is inert.
         val changed = medications.filter { c.status(it, section) != status }.toSet()
@@ -199,14 +237,14 @@ class AdminRepository @Inject constructor(private val factory: DatabaseFactory,
         expected: Map<String, BulkMedicationExpected>, expectedPharmacy: String): AvailabilityUndo? {
         var receipt: AvailabilityUndo? = null
         edit { c, author, now, _ ->
-        check(c.pharmacy?.pharmacyId == expectedPharmacy)
-        require(medications.isNotEmpty() && expected.keys == medications && !changes.isEmpty)
-        require(c.sections.any { it.id == section && it.isActive }) { "القسم لم يعد نشطاً" }
-        require(changes.formId == null || c.forms.any { it.id == changes.formId }) { "الشكل الدوائي لم يعد موجوداً" }
-        require(changes.categoryId == null || c.categories.any { it.id == changes.categoryId }) { "التصنيف لم يعد موجوداً" }
+        adminCheck(c.pharmacy?.pharmacyId == expectedPharmacy)
+        adminRequire(medications.isNotEmpty() && expected.keys == medications && !changes.isEmpty)
+        adminRequire(c.sections.any { it.id == section && it.isActive }) { "القسم لم يعد نشطاً" }
+        adminRequire(changes.formId == null || c.forms.any { it.id == changes.formId }) { "الشكل الدوائي لم يعد موجوداً" }
+        adminRequire(changes.categoryId == null || c.categories.any { it.id == changes.categoryId }) { "التصنيف لم يعد موجوداً" }
         val live = c.medications.associateBy { it.id }
-        check(medications.all { it in live }) { "حُذف دواء محدد؛ أعد المعاينة" }
-        check(medications.all { id ->
+        adminCheck(medications.all { it in live }) { "حُذف دواء محدد؛ أعد المعاينة" }
+        adminCheck(medications.all { id ->
             val med = live.getValue(id); val before = expected.getValue(id)
             (changes.status == null || c.status(id, section) == before.status) &&
                 (changes.formId == null || med.formId == before.formId) &&
@@ -238,10 +276,10 @@ class AdminRepository @Inject constructor(private val factory: DatabaseFactory,
     }
 
     suspend fun undoAvailability(receipt: AvailabilityUndo) = edit { c, author, now, _ ->
-        check(c.pharmacy?.pharmacyId == receipt.pharmacyId)
-        check(c.sections.any { it.id == receipt.sectionId && it.isActive })
+        adminCheck(c.pharmacy?.pharmacyId == receipt.pharmacyId)
+        adminCheck(c.sections.any { it.id == receipt.sectionId && it.isActive })
         val live = c.medications.associateBy { it.id }
-        check(receipt.after.all { (id, after) -> live[id]?.let { med ->
+        adminCheck(receipt.after.all { (id, after) -> live[id]?.let { med ->
             (receipt.fields.status == null || c.status(id, receipt.sectionId) == after.status) &&
                 (receipt.fields.formId == null || med.formId == after.formId) &&
                 (receipt.fields.categoryId == null || med.categoryId == after.categoryId)
@@ -261,27 +299,27 @@ class AdminRepository @Inject constructor(private val factory: DatabaseFactory,
 
     suspend fun saveTaxonomy(type: String, id: String?, name: String, english: String?, active: Boolean = true) = edit { c, _, _, _ ->
         val key = id ?: newId(); val ar = name.trim(); val en = english?.trim()?.takeIf { it.isNotEmpty() }
-        require(ar.isNotEmpty()) { "أدخل الاسم" }
+        adminRequire(ar.isNotEmpty()) { "أدخل الاسم" }
         when (type) {
             "category" -> {
                 val old = c.categories.find { it.id == key }
-                require(id == null || old != null) { "لم يعد التصنيف موجوداً" }
-                require(old?.isSystem != true)
+                adminRequire(id == null || old != null) { "لم يعد التصنيف موجوداً" }
+                adminRequire(old?.isSystem != true)
                 val row = old?.copy(nameAr = ar, nameEn = en) ?: Category(key, ar, en,
                     orderIndex = Math.addExact(c.categories.maxOfOrNull { it.orderIndex } ?: -1, 1))
                 c.copy(categories = c.categories.filterNot { it.id == key } + row)
             }
             "form" -> {
                 val old = c.forms.find { it.id == key }
-                require(id == null || old != null) { "لم يعد الشكل موجوداً" }
-                require(old?.isSystem != true)
+                adminRequire(id == null || old != null) { "لم يعد الشكل موجوداً" }
+                adminRequire(old?.isSystem != true)
                 val row = old?.copy(nameAr = ar, nameEn = en) ?: MedicationForm(key, ar, en,
                     orderIndex = Math.addExact(c.forms.maxOfOrNull { it.orderIndex } ?: -1, 1))
                 c.copy(forms = c.forms.filterNot { it.id == key } + row)
             }
             "section" -> {
                 val old = c.sections.find { it.id == key }
-                require(id == null || old != null) { "لم يعد القسم موجوداً" }
+                adminRequire(id == null || old != null) { "لم يعد القسم موجوداً" }
                 val row = old?.copy(nameAr = ar, nameEn = en, isActive = active) ?: Section(key, ar, en,
                     orderIndex = Math.addExact(c.sections.maxOfOrNull { it.orderIndex } ?: -1, 1), isActive = active)
                 c.copy(sections = c.sections.filterNot { it.id == key } + row)
@@ -293,11 +331,11 @@ class AdminRepository @Inject constructor(private val factory: DatabaseFactory,
     suspend fun delete(type: String, id: String, typedName: String = "") = edit { c, author, now, tx ->
         val next = when (type) {
             "medication" -> c.copy(medications = c.medications.filterNot { it.id == id }, availability = c.availability.filterNot { it.medicationId == id })
-            "category" -> { require(c.categories.none { it.id == id && it.isSystem }); c.copy(categories = c.categories.filterNot { it.id == id }, medications = c.medications.map {
+            "category" -> { adminRequire(c.categories.none { it.id == id && it.isSystem }); c.copy(categories = c.categories.filterNot { it.id == id }, medications = c.medications.map {
                 if (it.categoryId == id) it.copy(categoryId = CatalogSeeds.UNCATEGORIZED_ID, updatedAt = now, updatedBy = author) else it }) }
-            "form" -> { require(c.forms.none { it.id == id && it.isSystem }); c.copy(forms = c.forms.filterNot { it.id == id }, medications = c.medications.map {
+            "form" -> { adminRequire(c.forms.none { it.id == id && it.isSystem }); c.copy(forms = c.forms.filterNot { it.id == id }, medications = c.medications.map {
                 if (it.formId == id) it.copy(formId = CatalogSeeds.OTHER_FORM_ID, updatedAt = now, updatedBy = author) else it }) }
-            "section" -> { require(c.sections.single { it.id == id }.nameAr == typedName) { "اكتب اسم القسم لتأكيد الحذف" }; c.copy(sections = c.sections.filterNot { it.id == id }, availability = c.availability.filterNot { it.sectionId == id }) }
+            "section" -> { adminRequire(c.sections.single { it.id == id }.nameAr == typedName) { "اكتب اسم القسم لتأكيد الحذف" }; c.copy(sections = c.sections.filterNot { it.id == id }, availability = c.availability.filterNot { it.sectionId == id }) }
             else -> error("نوع غير صالح")
         }
         next.copy(tombstones = next.tombstones + Tombstone(type, id, now, tx))
@@ -316,12 +354,12 @@ class AdminRepository @Inject constructor(private val factory: DatabaseFactory,
     internal suspend fun clearReconnectIfDone(verified: Boolean = false) = transaction { dao ->
         if (verified || (dao.pendingCount() == 0 && dao.attemptCount() == 0)) dao.control()?.let { dao.control(it.copy(reconnectPending = false)) }
     }
-    suspend fun pending(): List<PendingOperation> = transaction { dao -> check(dao.deviceIdentity()?.adminMode == true); dao.pending() }
+    suspend fun pending(): List<PendingOperation> = transaction { dao -> adminCheck(dao.deviceIdentity()?.adminMode == true); dao.pending() }
     suspend fun leave(typedName: String, confirmed: Boolean) = sharingGate.withLock {
         transaction { dao ->
-            check(!BuildConfig.IS_DEMO && confirmed)
+            adminCheck(!BuildConfig.IS_DEMO && confirmed)
             val p = requireNotNull(dao.pharmacy()); val d = requireNotNull(dao.deviceIdentity())
-            require(!d.adminMode || typedName == p.name) { "اكتب اسم الصيدلية لتأكيد المغادرة" }
+            adminRequire(!d.adminMode || typedName == p.name) { "اكتب اسم الصيدلية لتأكيد المغادرة" }
             dao.control(requireNotNull(dao.control()).copy(leaving = true))
         }
         transaction { finishLeave(it, secure, maintenanceStage) }

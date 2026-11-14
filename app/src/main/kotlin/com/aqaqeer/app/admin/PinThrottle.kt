@@ -30,7 +30,7 @@ class PinThrottle @Inject constructor(@param:ApplicationContext private val cont
             else -> saved
         }
         if (state != saved) store.encode("pin-delay", state)
-        check(now >= state.retryAtElapsed) { "انتظر قليلاً قبل المحاولة التالية" }
+        adminCheck(now >= state.retryAtElapsed) { "انتظر قليلاً قبل المحاولة التالية" }
         return state
     }
     internal fun record(state: PinDelay, valid: Boolean) {

@@ -39,7 +39,7 @@ class PharmacySharing @Inject internal constructor(private val admin: AdminRepos
     private val active = PendingConnectionStore(secure, "active-connection")
     private var retryAt = 0L
     suspend fun inspectSetup(token: String, group: Long): String {
-        admin.transaction { admin.guard(it); check(it.attemptCount() == 0) }
+        admin.transaction { admin.guard(it); adminCheck(it.attemptCount() == 0) }
         return setup.validate(token, group).title
     }
     suspend fun discover(token: String, challenge: String): List<Pair<Long, String>> {
@@ -48,11 +48,11 @@ class PharmacySharing @Inject internal constructor(private val admin: AdminRepos
     }
     suspend fun saveSetup(token: String, group: Long, expectedTitle: String) = gate.withLock {
         val validated = setup.validate(token, group)
-        check(validated.title == expectedTitle) { "تغيرت المجموعة؛ تحقق مجدداً" }
+        adminCheck(validated.title == expectedTitle) { "تغيرت المجموعة؛ تحقق مجدداً" }
         admin.transaction { dao ->
             val d = admin.guard(dao)
-            check(dao.control()?.lifecycle == "LOCAL_DRAFT" && dao.attemptCount() == 0) { "إعداد الاتصال متاح للمسودة فقط" }
-            check(validated.pin == null) { "المجموعة تحتوي رسالة مثبتة؛ اختر مجموعة مخصصة فارغة" }
+            adminCheck(dao.control()?.lifecycle == "LOCAL_DRAFT" && dao.attemptCount() == 0) { "إعداد الاتصال متاح للمسودة فقط" }
+            adminCheck(validated.pin == null) { "المجموعة تحتوي رسالة مثبتة؛ اختر مجموعة مخصصة فارغة" }
             val p = requireNotNull(dao.pharmacy())
             dao.control(requireNotNull(dao.control()).copy(restoreConnectionConfirmed = true))
             if (staged.info() != null) {
@@ -89,6 +89,8 @@ class PharmacySharing @Inject internal constructor(private val admin: AdminRepos
             retryAt = android.os.SystemClock.elapsedRealtime() + maxOf(2, e.retryAfter) * 1000L
             mutable.value = SharingStatus(message = "تعذر إتمام النشر؛ احتُفظ بالعمل. تحقق من الاتصال وصلاحيات البوت ثم أعد المحاولة.",
                 retryable = e.code == 0 || e.code == 429 || e.code >= 500, retryAfterSeconds = maxOf(2, e.retryAfter))
+        } catch (e: AdminProblem) {
+            mutable.value = SharingStatus(message = e.reason)
         } catch (_: Exception) {
             mutable.value = SharingStatus(message = "تعذر إتمام النشر؛ احتُفظ بالعمل. راجع الاتصال أو حدّث البيانات ثم أعد المحاولة.")
         } finally { mutable.value = mutable.value.copy(busy = false) }
@@ -101,7 +103,7 @@ class PharmacySharing @Inject internal constructor(private val admin: AdminRepos
             requireNotNull(dao.control()).lifecycle, EditorRef(d.id, d.displayName!!))
     }
     private suspend fun publishLocked(choices: Map<String, Boolean>): Boolean {
-        admin.transaction { check(it.control()?.restorePaused != true) { "راجع النسخة المستعادة أولاً" } }
+        admin.transaction { adminCheck(it.control()?.restorePaused != true) { "راجع النسخة المستعادة أولاً" } }
         val initial = local()
         if (initial.lifecycle == "SHARED" && initial.ops.isEmpty() && initial.attempt == null) {
             admin.clearReconnectIfDone()
@@ -109,7 +111,7 @@ class PharmacySharing @Inject internal constructor(private val admin: AdminRepos
         }
         val store = if (initial.lifecycle == "LOCAL_DRAFT") staged else active
         val info = store.info() ?: error("أكمل إعداد تيليغرام أولاً")
-        check(info.pharmacyId == initial.catalog.pharmacy!!.pharmacyId)
+        adminCheck(info.pharmacyId == initial.catalog.pharmacy!!.pharmacyId)
         store.withCandidate(info.id) { connection ->
             val secrets = connection.copySecrets()
             try {
@@ -118,17 +120,17 @@ class PharmacySharing @Inject internal constructor(private val admin: AdminRepos
                 if (group.pin != null) incoming = reads.read(connection, BuildConfig.VERSION_CODE)
                 var remote = incoming?.let { read ->
                     val known = withContext(NonCancellable) { requirements.observe(connection.pharmacyId, read.snapshot.compatibility) }
-                    check(!known.requiresUpdate(BuildConfig.VERSION_CODE))
+                    adminCheck(!known.requiresUpdate(BuildConfig.VERSION_CODE))
                     read.snapshot as? SnapshotCandidate.Supported ?: error("يلزم تحديث التطبيق")
                 }
                 val observedRemote = remote
                 if (observedRemote != null) {
                     val valid = admin.transaction { dao -> authorizeObservedPin(dao, secure, observedRemote) }
-                    check(valid) { "تغير رمز الإدارة؛ أعد التفويض" }
+                    adminCheck(valid) { "تغير رمز الإدارة؛ أعد التفويض" }
                 }
                 if (initial.attempt != null && observedRemote?.publishId == initial.attempt.publishId) {
                     val expected = Json.decodeFromString<SnapshotWire>(initial.attempt.candidatePayloadJson).supported()
-                    check(expected.confirmedJson() == observedRemote.confirmedJson())
+                    adminCheck(expected.confirmedJson() == observedRemote.confirmedJson())
                     acknowledge(initial.attempt, requireNotNull(incoming), connection, info.id, choices)
                     return@withCandidate
                 }
@@ -136,7 +138,7 @@ class PharmacySharing @Inject internal constructor(private val admin: AdminRepos
                     guardPinOperations(MaintenanceStore(secure), admin.guard(dao), initial.ops, observedRemote.catalog.pharmacy!!.adminPinVerifier)
                 }
                 val base = initial.state.confirmedPayloadJson?.let { Json.decodeFromString<SnapshotWire>(it).supported() }
-                if (initial.lifecycle == "LOCAL_DRAFT") check(remote == null) { "المجموعة تحتوي صيدلية أخرى" }
+                if (initial.lifecycle == "LOCAL_DRAFT") adminCheck(remote == null) { "المجموعة تحتوي صيدلية أخرى" }
                 else if (remote == null) {
                     val retained = requireNotNull(base)
                     val key = "missing:${retained.publishId}"
@@ -180,7 +182,7 @@ class PharmacySharing @Inject internal constructor(private val admin: AdminRepos
                     val merged = if (live == null) MergeResult(initial.catalog, emptyList()) else
                         CatalogEdits.merge(base!!.catalog, initial.catalog, live.catalog, initial.ops, choices)
                     if (merged.conflicts.isNotEmpty()) throw ReviewRequired(merged.conflicts)
-                    check(live?.revision != Long.MAX_VALUE) { "بلغت مراجعات النشر الحد الأقصى" }
+                    adminCheck(live?.revision != Long.MAX_VALUE) { "بلغت مراجعات النشر الحد الأقصى" }
                     val candidate = SnapshotCandidate.Supported(
                         SnapshotCompatibility(1, merged.catalog.pharmacy!!.minVersionCode, connection.keyVersion),
                         (live?.revision ?: 0) + 1, newId(), live?.publishId, live?.revision ?: 0,
@@ -190,7 +192,7 @@ class PharmacySharing @Inject internal constructor(private val admin: AdminRepos
                     val saved = attempt
                     admin.transaction { dao ->
                         admin.guard(dao)
-                        check(dao.snapshotState() == initial.state && dao.catalog() == initial.catalog && dao.pending() == initial.ops)
+                        adminCheck(dao.snapshotState() == initial.state && dao.catalog() == initial.catalog && dao.pending() == initial.ops)
                         initial.attempt?.let { dao.deleteAttempt(it.publishId) }
                         dao.attempt(saved)
                     }
@@ -208,7 +210,7 @@ class PharmacySharing @Inject internal constructor(private val admin: AdminRepos
                 }
                 // Re-read immediately before mutation. Telegram provides no conditional-write lock.
                 val latest = writes.inspect(secrets.botToken, secrets.groupId)
-                check(latest.pin == group.pin) { "تغيرت الرسالة المثبتة؛ أعد المراجعة" }
+                adminCheck(latest.pin == group.pin) { "تغيرت الرسالة المثبتة؛ أعد المراجعة" }
                 val targetMessage = incoming?.document?.messageId
                 currentAttempt = currentAttempt.copy(transportPhase = "WRITE_STARTED")
                 saveAttempt(currentAttempt)
@@ -217,30 +219,30 @@ class PharmacySharing @Inject internal constructor(private val admin: AdminRepos
                 val verified = reads.read(connection, BuildConfig.VERSION_CODE)
                 val published = verified.snapshot as? SnapshotCandidate.Supported ?: error("يلزم تحديث التطبيق")
                 requirements.observe(connection.pharmacyId, published.compatibility)
-                check(published.confirmedJson() == candidate.confirmedJson()) { "لم يتم تأكيد النشر" }
+                adminCheck(published.confirmedJson() == candidate.confirmedJson()) { "لم يتم تأكيد النشر" }
                 acknowledge(currentAttempt, verified, connection, info.id, choices)
             } finally { secrets.snapshotKey.fill(0) }
         }
         return true
     }
     private suspend fun saveAttempt(attempt: PublishAttempt) = admin.transaction { dao ->
-        admin.guard(dao); check(dao.attempts().any { it.publishId == attempt.publishId }); dao.attempt(attempt)
+        admin.guard(dao); adminCheck(dao.attempts().any { it.publishId == attempt.publishId }); dao.attempt(attempt)
     }
     private suspend fun acknowledge(attempt: PublishAttempt, read: VerifiedSnapshotRead, connection: ConnectionCandidate, connectionId: String, choices: Map<String, Boolean>) {
         val incoming = read.snapshot as SnapshotCandidate.Supported
         val included = Json.decodeFromString<List<String>>(attempt.includedOperationIdsJson).toSet()
         admin.transaction { dao ->
             admin.guard(dao)
-            check(dao.pharmacy()?.pharmacyId == connection.pharmacyId)
-            check(dao.attempts().any { it.publishId == attempt.publishId })
-            check(authorizeObservedPin(dao, secure, incoming))
+            adminCheck(dao.pharmacy()?.pharmacyId == connection.pharmacyId)
+            adminCheck(dao.attempts().any { it.publishId == attempt.publishId })
+            adminCheck(authorizeObservedPin(dao, secure, incoming))
             val remaining = dao.pending().filterNot { it.id in included }
             val candidate = Json.decodeFromString<SnapshotWire>(attempt.candidatePayloadJson).supported()
             val visible = CatalogEdits.merge(candidate.catalog, dao.catalog(), incoming.catalog, remaining, choices)
             if (visible.conflicts.isNotEmpty()) throw ReviewRequired(visible.conflicts)
             val old = dao.snapshotState()?.confirmedPayloadJson?.let { Json.decodeFromString<SnapshotWire>(it).supported() }
             val known = requirements.observe(connection.pharmacyId, incoming.compatibility)
-            check(!known.requiresUpdate(BuildConfig.VERSION_CODE))
+            adminCheck(!known.requiresUpdate(BuildConfig.VERSION_CODE))
             // Write-ahead active credentials make a crash before the Room commit retryable.
             active.retain(connection, connectionId)
             dao.replace(visible.catalog)
@@ -283,19 +285,19 @@ class PharmacySharing @Inject internal constructor(private val admin: AdminRepos
         mutable.value = SharingStatus(busy = true)
         try {
             val initial = local()
-            admin.transaction { check(it.control()?.restorePaused == true) }
+            admin.transaction { adminCheck(it.control()?.restorePaused == true) }
             val store = if (initial.lifecycle == "LOCAL_DRAFT") staged else active
             if (initial.lifecycle == "LOCAL_DRAFT" && initial.attempt == null) {
                 admin.transaction { dao ->
                     admin.guard(dao)
-                    check(staged.info() == null || dao.control()?.restoreConnectionConfirmed == true) { "أكد المجموعة المحفوظة أولاً" }
+                    adminCheck(staged.info() == null || dao.control()?.restoreConnectionConfirmed == true) { "أكد المجموعة المحفوظة أولاً" }
                     dao.control(requireNotNull(dao.control()).copy(restorePaused = false, reconnectPending = false))
                 }
                 mutable.value = SharingStatus(message = "استؤنفت المسودة المحلية؛ المشاركة تحتاج إعداداً ونشراً صريحاً")
                 return@withLock
             }
             val info = requireNotNull(store.info())
-            admin.transaction { check(it.control()?.restoreConnectionConfirmed == true) { "أكد هوية المجموعة أولاً" } }
+            admin.transaction { adminCheck(it.control()?.restoreConnectionConfirmed == true) { "أكد هوية المجموعة أولاً" } }
             store.withCandidate(info.id) { connection ->
                 val secrets = connection.copySecrets()
                 val group = try { setup.validate(secrets.botToken, secrets.groupId) } finally { secrets.snapshotKey.fill(0) }
@@ -305,7 +307,7 @@ class PharmacySharing @Inject internal constructor(private val admin: AdminRepos
                     if (choices[key] != true) throw ReviewRequired(listOf(EditConflict(key, "محاولة النشر الأول", "استئناف بعد الاستعادة",
                         attempt.publishId, "المجموعة بلا رسالة مثبتة؛ الاحتفاظ بالمرشح وإعادة الرفع عند النشر اليدوي التالي", "نتيجة النقل السابقة غير مؤكدة")))
                     admin.transaction { dao ->
-                        admin.guard(dao); check(dao.attempts().singleOrNull() == attempt)
+                        admin.guard(dao); adminCheck(dao.attempts().singleOrNull() == attempt)
                         dao.attempt(attempt.copy(transportPhase = "PREPARED", uploadedFileId = null, uploadedMessageId = null))
                         dao.control(requireNotNull(dao.control()).copy(restorePaused = false, reconnectPending = false))
                     }
@@ -314,7 +316,7 @@ class PharmacySharing @Inject internal constructor(private val admin: AdminRepos
                 }
                 val read = reads.read(connection, BuildConfig.VERSION_CODE)
                 val known = requirements.observe(connection.pharmacyId, read.snapshot.compatibility)
-                check(!known.requiresUpdate(BuildConfig.VERSION_CODE))
+                adminCheck(!known.requiresUpdate(BuildConfig.VERSION_CODE))
                 val live = read.snapshot as? SnapshotCandidate.Supported ?: error("يلزم تحديث التطبيق")
                 val verifier = Json.encodeToString(live.catalog.pharmacy!!.adminPinVerifier)
                 val authorized = admin.transaction { dao ->
@@ -324,7 +326,7 @@ class PharmacySharing @Inject internal constructor(private val admin: AdminRepos
                     if (!matches) dao.updateDeviceIdentity(d.copy(adminMode = false))
                     matches
                 }
-                check(authorized) { "أعد التفويض برمز الإدارة الحالي للصيدلية" }
+                adminCheck(authorized) { "أعد التفويض برمز الإدارة الحالي للصيدلية" }
                 val restoredBase = requireNotNull(initial.state.confirmedPayloadJson ?: initial.attempt?.candidatePayloadJson)
                     .let { Json.decodeFromString<SnapshotWire>(it).supported() }
                 val attempt = initial.attempt
@@ -339,7 +341,7 @@ class PharmacySharing @Inject internal constructor(private val admin: AdminRepos
                 fun withLivePin(c: CatalogSnapshot) = c.copy(pharmacy = requireNotNull(c.pharmacy).copy(adminPinVerifier = live.catalog.pharmacy.adminPinVerifier))
                 val pending = initial.ops.filterNot { it.id in included || (it.entityType == "pharmacy" && it.field == "adminPinVerifier") }
                 val merged = if (replaceLive) {
-                    require(typedName == initial.catalog.pharmacy!!.name)
+                    adminRequire(typedName == initial.catalog.pharmacy!!.name)
                     val key = "restore-replace:${live.publishId}:${java.security.MessageDigest.getInstance("SHA-256").digest(live.confirmedJson().toByteArray()).joinToString("") { "%02x".format(it) }}"
                     if (choices[key] != true) throw ReviewRequired(listOf(EditConflict(key, "استبدال المحتوى المنشور", "تأكيد الاستبدال",
                         "المراجعة ${live.revision}", "اعتماد محتوى النسخة الاحتياطية مع إبقاء رمز الإدارة الحالي؛ النشر خطوة منفصلة", live.catalog.pharmacy.name)))
@@ -350,9 +352,9 @@ class PharmacySharing @Inject internal constructor(private val admin: AdminRepos
                 CatalogRules.validate(merged.catalog)
                 admin.transaction { dao ->
                     val device = admin.guard(dao)
-                    check(active.info()?.id == info.id && dao.control()?.restorePaused == true &&
+                    adminCheck(active.info()?.id == info.id && dao.control()?.restorePaused == true &&
                         dao.catalog() == initial.catalog && dao.pending() == initial.ops && dao.snapshotState() == initial.state)
-                    check(requireNotNull(dao.control()).authorizedPinVerifier == verifier)
+                    adminCheck(requireNotNull(dao.control()).authorizedPinVerifier == verifier)
                     val changes = CatalogEdits.diff(live.catalog, merged.catalog, initial.editor, Instant.now(), live.publishId).map { op ->
                         val prior = if (replaceLive) null else pending.lastOrNull { it.entityType == op.entityType && it.targetId == op.targetId && it.field == op.field }
                         if (prior == null) op else op.copy(id = prior.id, transactionId = prior.transactionId,
@@ -393,12 +395,13 @@ class PharmacySharing @Inject internal constructor(private val admin: AdminRepos
             if (mutable.value.busy) mutable.value = SharingStatus(message = "تمت المصالحة. راجع التعديلات ثم انشر يدوياً عند الحاجة")
         } catch (e: CancellationException) { throw e }
         catch (e: ReviewRequired) { mutable.value = SharingStatus(message = "راجع الخيارات ثم أعد المصالحة", conflicts = e.conflicts) }
+        catch (e: AdminProblem) { mutable.value = SharingStatus(message = e.reason) }
         catch (_: Exception) { mutable.value = SharingStatus(message = "تعذرت المصالحة؛ احتُفظ بالعمل والنشر متوقف. تحقق من الاتصال ورمز الإدارة الحالي") }
         finally { mutable.value = mutable.value.copy(busy = false) }
     }
 
     private suspend fun restoredStore(): PendingConnectionStore = admin.transaction { dao ->
-        admin.guard(dao); check(dao.control()?.restorePaused == true)
+        admin.guard(dao); adminCheck(dao.control()?.restorePaused == true)
         if (dao.control()?.lifecycle == "LOCAL_DRAFT") staged else active
     }
     internal suspend fun inspectRestoredConnection(token: String): String = gate.withLock {
@@ -408,7 +411,7 @@ class PharmacySharing @Inject internal constructor(private val admin: AdminRepos
             val secrets = candidate.copySecrets()
             try {
                 val replacement = token.ifBlank { secrets.botToken }
-                require(replacement.substringBefore(':') == secrets.botToken.substringBefore(':')) { "البوت المختلف يحتاج ترحيل اتصال" }
+                adminRequire(replacement.substringBefore(':') == secrets.botToken.substringBefore(':')) { "البوت المختلف يحتاج ترحيل اتصال" }
                 setup.validate(replacement, secrets.groupId).title
             } finally { secrets.snapshotKey.fill(0) }
         }
@@ -420,8 +423,8 @@ class PharmacySharing @Inject internal constructor(private val admin: AdminRepos
             val secrets = candidate.copySecrets()
             try {
                 val replacement = token.ifBlank { secrets.botToken }
-                require(replacement.substringBefore(':') == secrets.botToken.substringBefore(':'))
-                check(setup.validate(replacement, secrets.groupId).title == expectedTitle)
+                adminRequire(replacement.substringBefore(':') == secrets.botToken.substringBefore(':'))
+                adminCheck(setup.validate(replacement, secrets.groupId).title == expectedTitle)
                 ConnectionCandidate(candidate.pharmacyId, candidate.pharmacyName, candidate.createdAt, candidate.createdBy,
                     replacement, candidate.groupId, secrets.snapshotKey.copyOf(), candidate.keyVersion).use { updated -> store.retain(updated, info.id) }
                 admin.transaction { dao -> admin.guard(dao); dao.control(requireNotNull(dao.control()).copy(restoreConnectionConfirmed = true)) }
@@ -431,9 +434,9 @@ class PharmacySharing @Inject internal constructor(private val admin: AdminRepos
 
     suspend fun export(uri: Uri, password: CharArray) = withContext(Dispatchers.IO) {
         try {
-            admin.transaction { check(it.control()?.restorePaused != true) }
+            admin.transaction { adminCheck(it.control()?.restorePaused != true) }
             val state = local()
-            check(state.lifecycle == "SHARED" && state.state.confirmedPayloadJson != null)
+            adminCheck(state.lifecycle == "SHARED" && state.state.confirmedPayloadJson != null)
             val info = requireNotNull(active.info())
             active.withCandidate(info.id) { candidate ->
                 val secrets = candidate.copySecrets()
