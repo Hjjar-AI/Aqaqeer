@@ -107,6 +107,9 @@ android {
         informational += setOf("AndroidGradlePluginVersion", "GradleDependency", "NewerVersionAvailable")
     }
     buildFeatures { compose = true; buildConfig = true }
+    // AGP 9.5 Compose Preview task creation requires Android unit-test resources,
+    // including when APK dependency discovery realizes the Preview runfiles task.
+    testOptions { unitTests.isIncludeAndroidResources = true }
     sourceSets["main"].assets.directories += rootProject.file("licenses").path
     // Public test fixtures only; never included in either application APK.
     sourceSets["test"].resources.directories += rootProject.file("docs/crypto").path
