@@ -6,7 +6,7 @@
 
 **Android Studio is optional.** You can create the signing key with JDK `keytool`, build with the project's Gradle wrapper, and sign with Android SDK command-line tools. GitHub Actions prepares the hosted build tools for you.
 
-- **Create the signing key once.** For a first production release, create `local/signing/release.jks` with the example alias `aqaqeer`, choose its password, and keep a secure backup. For an already distributed production app, reuse its original key.
+- **Create each signing identity once.** Production uses `local/signing/release.jks` / alias `aqaqeer`; hosted debug uses the separate `local/signing/debug.jks` / alias `aqaqeer-debug`. Keep protected backups and reuse these identities for later updates. Existing distributed apps require their original signer.
 - **Copy the public certificate fingerprint.** `keytool -list -v` displays the value labeled `SHA256`; the signing helper checks that fingerprint against the finished APK. The private key and its passwords stay private.
 - **Increase the version code for each release.** It is a positive integer, not another key. After code **40**, a coordinated next code can be **41**, producing app version **0.0.41**. Failed hosted reservations also consume their code.
 - **Local builds reserve the next code automatically.** The wrapper keeps its locked counter; use the documented minimum-code floor when coordinating with higher codes used elsewhere. Build the unsigned release first, then run `python3 tools/sign_release.py` with signing settings.
@@ -15,7 +15,7 @@
 - **Production and debug are separate Android apps.** Production uses `com.aqaqeer.app`; standard debug uses `com.aqaqeer.app.debug`; demo debug uses `com.aqaqeer.app.demo.debug`. Installing production does not automatically transfer the debug app's stored data.
 - **No Android Studio, Play Console account or paid signing service is needed for ordinary APK distribution.** Local builds need JDK 21, the pinned Android SDK packages and Python; GitHub signing needs your permanent key. GitHub hosting still follows the repository's public-runner and storage controls.
 
-The complete walkthrough below expands these points with commands, settings, outputs, update rules and troubleshooting. Examples are instructions for the reader. Writing this guide did not create a key, run a build, alter a counter, upload secrets or publish anything. Current executed evidence and stops remain in [validation](validation.md) and [plan](plan.md).
+The complete walkthrough below expands these points with commands, settings, outputs, update rules and troubleshooting. Examples are instructions for the reader. Updating this guide does not execute its commands. The completed signing-setup checkpoint, user-reported actions, assistant verification and remaining limits are recorded in validation. Current executed evidence and stops remain in [validation](validation.md) and [plan](plan.md).
 
 ## Reading routes
 
@@ -24,7 +24,8 @@ The complete walkthrough below expands these points with commands, settings, out
 | Understand or prepare a computer without Android Studio | [Pinned toolchain](#pinned-toolchain), then [command-line setup](#set-up-a-computer-without-android-studio) |
 | Build standard/demo debug APKs locally | [Setup and commands](#setup-and-commands) |
 | Build or publish debug APKs on GitHub | [Manual workflows](#manual-quality-and-security-workflows), then [debug publication](#publish-debug-apks-on-github-releases) |
-| Create a permanent signing key | [Prepare signing once](#prepare-signing-once) |
+| Repeat the complete key/signing setup walkthrough | [Prepare both keys and backups](#prepare-signing-once), then [configure both GitHub environments](#configure-github-signing) |
+| See what we completed and what remains unverified | [Current signing checkpoint](validation.md), then [remaining work](plan.md#repositoryrelease-follow-up--2026-11-14) |
 | Make a signed production APK locally | [Build and sign locally](#build-and-sign-locally) |
 | Publish a signed production APK with GitHub | [Configure GitHub signing](#configure-github-signing) |
 | Release an update, recover from a failed run or solve a problem | [Updates and distribution](#updates-and-distribution), then [release troubleshooting](#release-troubleshooting) |
@@ -186,30 +187,72 @@ An Android **release build** and a GitHub **Release page** are separate choices.
 
 #### Prepare signing once
 
-If a production APK has already been distributed, obtain its original keystore and public signing-certificate fingerprint. Do not create a replacement key. A previously published APK can reveal its public certificate; it cannot recover its private signing key. If this is the first production release, create the permanent key with the following interactive JDK command. Android Studio's signing wizard is an optional alternative, not a prerequisite. The example alias is `aqaqeer`; these commands are instructions, not executed setup.
+This is the step-by-step walkthrough used for the first signing setup. The user confirmed that no APKs had yet been distributed. If you are repeating it, first check for existing keys: preserve them and skip creation. An already distributed app must keep its original private signing key. Creating a new key does not recover the old identity or make existing installations update-compatible.
+
+**1. Open the project in a Bash terminal.** The examples use Linux/JDK `keytool`; Android Studio is optional. Run the commands from the repository root, not the shared key store.
 
 ```bash
+cd "/mnt/Common/IT Projects/Aqaqeer"
 umask 077
 mkdir -p local/signing
-keytool -genkeypair -v -keystore local/signing/release.jks \
-  -storetype PKCS12 -alias aqaqeer -keyalg RSA -keysize 3072 -validity 10000
 ```
 
-`umask 077` makes newly created private files/directories accessible only to the current account. The command creates a keypair and signing certificate without buying a certificate or contacting a signing service. `3072` is the RSA key size; `10000` is the certificate validity in days. Keep the resulting file; do not rerun key generation as part of each build.
+`umask 077` requests restrictive creation permissions for this terminal and its child commands: normally files are owner-readable/writable (`600`) and directories owner-accessible (`700`). It does not encrypt files, change existing permissions or persist across new terminals. Inherited ACLs or tool-specific creation modes can affect the result; explicitly protect the finished files below.
 
-The terminal prompts you to choose and confirm a keystore password, enter certificate identity details such as name/organization/country, and confirm the result. Type passwords at the prompts. Hidden password input is normal. Keep the exact alias and password in a password manager. For this PKCS12 example, use the store password as the key password in the signing settings. Keep the alias unchanged unless you intentionally chose another value when creating your own key.
-
-After creating the key, obtain the public fingerprint:
+**2. Create the production key once, only if `local/signing/release.jks` does not exist.**
 
 ```bash
-keytool -list -v -keystore local/signing/release.jks -alias aqaqeer
+keytool -genkeypair -v \
+  -keystore local/signing/release.jks \
+  -storetype PKCS12 \
+  -alias aqaqeer \
+  -keyalg RSA -keysize 3072 \
+  -validity 10000 \
+  -dname "CN=Aqaqeer Release"
 ```
 
-Enter the keystore password when prompted. Record the **certificate SHA256** fingerprint from `keytool`; it is public. Do not choose SHA1 or an APK checksum instead. Colon-separated or plain hexadecimal SHA-256 is accepted by this project's signing helper, which normalizes case and colons.
+Choose and confirm a password at the hidden terminal prompts; typing shows no characters. Save it in a password manager, never in this document or a command argument. This creates a PKCS12 keystore despite the `.jks` filename. For these PKCS12 commands, use the same password for the store and key password fields later. `3072` is the RSA key size and `10000` is certificate validity in days. The certificate subject is public metadata, not a pharmacy login.
 
-Never hash, print, commit or upload the private keystore as an artifact. Keep local signing files under ignored `local/signing/` with protected permissions. `.gitignore` excludes `local/`, `.jks`, `.keystore`, `.p12` and related private files; ignoring is protection against accidental tracking, not an encrypted backup. Keep a separate secure backup of the keystore, alias, passwords and public certificate fingerprint before distributing the first release. Creating a new key does not establish continuity with any previously distributed key.
+**3. Create the separate debug key once, only if `local/signing/debug.jks` does not exist.**
 
-For a missing `keytool` command, check the JDK installation and current shell path first. You need JDK tools, not Android Studio. If the command reports that the alias already exists, inspect the existing store and alias; do not delete or overwrite a key to get past that message.
+```bash
+keytool -genkeypair -v \
+  -keystore local/signing/debug.jks \
+  -storetype PKCS12 \
+  -alias aqaqeer-debug \
+  -keyalg RSA -keysize 3072 \
+  -validity 10000 \
+  -dname "CN=Aqaqeer Debug"
+```
+
+Choose a different password and save it separately. This identity is permanent for future hosted debug updates; it is not the disposable runner-generated debug key and must not be substituted for the production identity.
+
+**4. Protect the original files and back them up.**
+
+```bash
+chmod 700 local/signing
+chmod 600 local/signing/release.jks local/signing/debug.jks
+```
+
+Use a private store outside the checkout, organized as `keys/<Project>/release.jks` and `keys/<Project>/debug.jks`, with a separate subfolder per project. Retain the original files under ignored `local/signing/`. Copy without overwriting an existing different key; compare copies byte-for-byte without printing or hashing private key contents. Protect store/project directories with mode `700` and key files with mode `600`. Keep aliases/passwords in the password manager and public fingerprints with the signing configuration. Record actual private backup locations outside the repository.
+
+The shared store used in this setup is on the same drive as the project. It is useful organization and a second copy, but independent off-device backup was not confirmed. Keep protected backups on separate storage as well. `.gitignore` protects against accidental tracking; it does not encrypt files or provide recovery.
+
+**5. Obtain each public certificate SHA-256 fingerprint.**
+
+```bash
+keytool -list -v \
+  -keystore local/signing/release.jks \
+  -alias aqaqeer
+
+keytool -list -v \
+  -keystore local/signing/debug.jks \
+  -alias aqaqeer-debug
+```
+
+Enter the corresponding password locally for each command. Under **Certificate fingerprints**, copy **SHA256**, not SHA1 or an APK checksum. Each key has its own fingerprint; do not swap them. Fingerprints are public; private keys and passwords remain private. The helpers accept colon-separated or plain hexadecimal SHA-256 and normalize case/colons. Record the actual values in GitHub environment variables, not in this walkthrough.
+
+If `keytool` is absent, check the existing JDK tools/PATH first. If an alias already exists, preserve that keystore and inspect the existing alias; do not delete or regenerate it to bypass the message.
 
 #### Choose and coordinate the version code
 
@@ -277,34 +320,60 @@ Share the signed APK directly, or attach the signed APK, release-info and checks
 
 #### Configure GitHub signing
 
-Use the same permanent production key for local and hosted releases. GitHub does not create that key for you. Someone with the appropriate repository settings access must prepare the environment once:
+The workflow signing references already exist; creating keys does not automatically upload them. No private key/password belongs in Gradle, YAML, tracked `.properties`, chat or issue text. Use the original production key for local and hosted releases. For local signing, `AQAQEER_RELEASE_KEYSTORE` selects its protected file; the shared backup location requires no source-code path change.
 
-1. Open the repository's **Settings → Environments** and create an environment named exactly **release-signing**.
-2. Restrict its deployment branches to this repository's default branch. The workflow itself also refuses other branches before reservation/build/signing jobs run. If you configure environment reviewers, signing will wait for their approval; the workflow does not add an extra approval setting itself.
-3. Inside that environment, add the four secrets below. Environment secrets are different from ordinary variables. The names must match exactly.
-4. Inside the same environment, add the public fingerprint as a variable named **AQAQEER_RELEASE_CERT_SHA256**.
-5. Ensure repository Actions settings permit the pinned actions and the workflow's scoped token permissions. Tag/ruleset settings must permit creation of `android-build-N` and `v0.0.N` references. Keep the existing public-repository requirement. No personal access token is requested by workflow 11.
+**6. Confirm the repository and default branch.** This setup targets [Hjjar-AI/Aqaqeer](https://github.com/Hjjar-AI/Aqaqeer), whose verified default branch is **`Final`**. Both signing environments now allow `Final`. During setup the environment rules initially allowed `main`; the assistant found that GitHub had no `main` branch, and changed both rules to `Final` at the user's request. For another repository or a later rename, use its actual default branch. The workflows read `github.event.repository.default_branch` automatically, but environment branch rules must be kept aligned separately.
 
-The required environment secrets are:
+**7. Create the two environments under [Settings → Environments](https://github.com/Hjjar-AI/Aqaqeer/settings/environments).**
 
-| Secret | Value |
-| --- | --- |
-| `AQAQEER_RELEASE_KEYSTORE_BASE64` | Base64 encoding of the existing permanent keystore |
-| `AQAQEER_RELEASE_KEY_ALIAS` | Its private-key alias |
-| `AQAQEER_RELEASE_STORE_PASSWORD` | Its keystore password |
-| `AQAQEER_RELEASE_KEY_PASSWORD` | Its key password, usually the same for PKCS12 |
+- Name them exactly **`release-signing`** and **`debug-signing`**.
+- In each, choose **Deployment branches and tags → Selected branches and tags** and add a **Branch** rule for **`Final`**.
+- Leave required reviewers unset, as chosen for this project. Keep any other existing safeguards unless intentionally changing them.
 
-Add the environment **variable** `AQAQEER_RELEASE_CERT_SHA256` containing the public certificate fingerprint. Base64 is encoding, not encryption; store the encoded key only in a GitHub encrypted secret. To send it directly from your private file without printing or creating another file, after authenticating GitHub CLI yourself:
+**8. Add the fingerprint as an Environment variable in each environment.** Use **Add variable**, not **Add secret**, for these public values.
+
+| Environment | Variable | Value |
+| --- | --- | --- |
+| `release-signing` | `AQAQEER_RELEASE_CERT_SHA256` | SHA256 from `release.jks`, alias `aqaqeer` |
+| `debug-signing` | `AQAQEER_DEBUG_CERT_SHA256` | SHA256 from `debug.jks`, alias `aqaqeer-debug` |
+
+**9. Add three Environment secrets in each environment.** Use **Add environment secret**, not **Add variable**. Enter passwords directly in GitHub's secret UI; their values are not documented here.
+
+| Environment | Secret | Value |
+| --- | --- | --- |
+| `release-signing` | `AQAQEER_RELEASE_KEY_ALIAS` | `aqaqeer` |
+| `release-signing` | `AQAQEER_RELEASE_STORE_PASSWORD` | Production keystore password |
+| `release-signing` | `AQAQEER_RELEASE_KEY_PASSWORD` | Same production password for this PKCS12 setup |
+| `debug-signing` | `AQAQEER_DEBUG_KEY_ALIAS` | `aqaqeer-debug` |
+| `debug-signing` | `AQAQEER_DEBUG_STORE_PASSWORD` | Debug keystore password |
+| `debug-signing` | `AQAQEER_DEBUG_KEY_PASSWORD` | Same debug password for this PKCS12 setup |
+
+**10. Upload each keystore directly as the fourth Environment secret.** These commands perform remote secret writes when explicitly run. Use them only for the intended existing keys/environments after authenticating GitHub CLI to the intended account. The GNU/Linux Base64 pipeline avoids displaying the encoded key or creating another private file. Base64 is encoding, not encryption; GitHub stores the result as an encrypted secret.
 
 ```bash
-base64 -w0 local/signing/release.jks | gh secret set AQAQEER_RELEASE_KEYSTORE_BASE64 --env release-signing
+cd "/mnt/Common/IT Projects/Aqaqeer"
+set -o pipefail
+
+test -s local/signing/release.jks &&
+  base64 -w0 local/signing/release.jks |
+  gh secret set AQAQEER_RELEASE_KEYSTORE_BASE64 \
+    --repo Hjjar-AI/Aqaqeer --env release-signing
+
+test -s local/signing/debug.jks &&
+  base64 -w0 local/signing/debug.jks |
+  gh secret set AQAQEER_DEBUG_KEYSTORE_BASE64 \
+    --repo Hjjar-AI/Aqaqeer --env debug-signing
 ```
 
-The command assumes GNU/Linux `base64`; use the GitHub secret UI or the platform-equivalent encoding elsewhere. Set the remaining secrets using the environment UI or interactive `gh secret set NAME --env release-signing`. Do not paste private key material/passwords into issues, chat, workflow inputs, YAML, logs or repository files. See [GitHub secrets](https://docs.github.com/en/actions/how-tos/write-workflows/choose-what-workflows-do/use-secrets). No key or secret has been created/uploaded by this implementation.
+Wait for success on each command. If authentication or upload fails, resolve it before proceeding. Do not run `base64` alone in a logged/shared terminal. A different OS needs its equivalent no-wrap encoding command. No personal access token is required by the workflows themselves. Keep repository Actions permissions compatible with pinned actions and scoped token writes; tag rules must permit creation of `android-build-N` / `v0.0.N`.
 
-If you use the CLI, authenticate to the intended repository first and verify its repository name. The Base64 command above performs a remote secret upload when you run it. It avoids printing the encoded file, but it is still uploading a private key to GitHub's encrypted secret storage. Do not run `base64` by itself in a terminal that is being logged or shared. Use the settings UI for the alias and passwords if you prefer not to use CLI secret commands. GitHub masks secrets in ordinary logs, but masking is not a reason to print them.
+**11. Verify configuration presence without exposing values.** Each environment should have **four secrets**, **one certificate variable** and the **`Final` branch rule**. The assistant verified those names/rules through GitHub's API after the user entered the values. Secret values cannot be retrieved by that check; it does not prove that uploaded keys, aliases, passwords or fingerprints agree. That boundary is established by an authorized signing run and artifact inspection.
 
-Push the workflow/helper changes to the default branch, then open **Actions → 11 - Publish - Release APK to GitHub Releases → Run workflow**:
+If VS Code still shows `Value 'release-signing' is not valid` / `Value 'debug-signing' is not valid` or unknown secret/variable context warnings after the configuration is confirmed, run **Ctrl+Shift+P → Developer: Reload Window**, then reopen the workflow. **GitHub Actions: Refresh** is also available in the installed extension. If warnings persist, check the extension's signed-in account and access to the same repository. Do not replace valid secret references with literal credentials. In this session the user confirmed the diagnostics disappeared after refreshing/reloading.
+
+**12. Start with the manual repository check.** Open [01 - Checks - Repository integrity](https://github.com/Hjjar-AI/Aqaqeer/actions/workflows/repository.yml), click **Run workflow**, select **`Final`**, and wait for its result. This checks source/configuration/workflow integrity without building or signing an APK. It has been recommended, but completion of this new run has not been reported. After a pass, the next planned step is a manually requested workflow 06 standard debug build to exercise the new debug signing setup. Setup/documentation alone does not authorize dispatch, release publication or device installation.
+
+For a later explicitly requested production publication, push the workflow/helper changes to the default branch, then open **Actions → 11 - Publish - Release APK to GitHub Releases → Run workflow**:
 
 1. Select the **default branch**; all other branches are refused before mutation.
 2. Enter `version_code`: a positive whole number below 2100000000, greater than all previous production codes, including local releases and failed/unpublished hosted reservations. The UI intentionally has no guessed default.
@@ -345,6 +414,8 @@ Locate the first failed step and retain its public diagnostics. For signing, the
 | Gradle cache is inaccessible | Check ownership, groups, ACLs and the affected path. Do not create a fresh cache or use another Gradle home to bypass the failure. |
 | `--offline` cannot resolve dependencies | Required artifacts are missing. Use normal resolution when authorized; offline mode cannot create them. |
 | Alias already exists during key generation | Inspect and preserve the existing key entry. Repeated releases do not need repeated key generation. |
+| Environment allows `main`, workflow default branch is `Final` | Set the environment's selected **Branch** rule to the actual default branch; changing the rule does not rename Git branches. |
+| VS Code still flags configured environments/secrets | Verify names/access, reload the window and refresh GitHub Actions; editor diagnostics can retain stale metadata. |
 | Signing settings are missing | Supply the local keystore path or the hosted Base64 secret, plus alias/passwords and expected certificate. Use exactly one key source. |
 | Password/alias error | Check the saved key alias and passwords. For PKCS12, use the store password for the key password unless your existing store requires otherwise. Do not substitute a new key. |
 | Certificate mismatch or debug signer rejected | Compare the public fingerprint from the original production key/APK. Use that original key and fingerprint; do not change the expected value just to accept a different identity. |
