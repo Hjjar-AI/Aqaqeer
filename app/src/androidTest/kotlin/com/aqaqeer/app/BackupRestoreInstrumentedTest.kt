@@ -100,7 +100,7 @@ class BackupRestoreInstrumentedTest {
     @Test fun historyAboveSnapshotLimitSurvivesArchiveAndRepositoryRoundTrip(): Unit = runBlocking {
         val p = profile(); val med = p.medication()
         p.admin.transaction { dao ->
-            dao.insertHistory((0 until 180).map { HistoryEntry(newId(),null,"medication",med.id,med.nameEn,"note",null,
+            dao.insertHistory((0 until 180).map { HistoryEntry(newId(),null,"medication",med.id,MedicationPresentation.identity(med),"note",null,
                 "x".repeat(65536),null,null,null,p.clock.instant(),null) })
         }
         val before = p.admin.transaction { it.historyCount() }

@@ -7,7 +7,7 @@ import org.junit.Test
 
 class CatalogEditsTest {
     private val base = F.catalog()
-    private fun local(name: String = base.medications.single().nameEn, note: String? = null) =
+    private fun local(name: String = requireNotNull(base.medications.single().nameEn), note: String? = null) =
         base.copy(medications = base.medications.map { it.copy(nameEn = name, note = note) })
     @Test fun disjointFieldsMergeAndRemoteAttributionIsNotAConflict() {
         val local = local(note = "mine")

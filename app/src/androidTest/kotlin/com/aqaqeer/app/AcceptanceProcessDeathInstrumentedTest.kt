@@ -64,7 +64,7 @@ class AcceptanceProcessDeathInstrumentedTest {
         p.create("صيدلية الصيانة");p.medication("Interruption verification only")
         if(argument("Target")=="export") p.admin.transaction { dao ->
             val medication=dao.medications().single()
-            dao.insertHistory(listOf(HistoryEntry(newId(),null,"medication",medication.id,medication.nameEn,"note",null,
+            dao.insertHistory(listOf(HistoryEntry(newId(),null,"medication",medication.id,MedicationPresentation.identity(medication),"note",null,
                 JsonPrimitive("Synthetic export interruption ".repeat(6000)).toString(),null,null,null,p.clock.instant(),null)))
         }
         val remote=PersistentRecoveryRemote(p)

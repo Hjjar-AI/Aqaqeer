@@ -35,7 +35,7 @@ class AcceptanceResourceInstrumentedTest {
         p.admin.transaction { dao ->
             dao.insertHistory((0 until rows).map { index ->
                 val value = "x".repeat(65_500) + " | سجل 😀 $index"
-                HistoryEntry(newId(),null,"medication",med.id,med.nameEn,"note",null,
+                HistoryEntry(newId(),null,"medication",med.id,MedicationPresentation.identity(med),"note",null,
                     JsonPrimitive(value).toString(),null,null,null,p.clock.instant(),null)
             })
         }

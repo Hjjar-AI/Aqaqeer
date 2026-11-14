@@ -53,7 +53,7 @@ class UiEnhancementTest {
         compose.onAllNodes(SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Checkbox)).assertCountEquals(1)
         compose.onNodeWithTag("select_${med.id}").performClick().assertIsOn()
         compose.runOnIdle { assertTrue(selected); assertEquals(0,opened) }
-        compose.onNodeWithText(med.nameEn, substring = true, useUnmergedTree = true).performClick()
+        compose.onNodeWithText(requireNotNull(med.nameEn), substring = true, useUnmergedTree = true).performClick()
         compose.runOnIdle { assertEquals(1,opened) }
     }
 
