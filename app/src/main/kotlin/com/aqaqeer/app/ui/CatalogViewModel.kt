@@ -26,6 +26,7 @@ import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.withContext
+import java.time.Instant
 import javax.inject.Inject
 
 private data class BrowseRequest(val section: String?, val query: String, val filters: HomeFilters,
@@ -181,6 +182,7 @@ class CatalogViewModel @Inject constructor(
     internal fun command(destination: String? = null, queueOffline: Boolean = true, action: suspend () -> Unit) {
         if (adminBusy.value) { feedback.value = UiFeedback(uiText(R.string.ui_catalog_view_model_005), route.value); return }
         val origin = route.value
+        refreshJob?.cancel()
         adminBusy.value = true; adminMessage.value = null
         adminJob = viewModelScope.launch {
             try { action(); if (queueOffline && !online) markReconnectSafely(); if (destination != null) navigate(destination) }
@@ -368,14 +370,30 @@ class CatalogViewModel @Inject constructor(
     }
     internal fun retryHistory() { historyRequest.update { it.copy(refresh = it.refresh + 1) } }
 
-    fun refreshCatalog() {
+    private var refreshJob: Job? = null
+    fun refreshCatalog(automatic: Boolean = false) {
         val ready = state.value.catalog as? CatalogState.Ready ?: return
         if (ready.isDemo || ready.restorePaused || ready.maintenancePaused || ready.lifecycle != "SHARED" || ready.catalog.pharmacy == null || refreshState.value.busy) return
+        if (adminBusy.value || sharing.status.value.busy || !online) {
+            if (!automatic) feedback.value = UiFeedback(if (!online) uiText(R.string.logic_offline) else uiText(R.string.logic_busy), route.value)
+            return
+        }
+        val age = ready.lastSuccessfulRefreshAt?.let { java.time.Duration.between(it, Instant.now()).toMillis() }
+        if (automatic && age != null && age in 0 until 5 * 60 * 1000L) return
+        val origin = route.value
+        val pharmacyId = ready.catalog.pharmacy.pharmacyId
         refreshState.value = RefreshUiState(busy = true)
-        viewModelScope.launch {
-            try { refreshes.refresh() }
+        refreshJob = viewModelScope.launch {
+            try {
+                val result = refreshes.refresh()
+                if (!automatic && route.value == origin && (state.value.catalog as? CatalogState.Ready)?.catalog?.pharmacy?.pharmacyId == pharmacyId)
+                    feedback.value = UiFeedback(if (result == com.aqaqeer.app.data.RefreshOutcome.APPLIED) uiText(R.string.logic_refresh_applied) else uiText(R.string.logic_refresh_current), origin)
+            }
             catch (error: CancellationException) { throw error }
-            catch (error: Exception) { refreshState.value = RefreshUiState(error = refreshMessage(error)) }
+            catch (error: Exception) {
+                if ((state.value.catalog as? CatalogState.Ready)?.catalog?.pharmacy?.pharmacyId == pharmacyId)
+                    refreshState.value = RefreshUiState(error = refreshMessage(error))
+            }
             finally { refreshState.update { it.copy(busy = false) } }
         }
     }

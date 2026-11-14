@@ -43,6 +43,8 @@ import com.aqaqeer.app.data.CatalogSnapshot
     var touched by remember(label) { mutableStateOf(false) }
     // Visibility is intentionally never saved across recreation.
     var visible by remember(label) { mutableStateOf(false) }
+    if (secret && numericSecret && FormGuidance.simpleNumericPattern(value))
+        SupportingText(uiText(R.string.logic_weak_pattern))
     val validationError = errorText ?: if (required == true && (if (secret) value.isEmpty() else value.isBlank()))
         uiText(R.string.ui_admin_components_001) else validate?.invoke(value)
     val error = validationError.takeIf { touched || submitted }

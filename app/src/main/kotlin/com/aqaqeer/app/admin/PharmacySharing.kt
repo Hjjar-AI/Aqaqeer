@@ -110,7 +110,7 @@ class PharmacySharing @Inject internal constructor(private val admin: AdminRepos
             return false
         }
         val store = if (initial.lifecycle == "LOCAL_DRAFT") staged else active
-        val info = store.info() ?: error("أكمل إعداد تيليغرام أولاً")
+        val info = store.info() ?: throw AdminProblem("أكمل إعداد تيليغرام أولاً")
         adminCheck(info.pharmacyId == initial.catalog.pharmacy!!.pharmacyId)
         store.withCandidate(info.id) { connection ->
             val secrets = connection.copySecrets()
@@ -120,8 +120,8 @@ class PharmacySharing @Inject internal constructor(private val admin: AdminRepos
                 if (group.pin != null) incoming = reads.read(connection, BuildConfig.VERSION_CODE)
                 var remote = incoming?.let { read ->
                     val known = withContext(NonCancellable) { requirements.observe(connection.pharmacyId, read.snapshot.compatibility) }
-                    adminCheck(!known.requiresUpdate(BuildConfig.VERSION_CODE))
-                    read.snapshot as? SnapshotCandidate.Supported ?: error("يلزم تحديث التطبيق")
+                    adminCheck(!known.requiresUpdate(BuildConfig.VERSION_CODE)) { "يلزم تحديث التطبيق" }
+                    read.snapshot as? SnapshotCandidate.Supported ?: throw AdminProblem("يلزم تحديث التطبيق")
                 }
                 val observedRemote = remote
                 if (observedRemote != null) {
@@ -217,7 +217,7 @@ class PharmacySharing @Inject internal constructor(private val admin: AdminRepos
                 if (targetMessage == null) writes.pin(secrets.botToken, secrets.groupId, requireNotNull(currentAttempt.uploadedMessageId))
                 else writes.replace(secrets.botToken, secrets.groupId, targetMessage, requireNotNull(currentAttempt.uploadedFileId), caption)
                 val verified = reads.read(connection, BuildConfig.VERSION_CODE)
-                val published = verified.snapshot as? SnapshotCandidate.Supported ?: error("يلزم تحديث التطبيق")
+                val published = verified.snapshot as? SnapshotCandidate.Supported ?: throw AdminProblem("يلزم تحديث التطبيق")
                 requirements.observe(connection.pharmacyId, published.compatibility)
                 adminCheck(published.confirmedJson() == candidate.confirmedJson()) { "لم يتم تأكيد النشر" }
                 acknowledge(currentAttempt, verified, connection, info.id, choices)
@@ -242,7 +242,7 @@ class PharmacySharing @Inject internal constructor(private val admin: AdminRepos
             if (visible.conflicts.isNotEmpty()) throw ReviewRequired(visible.conflicts)
             val old = dao.snapshotState()?.confirmedPayloadJson?.let { Json.decodeFromString<SnapshotWire>(it).supported() }
             val known = requirements.observe(connection.pharmacyId, incoming.compatibility)
-            adminCheck(!known.requiresUpdate(BuildConfig.VERSION_CODE))
+            adminCheck(!known.requiresUpdate(BuildConfig.VERSION_CODE)) { "يلزم تحديث التطبيق" }
             // Write-ahead active credentials make a crash before the Room commit retryable.
             active.retain(connection, connectionId)
             dao.replace(visible.catalog)
@@ -316,8 +316,8 @@ class PharmacySharing @Inject internal constructor(private val admin: AdminRepos
                 }
                 val read = reads.read(connection, BuildConfig.VERSION_CODE)
                 val known = requirements.observe(connection.pharmacyId, read.snapshot.compatibility)
-                adminCheck(!known.requiresUpdate(BuildConfig.VERSION_CODE))
-                val live = read.snapshot as? SnapshotCandidate.Supported ?: error("يلزم تحديث التطبيق")
+                adminCheck(!known.requiresUpdate(BuildConfig.VERSION_CODE)) { "يلزم تحديث التطبيق" }
+                val live = read.snapshot as? SnapshotCandidate.Supported ?: throw AdminProblem("يلزم تحديث التطبيق")
                 val verifier = Json.encodeToString(live.catalog.pharmacy!!.adminPinVerifier)
                 val authorized = admin.transaction { dao ->
                     val control = requireNotNull(dao.control()); val d = requireNotNull(dao.deviceIdentity())
@@ -341,7 +341,7 @@ class PharmacySharing @Inject internal constructor(private val admin: AdminRepos
                 fun withLivePin(c: CatalogSnapshot) = c.copy(pharmacy = requireNotNull(c.pharmacy).copy(adminPinVerifier = live.catalog.pharmacy.adminPinVerifier))
                 val pending = initial.ops.filterNot { it.id in included || (it.entityType == "pharmacy" && it.field == "adminPinVerifier") }
                 val merged = if (replaceLive) {
-                    adminRequire(typedName == initial.catalog.pharmacy!!.name)
+                    adminRequire(typedName == initial.catalog.pharmacy!!.name) { "اكتب اسم الصيدلية لتأكيد الاستبدال" }
                     val key = "restore-replace:${live.publishId}:${java.security.MessageDigest.getInstance("SHA-256").digest(live.confirmedJson().toByteArray()).joinToString("") { "%02x".format(it) }}"
                     if (choices[key] != true) throw ReviewRequired(listOf(EditConflict(key, "استبدال المحتوى المنشور", "تأكيد الاستبدال",
                         "المراجعة ${live.revision}", "اعتماد محتوى النسخة الاحتياطية مع إبقاء رمز الإدارة الحالي؛ النشر خطوة منفصلة", live.catalog.pharmacy.name)))
@@ -445,7 +445,7 @@ class PharmacySharing @Inject internal constructor(private val admin: AdminRepos
                     val wire = ConnectionWire(1, p.pharmacyId, p.name, secrets.botToken, secrets.groupId,
                         Base64.getEncoder().encodeToString(secrets.snapshotKey), secrets.keyVersion, Instant.now(), state.editor)
                     val bytes = EnvelopeWriter.connection(wire, password)
-                    try { (context.contentResolver.openOutputStream(uri, "wt") ?: error("تعذر فتح الملف")).use { it.write(bytes) } }
+                    try { (context.contentResolver.openOutputStream(uri, "wt") ?: throw AdminProblem("تعذر فتح الملف")).use { it.write(bytes) } }
                     finally { bytes.fill(0) }
                 } finally { secrets.snapshotKey.fill(0) }
             }

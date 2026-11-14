@@ -11,7 +11,8 @@ internal val medicationColumns = listOf("genericAr", "genericEn", "nameAr", "nam
 internal val visibleMedicationColumns = medicationColumns
 internal val resultColumns = listOf("rowNumber", "outcome", "warning", "error")
 internal data class CsvRecord(val number: Int, val cells: List<String>, val malformed: Boolean = false)
-internal data class CsvTable(val headers: List<String>, val records: List<CsvRecord>)
+internal data class CsvTable(val headers: List<String>, val records: List<CsvRecord>,
+    val sectionIds: Map<String, String> = emptyMap())
 internal class CsvProblem(val reason: String) : Exception()
 
 /** Strict, bounded CSV. No database writes occur while reading. */
@@ -37,6 +38,34 @@ internal object CsvCodec {
             throw CsvProblem("لا توجد ذاكرة كافية لمعاينة الملف بأمان")
         val decoder = Charsets.UTF_8.newDecoder().onMalformedInput(CodingErrorAction.REPORT).onUnmappableCharacter(CodingErrorAction.REPORT)
         return InputStreamReader(BoundedInput(input), decoder).use { reader ->
+            val maxHeaderChars = (medicationColumns.size + 5 + resultColumns.size) * (MAX_CELL_BYTES + 1)
+            val source = java.io.PushbackReader(reader, maxHeaderChars)
+            val prefix = StringBuilder()
+            var quoted = false
+            var quotePending = false
+            val separators = mutableMapOf(',' to 0, ';' to 0, '\t' to 0)
+            while (true) {
+                checkpoint()
+                val next = source.read()
+                if (next < 0) break
+                val char = next.toChar()
+                prefix.append(char)
+                if (prefix.length > maxHeaderChars) throw CsvProblem("رأس CSV يتجاوز الحد المسموح")
+                if (char == '"') {
+                    if (quoted) { if (quotePending) quotePending = false else quotePending = true }
+                    else quoted = true
+                } else {
+                    if (quotePending) { quoted = false; quotePending = false }
+                    if (!quoted) {
+                        if (char == '\r' || char == '\n') break
+                        if (char in separators) separators[char] = separators.getValue(char) + 1
+                    }
+                }
+            }
+            val candidates = separators.filterValues { it > 0 }
+            val delimiter = if (candidates.size <= 1) candidates.keys.firstOrNull() ?: ','
+                else throw CsvProblem("رأس CSV يحتوي فواصل ملتبسة؛ استخدم فاصلاً واحداً")
+            source.unread(prefix.toString().toCharArray())
             var header: List<String>? = null
             val records = mutableListOf<CsvRecord>()
             val cells = mutableListOf<String>()
@@ -68,7 +97,7 @@ internal object CsvCodec {
             }
             while (true) {
                 checkpoint()
-                val next = reader.read()
+                val next = source.read()
                 if (next < 0) break
                 val char = next.toChar()
                 if (first) { first = false; if (char == '\uFEFF') continue }
@@ -77,7 +106,7 @@ internal object CsvCodec {
                 when (state) {
                     2 -> if (char == '"') state = 3 else cell.append(char)
                     else -> when (char) {
-                        ',' -> endCell()
+                        delimiter -> endCell()
                         '\r', '\n' -> { endRecord(); skipLf = char == '\r' }
                         '"' -> when (state) {
                             0 -> state = 2

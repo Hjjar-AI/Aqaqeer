@@ -28,6 +28,7 @@ import com.aqaqeer.app.reports.*
     val message by vm.adminMessage.collectAsStateWithLifecycle()
     var preset by rememberSaveable(pharmacyId) { mutableStateOf(ReportPreset.OUT) }
     var section by rememberSaveable(pharmacyId) { mutableStateOf(ready.catalog.sections.firstOrNull()?.id) }
+    var allSections by rememberSaveable(pharmacyId) { mutableStateOf(false) }
     var unpublished by rememberSaveable(pharmacyId) { mutableStateOf(false) }
     var capturedPharmacy by rememberSaveable { mutableStateOf(pharmacyId) }
     LaunchedEffect(pharmacyId) {
@@ -36,7 +37,7 @@ import com.aqaqeer.app.reports.*
             capturedPharmacy = pharmacyId
         }
     }
-    val request = ReportRequest(preset, if (preset == ReportPreset.OUT) section else null, unpublished)
+    val request = ReportRequest(preset, if (preset == ReportPreset.OUT && !allSections) section else null, unpublished, preset == ReportPreset.OUT && allSections)
     val current = snapshot?.takeIf { it.request == request && capturedPharmacy == pharmacyId }
     var showAll by rememberSaveable(current?.generatedAt?.toString(), current?.request.toString()) { mutableStateOf(false) }
     val csv = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("text/csv"), vm::saveReport)
@@ -55,7 +56,8 @@ import com.aqaqeer.app.reports.*
                         ChoicePicker(uiText(R.string.ui_reports_screen_004), ReportPreset.entries, preset, {
                             when (it) { ReportPreset.OUT -> uiText(R.string.ui_reports_screen_005); ReportPreset.FULL -> uiText(R.string.ui_reports_screen_006); ReportPreset.EXPIRING_SOON -> uiText(R.string.ui_reports_screen_007) }
                         }, enabled = !busy) { preset = it }
-                        if (preset == ReportPreset.OUT) ChoicePicker(uiText(R.string.ui_reports_screen_008), ready.catalog.sections,
+                        if (preset == ReportPreset.OUT) CheckChoiceRow(allSections, uiText(R.string.logic_all_shortages), enabled = !busy) { allSections = it }
+                        if (preset == ReportPreset.OUT && !allSections) ChoicePicker(uiText(R.string.ui_reports_screen_008), ready.catalog.sections,
                             ready.catalog.sections.find { it.id == section }, { it.nameAr }, enabled = !busy) { section = it.id }
                         CheckChoiceRow(unpublished, uiText(R.string.ui_reports_screen_009), enabled = !busy) { unpublished = it }
                         Button(enabled = !busy, onClick = { vm.prepareReport(request) }) { Text(uiText(R.string.ui_reports_screen_010)) }

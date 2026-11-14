@@ -52,7 +52,7 @@ internal object RemoteObservationHistory {
         different(catalog.sections, unchangedFrom.sections) { it.id }.forEach { add("section", it.id, json.parseToJsonElement(json.encodeToString(it))) }
         different(catalog.medications, unchangedFrom.medications) { it.id }.forEach { add("medication", it.id, json.parseToJsonElement(json.encodeToString(it))) }
         different(catalog.availability, unchangedFrom.availability) { it.medicationId to it.sectionId }.forEach { add("availability", "${it.medicationId}/${it.sectionId}", json.parseToJsonElement(json.encodeToString(it))) }
-        different(catalog.tombstones, unchangedFrom.tombstones) { it.entityType to it.entityId }.forEach { add("tombstone", "${it.entityType}/${it.entityId}/${it.operationId}", json.parseToJsonElement(json.encodeToString(it))) }
+        different(catalog.tombstones, unchangedFrom.tombstones) { Triple(it.entityType, it.entityId, it.operationId) }.forEach { add("tombstone", "${it.entityType}/${it.entityId}/${it.operationId}", json.parseToJsonElement(json.encodeToString(it))) }
     }
     /** A durable encrypted-DB observation retains the incoming candidate without replacing the base.
      * Deterministic identity deduplicates repeated reads; it is never a pending/publish operation.

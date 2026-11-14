@@ -53,7 +53,7 @@
     <string name="ui_choice_components_002" formatted="false">"بحث"</string>
     <string name="ui_choice_components_003" formatted="false">"لا توجد نتائج مطابقة"</string>
     <string name="ui_choice_components_004" formatted="false">"إغلاق"</string>
-    <string name="ui_form_guidance_001" formatted="false">"أدخل ستة أرقام عربية أو إنجليزية"</string>
+    <string name="ui_form_guidance_001" formatted="false">"أدخل أربعة أرقام عربية أو إنجليزية على الأقل"</string>
     <string name="ui_form_guidance_002" formatted="false">"أدخل منطقة زمنية صحيحة مثل Asia/Damascus"</string>
     <string name="ui_form_guidance_003" formatted="false">"أدخل تاريخاً ميلادياً صحيحاً مثل 2026-11-12"</string>
     <string name="ui_form_guidance_004" formatted="false">"أدخل عدداً صحيحاً غير سالب للأيام"</string>
@@ -87,7 +87,7 @@
     <string name="ui_pharmacy_admin_screen_008" formatted="false">"اسم المحرر"</string>
     <string name="ui_pharmacy_admin_screen_009" formatted="false">"اسم القسم الأول"</string>
     <string name="ui_pharmacy_admin_screen_010" formatted="false">"جارٍ إنشاء الصيدلية…"</string>
-    <string name="ui_pharmacy_admin_screen_011" formatted="false">"رمز الإدارة — ستة أرقام"</string>
+    <string name="ui_pharmacy_admin_screen_011" formatted="false">"رمز الإدارة — أربعة أرقام على الأقل"</string>
     <string name="ui_pharmacy_admin_screen_012" formatted="false">"تأكيد رمز الإدارة"</string>
     <string name="ui_pharmacy_admin_screen_013" formatted="false">"رمزا الإدارة غير متطابقين"</string>
     <string name="ui_pharmacy_admin_screen_014" formatted="false">"يمكنك البدء دون اتصال. لن تُشارك البيانات حتى إعداد تيليغرام وتأكيد النشر."</string>
@@ -180,9 +180,9 @@
     <string name="ui_pharmacy_admin_screen_101" formatted="false">"لاحقاً"</string>
     <string name="ui_pharmacy_admin_screen_102" formatted="false">"نشر الآن"</string>
     <string name="ui_pharmacy_admin_screen_103" formatted="false">"لن يُحذف أي webhook قائم. استخدم بوتاً مخصصاً إذا كان البوت مرتبطاً بخدمة أخرى. بعد الحفظ اختر مراجعة التعديلات والنشر؛ يمكنك نشر صيدلية فارغة أيضاً."</string>
-    <string name="ui_pharmacy_admin_screen_104" formatted="false">"يحصل المستورد على صلاحية القراءة. اختر ١٦ رقماً عشوائياً على الأقل؛ تجنب التواريخ والتسلسلات والأرقام المكررة. شارك الملف وكلمته عبر قناتين منفصلتين."</string>
+    <string name="ui_pharmacy_admin_screen_104" formatted="false">"يحصل المستورد على صلاحية القراءة. اختر أربعة أرقام على الأقل؛ يفضل توليد ١٦ رقماً عشوائياً؛ تجنب التواريخ والتسلسلات والأرقام المكررة. شارك الملف وكلمته عبر قناتين منفصلتين."</string>
     <string name="ui_pharmacy_admin_screen_105" formatted="false">"حماية ملف الاتصال"</string>
-    <string name="ui_pharmacy_admin_screen_106" formatted="false">"كلمة ملف الاتصال — ١٦ رقماً عشوائياً على الأقل"</string>
+    <string name="ui_pharmacy_admin_screen_106" formatted="false">"كلمة ملف الاتصال — أربعة أرقام على الأقل؛ يفضل توليد ١٦ رقماً عشوائياً"</string>
     <string name="ui_pharmacy_admin_screen_107" formatted="false">"حفظ ملف الاتصال"</string>
     <string name="ui_pharmacy_admin_screen_108" formatted="false">"أدخل اسماً علمياً بالعربية أو الإنجليزية على الأقل"</string>
     <string name="ui_pharmacy_admin_screen_109" formatted="false">"حفظ محلياً"</string>
@@ -485,7 +485,7 @@
     <string name="ui_maintenance_screen_047" formatted="false">"فحص الملف وحفظ استبدال معلق"</string>
     <string name="ui_maintenance_screen_048" formatted="false">"تغيير رمز الإدارة"</string>
     <string name="ui_maintenance_screen_049" formatted="false">"رمز الإدارة الحالي"</string>
-    <string name="ui_maintenance_screen_050" formatted="false">"رمز الإدارة الجديد — ستة أرقام"</string>
+    <string name="ui_maintenance_screen_050" formatted="false">"رمز الإدارة الجديد — أربعة أرقام على الأقل"</string>
     <string name="ui_maintenance_screen_051" formatted="false">"تأكيد رمز الإدارة الجديد"</string>
     <string name="ui_maintenance_screen_052" formatted="false">"حفظ تغيير الرمز محلياً ثم مراجعته للنشر"</string>
     <string name="ui_maintenance_screen_053" formatted="false">"يبقى هذا الجهاز مفوضاً بعد التحقق من نشر تغييره نفسه. الأجهزة الأخرى تخرج من الإدارة عندما ترصد الرمز الجديد؛ الأجهزة غير المتصلة لا تُقفل فوراً."</string>
@@ -553,7 +553,7 @@
     <string name="ui_medication_components_010" formatted="false">"منتهي الصلاحية"</string>
     <string name="ui_medication_components_011" formatted="false">"صلاحية قصيرة"</string>
     <string name="ui_connection_import_state_001" formatted="false">"كلمة المرور غير صحيحة أو الملف تالف."</string>
-    <string name="ui_connection_import_state_002" formatted="false">"أدخل كلمة مرور الملف: ستة أرقام على الأقل."</string>
+    <string name="ui_connection_import_state_002" formatted="false">"أدخل كلمة مرور الملف: أربعة أرقام على الأقل."</string>
     <string name="ui_connection_import_state_003" formatted="false">"يتجاوز الملف الحد المسموح: ١٠ ميبيبايت."</string>
     <string name="ui_connection_import_state_004" formatted="false">"لا تكفي الموارد لمعالجة هذا الملف."</string>
     <string name="ui_connection_import_state_005" formatted="false">"تنسيق الملف غير مدعوم. اطلب ملف اتصال متوافقاً من المسؤول."</string>
@@ -616,9 +616,9 @@
     <string name="ui_csv_import_screen_001" formatted="false">"UTF-8، حتى ١٠ ميبيبايت و١٠٠٠٠ صف و٦٤ كيبيبايت للخلية. لا تُحفظ بيانات قبل التأكيد. الملف الجديد يستبدل جلسة المعاينة ونتائجها فقط."</string>
     <string name="ui_csv_import_screen_002" formatted="false">"اختيار ملف ومعاينته"</string>
     <string name="ui_csv_import_screen_003" formatted="false">"حفظ القالب"</string>
-    <string name="ui_csv_import_screen_004" formatted="false">"أعمدة التوافر اختيارية وتستخدم AVAILABLE / LOW / OUT / UNKNOWN. معرّفات أقسام القالب الحالي:"</string>
+    <string name="ui_csv_import_screen_004" formatted="false">"تقبل أعمدة التوافر AVAILABLE / LOW / OUT / UNKNOWN دون حساسية لحالة الأحرف أو التسميات العربية. تقبل معرّف القسم أو اسمه الواضح. معرّفات القالب الحالي:"</string>
     <string name="ui_csv_import_screen_005" formatted="false">"نجاح الحفظ يتطلب إغلاق الملف. قد يبقى ملف جزئي عند الإلغاء أو فشل مزود التخزين."</string>
-    <string name="ui_csv_import_screen_006" formatted="false">"في التحديث، الخلايا الفارغة تبقي القيم. مسح قيمة اختيارية يحتاج اختياراً صريحاً. السعر والعملة يقدمان أو يمسحان معاً."</string>
+    <string name="ui_csv_import_screen_006" formatted="false">"في التحديث، الخلايا الفارغة تبقي القيم. مسح قيمة اختيارية يحتاج اختياراً صريحاً. "</string>
     <string name="ui_csv_import_screen_007" formatted="false">"جلسة الاستيراد"</string>
     <string name="ui_csv_import_screen_008">"الصفوف: %1$s"</string>
     <string name="ui_csv_import_screen_009" formatted="false">"اختر الصفوف المطلوبة. الأسماء المكررة تحتاج قراراً صريحاً، وإضافة تصنيف أو شكل تحتاج موافقتك."</string>
@@ -729,9 +729,9 @@
     <string name="ui_connection_import_screen_026" formatted="false">"فتح ملف الاتصال"</string>
     <string name="ui_connection_import_screen_027" formatted="false">"تم اختيار ملف. أدخل كلمة المرور التي أعطاك إياها المسؤول."</string>
     <string name="ui_connection_import_screen_028" formatted="false">"كلمة مرور الملف"</string>
-    <string name="ui_connection_import_screen_029" formatted="false">"أدخل ستة أرقام على الأقل"</string>
+    <string name="ui_connection_import_screen_029" formatted="false">"أدخل أربعة أرقام على الأقل"</string>
     <string name="ui_connection_import_screen_030" formatted="false">"فك التشفير وحفظ الاتصال المعلق"</string>
-    <string name="ui_connection_import_screen_031" formatted="false">"ستة أرقام على الأقل؛ تُقبل الأرقام العربية والإنجليزية. لا تُحفظ كلمة المرور."</string>
+    <string name="ui_connection_import_screen_031" formatted="false">"أربعة أرقام على الأقل؛ تُقبل الأرقام العربية والإنجليزية. لا تُحفظ كلمة المرور."</string>
     <string name="ui_connection_import_screen_032" formatted="false">"جار التحقق وتفعيل الصيدلية…"</string>
     <string name="ui_connection_import_screen_033" formatted="false">"جار التحقق عبر تيليغرام…"</string>
     <string name="ui_connection_import_screen_034" formatted="false">"جار تنفيذ العملية…"</string>
@@ -749,4 +749,30 @@
     <string name="status_unknown">غير معروف</string>
     <string name="home_two_columns">عرض البطاقات في عمودين</string>
     <string name="home_two_columns_help">أوقفه لعرض بطاقة واحدة في كل صف.</string>
+    <string name="logic_weak_pattern">تجنب التواريخ والتسلسلات والأرقام المكررة</string>
+    <string name="logic_password_guidance">يمكن استخدام أربعة أرقام على الأقل؛ كلمة عشوائية أطول تقاوم التخمين بشكل أفضل</string>
+    <string name="logic_password_pattern">تجنب التكرار والتسلسلات والتواريخ؛ يفضل توليد كلمة عشوائية</string>
+    <string name="logic_generate_password">توليد ١٦ رقماً عشوائياً</string>
+    <string name="logic_copy_password">نسخ كلمة الملف</string>
+    <string name="logic_file_destination_failed">تعذر فتح وجهة الملف؛ أعد المحاولة</string>
+    <string name="logic_duplicate_warning">يوجد دواء بالاسم والتركيز والشكل نفسه؛ أكد إنشاء سجل مستقل أو تعديل هذا السجل</string>
+    <string name="logic_duplicate_confirm">يوجد دواء بالاسم والتركيز والشكل نفسه؛ أؤكد حفظ هذا السجل مستقلاً</string>
+    <string name="logic_past_expiry">تاريخ الصلاحية في الماضي؛ تحقق منه قبل الحفظ</string>
+    <string name="logic_all_shortages">النواقص في جميع الأقسام النشطة</string>
+    <string name="logic_history_type">نوع التغيير</string>
+    <string name="logic_history_availability">التوافر</string>
+    <string name="logic_history_medication">بيانات الأدوية</string>
+    <string name="logic_history_taxonomy">التصنيفات والأشكال والأقسام</string>
+    <string name="logic_history_pharmacy">الصيدلية</string>
+    <string name="logic_history_publication">النشر والاسترداد</string>
+    <string name="logic_history_maintenance">الصيانة</string>
+    <string name="logic_csv_update_matches">تحديث جميع المطابقات الوحيدة</string>
+    <string name="logic_csv_skip_duplicates">تخطي جميع المكررات</string>
+    <string name="logic_csv_update_match">تحديث الدواء المطابق</string>
+    <string name="logic_offline">لا يوجد اتصال بالإنترنت</string>
+    <string name="logic_busy">انتظر اكتمال العملية الحالية</string>
+    <string name="logic_refresh_applied">تم تحديث البيانات</string>
+    <string name="logic_refresh_current">البيانات محدثة بالفعل</string>
+    <string name="logic_retry_after">؛ أعد المحاولة بعد %s ثانية</string>
+    <string name="logic_missing_medication">الدواء المحدد لم يعد موجوداً؛ راجع التحديد</string>
 </resources>

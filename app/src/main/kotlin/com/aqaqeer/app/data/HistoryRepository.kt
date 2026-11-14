@@ -6,6 +6,7 @@ import com.aqaqeer.app.BuildConfig
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.flow.*
 import java.time.Instant
 import java.time.LocalDate
@@ -15,7 +16,7 @@ import javax.inject.Singleton
 
 internal const val UNKNOWN_HISTORY_EDITOR = "unknown"
 internal data class HistoryFilter(val from: LocalDate? = null, val through: LocalDate? = null,
-    val editorId: String? = null, val medicationId: String? = null)
+    val editorId: String? = null, val medicationId: String? = null, val entityType: String? = null)
 internal data class HistoryOption(val id: String, val name: String)
 internal data class HistoryValue(val text: String?, val shortened: Boolean = false)
 internal data class HistoryDisplayEntry(val id: String, val entityType: String, val entityId: String,
@@ -44,6 +45,33 @@ internal fun CatalogSnapshot.historyName(type: String, id: String): String? = wh
 @Singleton
 @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
 class HistoryRepository @Inject constructor(private val factory: DatabaseFactory) {
+    private val optionsLock = Any()
+    private var optionsDatabase: AqaqeerDatabase? = null
+    private var optionsObserver: androidx.room.InvalidationTracker.Observer? = null
+    private var cachedOptions: Pair<List<HistoryOption>, List<HistoryOption>>? = null
+    private val optionsRegistration = kotlinx.coroutines.sync.Mutex()
+    private suspend fun observeOptions(database: AqaqeerDatabase) = optionsRegistration.withLock {
+        val registration = synchronized(optionsLock) {
+            if (optionsDatabase === database) null else {
+                val previous = optionsDatabase to optionsObserver
+                cachedOptions = null
+                optionsDatabase = database
+                val observer = object : androidx.room.InvalidationTracker.Observer("history", "medications", "forms", "pharmacy") {
+                    override fun onInvalidated(tables: Set<String>) { synchronized(optionsLock) { cachedOptions = null } }
+                }
+                optionsObserver = observer
+                Triple(previous.first, previous.second, observer)
+            }
+        }
+        // Do not hold the option-cache lock while registering/removing Room observers.
+        registration?.let { (previous, observer, next) ->
+            if (observer != null) previous?.invalidationTracker?.removeObserver(observer)
+            database.invalidationTracker.addObserver(next)
+        }
+    }
+    private fun options(dao: CatalogDao): Pair<List<HistoryOption>, List<HistoryOption>> = synchronized(optionsLock) {
+        cachedOptions ?: (medicationOptions(dao) to editorOptions(dao)).also { cachedOptions = it }
+    }
     /** History viewing remains available to authorized admins under compatibility restrictions. */
     internal fun observe(pharmacyId: String, filter: HistoryFilter, page: Int): Flow<HistoryPage> = flow {
         require(page >= 0)
@@ -53,6 +81,7 @@ class HistoryRepository @Inject constructor(private val factory: DatabaseFactory
         val lease = factory.acquire()
         val database = lease.database
         try {
+            observeOptions(database)
             emitAll(database.invalidationTracker.createFlow("history", "medications", "forms", "pharmacy", "device_identity", "local_control")
                 .mapLatest {
                     database.withTransaction {
@@ -82,6 +111,13 @@ class HistoryRepository @Inject constructor(private val factory: DatabaseFactory
             where += "((h.entityType='medication' AND h.entityId=?) OR (h.entityType='availability' AND substr(h.entityId,1,instr(h.entityId,'/')-1)=?))"
             args += it; args += it
         }
+        filter.entityType?.let {
+            when (it) {
+                "taxonomy" -> where += "h.entityType IN ('category','form','section')"
+                "availability", "medication", "pharmacy", "snapshot", "maintenance" -> { where += "h.entityType=?"; args += it }
+                else -> throw IllegalArgumentException("Unknown history entity type")
+            }
+        }
         // Never return verifier material, pharmacy record bodies, or snapshot/recovery JSON.
         val hidden = "(h.entityType IN ('snapshot','maintenance') OR h.field='adminPinVerifier' OR (h.entityType='pharmacy' AND h.field IN ('@entity','record')))"
         val sql = """SELECT h.id,h.entityType,h.entityId,substr(h.entityName,1,513),h.field,
@@ -101,7 +137,8 @@ class HistoryRepository @Inject constructor(private val factory: DatabaseFactory
                     instant(9), instant(10), if (cursor.isNull(11)) null else cursor.getLong(11), cursor.getInt(12) != 0))
             }
         }
-        return HistoryPage(entries.take(50), entries.size > 50, medicationOptions(dao), editorOptions(dao), timezone)
+        val (medications, editors) = options(dao)
+        return HistoryPage(entries.take(50), entries.size > 50, medications, editors, timezone)
     }
 
     private fun medicationOptions(dao: CatalogDao): List<HistoryOption> {

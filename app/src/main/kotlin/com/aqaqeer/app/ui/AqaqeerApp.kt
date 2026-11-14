@@ -84,11 +84,11 @@ internal fun statusLabel(status: AvailabilityStatus): String = uiText(when (stat
     val refreshEligible = configured && !state.catalog.isDemo && !state.catalog.restorePaused && !state.catalog.maintenancePaused && state.catalog.lifecycle == "SHARED"
     DisposableEffect(lifecycle, refreshEligible) {
         val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_START) { viewModel.onForeground(true); if (refreshEligible) viewModel.refreshCatalog() }
+            if (event == Lifecycle.Event.ON_START) { viewModel.onForeground(true); if (refreshEligible) viewModel.refreshCatalog(automatic = true) }
             if (event == Lifecycle.Event.ON_STOP) viewModel.onForeground(false)
         }
         lifecycle.addObserver(observer)
-        if (lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)) { viewModel.onForeground(true); if (refreshEligible) viewModel.refreshCatalog() }
+        if (lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)) { viewModel.onForeground(true); if (refreshEligible) viewModel.refreshCatalog(automatic = true) }
         onDispose { lifecycle.removeObserver(observer); viewModel.onForeground(false) }
     }
     val navigate = viewModel::navigate
@@ -312,7 +312,7 @@ internal fun statusLabel(status: AvailabilityStatus): String = uiText(when (stat
                             HomeStateContent(viewModel) { state, browse, highlighted -> HomeScreen(catalogState, state, now, viewModel::selectSection, viewModel::setQuery,
                                 viewModel::toggleStatus, viewModel::toggleCategory, viewModel::clearFilters,
                                 { navigate("med:${it}") }, { navigate("settings") }, { viewModel.openConnectionImport() },
-                                if (catalogState.isDemo || catalogState.restorePaused || catalogState.maintenancePaused || catalogState.lifecycle != "SHARED") null else viewModel::refreshCatalog,
+                                if (catalogState.isDemo || catalogState.restorePaused || catalogState.maintenancePaused || catalogState.lifecycle != "SHARED") null else ({ viewModel.refreshCatalog() }),
                                 { navigate("create") }, { navigate("backup") }, adminBusy, adminMessage,
                                 saveAvailability = { selection, status, complete ->
                                     viewModel.saveAvailability(selection, BulkMedicationChanges(status = status), complete)
@@ -375,10 +375,11 @@ internal fun statusLabel(status: AvailabilityStatus): String = uiText(when (stat
     val savedId by vm.availabilitySavedId.collectAsStateWithLifecycle()
     LaunchedEffect(savedId) { if (savedId != null && editor?.id == savedId) editor = null }
     LaunchedEffect(canEdit, catalog.pharmacy?.pharmacyId) { if (!canEdit || editor?.pharmacyId != catalog.pharmacy?.pharmacyId) editor = null }
-    editor?.takeIf { canEdit && it.pharmacyId == catalog.pharmacy?.pharmacyId }?.let { captured ->
+    SideEffect { if (editor?.restored == true) editor = editor?.resolve(catalog) }
+    editor?.takeIf { canEdit && !it.restored && it.pharmacyId == catalog.pharmacy?.pharmacyId }?.let { captured ->
         AvailabilityEditor(captured, busy, message, dismiss = { editor = null }, save = { status ->
             vm.saveAvailability(captured, BulkMedicationChanges(status = status)) { editor = null }
-        }, current = captured.expected.all { (id, status) -> catalog.status(id, captured.section.id) == status &&
+        }, current = catalog.sections.any { it.id == captured.section.id && it.isActive } && captured.expected.all { (id, status) -> catalog.status(id, captured.section.id) == status &&
             catalog.medications.any { it.id == id } }, isSaving = { vm.adminBusy.value })
     }
     LazyColumn(Modifier.fillMaxSize().testTag("medication_detail"), contentPadding = PaddingValues(UiSpacing.page),

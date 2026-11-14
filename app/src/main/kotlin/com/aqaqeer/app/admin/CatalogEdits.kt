@@ -14,7 +14,7 @@ internal data class MergeResult(val catalog: CatalogSnapshot, val conflicts: Lis
 
 /** Field comparison deliberately excludes derived attribution. Entity additions/deletions are indivisible. */
 internal object CatalogEdits {
-    fun rows(c: CatalogSnapshot, unchangedFrom: CatalogSnapshot? = null): Map<String, JsonObject> = buildMap {
+    fun rows(c: CatalogSnapshot, unchangedFrom: CatalogSnapshot? = null, targets: Set<String>? = null): Map<String, JsonObject> = buildMap {
         fun <T, K> different(values: List<T>, old: List<T>?, key: (T) -> K): List<T> {
             if (old == null) return values
             val previous = old.associateBy(key)
@@ -23,12 +23,12 @@ internal object CatalogEdits {
         fun putRows(type: String, values: List<JsonObject>, id: (JsonObject) -> String = { it.getValue("id").jsonPrimitive.content }) {
             values.forEach { put("$type:${id(it)}", it) }
         }
-        c.pharmacy?.takeUnless { unchangedFrom != null && it == unchangedFrom.pharmacy }?.let { put("pharmacy:${it.pharmacyId}", editJson.encodeToJsonElement(it).jsonObject) }
-        putRows("category", different(c.categories, unchangedFrom?.categories) { it.id }.map { editJson.encodeToJsonElement(it).jsonObject })
-        putRows("form", different(c.forms, unchangedFrom?.forms) { it.id }.map { editJson.encodeToJsonElement(it).jsonObject })
-        putRows("section", different(c.sections, unchangedFrom?.sections) { it.id }.map { editJson.encodeToJsonElement(it).jsonObject })
-        putRows("medication", different(c.medications, unchangedFrom?.medications) { it.id }.map { editJson.encodeToJsonElement(it).jsonObject })
-        putRows("availability", different(c.availability, unchangedFrom?.availability) { it.medicationId to it.sectionId }.map { editJson.encodeToJsonElement(it).jsonObject }) {
+        c.pharmacy?.takeUnless { (unchangedFrom != null && it == unchangedFrom.pharmacy) || (targets != null && "pharmacy:${it.pharmacyId}" !in targets) }?.let { put("pharmacy:${it.pharmacyId}", editJson.encodeToJsonElement(it).jsonObject) }
+        putRows("category", different(c.categories, unchangedFrom?.categories) { it.id }.filter { targets == null || "category:${it.id}" in targets }.map { editJson.encodeToJsonElement(it).jsonObject })
+        putRows("form", different(c.forms, unchangedFrom?.forms) { it.id }.filter { targets == null || "form:${it.id}" in targets }.map { editJson.encodeToJsonElement(it).jsonObject })
+        putRows("section", different(c.sections, unchangedFrom?.sections) { it.id }.filter { targets == null || "section:${it.id}" in targets }.map { editJson.encodeToJsonElement(it).jsonObject })
+        putRows("medication", different(c.medications, unchangedFrom?.medications) { it.id }.filter { targets == null || "medication:${it.id}" in targets }.map { editJson.encodeToJsonElement(it).jsonObject })
+        putRows("availability", different(c.availability, unchangedFrom?.availability) { it.medicationId to it.sectionId }.filter { targets == null || "availability:${it.medicationId}/${it.sectionId}" in targets }.map { editJson.encodeToJsonElement(it).jsonObject }) {
             it.getValue("medicationId").jsonPrimitive.content + "/" + it.getValue("sectionId").jsonPrimitive.content
         }
     }

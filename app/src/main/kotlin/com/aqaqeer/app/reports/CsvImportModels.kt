@@ -23,11 +23,12 @@ internal data class CsvRowPlan(val medication: Medication, val category: Categor
 }
 internal data class CsvPreviewRow(val record: CsvRecord, val decision: CsvDecision, val plan: CsvRowPlan? = null,
     val changes: List<CsvFieldChange> = emptyList(), val duplicates: List<String> = emptyList(),
-    val warnings: List<String> = emptyList(), val error: String? = null)
+    val warnings: List<String> = emptyList(), val error: String? = null, val duplicateRows: List<Int> = emptyList())
 internal data class CsvImportSession(val id: String, val pharmacyId: String, val baseline: CatalogSnapshot,
     val table: CsvTable, val rows: List<CsvPreviewRow>,
     val duplicateIndex: Map<MedicationDuplicates.Key, List<String>> = MedicationDuplicates.index(baseline.medications),
-    val candidates: Map<Int, CsvRowPlan?> = emptyMap())
+    val candidates: Map<Int, CsvRowPlan?> = emptyMap(),
+    val identityKeys: Map<Int, Set<MedicationDuplicates.Key>> = emptyMap())
 internal enum class CsvOutcome { CREATED, UPDATED, UNCHANGED, SKIPPED, FAILED }
 internal data class CsvRowResult(val number: Int, val outcome: CsvOutcome, val warning: String = "", val error: String = "")
 internal data class CsvImportState(val session: CsvImportSession? = null,

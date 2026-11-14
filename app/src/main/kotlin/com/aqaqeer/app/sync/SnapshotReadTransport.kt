@@ -9,7 +9,7 @@ enum class SnapshotReadError {
     INVALID_CREDENTIALS, ACCESS_DENIED, SNAPSHOT_UNAVAILABLE, INVALID_RESPONSE,
     RESPONSE_TOO_LARGE, RESOURCE_LIMIT, RATE_LIMITED, NETWORK, CHANGED_DURING_READ, CAPTION_MISMATCH,
 }
-class SnapshotReadException(val error: SnapshotReadError) : Exception(error.name)
+class SnapshotReadException(val error: SnapshotReadError, val retryAfterSeconds: Int = 0) : Exception(error.name)
 
 data class BotIdentity(val id: Long)
 data class SnapshotDocument(val groupId: Long, val messageId: Long, val fileId: String,

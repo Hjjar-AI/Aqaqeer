@@ -74,6 +74,7 @@ import java.time.LocalDate
     var through by rememberSaveable(filter.through, medicationScope) { mutableStateOf(filter.through?.toString().orEmpty()) }
     var editor by rememberSaveable(filter.editorId, medicationScope) { mutableStateOf(filter.editorId) }
     var medication by rememberSaveable(filter.medicationId, medicationScope) { mutableStateOf(filter.medicationId) }
+    var entityType by rememberSaveable(filter.entityType, medicationScope) { mutableStateOf(filter.entityType) }
     val fromDate = historyDate(from)
     val throughDate = historyDate(through)
     val valid = (from.isBlank() || fromDate != null) && (through.isBlank() || throughDate != null) &&
@@ -81,11 +82,14 @@ import java.time.LocalDate
     GroupedCard(title = uiText(R.string.ui_history_screen_002)) {
         GregorianDateField(uiText(R.string.ui_history_screen_011), from, { from = it })
         GregorianDateField(uiText(R.string.ui_history_screen_012), through, { through = it })
+        HistoryFilterPicker(uiText(R.string.logic_history_type), listOf(HistoryOption("availability", uiText(R.string.logic_history_availability)), HistoryOption("medication", uiText(R.string.logic_history_medication)),
+            HistoryOption("taxonomy", uiText(R.string.logic_history_taxonomy)), HistoryOption("pharmacy", uiText(R.string.logic_history_pharmacy)), HistoryOption("snapshot", uiText(R.string.logic_history_publication)),
+            HistoryOption("maintenance", uiText(R.string.logic_history_maintenance))), entityType) { entityType = it }
         HistoryFilterPicker(uiText(R.string.ui_history_screen_013), editors, editor) { editor = it }
         if (medicationScope == null) HistoryFilterPicker(uiText(R.string.ui_history_screen_014), medications, medication) { medication = it }
         if (!valid) Text(uiText(R.string.ui_history_screen_015), color = MaterialTheme.colorScheme.error)
         ActionGroup {
-            Button(enabled = valid, onClick = { apply(HistoryFilter(fromDate, throughDate, editor, medicationScope ?: medication)) }) { Text(uiText(R.string.ui_history_screen_016)) }
+            Button(enabled = valid, onClick = { apply(HistoryFilter(fromDate, throughDate, editor, medicationScope ?: medication, entityType)) }) { Text(uiText(R.string.ui_history_screen_016)) }
             TextButton(onClick = {
                 from = ""; through = ""; editor = null; medication = medicationScope
                 apply(HistoryFilter(medicationId = medicationScope))

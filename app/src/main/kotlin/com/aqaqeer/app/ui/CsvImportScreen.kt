@@ -55,6 +55,10 @@ import com.aqaqeer.app.reports.*
                     Text(uiText(R.string.ui_csv_import_screen_008, MedicationPresentation.easternDigits(session.rows.size.toString())))
                     if (!state.finished) {
                         Text(uiText(R.string.ui_csv_import_screen_009))
+                        ActionGroup {
+                            TextButton(enabled = !busy, onClick = { vm.chooseCsvDuplicates(true) }) { Text(uiText(R.string.logic_csv_update_matches)) }
+                            TextButton(enabled = !busy, onClick = { vm.chooseCsvDuplicates(false) }) { Text(uiText(R.string.logic_csv_skip_duplicates)) }
+                        }
                         TextButton(enabled = !busy, onClick = vm::selectValidCsv) { Text(uiText(R.string.ui_csv_import_screen_010)) }
                         Button(enabled = !busy && session.rows.isNotEmpty(), onClick = { confirm = true }) {
                             Text(if (session.rows.any { it.decision.selected && it.error == null }) uiText(R.string.ui_csv_import_screen_011) else uiText(R.string.ui_csv_import_screen_012))
@@ -99,6 +103,9 @@ import com.aqaqeer.app.reports.*
                     ((row.plan.category == null && row.plan.form == null) || decision.approveTaxonomy)) {
                 change(decision.copy(selected = it))
             }
+            if (row.duplicates.size == 1) TextButton(enabled = !busy, onClick = {
+                change(decision.copy(action = CsvAction.UPDATE, targetId = row.duplicates.single(), selected = false))
+            }) { Text(uiText(R.string.logic_csv_update_match)) }
             ChoicePicker(uiText(R.string.ui_csv_import_screen_023), CsvAction.entries, decision.action, ::csvActionLabel, enabled = !busy) { change(decision.copy(action = it, selected = false)) }
             if (decision.action == CsvAction.UPDATE) ChoicePicker(uiText(R.string.ui_csv_import_screen_024), session.baseline.medications,
                 session.baseline.medications.find { it.id == decision.targetId }, { "${MedicationPresentation.identity(it, session.baseline.forms.find { form -> form.id == it.formId }?.nameAr)} · ${bidi(it.id)}" }, enabled = !busy) {

@@ -200,7 +200,7 @@ class EnvelopeReader(private val stagingRoot: File,
                     else -> throw EnvelopeException(EnvelopeError.INVALID_CREDENTIAL)
                 }
             }
-            if (domain == EnvelopeDomain.CONNECTION && normalized.size < 6) throw EnvelopeException(EnvelopeError.INVALID_CREDENTIAL)
+            if (domain == EnvelopeDomain.CONNECTION && normalized.size < 4) throw EnvelopeException(EnvelopeError.INVALID_CREDENTIAL)
             if (domain == EnvelopeDomain.BACKUP && Character.codePointCount(normalized, 0, normalized.size) < 8)
                 throw EnvelopeException(EnvelopeError.INVALID_CREDENTIAL)
             // Reject unpaired surrogates rather than allowing provider-specific replacement.

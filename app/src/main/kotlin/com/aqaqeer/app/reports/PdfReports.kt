@@ -282,7 +282,8 @@ private class A5Report(
             newPage()
             plain(listOf(PdfPart(snapshot.pharmacyName, true, 10f, "الصيدلية: ", true)))
             val title = when (snapshot.request.preset) {
-                ReportPreset.OUT -> "الأدوية غير المتوفرة في القسم: ${snapshot.sections.single().nameAr}"
+                ReportPreset.OUT -> if (snapshot.request.allSections) "النواقص في جميع الأقسام النشطة — غير متوفر في قسم واحد على الأقل"
+                    else "الأدوية غير المتوفرة في القسم: ${snapshot.sections.single().nameAr}"
                 ReportPreset.FULL -> "التوافر الكامل — يشمل غير معروف"
                 ReportPreset.EXPIRING_SOON -> "الأدوية القريبة من الانتهاء — يستثني المنتهي، وفق حد التنبيه الخاص بكل دواء"
             }

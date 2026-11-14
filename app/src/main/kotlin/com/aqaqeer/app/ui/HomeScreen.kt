@@ -109,6 +109,7 @@ import java.time.ZoneId
     var selectedIds by rememberSaveable(catalog.pharmacy.pharmacyId, selected?.id, canEdit,
         stateSaver = Saver<Set<String>, ArrayList<String>>(save = { ArrayList(it) }, restore = { it.toSet() })) { mutableStateOf(emptySet<String>()) }
     var editor by rememberSaveable(catalog.pharmacy.pharmacyId, selected?.id, canEdit, stateSaver = AvailabilitySelectionSaver) { mutableStateOf<AvailabilitySelection?>(null) }
+    SideEffect { if (editor?.restored == true) editor = editor?.resolve(catalog) }
     val contextKey = "${catalog.pharmacy.pharmacyId}/${selected?.id}/${canEdit}"
     var capturedContext by rememberSaveable { mutableStateOf(contextKey) }
     val contextValid = capturedContext == contextKey
@@ -119,7 +120,7 @@ import java.time.ZoneId
     var filtersOpen by rememberSaveable(catalog.pharmacy.pharmacyId) { mutableStateOf(false) }
     val notifyModal by rememberUpdatedState(onModalVisibilityChanged)
     val editorCurrent = editor?.let {
-        contextValid && canEdit && (!it.bulk || saveBulk != null) &&
+        contextValid && canEdit && !it.restored && (!it.bulk || saveBulk != null) &&
             it.pharmacyId == catalog.pharmacy.pharmacyId && it.section.id == selected?.id
     } == true
     val editorVisible = editorCurrent && editor?.bulk == false
@@ -144,14 +145,15 @@ import java.time.ZoneId
     fun changeBulkSelection(ids: Set<String>) {
         if (availabilityInProgress()) return
         val fresh = selection(ids) ?: return
-        val old = editor?.takeIf { it.bulk && contextValid }
+        val old = editor?.takeIf { it.bulk && contextValid }?.resolve(catalog)
         selectedIds = ids
         editor = fresh.copy(bulk = true, id = old?.id ?: fresh.id,
             medications = ids.mapNotNull { id -> old?.medications?.find { it.id == id }
                 ?: fresh.medications.find { it.id == id } },
             expected = fresh.expected.mapValues { (id, value) -> old?.expected?.get(id) ?: value },
             formNames = fresh.formNames + old?.formNames.orEmpty(),
-            categoryNames = fresh.categoryNames + old?.categoryNames.orEmpty())
+            categoryNames = fresh.categoryNames + old?.categoryNames.orEmpty(),
+            originalFields = fresh.originalFields + old?.originalFields.orEmpty().filterKeys { it in ids })
     }
     fun exitBulk() { if (!availabilityInProgress()) { editor = null; selectedIds = emptySet(); bulkMode = false; bulkSheetOpen = false } }
     LaunchedEffect(bulkMode, contextValid) {

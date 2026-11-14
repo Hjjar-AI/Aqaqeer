@@ -54,14 +54,14 @@ internal suspend fun CatalogDao.applyChanges(before: CatalogSnapshot, after: Cat
     remove(before.sections, after.sections, { it.id }, ::deleteSections)
     remove(before.categories, after.categories, { it.id }, ::deleteCategories)
     remove(before.forms, after.forms, { it.id }, ::deleteForms)
-    remove(before.tombstones, after.tombstones, { it.entityType to it.entityId }, ::deleteTombstones)
-    write(before.tombstones, after.tombstones, { it.entityType to it.entityId }, ::insertTombstones, ::updateTombstones)
+    remove(before.tombstones, after.tombstones, { Triple(it.entityType, it.entityId, it.operationId) }, ::deleteTombstones)
+    write(before.tombstones, after.tombstones, { Triple(it.entityType, it.entityId, it.operationId) }, ::insertTombstones, ::updateTombstones)
 }
 
 @Singleton
 class AdminRepository @Inject constructor(private val factory: DatabaseFactory,
     private val requirements: SnapshotRequirementsStore, private val secure: SecureStore, private val maintenanceStage: MaintenanceStage,
-    private val pinThrottle: PinThrottle,
+    private val pinThrottle: PinThrottle, private val preferences: DisplayPreferences,
     private val clock: Clock = Clock.systemUTC()) {
     internal val sharingGate = Mutex()
     internal suspend fun <T> transaction(block: suspend (CatalogDao) -> T): T = withContext(Dispatchers.IO) {
@@ -79,9 +79,12 @@ class AdminRepository @Inject constructor(private val factory: DatabaseFactory,
     }
     suspend fun create(name: String, timezone: String, editor: String, section: String, pin: CharArray, confirm: CharArray) {
         try {
-            val normalized = PinSecurity.digits(pin); val confirmation = PinSecurity.digits(confirm)
-            try { adminRequire(normalized.contentEquals(confirmation)) { "رمزا الإدارة غير متطابقين" } }
-            finally { normalized.fill('\u0000'); confirmation.fill('\u0000') }
+            val normalized = PinSecurity.digits(pin)
+            try {
+                val confirmation = PinSecurity.digits(confirm)
+                try { adminRequire(normalized.contentEquals(confirmation)) { "رمزا الإدارة غير متطابقين" } }
+                finally { confirmation.fill('\u0000') }
+            } finally { normalized.fill('\u0000') }
             adminRequire(name.trim().isNotEmpty() && editor.trim().isNotEmpty() && section.trim().isNotEmpty()) { "أكمل الحقول المطلوبة" }
             ZoneId.of(timezone)
             val verifier = withContext(Dispatchers.Default) { PinSecurity.create(pin) }
@@ -167,10 +170,12 @@ class AdminRepository @Inject constructor(private val factory: DatabaseFactory,
             op.baseValueJson, op.intendedValueJson, d.id, d.displayName, now, null, null) })
         // Fold edits to a not-yet-shared addition into its entity operation. A create/delete
         // round trip leaves history but no net operation. Never cross an in-flight boundary.
-        val rows = CatalogEdits.rows(next)
         val pending = dao.pending()
+        val additions = pending.filter { it.field == "@entity" && it.baseValueJson == "null" && it.id !in attempts }
+        val rows = if (additions.isEmpty()) emptyMap() else CatalogEdits.rows(next,
+            targets = additions.map { "${it.entityType}:${it.targetId}" }.toSet())
         val pendingGroups = pending.filter { it.id !in attempts }.groupBy { it.entityType to it.targetId }
-        pending.filter { it.field == "@entity" && it.baseValueJson == "null" && it.id !in attempts }.forEach { addition ->
+        additions.forEach { addition ->
             val same = pendingGroups[addition.entityType to addition.targetId].orEmpty()
             if (same.size > 1) {
                 dao.deletePending(same.map { it.id })
@@ -362,13 +367,14 @@ class AdminRepository @Inject constructor(private val factory: DatabaseFactory,
             adminRequire(!d.adminMode || typedName == p.name) { "اكتب اسم الصيدلية لتأكيد المغادرة" }
             dao.control(requireNotNull(dao.control()).copy(leaving = true))
         }
-        transaction { finishLeave(it, secure, maintenanceStage) }
+        transaction { finishLeave(it, secure, maintenanceStage, preferences) }
     }
 }
 
 /** A durable user-confirmed leave checkpoint completes after interruption, including secret cleanup. */
-internal suspend fun finishLeave(dao: CatalogDao, secure: SecureStore, maintenanceStage: MaintenanceStage) {
+internal suspend fun finishLeave(dao: CatalogDao, secure: SecureStore, maintenanceStage: MaintenanceStage, preferences: DisplayPreferences) {
     if (dao.control()?.leaving != true) return
+    dao.pharmacy()?.pharmacyId?.let { preferences.clearSection(it) }
     for (entry in listOf("active-connection", "pending-connection", "setup-connection", "restore-candidate")) {
         PendingConnectionStore(secure, entry).clear()
     }

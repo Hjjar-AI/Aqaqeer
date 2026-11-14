@@ -4,6 +4,8 @@ import com.aqaqeer.app.uiText
 import com.aqaqeer.app.R
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -15,6 +17,7 @@ private data class BulkFieldOption(val value: String?, val label: String)
 @Composable internal fun BulkMedicationEditor(selection: AvailabilitySelection, catalog: CatalogSnapshot,
     busy: Boolean, message: String?, dismiss: () -> Unit, save: (BulkMedicationChanges) -> Unit,
     current: (BulkMedicationChanges) -> Boolean, isSaving: () -> Boolean = { busy }) {
+    val selectedMedications = remember(selection.medications) { selection.medications.associateBy { it.id } }
     var statusName by rememberSaveable(selection.id) { mutableStateOf<String?>(null) }
     var formId by rememberSaveable(selection.id) { mutableStateOf<String?>(null) }
     var categoryId by rememberSaveable(selection.id) { mutableStateOf<String?>(null) }
@@ -59,8 +62,12 @@ private data class BulkFieldOption(val value: String?, val label: String)
             if (formId != null || categoryId != null) SupportingText(uiText(R.string.ui_bulk_medication_editor_002))
         } else {
             val count = selection.medications.count(::changed)
-            Text(uiText(R.string.ui_bulk_medication_editor_003, MedicationPresentation.easternDigits(count.toString()), MedicationPresentation.easternDigits(selection.medications.size.toString())))
-            selection.medications.forEach { med ->
+            Text(uiText(R.string.ui_bulk_medication_editor_003, MedicationPresentation.easternDigits(count.toString()), MedicationPresentation.easternDigits(selection.expected.size.toString())))
+            LazyColumn(Modifier.fillMaxWidth().heightIn(max = viewportHeight() * 0.55f)) {
+            items(selection.expected.keys.toList(), key = { it }) { id ->
+                val med = selectedMedications[id]
+                if (med == null) Text(uiText(R.string.logic_missing_medication) + " · " + bidi(id))
+                else {
                 HorizontalDivider()
                 MedicationSummary(med, prominent = true, form = selection.formNames[med.formId])
                 changes.status?.let { result ->
@@ -73,6 +80,8 @@ private data class BulkFieldOption(val value: String?, val label: String)
                     Text(uiText(R.string.ui_bulk_medication_editor_007, selection.categoryNames[med.categoryId] ?: uiText(R.string.ui_bulk_medication_editor_005), catalog.categories.find { it.id == target }?.nameAr ?: uiText(R.string.ui_bulk_medication_editor_005)))
                 }
                 if (!changed(med)) SupportingText(uiText(R.string.ui_bulk_medication_editor_001))
+                }
+            }
             }
         }
         if (!contextValid && selection.medications.isNotEmpty()) Text(uiText(R.string.ui_bulk_medication_editor_008),

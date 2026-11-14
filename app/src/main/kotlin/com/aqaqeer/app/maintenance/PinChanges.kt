@@ -52,8 +52,12 @@ internal fun guardPinOperations(store: MaintenanceStore, device: DeviceIdentity,
 class PinChanges @Inject constructor(private val admin: AdminRepository, private val store: MaintenanceStore) {
     suspend fun change(current: CharArray, next: CharArray, confirmation: CharArray) {
         try { withContext(Dispatchers.IO) {
-            val a = PinSecurity.digits(next); val b = PinSecurity.digits(confirmation)
-            try { adminRequire(a.contentEquals(b)) } finally { a.fill('\u0000'); b.fill('\u0000') }
+            val a = PinSecurity.digits(next)
+            try {
+                val b = PinSecurity.digits(confirmation)
+                try { adminRequire(a.contentEquals(b)) { "رمزا الإدارة غير متطابقين" } }
+                finally { b.fill('\u0000') }
+            } finally { a.fill('\u0000') }
             val verifier = withContext(Dispatchers.Default) { PinSecurity.create(next) }
             admin.sharingGate.withLock {
                 val baseline = admin.transaction { dao ->
@@ -66,6 +70,7 @@ class PinChanges @Inject constructor(private val admin: AdminRepository, private
                     pharmacy to device
                 }
                 admin.verifyCurrentPin(baseline.first, current)
+                adminRequire(!PinSecurity.matches(next, baseline.first.adminPinVerifier)) { "اختر رمزاً جديداً مختلفاً عن رمز الإدارة الحالي" }
                 val record = PinChangeJournal(newId(), baseline.first.pharmacyId, baseline.second.id, baseline.first.adminPinVerifier, verifier)
                 store.encode("pin-change", record)
                 admin.edit(pinIntent = record.id) { catalog, author, _, _ ->

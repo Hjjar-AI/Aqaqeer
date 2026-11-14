@@ -16,6 +16,8 @@ On an explicitly authorized physical resume, verify serial/package/signer/instal
 
 ## Remaining verification
 
+Logic-review source changes are implemented. Remaining validation requires separate authorization: incremental catalog writes/history/pending equivalence; CSV delimiter/alias/duplicate/dependency revisions and 50-row rollback/cancellation/result recording; four-digit credential round trips and same-PIN rejection; refresh age/busy/cooldown/cache behavior; restored lazy selections/deleted targets; history option invalidation/type filters; all-sections shortage exports. No tests, compilation, build, lint, device or live-integration work was authorized for this package. Earlier results do not validate these changes.
+
 The latest Home changes (section swipes, narrower drawer, category grouping/two-column defaults, simplified search/filters, inline accent dots and unavailable-card stripes) have source-only checks. The expanded 40-entry demo seed and its guarded refresh also have source-only checks. Compilation and runtime verification of these changes remain pending explicit authorization; earlier browsing completion does not cover them.
 
 | ID / priority | Dependencies | Remaining checks / completion criteria |

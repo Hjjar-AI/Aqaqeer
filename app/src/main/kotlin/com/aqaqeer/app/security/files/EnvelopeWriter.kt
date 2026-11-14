@@ -25,16 +25,20 @@ internal object EnvelopeWriter {
         }
     }
     fun connection(wire: ConnectionWire, password: CharArray): ByteArray {
-        val digits = PinSecurity.digits(password)
         try {
-            require(digits.size >= 16) { "استخدم كلمة ملف اتصال عشوائية من ١٦ رقماً على الأقل" }
-            val salt = ByteArray(16).also { SecureRandom().nextBytes(it) }
-            val spec = PBEKeySpec(digits, salt, PasswordEnvelopeKdfV1.ITERATIONS, 256)
-            val key = try { SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256").generateSecret(spec).encoded }
-                finally { spec.clearPassword() }
-            val plain = encode(wire, ConnectionWire.serializer())
-            return try { encrypt(plain, key, salt, "aqz:v1") } finally { key.fill(0); plain.fill(0) }
-        } finally { digits.fill('\u0000'); password.fill('\u0000') }
+            val digits = PinSecurity.digits(password)
+            try {
+                com.aqaqeer.app.admin.adminRequire(digits.size >= 4) { "استخدم أربعة أرقام على الأقل لكلمة ملف الاتصال" }
+                val salt = ByteArray(16).also { SecureRandom().nextBytes(it) }
+                val spec = PBEKeySpec(digits, salt, PasswordEnvelopeKdfV1.ITERATIONS, 256)
+                val key = try { SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256").generateSecret(spec).encoded }
+                    finally { spec.clearPassword() }
+                try {
+                    val plain = encode(wire, ConnectionWire.serializer())
+                    return try { encrypt(plain, key, salt, "aqz:v1") } finally { plain.fill(0) }
+                } finally { key.fill(0) }
+            } finally { digits.fill('\u0000') }
+        } finally { password.fill('\u0000') }
     }
     private fun <T> encode(value: T, serializer: kotlinx.serialization.SerializationStrategy<T>): ByteArray {
         val runtime = Runtime.getRuntime()

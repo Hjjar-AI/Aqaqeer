@@ -24,7 +24,7 @@ class CsvImportRepository @Inject constructor(private val admin: AdminRepository
         val choices = session.rows.associate { it.record.number to it.decision }.toMutableMap()
         choices[number] = decision
         val jobContext = currentCoroutineContext()
-        CsvRowPlanner.preview(session.id, session.baseline, session.table, choices, { jobContext.ensureActive() }, session, setOf(number))
+        CsvRowPlanner.preview(session.id, session.baseline, session.table, choices, session, setOf(number)) { jobContext.ensureActive() }
     }
     internal suspend fun selectValid(session: CsvImportSession): CsvImportSession = session.copy(rows = session.rows.map { row ->
         row.copy(decision = row.decision.copy(selected = row.error == null && row.plan != null &&
@@ -32,7 +32,7 @@ class CsvImportRepository @Inject constructor(private val admin: AdminRepository
     })
 
     internal suspend fun chooseDuplicates(session: CsvImportSession, update: Boolean): CsvImportSession = withContext(Dispatchers.Default) {
-        val choices = session.rows.associate { row -> row.record.number to if (row.duplicates.isEmpty()) row.decision
+        val choices = session.rows.associate { row -> row.record.number to if (row.duplicates.isEmpty() && row.duplicateRows.isEmpty()) row.decision
             else if (!update) row.decision.copy(action = CsvAction.SKIP, selected = false)
             else if (row.duplicates.size == 1) row.decision.copy(action = CsvAction.UPDATE, targetId = row.duplicates.single(), selected = false)
             else row.decision }
@@ -54,6 +54,7 @@ class CsvImportRepository @Inject constructor(private val admin: AdminRepository
                         val device = admin.guard(dao)
                         val author = EditorRef(device.id, requireNotNull(device.displayName))
                         var staged = dao.catalog()
+                        val stagedIndex = MedicationDuplicates.index(staged.medications).mapValues { it.value.toMutableList() }.toMutableMap()
                         val plans = mutableListOf<CsvRowPlan>()
                         val baselineIndex = session.duplicateIndex
                         for (row in chunk) {
@@ -78,13 +79,17 @@ class CsvImportRepository @Inject constructor(private val admin: AdminRepository
                                     if (staged.status(plan.medication.id, section) != session.baseline.status(plan.medication.id, section))
                                         throw CsvProblem("تغير التوافر منذ المعاينة؛ يلزم معاينة جديدة")
                                 }
-                                val duplicates = MedicationDuplicates.find(plan.medication, MedicationDuplicates.index(staged.medications)).toSet()
+                                val duplicates = MedicationDuplicates.find(plan.medication, stagedIndex).toSet()
                                 val expected = MedicationDuplicates.find(plan.medication, baselineIndex).toSet()
                                 if ((duplicates - sessionCreatedIds) != expected) throw CsvProblem("تغير التكرار منذ المعاينة؛ يلزم معاينة جديدة")
                                 if (row.decision.action == CsvAction.CREATE && duplicates.isNotEmpty()) throw CsvProblem("الدواء مكرر؛ اختر إنشاء دواء آخر صراحة")
                                 val next = plan.apply(staged, author, java.time.Instant.EPOCH)
                                 CatalogRules.validate(next)
                                 val changed = CatalogEdits.diff(staged, next, author, java.time.Instant.EPOCH, null).isNotEmpty()
+                                staged.medications.find { it.id == plan.medication.id }?.let { previous ->
+                                    MedicationDuplicates.keys(previous).forEach { key -> stagedIndex[key]?.remove(previous.id) }
+                                }
+                                MedicationDuplicates.keys(plan.medication).forEach { key -> stagedIndex.getOrPut(key) { mutableListOf() }.add(plan.medication.id) }
                                 staged = next
                                 plans += plan
                                 outcomes += outcome(if (!changed) CsvOutcome.UNCHANGED else if (row.decision.action == CsvAction.UPDATE) CsvOutcome.UPDATED else CsvOutcome.CREATED)
@@ -95,14 +100,17 @@ class CsvImportRepository @Inject constructor(private val admin: AdminRepository
                         plans.forEach { plan -> admin.editInTransaction(dao) { current, editor, now, _ -> plan.apply(current, editor, now) } }
                     }
                 } catch (e: CancellationException) { throw e }
-                catch (_: Exception) {
+                catch (error: Exception) {
                     val existing = outcomes.associateBy { it.number }
                     outcomes.clear()
                     outcomes += chunk.map { row ->
                         val prior = existing[row.record.number]
                         if (prior?.outcome in setOf(CsvOutcome.SKIPPED, CsvOutcome.FAILED)) requireNotNull(prior)
+                        else if (row.decision.action == CsvAction.SKIP || (!row.decision.selected && row.error == null))
+                            CsvRowResult(row.record.number, CsvOutcome.SKIPPED, row.warnings.joinToString("؛ "))
+                        else if (row.error != null) CsvRowResult(row.record.number, CsvOutcome.FAILED, row.warnings.joinToString("؛ "), row.error)
                         else CsvRowResult(row.record.number, CsvOutcome.FAILED, row.warnings.joinToString("؛ "),
-                            "تعذر حفظ الدفعة؛ لم تُعتمد نتائج نجاح. أعد المعاينة قبل المحاولة")
+                            (error as? AdminProblem)?.reason ?: "تعذر حفظ الدفعة؛ لم تُعتمد نتائج نجاح. أعد المعاينة قبل المحاولة")
                     }
                 }
                 result(outcomes)

@@ -97,7 +97,7 @@ import com.aqaqeer.app.BuildConfig
                                 FormField(uiText(R.string.ui_connection_import_screen_028), password, { if (it.length <= 1024) password = it }, secret = true,
                                     required = true, tag = "connection_password",
                                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
-                                    validate = { if (it.length >= 6 && it.all { c -> Character.digit(c, 10) in 0..9 }) null else uiText(R.string.ui_connection_import_screen_029) })
+                                    validate = { if (it.length >= 4 && it.all { c -> Character.digit(c, 10) in 0..9 }) null else uiText(R.string.ui_connection_import_screen_029) })
                                 Button(onClick = {
                                     val owned = password.toCharArray()
                                     password = ""; focus.clearFocus(); stage(owned)

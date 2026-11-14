@@ -11,12 +11,13 @@ import javax.inject.Inject
 
 internal enum class ReportPreset { OUT, FULL, EXPIRING_SOON }
 internal data class ReportRequest(val preset: ReportPreset = ReportPreset.OUT, val sectionId: String? = null,
-    val includeUnpublished: Boolean = false)
+    val includeUnpublished: Boolean = false, val allSections: Boolean = false)
 internal data class ReportSnapshot(val pharmacyId: String, val pharmacyName: String, val timezone: String,
     val generatedAt: Instant, val publishedAt: Instant?, val request: ReportRequest,
     val sections: List<Section>, val medications: List<Medication>, val availability: List<Availability>,
     val categories: List<Category>, val forms: List<MedicationForm>) {
-    fun status(medication: String, section: String) = availability.find { it.medicationId == medication && it.sectionId == section }?.status ?: AvailabilityStatus.UNKNOWN
+    private val statuses = availability.associate { (it.medicationId to it.sectionId) to it.status }
+    fun status(medication: String, section: String) = statuses[medication to section] ?: AvailabilityStatus.UNKNOWN
 }
 
 class ReportRepository @Inject constructor(private val admin: AdminRepository, private val output: DocumentOutput,
@@ -31,12 +32,16 @@ class ReportRepository @Inject constructor(private val admin: AdminRepository, p
         val pharmacy = requireNotNull(catalog.pharmacy)
         check(pharmacy.pharmacyId == local.pharmacy?.pharmacyId)
         val generated = Instant.now()
-        val section = if (request.preset == ReportPreset.OUT) catalog.sections.find { it.id == request.sectionId }
+        val section = if (request.preset == ReportPreset.OUT && !request.allSections) catalog.sections.find { it.id == request.sectionId }
             ?: throw CsvProblem("اختر قسماً موجوداً في مصدر التقرير") else null
+        val sections = if (section != null) listOf(section) else if (request.preset == ReportPreset.OUT && request.allSections)
+            catalog.sections.filter { it.isActive } else catalog.sections
+        if (request.preset == ReportPreset.OUT && request.allSections && sections.isEmpty())
+            throw CsvProblem("لا توجد أقسام نشطة لإعداد تقرير النواقص")
         val today = MedicationPresentation.today(generated, pharmacy.timezone)
         val medications = MedicationPresentation.browse(catalog, section?.id, "", HomeFilters(), HomeSort.SCIENTIFIC_NAME).filter { med ->
             when (request.preset) {
-                ReportPreset.OUT -> catalog.status(med.id, requireNotNull(section).id) == AvailabilityStatus.OUT
+                ReportPreset.OUT -> sections.any { catalog.status(med.id, it.id) == AvailabilityStatus.OUT }
                 ReportPreset.FULL -> true
                 ReportPreset.EXPIRING_SOON -> MedicationPresentation.expiry(med, today) == ExpiryState.SOON
             }
@@ -47,7 +52,7 @@ class ReportRepository @Inject constructor(private val admin: AdminRepository, p
         if (estimate * 12 + 16L * 1024 * 1024 > runtime.maxMemory() - (runtime.totalMemory() - runtime.freeMemory()))
             throw CsvProblem("لا توجد ذاكرة كافية لإعداد التقرير بأمان")
         ReportSnapshot(pharmacy.pharmacyId, pharmacy.name, pharmacy.timezone, generated, saved?.publishedAt, request,
-            if (section != null) listOf(section) else catalog.sections, medications, catalog.availability, catalog.categories, catalog.forms)
+            sections, medications, catalog.availability, catalog.categories, catalog.forms)
     }
     private suspend fun authorize(snapshot: ReportSnapshot) = admin.transaction { dao ->
         admin.guard(dao); check(dao.pharmacy()?.pharmacyId == snapshot.pharmacyId)
@@ -63,6 +68,7 @@ class ReportRepository @Inject constructor(private val admin: AdminRepository, p
                 yield(listOf("publishedAt", snapshot.publishedAt?.toString() ?: "لم يُنشر"))
                 yield(listOf("includeUnpublished", snapshot.request.includeUnpublished.toString()))
                 yield(listOf("preset", snapshot.request.preset.name))
+                if (snapshot.request.preset == ReportPreset.OUT) yield(listOf("allSections", snapshot.request.allSections.toString()))
                 if (snapshot.request.preset == ReportPreset.EXPIRING_SOON)
                     yield(listOf("expiryPolicy", "صلاحية قصيرة وفق حد كل دواء؛ يستثني المنتهي"))
                 yield(emptyList())

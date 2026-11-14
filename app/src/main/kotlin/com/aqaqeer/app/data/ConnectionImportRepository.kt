@@ -11,7 +11,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
@@ -41,7 +40,7 @@ class ConnectionImportRepository @Inject constructor(
             envelopes.cleanupAbandoned()
             var info = if (BuildConfig.IS_DEMO) null else pending.info()
             if (info != null) {
-                val state = catalog.observe().first { it !is CatalogState.Loading }
+                val state = catalog.readOnce()
                 if (state !is CatalogState.Ready) throw com.aqaqeer.app.security.StorageRecoveryRequired()
                 if (state.catalog.pharmacy != null) {
                     // Recover a process death after Room commit, before pending-marker cleanup.
@@ -125,7 +124,7 @@ class ConnectionImportRepository @Inject constructor(
         gate.withLock {
             if (BuildConfig.IS_DEMO) throw ConnectionImportException(ConnectionImportError.DEMO)
             currentCoroutineContext().ensureActive()
-            val state = catalog.observe().first { it !is CatalogState.Loading }
+            val state = catalog.readOnce()
             if (state !is CatalogState.Ready) throw com.aqaqeer.app.security.StorageRecoveryRequired()
             withContext(NonCancellable) {
                 // A cancelled/failed pre-commit activation can leave write-ahead credentials.
@@ -137,7 +136,7 @@ class ConnectionImportRepository @Inject constructor(
 
     private suspend fun requireUnconfigured() {
         if (BuildConfig.IS_DEMO) throw ConnectionImportException(ConnectionImportError.DEMO)
-        val state = catalog.observe().first { it !is CatalogState.Loading }
+        val state = catalog.readOnce()
         if (state !is CatalogState.Ready) throw com.aqaqeer.app.security.StorageRecoveryRequired()
         if (state.catalog.pharmacy != null) throw ConnectionImportException(ConnectionImportError.CONFIGURED)
     }

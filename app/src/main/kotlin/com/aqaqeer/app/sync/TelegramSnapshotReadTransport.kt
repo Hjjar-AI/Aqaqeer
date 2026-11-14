@@ -62,7 +62,7 @@ class TelegramSnapshotReadTransport internal constructor(private val openConnect
                 try {
                     connection.requestMethod = "GET"
                     val check = deadline(owner)
-                    check(); response(connection); check()
+                    check(); response(connection, check); check()
                     HttpDocumentStream(connection, connection.inputStream, check).also { opened = it }
                 } catch (error: Throwable) { connection.disconnect(); throw error }
             }
@@ -90,29 +90,33 @@ class TelegramSnapshotReadTransport internal constructor(private val openConnect
                 connection.setFixedLengthStreamingMode(body.size)
                 connection.outputStream.use { it.write(body) }
             } finally { body.fill(0) }
-            check(); response(connection); check()
+            check(); response(connection, check); check()
             val bytes = connection.inputStream.use { input -> boundedMetadata(input, check) }
             try {
-                val runtime = Runtime.getRuntime()
-                val available = (runtime.maxMemory() - (runtime.totalMemory() - runtime.freeMemory()) - 16L * 1024 * 1024).coerceAtLeast(0)
-                if (bytes.size * 64L + 65_536 > available / 4 * 3) throw SnapshotReadException(SnapshotReadError.RESOURCE_LIMIT)
-                InputStreamReader(bytes.inputStream(), Charsets.UTF_8.newDecoder()
-                    .onMalformedInput(CodingErrorAction.REPORT).onUnmappableCharacter(CodingErrorAction.REPORT)).use {
-                    StrictJson(it, check).validateObject()
-                }
-                val envelope = Json.parseToJsonElement(bytes.toString(Charsets.UTF_8)) as? JsonObject ?: invalidResponse()
+                val envelope = metadata(bytes, check)
                 check()
                 if (!envelope.boolean("ok")) {
                     when (envelope.integer("error_code")) {
                         401L -> throw SnapshotReadException(SnapshotReadError.INVALID_CREDENTIALS)
                         403L -> throw SnapshotReadException(SnapshotReadError.ACCESS_DENIED)
-                        429L -> throw SnapshotReadException(SnapshotReadError.RATE_LIMITED)
+                        429L -> throw SnapshotReadException(SnapshotReadError.RATE_LIMITED, retryAfter(envelope))
                         else -> throw SnapshotReadException(SnapshotReadError.INVALID_RESPONSE)
                     }
                 }
                 return envelope["result"] as? JsonObject ?: invalidResponse()
             } finally { bytes.fill(0) }
         } finally { connection.disconnect() }
+    }
+
+    private fun metadata(bytes: ByteArray, check: () -> Unit): JsonObject {
+        val runtime = Runtime.getRuntime()
+        val available = (runtime.maxMemory() - (runtime.totalMemory() - runtime.freeMemory()) - 16L * 1024 * 1024).coerceAtLeast(0)
+        if (bytes.size * 64L + 65_536 > available / 4 * 3) throw SnapshotReadException(SnapshotReadError.RESOURCE_LIMIT)
+        InputStreamReader(bytes.inputStream(), Charsets.UTF_8.newDecoder()
+            .onMalformedInput(CodingErrorAction.REPORT).onUnmappableCharacter(CodingErrorAction.REPORT)).use {
+            StrictJson(it, check).validateObject()
+        }
+        return Json.parseToJsonElement(bytes.toString(Charsets.UTF_8)) as? JsonObject ?: invalidResponse()
     }
 
     private fun boundedMetadata(input: InputStream, check: () -> Unit): ByteArray {
@@ -196,6 +200,35 @@ class TelegramSnapshotReadTransport internal constructor(private val openConnect
         setRequestProperty("Accept-Encoding", "identity")
     }
 
+    private fun retryAfter(envelope: JsonObject): Int =
+        ((envelope["parameters"] as? JsonObject)?.get("retry_after") as? JsonPrimitive)
+            ?.takeUnless { it.isString }?.intOrNull?.takeIf { it > 0 } ?: 2
+
+    private fun response(connection: HttpsURLConnection, check: () -> Unit) {
+        when (connection.responseCode) {
+            200 -> Unit
+            401 -> throw SnapshotReadException(SnapshotReadError.INVALID_CREDENTIALS)
+            403 -> throw SnapshotReadException(SnapshotReadError.ACCESS_DENIED)
+            429 -> {
+                var seconds = connection.getHeaderField("Retry-After")?.toIntOrNull()?.takeIf { it > 0 } ?: 2
+                try {
+                    connection.errorStream?.use { stream ->
+                        val bytes = boundedMetadata(stream, check)
+                        try {
+                            val envelope = metadata(bytes, check)
+                            seconds = maxOf(seconds, retryAfter(envelope))
+                        } finally { bytes.fill(0) }
+                    }
+                } catch (e: kotlinx.coroutines.CancellationException) { throw e }
+                catch (_: Exception) { /* Still respect the HTTP rate-limit response. */ }
+                throw SnapshotReadException(SnapshotReadError.RATE_LIMITED, seconds)
+            }
+            else -> throw SnapshotReadException(SnapshotReadError.NETWORK)
+        }
+        val encoding = connection.contentEncoding
+        if (encoding != null && !encoding.equals("identity", ignoreCase = true)) invalidResponse()
+    }
+
     companion object {
         private const val METADATA_LIMIT = 256 * 1024
         private val TOKEN = Regex("[0-9]+:[A-Za-z0-9_-]+")
@@ -210,17 +243,6 @@ class TelegramSnapshotReadTransport internal constructor(private val openConnect
                 context.ensureActive()
                 if (System.nanoTime() - started > 60_000_000_000L) throw SnapshotReadException(SnapshotReadError.NETWORK)
             }
-        }
-        private fun response(connection: HttpsURLConnection) {
-            when (connection.responseCode) {
-                200 -> Unit
-                401 -> throw SnapshotReadException(SnapshotReadError.INVALID_CREDENTIALS)
-                403 -> throw SnapshotReadException(SnapshotReadError.ACCESS_DENIED)
-                429 -> throw SnapshotReadException(SnapshotReadError.RATE_LIMITED)
-                else -> throw SnapshotReadException(SnapshotReadError.NETWORK)
-            }
-            val encoding = connection.contentEncoding
-            if (encoding != null && !encoding.equals("identity", ignoreCase = true)) invalidResponse()
         }
         private fun JsonObject.text(name: String): String {
             val value = this[name] as? JsonPrimitive ?: invalidResponse()

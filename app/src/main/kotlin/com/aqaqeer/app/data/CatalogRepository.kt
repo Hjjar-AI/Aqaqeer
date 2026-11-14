@@ -30,7 +30,7 @@ sealed interface CatalogState {
 
 @Singleton
 class CatalogRepository @Inject constructor(private val factory: DatabaseFactory,
-    private val secureStore: SecureStore, private val requirements: SnapshotRequirementsStore, private val maintenanceStage: MaintenanceStage) {
+    private val secureStore: SecureStore, private val requirements: SnapshotRequirementsStore, private val maintenanceStage: MaintenanceStage, private val preferences: DisplayPreferences) {
     private val active = PendingConnectionStore(secureStore, "active-connection")
 
     /** Initial reader activation only; never replaces a configured pharmacy or local work. */
@@ -84,105 +84,124 @@ class CatalogRepository @Inject constructor(private val factory: DatabaseFactory
         finally { com.aqaqeer.app.security.ProtectedReadCache.invalidateAll() }
     }
 
+    private val contentTables = setOf("pharmacy", "categories", "forms", "sections", "medications", "availability", "tombstones")
+    private class ReadCache {
+        var cachedCatalog: CatalogSnapshot? = null
+        var confirmedKey: Pair<String?, String?>? = null
+        var confirmedCatalog: CatalogSnapshot? = null
+    }
+    private suspend fun initialize(dao: CatalogDao) {
+        val existing = dao.installation()
+        if (existing == null) {
+            val seed = BuildSeed.catalog()
+            CatalogRules.validate(seed)
+            dao.insertCategories(seed.categories)
+            dao.insertForms(seed.forms)
+            dao.insertSections(seed.sections)
+            seed.pharmacy?.let { dao.insertPharmacy(it) }
+            dao.insertMedications(seed.medications)
+            dao.insertAvailability(seed.availability)
+            dao.insertSnapshotState(SnapshotState())
+            dao.control(LocalControl(lifecycle = if (BuildConfig.IS_DEMO) "SHARED" else "UNCONFIGURED"))
+            val now = Instant.now()
+            dao.insertDeviceIdentity(DeviceIdentity(UUID.randomUUID().toString(), null, false, now, now))
+            dao.insertInstallation(InstallationState(seedVersion = BuildSeed.VERSION, isDemo = BuildConfig.IS_DEMO))
+        } else {
+            check(existing.isDemo == BuildConfig.IS_DEMO) { "Data profile mismatch" }
+            BuildSeed.refreshIfNeeded(dao, existing)
+        }
+    }
+    private suspend fun readState(dao: CatalogDao, cache: ReadCache, changed: Set<String>): CatalogState.Ready {
+        val beforeControl = dao.control()
+        val activating = beforeControl?.leaving == true || beforeControl?.restoreActivationId != null ||
+            try { MaintenanceStore(secureStore).read() != null } catch (error: Exception) {
+                if (error is kotlinx.coroutines.CancellationException) throw error
+                true
+            }
+        com.aqaqeer.app.admin.finishLeave(dao, secureStore, maintenanceStage, preferences)
+        com.aqaqeer.app.backup.finishRestoreActivation(dao, secureStore, requirements)
+        var maintenanceRecovery = false
+        val maintenance = try {
+            finishMaintenanceActivation(dao, MaintenanceStore(secureStore), maintenanceStage)
+            MaintenanceStore(secureStore).read().also {
+                if (it != null && it.pharmacyId != dao.pharmacy()?.pharmacyId) throw StorageRecoveryRequired()
+            }
+        } catch (error: Exception) {
+            if (error is kotlinx.coroutines.CancellationException) throw error
+            maintenanceRecovery = true; null
+        }
+        val initialControl = requireNotNull(dao.control())
+        if (dao.deviceIdentity()?.adminMode == true && initialControl.firstAdminAt == null)
+            dao.control(initialControl.copy(firstAdminAt = System.currentTimeMillis()))
+        val snapshot = if (cache.cachedCatalog == null || activating || changed.any { it in contentTables }) {
+            CatalogSnapshot(dao.pharmacy(), dao.categories(), dao.forms(),
+                dao.sections(), dao.medications(), dao.availability(), dao.tombstones()).also {
+                CatalogRules.validate(it)
+                cache.cachedCatalog = it
+            }
+        } else requireNotNull(cache.cachedCatalog)
+        // Publication time is supplied by authenticated snapshot metadata in M3.
+        // Never substitute a medication update time or the local launch time.
+        val state = dao.snapshotMetadata()
+        val pharmacy = snapshot.pharmacy
+        val control = dao.control() ?: throw StorageRecoveryRequired()
+        val lifecycle = control.lifecycle
+        check(lifecycle in setOf("UNCONFIGURED", "LOCAL_DRAFT", "SHARED"))
+        check((pharmacy == null) == (lifecycle == "UNCONFIGURED"))
+        val known = if (!BuildConfig.IS_DEMO && pharmacy != null && lifecycle == "SHARED") {
+            val connection = active.info() ?: throw StorageRecoveryRequired()
+            if (connection.pharmacyId != pharmacy.pharmacyId) throw StorageRecoveryRequired()
+            requirements.read(pharmacy.pharmacyId) ?: throw StorageRecoveryRequired()
+        } else pharmacy?.let { requirements.read(it.pharmacyId) }
+        val publishedAt = state?.publishedAt?.let(Instant::parse)
+        val authorized = dao.deviceIdentity()?.adminMode == true
+        val visible = if (!authorized && !control.restorePaused && dao.pendingCount() > 0 && state?.publishId != null) {
+            val key = state.publishId to state.publishedAt
+            if (cache.confirmedKey != key || cache.confirmedCatalog == null || activating) {
+                cache.confirmedCatalog = Json.decodeFromString<SnapshotWire>(requireNotNull(dao.snapshotState()?.confirmedPayloadJson)).supported().catalog
+                cache.confirmedKey = key
+            }
+            requireNotNull(cache.confirmedCatalog)
+        } else snapshot
+        return CatalogState.Ready(visible, BuildConfig.IS_DEMO, state?.lastSuccessfulSyncAt,
+            publishedAt, known?.requiresUpdate(BuildConfig.VERSION_CODE) == true, lifecycle,
+            authorized, dao.pendingCount(), dao.attemptCount() != 0, control.restorePaused, control.restoreConnectionConfirmed,
+            if (authorized) com.aqaqeer.app.backup.BackupReminder(control.firstAdminAt, control.lastBackupAt,
+                control.backupDismissedAt).nextAt() else null,
+            control.restorePaused && (if (lifecycle == "SHARED") active.info() != null
+                else PendingConnectionStore(secureStore, "setup-connection").info() != null),
+            hasPublicationConnection = pharmacy != null && (lifecycle == "SHARED" ||
+                PendingConnectionStore(secureStore, "setup-connection").info()?.pharmacyId == pharmacy.pharmacyId),
+            maintenancePaused = maintenance != null || maintenanceRecovery, maintenanceRecoveryRequired = maintenanceRecovery,
+            unpublishedMedicationIds = if (authorized) dao.pending().filter {
+                it.entityType in setOf("medication", "availability")
+            }.map { it.targetId.substringBefore('/') }.toSet() else emptySet())
+    }
+
+    /** Same initialization/recovery/integrity boundary as observation, without an invalidation flow. */
+    internal suspend fun readOnce(): CatalogState = kotlinx.coroutines.withContext(Dispatchers.IO) {
+        try {
+            val lease = factory.acquire()
+            try { lease.database.withTransaction {
+                val dao = lease.database.catalogDao()
+                initialize(dao)
+                readState(dao, ReadCache(), contentTables)
+            } } finally { lease.close() }
+        } catch (error: kotlinx.coroutines.CancellationException) { throw error }
+        catch (_: Exception) { CatalogState.RecoveryRequired }
+    }
+
     fun observe(): Flow<CatalogState> = flow<CatalogState> {
         val lease = factory.acquire()
         val database = lease.database
         try {
-        val dao = database.catalogDao()
-        var cachedCatalog: CatalogSnapshot? = null
-        var confirmedKey: Pair<String?, String?>? = null
-        var confirmedCatalog: CatalogSnapshot? = null
-        val contentTables = setOf("pharmacy", "categories", "forms", "sections", "medications", "availability", "tombstones")
-        database.withTransaction {
-            val existing = dao.installation()
-            if (existing == null) {
-                val seed = BuildSeed.catalog()
-                CatalogRules.validate(seed)
-                dao.insertCategories(seed.categories)
-                dao.insertForms(seed.forms)
-                dao.insertSections(seed.sections)
-                seed.pharmacy?.let { dao.insertPharmacy(it) }
-                dao.insertMedications(seed.medications)
-                dao.insertAvailability(seed.availability)
-                dao.insertSnapshotState(SnapshotState())
-                dao.control(LocalControl(lifecycle = if (BuildConfig.IS_DEMO) "SHARED" else "UNCONFIGURED"))
-                val now = Instant.now()
-                dao.insertDeviceIdentity(DeviceIdentity(UUID.randomUUID().toString(), null, false, now, now))
-                dao.insertInstallation(InstallationState(seedVersion = BuildSeed.VERSION, isDemo = BuildConfig.IS_DEMO))
-            } else {
-                check(existing.isDemo == BuildConfig.IS_DEMO) { "Data profile mismatch" }
-                BuildSeed.refreshIfNeeded(dao, existing)
-            }
-        }
+            val dao = database.catalogDao()
+            val cache = ReadCache()
+            database.withTransaction { initialize(dao) }
             emitAll(database.invalidationTracker.createFlow("pharmacy", "categories", "forms", "sections",
                 "medications", "availability", "tombstones", "snapshot_state", "local_control",
                 "device_identity", "pending_operations", "publish_attempts").combine(MaintenanceStore.changes) { tables, _ -> tables }.map { changed ->
-                database.withTransaction {
-                    val beforeControl = dao.control()
-                    val activating = beforeControl?.leaving == true || beforeControl?.restoreActivationId != null ||
-                        try { MaintenanceStore(secureStore).read() != null } catch (error: Exception) {
-                            if (error is kotlinx.coroutines.CancellationException) throw error
-                            true
-                        }
-                    com.aqaqeer.app.admin.finishLeave(dao, secureStore, maintenanceStage)
-                    com.aqaqeer.app.backup.finishRestoreActivation(dao, secureStore, requirements)
-                    var maintenanceRecovery = false
-                    val maintenance = try {
-                        finishMaintenanceActivation(dao, MaintenanceStore(secureStore), maintenanceStage)
-                        MaintenanceStore(secureStore).read().also {
-                            if (it != null && it.pharmacyId != dao.pharmacy()?.pharmacyId) throw StorageRecoveryRequired()
-                        }
-                    } catch (error: Exception) {
-                        if (error is kotlinx.coroutines.CancellationException) throw error
-                        maintenanceRecovery = true; null
-                    }
-                    val initialControl = requireNotNull(dao.control())
-                    if (dao.deviceIdentity()?.adminMode == true && initialControl.firstAdminAt == null)
-                        dao.control(initialControl.copy(firstAdminAt = System.currentTimeMillis()))
-                    val snapshot = if (cachedCatalog == null || activating || changed.any { it in contentTables }) {
-                        CatalogSnapshot(dao.pharmacy(), dao.categories(), dao.forms(),
-                            dao.sections(), dao.medications(), dao.availability(), dao.tombstones()).also {
-                            CatalogRules.validate(it)
-                            cachedCatalog = it
-                        }
-                    } else requireNotNull(cachedCatalog)
-                    // Publication time is supplied by authenticated snapshot metadata in M3.
-                    // Never substitute a medication update time or the local launch time.
-                    val state = dao.snapshotMetadata()
-                    val pharmacy = snapshot.pharmacy
-                    val control = dao.control() ?: throw StorageRecoveryRequired()
-                    val lifecycle = control.lifecycle
-                    check(lifecycle in setOf("UNCONFIGURED", "LOCAL_DRAFT", "SHARED"))
-                    check((pharmacy == null) == (lifecycle == "UNCONFIGURED"))
-                    val known = if (!BuildConfig.IS_DEMO && pharmacy != null && lifecycle == "SHARED") {
-                        val connection = active.info() ?: throw StorageRecoveryRequired()
-                        if (connection.pharmacyId != pharmacy.pharmacyId) throw StorageRecoveryRequired()
-                        requirements.read(pharmacy.pharmacyId) ?: throw StorageRecoveryRequired()
-                    } else pharmacy?.let { requirements.read(it.pharmacyId) }
-                    val publishedAt = state?.publishedAt?.let(Instant::parse)
-                    val authorized = dao.deviceIdentity()?.adminMode == true
-                    val visible = if (!authorized && !control.restorePaused && dao.pendingCount() > 0 && state?.publishId != null) {
-                        val key = state.publishId to state.publishedAt
-                        if (confirmedKey != key || confirmedCatalog == null || activating) {
-                            confirmedCatalog = Json.decodeFromString<SnapshotWire>(requireNotNull(dao.snapshotState()?.confirmedPayloadJson)).supported().catalog
-                            confirmedKey = key
-                        }
-                        requireNotNull(confirmedCatalog)
-                    } else snapshot
-                    CatalogState.Ready(visible, BuildConfig.IS_DEMO, state?.lastSuccessfulSyncAt,
-                        publishedAt, known?.requiresUpdate(BuildConfig.VERSION_CODE) == true, lifecycle,
-                        authorized, dao.pendingCount(), dao.attemptCount() != 0, control.restorePaused, control.restoreConnectionConfirmed,
-                        if (authorized) com.aqaqeer.app.backup.BackupReminder(control.firstAdminAt, control.lastBackupAt,
-                            control.backupDismissedAt).nextAt() else null,
-                        control.restorePaused && (if (lifecycle == "SHARED") active.info() != null
-                            else PendingConnectionStore(secureStore, "setup-connection").info() != null),
-                        hasPublicationConnection = pharmacy != null && (lifecycle == "SHARED" ||
-                            PendingConnectionStore(secureStore, "setup-connection").info()?.pharmacyId == pharmacy.pharmacyId),
-                        maintenancePaused = maintenance != null || maintenanceRecovery, maintenanceRecoveryRequired = maintenanceRecovery,
-                        unpublishedMedicationIds = if (authorized) dao.pending().filter {
-                            it.entityType in setOf("medication", "availability")
-                        }.map { it.targetId.substringBefore('/') }.toSet() else emptySet())
-                }
+                database.withTransaction { readState(dao, cache, changed) }
             }.distinctUntilChanged())
         } finally { lease.close() }
     }.catch { error ->

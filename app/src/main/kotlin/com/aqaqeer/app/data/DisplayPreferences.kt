@@ -36,6 +36,9 @@ class DisplayPreferences(private val context: Context) {
     suspend fun setSection(pharmacyId: String, sectionId: String) {
         context.displayDataStore.edit { it[stringPreferencesKey("selected_section_$pharmacyId")] = sectionId }
     }
+    suspend fun clearSection(pharmacyId: String) {
+        context.displayDataStore.edit { it.remove(stringPreferencesKey("selected_section_$pharmacyId")) }
+    }
     val home: Flow<HomePreferences> = data.map { prefs -> HomePreferences(
         HomeSort.entries.firstOrNull { it.name == prefs[SORT] } ?: HomeSort.SCIENTIFIC_NAME,
         CardLayout.entries.firstOrNull { it.name == prefs[LAYOUT] } ?: CardLayout.COMPACT,
