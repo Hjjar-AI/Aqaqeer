@@ -138,7 +138,7 @@ Titles show the suggested review order: **01–05 Checks → 06 Build → 07–0
 | [04 - Checks - Android quality](../.github/workflows/quality.yml) | Workflow actionlint and both production lint flavors |
 | [05 - Checks - Security analysis](../.github/workflows/security.yml) | Java/Kotlin, Python and Actions CodeQL; alerts under Security → Code scanning |
 | [06 - Build - Debug APKs](../.github/workflows/android.yml) | Choose standard, demo or both; independent APK jobs/checksums/diagnostics |
-| [07 - Verify - Emulator with visual evidence](../.github/workflows/emulator.yml) | Selected API 29/35 offline demo checks with PNG/MP4 |
+| [07 - Verify - Emulator with visual evidence](../.github/workflows/emulator.yml) | Selected API 29/35 offline demo checks with PNG/MP4; optional API 35 standard functional regressions |
 | [08 - Verify - Release output](../.github/workflows/release.yml) | R8/resources/native/alignment/signature inspection; unsigned output is not distribution-ready |
 | [09 - Maintenance - Clear workflow runs and logs](../.github/workflows/cleanup-evidence.yml) | Daily seven-day completed-run retention, plus manual preview/clear; includes run APK artifacts |
 | [10 - Publish - Debug APKs to GitHub Releases](../.github/workflows/publish-debug.yml) | Build selected standard/demo/both debug APKs, then attach them to a regular release, prerelease or draft |
@@ -444,7 +444,7 @@ Four independent `fail-fast: false` entries select `testStandardDebugUnitTest`, 
 
 ### Hosted emulator screenshots and recordings
 
-Run the emulator workflow; download `emulator-evidence-api29-*` / `emulator-evidence-api35-*` within one day. It runs six explicit invocations per fresh API, one emulator at a time. There is no live browser screen. [CI guidance](ci-free-tier.md#emulator-presentation-and-assertion-evidence) specifies selected checks, assertion/fallback capture, 45-second recordings, timeouts and limits. Local/physical devices and live Telegram campaigns are excluded.
+Run **07 - Verify - Emulator with visual evidence** on the default branch; download `emulator-evidence-api29-*` / `emulator-evidence-api35-*` within one day. Its default demo matrix runs six explicit invocations per fresh API, one emulator at a time. To include the new functional tests, enable **Also run 30 offline standard CSV/report and bulk/PIN regression cases on API 35** (`standard_functional=true`) in **Run workflow**. The optional standard job waits for the demo matrix, then packages standard app/instrumentation and runs all 15 methods in `CsvReportsInstrumentedTest` plus all 15 in `BulkMedicationRegressionInstrumentedTest` on its own fresh API 35 AVD. It still runs after a demo failure unless the workflow is cancelled. Download its separate `emulator-standard-functional-api35-*` artifact for per-case transcripts, partial/final `results.json`, APK/certificate/install provenance and failure PNG/logcat; these functional cases do not record MP4. The input defaults off; enabling it adds one bounded 45-minute job and does not run the entire instrumentation suite. There is no live browser screen. [CI guidance](ci-free-tier.md#emulator-presentation-and-assertion-evidence) specifies selected checks, assertion/fallback capture, 45-second recordings, timeouts and limits. Local/physical devices and live Telegram campaigns are excluded.
 
 ### Clear older CI evidence manually
 

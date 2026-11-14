@@ -79,6 +79,16 @@ def require_absent(package):
         raise RuntimeError(f'Package must be absent on the fresh AVD: {package}')
 
 
+def save_results(suite, cases, results, capture_errors):
+    finished = {item['case'] for item in results}
+    payload = {'suite': suite, 'selected': len(cases), 'completedInvocations': len(results),
+               'notExecuted': [method for name, method, _ in cases if name not in finished],
+               'cases': results, 'captureErrors': capture_errors}
+    temporary = OUTPUT / 'results.json.tmp'
+    temporary.write_text(json.dumps(payload, indent=2) + '\n')
+    temporary.replace(OUTPUT / 'results.json')
+
+
 def main():
     global PACKAGE
     parser = argparse.ArgumentParser(description=__doc__)
@@ -97,7 +107,9 @@ def main():
     provenance = {'serial': SERIAL, 'package': PACKAGE, 'commit': os.environ.get('GITHUB_SHA'),
                   'suite': args.suite, 'runId': os.environ.get('GITHUB_RUN_ID'),
                   'attempt': os.environ.get('GITHUB_RUN_ATTEMPT'), 'job': os.environ.get('GITHUB_JOB'),
+                  'selectedMethods': [method for _, method, _ in cases],
                   'api': adb('shell', 'getprop', 'ro.build.version.sdk').stdout.decode().strip(), 'apks': {}}
+    save_results(args.suite, cases, results, capture_errors)
     try:
         for label, pattern in (
             ('application', f'app/build/outputs/apk/{args.suite}/debug/*.apk'),
@@ -164,6 +176,7 @@ def main():
                 (OUTPUT / f'{name}-instrumentation.log').write_bytes(transcript)
                 results.append({'case': name, 'method': method, 'status': status,
                                 'instrumentationExitCode': run.returncode if status != 'timed out' else None})
+                save_results(args.suite, cases, results, capture_errors)
                 if not passed:
                     try:
                         screenshot = adb('exec-out', 'screencap', '-p').stdout
@@ -228,11 +241,11 @@ def main():
         except (OSError, subprocess.SubprocessError):
             capture_errors.append('Final screenshot collection/font-scale cleanup incomplete')
         (OUTPUT / 'provenance.json').write_text(json.dumps(provenance, indent=2) + '\n')
-        (OUTPUT / 'results.json').write_text(json.dumps({'suite': args.suite, 'selected': len(cases), 'cases': results, 'captureErrors': capture_errors}, indent=2) + '\n')
+        save_results(args.suite, cases, results, capture_errors)
         lines = [f'### {args.suite.title()} emulator results', '', *[f'- {r["case"]}: {r["status"]}' for r in results],
                  *[f'- Capture limitation: {message}' for message in capture_errors], '',
-                 'Download emulator-evidence for MP4/PNG/logs within one day; GitHub storage quota can block uploads.',
-                 'Clips cover at most the first 45 seconds of each UI case. ui-screenshots holds live-activity captures; host failure PNGs are post-instrumentation fallbacks.']
+                 f'Download {"emulator-standard-functional" if args.suite == "standard" else "emulator-evidence"} artifacts within one day; GitHub storage quota can block uploads.',
+                 ('Standard cases retain individual instrumentation logs and post-instrumentation failure PNG/logcat fallbacks; no recordings or human visual acceptance.' if args.suite == 'standard' else 'Clips cover at most the first 45 seconds of each UI case. ui-screenshots holds live-activity captures; host failure PNGs are post-instrumentation fallbacks.')]
         (OUTPUT / 'results.md').write_text('\n'.join(lines) + '\n')
     if len(results) != len(cases) or any(r['status'] != 'passed' for r in results) or capture_errors:
         raise SystemExit(1)
