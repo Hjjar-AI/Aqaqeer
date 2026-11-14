@@ -161,10 +161,12 @@ def main():
                 receipt['failureCapture'] = 'unavailable'
             if installed is not None:
                 try:
+                    progress('verify installation ownership before cleanup')
                     emulator_identity()
                     if installed_identity() != installed or installed['sha256'] != receipt['artifactSha256']:
                         receipt['cleanup'] = 'refused: installation ownership differs'
                     else:
+                        progress('uninstall owned APK and confirm absence')
                         adb('uninstall', PACKAGE)
                         receipt['cleanup'] = 'confirmed absent' if not package_paths() else 'failed: still installed'
                 except Exception:
@@ -172,6 +174,7 @@ def main():
             (OUTPUT / 'results.json').write_text(json.dumps(receipt, indent=2) + '\n')
             if installed is not None and receipt['cleanup'] != 'confirmed absent':
                 raise ValueError('Owned installation cleanup incomplete')
+        progress('completed startup and cleanup')
 
 
 if __name__ == '__main__':
