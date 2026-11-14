@@ -236,7 +236,7 @@ chmod 600 local/signing/release.jks local/signing/debug.jks
 
 Use a private store outside the checkout, organized as `keys/<Project>/release.jks` and `keys/<Project>/debug.jks`, with a separate subfolder per project. Retain the original files under ignored `local/signing/`. Copy without overwriting an existing different key; compare copies byte-for-byte without printing or hashing private key contents. Protect store/project directories with mode `700` and key files with mode `600`. Keep aliases/passwords in the password manager and public fingerprints with the signing configuration. Record actual private backup locations outside the repository.
 
-The shared store used in this setup is on the same drive as the project. It is useful organization and a second copy, but independent off-device backup was not confirmed. Keep protected backups on separate storage as well. `.gitignore` protects against accidental tracking; it does not encrypt files or provide recovery.
+The shared store used in this setup is on the same drive as the project. It is useful organization and a second copy; keep protected backups on separate storage as well. Current backup completion is recorded in validation. `.gitignore` protects against accidental tracking; it does not encrypt files or provide recovery.
 
 **5. Obtain each public certificate SHA-256 fingerprint.**
 
@@ -530,7 +530,7 @@ All debug release/prerelease/draft choices set Latest to false. Release records 
 | 14 - Maintenance - Debug release cleanup | [cleanup-debug.yml](../.github/workflows/cleanup-debug.yml) | Preview by default; explicit deletion choice; only identifiable publisher-owned debug releases/tags |
 | 15 - Maintenance - Actionlint updates | [actionlint-updates.yml](../.github/workflows/actionlint-updates.yml) | Stable upstream version/SHA-256 proposal as a patch; never executes the candidate or applies it |
 
-Workflow 03 offers opt-in per-flavor unit coverage with AGP JaCoCo 0.8.16. Reports have no percentage threshold and do not run device tests. Verification APK workflows 07/08 are also default-branch-only. Workflow 08 generates/inspects the three production outputs and separately opens the universal APK on an owned GitHub-hosted API 35 emulator with a throwaway signer. Its 30-second process observation is startup evidence only. No local emulators or production signing credentials are involved.
+Workflow 03 offers opt-in per-flavor unit coverage with AGP JaCoCo 0.8.16. Reports have no percentage threshold and do not run device tests. Verification APK workflows 07/08 are also default-branch-only. Workflow 08 generates/inspects the three production outputs and separately opens the universal APK on an owned GitHub-hosted API 35 emulator with a throwaway signer. Its 30-second process observation is startup evidence only. The helper treats an empty Android `pm path` exit-1 result as expected package absence, while transport errors remain failures; progress/failure JSON identifies the failing phase. No local emulators or production signing credentials are involved.
 
 The pinned setup-gradle action already validates wrapper JARs; policy forbids disabling this. Workflow YAML checks reject expressions inside shell bodies and permit secrets only in explicit signing-step environments. All new workflows are manual, public-only, bounded Ubuntu jobs with full action pins and one-day artifacts where appropriate. Only the existing run-cleanup workflow has a schedule.
 

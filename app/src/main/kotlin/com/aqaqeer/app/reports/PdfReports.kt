@@ -275,6 +275,10 @@ private class A5Report(
     fun render(): PdfDocument {
         try {
             require(snapshot.sections.size in 1..5)
+            val categoryIds = snapshot.categories.map { it.id }.toSet()
+            require(categoryIds.size == snapshot.categories.size && snapshot.medications.all { it.categoryId in categoryIds }) {
+                "Report medications require unique, known categories"
+            }
             newPage()
             plain(listOf(PdfPart(snapshot.pharmacyName, true, 10f, "الصيدلية: ", true)))
             val title = when (snapshot.request.preset) {
