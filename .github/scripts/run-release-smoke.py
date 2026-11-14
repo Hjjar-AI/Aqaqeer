@@ -15,6 +15,7 @@ PACKAGE = 'com.aqaqeer.app'
 SERIAL = 'emulator-5554'
 AVD = 'aqaqeer-release-smoke'
 OUTPUT = Path('ci-output/release-smoke')
+PHASE = 'initialization'
 
 
 def run(arguments, binary=False):
@@ -35,8 +36,31 @@ def emulator_identity():
         raise ValueError('Owned GitHub-hosted emulator required; physical/local devices forbidden')
 
 
+def package_paths():
+    # Android's pm returns 1, without output, for an absent package. Device/transport
+    # errors remain errors; they must never be mistaken for successful cleanup.
+    result = subprocess.run(['adb', '-s', SERIAL, 'shell', 'pm', 'path', PACKAGE],
+                            capture_output=True, text=True, timeout=60)
+    if result.returncode == 1 and not result.stdout.strip() and not result.stderr.strip():
+        return []
+    if result.returncode or result.stderr.strip():
+        raise ValueError('Package lookup failed; absence is unconfirmed')
+    paths = result.stdout.strip().splitlines()
+    if any(not path.startswith('package:/data/app/') for path in paths):
+        raise ValueError('Unexpected package path response')
+    return paths
+
+
+def progress(value):
+    global PHASE
+    PHASE = value
+    OUTPUT.mkdir(parents=True, exist_ok=True)
+    (OUTPUT / 'progress.json').write_text(json.dumps({'phase': value, 'serial': SERIAL, 'avd': AVD,
+        'run': os.environ.get('GITHUB_RUN_ID'), 'sourceCommit': os.environ.get('GITHUB_SHA')}, indent=2) + '\n')
+
+
 def installed_identity():
-    paths = adb('shell', 'pm', 'path', PACKAGE).strip().splitlines()
+    paths = package_paths()
     if len(paths) != 1 or not paths[0].startswith('package:/data/app/'):
         raise ValueError('Unexpected installed APK path/set')
     uid = adb('shell', 'cmd', 'package', 'list', 'packages', '-U', PACKAGE).strip()
@@ -47,9 +71,12 @@ def installed_identity():
 
 def main():
     OUTPUT.mkdir(parents=True, exist_ok=True)
+    progress('verify owned emulator')
     emulator_identity()
-    if adb('shell', 'pm', 'path', PACKAGE).strip():
+    progress('verify package absence before installation')
+    if package_paths():
         raise ValueError('Existing installation must be preserved')
+    progress('select inspected universal APK')
     candidates = list(Path('smoke-apks').glob('*universal*.apk'))
     if len(candidates) != 1:
         raise ValueError('Expected one universal release APK')
@@ -62,12 +89,14 @@ def main():
         key = Path(temporary) / 'smoke.keystore'
         signed = Path(temporary) / 'smoke.apk'
         environment = dict(os.environ, AQAQEER_SMOKE_PASSWORD='throwaway-ephemeral-only')
+        progress('generate throwaway key')
         generated = subprocess.run(['keytool', '-genkeypair', '-keystore', str(key), '-alias', 'smoke',
                                     '-storepass:env', 'AQAQEER_SMOKE_PASSWORD', '-keypass:env', 'AQAQEER_SMOKE_PASSWORD',
                                     '-keyalg', 'RSA', '-keysize', '2048', '-validity', '2', '-dname', 'CN=Aqaqeer CI smoke'],
                                    env=environment, capture_output=True, timeout=60)
         if generated.returncode:
             raise ValueError('Throwaway key generation failed')
+        progress('sign throwaway startup APK')
         result = subprocess.run([str(tools / 'apksigner'), 'sign', '--ks', str(key), '--ks-key-alias', 'smoke',
                                  '--ks-pass', 'env:AQAQEER_SMOKE_PASSWORD', '--key-pass', 'env:AQAQEER_SMOKE_PASSWORD',
                                  '--v4-signing-enabled', 'false', '--out', str(signed), str(source)],
@@ -90,12 +119,14 @@ def main():
         (OUTPUT / 'ownership.json').write_text(json.dumps(receipt, indent=2) + '\n')
         try:
             receipt['cleanup'] = 'installation attempted; ownership verification pending'
+            progress('install owned APK')
             adb('install', str(signed))
             installed = installed_identity()
             if installed['sha256'] != receipt['artifactSha256']:
                 raise ValueError('Installed bytes differ from owned artifact')
             receipt['installation'] = installed
             (OUTPUT / 'ownership.json').write_text(json.dumps(receipt, indent=2) + '\n')
+            progress('launch owned APK')
             launch = adb('shell', 'am', 'start', '-W', '-n', PACKAGE + '/' + activity[1])
             (OUTPUT / 'launch.txt').write_text(launch)
             if 'Status: ok' not in launch or 'Error' in launch:
@@ -104,6 +135,7 @@ def main():
             if not re.fullmatch(r'[0-9]+', pid):
                 raise ValueError('No single application process')
             observed_pid = pid
+            progress('observe thirty-second startup survival')
             for _ in range(30):
                 time.sleep(1)
                 if adb('shell', 'pidof', PACKAGE).strip() != pid:
@@ -134,7 +166,7 @@ def main():
                         receipt['cleanup'] = 'refused: installation ownership differs'
                     else:
                         adb('uninstall', PACKAGE)
-                        receipt['cleanup'] = 'confirmed absent' if not adb('shell', 'pm', 'path', PACKAGE).strip() else 'failed: still installed'
+                        receipt['cleanup'] = 'confirmed absent' if not package_paths() else 'failed: still installed'
                 except Exception:
                     receipt['cleanup'] = 'failed/incomplete: preserve installation identity evidence'
             (OUTPUT / 'results.json').write_text(json.dumps(receipt, indent=2) + '\n')
@@ -145,5 +177,12 @@ def main():
 if __name__ == '__main__':
     try:
         main()
-    except Exception:
-        sys.exit('Release startup/cleanup failed or incomplete. Inspect retained evidence; no broader runtime pass claimed.')
+    except Exception as error:
+        reason = str(error) if isinstance(error, ValueError) else 'Tool/environment failure; no startup pass claimed'
+        try:
+            OUTPUT.mkdir(parents=True, exist_ok=True)
+            (OUTPUT / 'failure.json').write_text(json.dumps({'phase': PHASE, 'errorType': type(error).__name__,
+                'reason': reason}, indent=2) + '\n')
+        except OSError:
+            pass
+        sys.exit(f'Release startup/cleanup failed during {PHASE}: {reason}')
