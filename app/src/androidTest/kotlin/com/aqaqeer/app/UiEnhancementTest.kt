@@ -45,7 +45,7 @@ class UiEnhancementTest {
         compose.onNodeWithText("أكمل هذا الحقل المطلوب").assertExists()
     }
 
-    @Test fun bulkCheckboxIsOneControlAndDoesNotNavigate() {
+    @Test fun bulkCardIsOneCheckboxAndDoesNotNavigate() {
         val c = F.catalog(); val med = c.medications.single()
         var selected by mutableStateOf(false); var opened = 0
         compose.setContent { AqaqeerTheme(ThemeChoice.DARK) {
@@ -53,10 +53,10 @@ class UiEnhancementTest {
                 selected, { selected = !selected }, { opened++ })
         } }
         compose.onAllNodes(SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Checkbox)).assertCountEquals(1)
-        compose.onNodeWithTag("select_${med.id}").performClick().assertIsOn()
+        compose.onNodeWithTag("med_${med.nameEn}").performClick().assertIsOn()
         compose.runOnIdle { assertTrue(selected); assertEquals(0,opened) }
-        compose.onNodeWithText(requireNotNull(med.nameEn), substring = true, useUnmergedTree = true).performClick()
-        compose.runOnIdle { assertEquals(1,opened) }
+        compose.onNodeWithTag("med_${med.nameEn}").performClick().assertIsOff()
+        compose.runOnIdle { assertFalse(selected); assertEquals(0,opened) }
     }
 
     private fun many(): CatalogSnapshot {
@@ -74,8 +74,7 @@ class UiEnhancementTest {
         } }
         compose.onNodeWithTag("home").performScrollToNode(hasTestTag("med_Item 00"))
         compose.onNodeWithTag("med_Item 00").performTouchInput { longClick() }
-        compose.onNodeWithTag("home").performScrollToNode(hasTestTag("select_item0"))
-        compose.onNodeWithTag("select_item0").performScrollTo().performClick()
+        compose.onNodeWithTag("med_Item 00").assertIsOn()
         compose.onNodeWithTag("home").performScrollToNode(hasTestTag("med_Item 29"))
         compose.onNodeWithTag("bulk_selection_bar").assertIsDisplayed()
         compose.onNodeWithText("تعديل المحدد").assertIsEnabled()

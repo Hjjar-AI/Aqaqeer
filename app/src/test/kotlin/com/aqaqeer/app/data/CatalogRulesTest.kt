@@ -35,7 +35,7 @@ class CatalogRulesTest {
         CatalogRules.validate(seed.copy(medications = listOf(medication())))
         assertNull(medication().nameAr)
     }
-    @Test fun PresentNamesAndStrengthCannotBeBlank() {
+    @Test fun presentNamesAndStrengthCannotBeBlank() {
         assertThrows(IllegalArgumentException::class.java) {
             CatalogRules.validate(seed.copy(medications = listOf(medication().copy(nameEn = " "))))
         }
