@@ -219,7 +219,7 @@ jobs:
             printf 'Debug APK distribution (%s). These are debuggable builds signed with the permanent dedicated debug key, not production-signed Android releases.\n\n' "$CI_RELEASE_FLAVOR"
             printf '<!-- aqaqeer-debug-distribution:v1 run=%s attempt=%s flavors=%s source=%s -->\n' "$CI_RELEASE_RUN" "$CI_RELEASE_ATTEMPT" "$CI_RELEASE_FLAVOR" "$CI_SOURCE_SHA"
             printf 'Source commit: %s\nTemporary build-run link: %s\n\n' "$CI_SOURCE_SHA" "$CI_RUN_URL"
-            printf 'APK version: 0.0.%s (version code %s).\n\n' "$CI_BUILD_CODE" "$CI_BUILD_CODE"
+            printf 'Reserved APK version code: %s (base version 0.0.%s).\n\n' "$CI_BUILD_CODE" "$CI_BUILD_CODE"
             printf 'Standard: com.aqaqeer.app.debug. Demo: com.aqaqeer.app.demo.debug (fictional sample data).\n\n'
             printf 'Verified signer/package/version receipts and SHA-256 checksums are attached. Debug and production versions share android-build-N reservations. Existing installations require the same signer; never uninstall or clear pharmacy data to bypass a conflict.\n'
           } > release-notes.md

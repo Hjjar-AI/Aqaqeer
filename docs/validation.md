@@ -22,7 +22,9 @@ Source changes protect `.aqz`/private-key files and known workflow outputs, reje
 
 GitHub private reporting, Dependabot alerts/security-update PRs and both reviewed branch/tag rulesets were applied and read back; the [settings receipt](evidence/repository-review-20261114.md#focused-settings-update--2026-11-15) records IDs and limits. Local hook activation was not changed.
 
-Hosted [08 / 43644861384](https://github.com/Hjjar-AI/Aqaqeer/actions/runs/43644861384) was dispatched on `Final`, source `b1d777218316da8556d939f0f1a2b5ea12b4dcf6`. Before dispatch, hosted workflow/helper blob hashes matched the local files containing the existing package-absence correction. The run is pending; this does not verify the uncommitted housekeeping changes. No local builds, Gradle, lint, test-suite inspection/execution or migration inspection accompanied this work.
+Source-only integrity checked **243 text files / 221 local links, zero problems**; parsed CI policy checked **15 workflows, zero problems**. Hook and publication-shell syntax, short issue-form YAML and the selected ignore patterns passed lightweight checks. These are source checks, not hook runtime or debug-release publication evidence.
+
+Hosted [08 / 43644861384](https://github.com/Hjjar-AI/Aqaqeer/actions/runs/43644861384) was dispatched on `Final`, source `b1d777218316da8556d939f0f1a2b5ea12b4dcf6`. Before dispatch, hosted workflow/helper blob hashes matched the local files containing the existing package-absence correction. The run is pending; it builds the earlier source and does not verify the housekeeping changes above. No local builds, Gradle, lint, test-suite inspection/execution or migration inspection accompanied this work.
 
 ## Expanded test source — 2026-11-14
 
