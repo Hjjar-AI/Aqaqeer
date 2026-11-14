@@ -35,7 +35,8 @@ class AcceptancePdfInstrumentedTest {
                 genericAr="أموكسيسيلين مع حمض الكلافولانيك",genericEn="Amoxicillin / Clavulanic acid",
                 strength="500 mg + 125 mg",note=("ملاحظة عربية ممتدة لاختبار اتصال الحروف واتجاه النص مع English reference 12345. ").repeat(if(i==3) 80 else 2),
                 expiryDate=today.plusDays(20))
-            profile.admin.saveMedication(medication)
+            val duplicates = MedicationDuplicates.find(medication, MedicationDuplicates.index(profile.ready().catalog.medications)).toSet()
+            profile.admin.saveMedication(medication, confirmedDuplicates = duplicates)
             profile.admin.availability(medication.id,section.id,if(i%2==0) AvailabilityStatus.OUT else AvailabilityStatus.UNKNOWN)
         }
         val reports=ReportRepository(profile.admin,DocumentOutput(profile.context),PdfReports(profile.context))

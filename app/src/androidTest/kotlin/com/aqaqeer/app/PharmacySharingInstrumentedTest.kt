@@ -78,7 +78,7 @@ class PharmacySharingInstrumentedTest {
     }
     private suspend fun medicine(p: Profile, name: String = "Medicine"): Medication {
         val value = Medication(newId(), name, "10 mg", CatalogSeeds.OTHER_FORM_ID, CatalogSeeds.UNCATEGORIZED_ID,
-            Instant.now(), Instant.now(), EditorRef(newId(), "placeholder"))
+            Instant.now(), Instant.now(), EditorRef(newId(), "placeholder"), genericEn = name)
         p.admin.saveMedication(value); return p.ready().catalog.medications.single { it.id == value.id }
     }
     @After fun cleanOwnedProfiles() { profiles.forEach { p ->
@@ -117,6 +117,10 @@ class PharmacySharingInstrumentedTest {
         failed = false
         try { AdminRepository(reader.factory, reader.requirements, reader.secure, com.aqaqeer.app.maintenance.MaintenanceStage(reader.context), com.aqaqeer.app.admin.PinThrottle(reader.context, reader.secure), com.aqaqeer.app.data.DisplayPreferences(reader.context), pinClock).promote("123456".toCharArray(), "محرر ثانٍ") }
         catch (_: Exception) { failed = true }; assertTrue(failed)
+        val throttle = com.aqaqeer.app.maintenance.MaintenanceStore(reader.secure)
+            .decode<com.aqaqeer.app.admin.PinDelay>("pin-delay")!!
+        assertEquals(1, throttle.failures)
+        delay((throttle.retryAtElapsed - android.os.SystemClock.elapsedRealtime()).coerceAtLeast(0) + 1)
         AdminRepository(reader.factory, reader.requirements, reader.secure, com.aqaqeer.app.maintenance.MaintenanceStage(reader.context), com.aqaqeer.app.admin.PinThrottle(reader.context, reader.secure), com.aqaqeer.app.data.DisplayPreferences(reader.context), java.time.Clock.fixed(pinClock.instant().plusSeconds(3), java.time.ZoneOffset.UTC))
             .promote("123456".toCharArray(), "محرر ثانٍ")
         assertTrue(reader.ready().admin)

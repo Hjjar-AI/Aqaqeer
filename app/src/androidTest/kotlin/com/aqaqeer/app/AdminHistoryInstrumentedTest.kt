@@ -86,12 +86,12 @@ class AdminHistoryInstrumentedTest {
         assertEquals(operation.id, record.operationId)
         val device = p.admin.transaction { it.deviceIdentity()!! }
         guardPinOperations(store, device, listOf(operation), record.previous)
-        assertThrows(IllegalStateException::class.java) { guardPinOperations(store, device.copy(id = newId()), listOf(operation), record.previous) }
+        assertThrows(AdminProblem::class.java) { guardPinOperations(store, device.copy(id = newId()), listOf(operation), record.previous) }
     }
     @Test fun wrongPinAndMismatchedConfirmationLeaveCatalogAndHistoryUnchanged(): Unit = runBlocking {
         val before = p.admin.transaction { Triple(it.catalog(), it.pending(), it.historyCount()) }
         val secrets = listOf("000000".toCharArray(), "654321".toCharArray(), "654321".toCharArray())
-        assertThrows(IllegalStateException::class.java) { runBlocking { PinChanges(p.admin, MaintenanceStore(p.secure)).change(secrets[0], secrets[1], secrets[2]) } }
+        assertThrows(AdminProblem::class.java) { runBlocking { PinChanges(p.admin, MaintenanceStore(p.secure)).change(secrets[0], secrets[1], secrets[2]) } }
         assertTrue(secrets.all { it.all { c -> c == '\u0000' } })
         assertEquals(before, p.admin.transaction { Triple(it.catalog(), it.pending(), it.historyCount()) })
     }

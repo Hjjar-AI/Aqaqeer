@@ -34,7 +34,7 @@ class CreationUiTest {
         compose.onNodeWithTag("create_pharmacy").performClick()
         compose.onNodeWithTag("اسم الصيدلية").performTextInput("صيدلية واجهة الاختبار")
         compose.onNodeWithTag("اسم المحرر").performScrollTo().performTextInput("محرر الاختبار")
-        compose.onNodeWithTag("رمز الإدارة — ستة أرقام").performScrollTo().performTextInput("123456")
+        compose.onNodeWithTag("رمز الإدارة — أربعة أرقام على الأقل").performScrollTo().performTextInput("123456")
         compose.onNodeWithTag("تأكيد رمز الإدارة").performScrollTo().performTextInput("123456")
         compose.onNodeWithText("إنشاء الصيدلية").performScrollTo().performClick()
         compose.waitUntil(15000) { compose.onAllNodesWithText("مسودة محلية — غير مشتركة").fetchSemanticsNodes().isNotEmpty() }

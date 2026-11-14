@@ -187,7 +187,7 @@ internal class RestoreCrashProfile(val base: Context, val root: File, val namesp
         admin.create(name, "Asia/Damascus", "محرر الاختبار", "الرئيسي", "123456".toCharArray(), "123456".toCharArray())
     }
     suspend fun medication(name: String): Medication {
-        val med = M3Fixtures.catalog().medications.single().copy(id = newId(), nameEn = name)
+        val med = M3Fixtures.catalog().medications.single().copy(id = newId(), nameEn = name, genericEn = name)
         admin.saveMedication(med)
         return ready().catalog.medications.single { it.id == med.id }
     }
