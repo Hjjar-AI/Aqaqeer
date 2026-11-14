@@ -3,6 +3,7 @@
 .kotlin/
 **/build/
 .cxx/
+.externalNativeBuild/
 
 # Machine-local configuration and verification evidence
 /local/
@@ -10,11 +11,15 @@ local.properties
 /ci-output/
 
 # Private signing material and credentials
+/signing/
 *.jks
 *.keystore
 *.p12
 *.pfx
+*.b64
+*.base64
 keystore.properties
+release.properties
 .env
 .env.*
 !.env.example
@@ -23,6 +28,7 @@ telegram-test-config.local.json
 # Generated packages and runtime dumps
 *.apk
 *.aab
+*.idsig
 *.hprof
 
 # IDE metadata
@@ -35,9 +41,5 @@ __pycache__/
 
 # Operating-system metadata
 .DS_Store
-
-# Encoded signing exports remain private.
-*.b64
-*.base64
-release.properties
-/signing/
+Thumbs.db
+desktop.ini
