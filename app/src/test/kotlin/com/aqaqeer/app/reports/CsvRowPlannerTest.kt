@@ -29,17 +29,21 @@ class CsvRowPlannerTest {
         assertNull(preview("genericEn,strength,formAr\n${med.genericEn},20 mg,أخرى").rows.single().error)
     }
     @Test fun blankUpdatesPreserveValuesAndExplicitClearingRemovesOptionalValues() {
-        val enriched = catalog.copy(medications = listOf(med.copy(note = "keep", brand = "Brand")))
+        val enriched = catalog.copy(medications = listOf(med.copy(nameAr = "تجاري", nameEn = "Commercial", note = "keep", brand = "Brand", expiryDate = java.time.LocalDate.of(2027, 1, 1))))
         val table = CsvCodec.read("nameEn,note,brand\n,,".byteInputStream()) {}
         fun plan(clear: Set<String>) = CsvRowPlanner.plan(F.publishId, enriched, table, table.records.single(), CsvDecision(CsvAction.UPDATE, med.id, clear = clear))
         assertEquals("keep", plan(emptySet()).medication.note)
         assertEquals("Brand", plan(emptySet()).medication.brand)
         assertNull(plan(setOf("note")).medication.note)
         assertEquals("Brand", plan(setOf("note")).medication.brand)
+        val cleared = plan(setOf("nameAr", "nameEn", "brand", "note", "expiryDate")).medication
+        assertNull(cleared.nameAr); assertNull(cleared.nameEn); assertNull(cleared.brand)
+        assertNull(cleared.note); assertNull(cleared.expiryDate)
+        assertEquals(med.genericEn, cleared.genericEn)
     }
     @Test fun unsupportedClearFieldsRejectRatherThanSilentlyErase() {
         val table = CsvCodec.read("genericEn\nNew".byteInputStream()) {}
-        for (field in listOf("strength", "formAr", "categoryAr", "brand", "expirySoonThresholdDays")) {
+        for (field in listOf("strength", "formAr", "categoryAr", "expirySoonThresholdDays", "unknown")) {
             assertThrows(CsvProblem::class.java) {
                 CsvRowPlanner.plan(F.publishId, catalog, table, table.records.single(), CsvDecision(CsvAction.UPDATE, med.id, clear = setOf(field)))
             }

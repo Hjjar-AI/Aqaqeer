@@ -6,6 +6,7 @@ import android.os.ParcelFileDescriptor
 import androidx.test.platform.app.InstrumentationRegistry
 import com.aqaqeer.app.data.*
 import com.aqaqeer.app.admin.AdminProblem
+import com.aqaqeer.app.admin.catalog
 import com.aqaqeer.app.fixtures.*
 import com.aqaqeer.app.reports.*
 import kotlinx.coroutines.*

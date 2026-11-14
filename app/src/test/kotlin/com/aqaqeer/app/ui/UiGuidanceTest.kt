@@ -1,9 +1,45 @@
 package com.aqaqeer.app.ui
 
+import android.content.res.Resources
+import com.aqaqeer.app.AppStrings
+import com.aqaqeer.app.R
+import io.mockk.*
+import org.junit.Before
+import org.junit.After
 import org.junit.Assert.*
 import org.junit.Test
 
 class UiGuidanceTest {
+    // Local JVM tests do not start AqaqeerApplication. Stub only resource lookup;
+    // screen routing and validation still execute the production functions.
+    @Before fun setupStrings() {
+        val strings = mapOf(
+            R.string.ui_screen_titles_001 to "إنشاء صيدلية",
+            R.string.ui_screen_titles_002 to "أدوات الإدارة",
+            R.string.ui_screen_titles_003 to "إعداد تيليغرام",
+            R.string.ui_screen_titles_004 to "مراجعة التعديلات والنشر",
+            R.string.ui_screen_titles_005 to "الأقسام والتصنيفات والأشكال",
+            R.string.ui_screen_titles_006 to "تفعيل الإدارة",
+            R.string.ui_screen_titles_007 to "مغادرة الصيدلية",
+            R.string.ui_screen_titles_008 to "إصدار ملف اتصال",
+            R.string.ui_screen_titles_009 to "إضافة دواء",
+            R.string.ui_screen_titles_010 to "تعديل الدواء",
+            R.string.ui_screen_titles_015 to "السجل المحلي",
+            R.string.ui_screen_titles_019 to "تفاصيل الدواء",
+            R.string.ui_screen_titles_020 to "عقاقير",
+            R.string.ui_form_guidance_001 to "أدخل أربعة أرقام عربية أو إنجليزية على الأقل",
+            R.string.ui_form_guidance_002 to "أدخل منطقة زمنية صحيحة مثل Asia/Damascus",
+            R.string.ui_form_guidance_003 to "أدخل تاريخاً ميلادياً صحيحاً مثل 2026-11-12",
+            R.string.ui_form_guidance_004 to "أدخل عدداً صحيحاً غير سالب للأيام",
+            R.string.ui_form_guidance_005 to "أدخل معرّف المجموعة السالب الصحيح",
+        )
+        val resources = mockk<Resources>()
+        every { resources.getString(any()) } answers { strings.getValue(firstArg<Int>()) }
+        mockkObject(AppStrings)
+        every { AppStrings.resources } returns resources
+    }
+    @After fun restoreStrings() { unmockkObject(AppStrings) }
+
     @Test fun titlesDistinguishCreationEditingAndAdministration() {
         val expected = mapOf("create" to "إنشاء صيدلية", "admin" to "أدوات الإدارة", "setup" to "إعداد تيليغرام",
             "review" to "مراجعة التعديلات والنشر", "taxonomy" to "الأقسام والتصنيفات والأشكال", "promote" to "تفعيل الإدارة",
