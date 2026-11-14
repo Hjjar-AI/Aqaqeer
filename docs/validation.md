@@ -2,6 +2,28 @@
 
 [Requirements](requirements.md) define acceptance; [plan](plan.md) owns remaining work. Source review, compilation, runtime and human acceptance are separate. The evidence manifest (local-only: `../local/verification/manifest.json`) retains provenance and original results; ignored evidence may be absent in fresh checkouts. Documentation cleanup deletes no raw evidence, credentials, keys, counters or artifacts.
 
+## Expanded test source — 2026-11-14
+
+The user authorized substantial new test files and updates to existing tests, explicitly forbidding execution and retaining workflow execution themselves. This batch changes test/fixture/document sources only. No production changes, migration inspection/changes, Gradle, compilation, test execution, packaging, lint, workflow dispatch, version reservation or device/network operation accompanied it.
+
+Static source inventory, excluding the untouched migration test file and counting each parameter row separately:
+
+| Source set | Before | Authored current cases | Method declarations |
+| --- | --- | --- | --- |
+| JVM, per flavor | 165 | 520 | 211 |
+| Instrumentation | 132 | 155 | 155 |
+| Combined inventory | 297 | 675 | 366 |
+
+Five parameterized classes contribute 314 cases: duplicate identity 48; search/filter/sort/projection 120; CSV dialect 72; expiry boundaries 42; field merge 32. JVM inventory is about 3.15× its prior size; combined inventory about 2.27×. These are source counts, not discovered/executed/passed counts, measured coverage or scenario completeness. Flavor executions and parameter cases must be reconciled with fresh workflow XML; standard-only instrumentation skips demo, and existing host-managed acceptance/process-death classes retain their prerequisites.
+
+Focused additions cover dependent CSV preview revisions and stable IDs/aliases, optional clears and scientific-name preservation, protected metadata caching/isolation/invalidation/failure buffers, typed incremental diffs/composite targets/tombstones, four-digit and mixed-script PINs, atomic bulk changes/Undo/stale/deleted targets, same-PIN rejection, history type filtering, all-active-section shortages and empty A5 output. CSV instrumentation includes 50+1 chunk ordering, cancellation before the next chunk and a test-owned SQLite trigger that forces a mid-chunk storage failure, asserting full catalog/pending/history rollback and no success results. Those fault assertions are authored, not observed results.
+
+Existing fixtures/assertions were updated for current constructor dependencies, scientific names and AVAILABLE defaults, removed price APIs, deliberate AdminProblem boundaries, monotonic PIN delays, batch-result callbacks, explicit Unit coroutine test methods, current demo identities, projected Home content/filter sheets and card/selection APIs. Existing per-case assertions remain behavioral; obsolete price checks were replaced with current scientific identity/expiry rules.
+
+Workflow routing remains unchanged: [03](../.github/workflows/verification.yml) runs all JVM cases for both flavors and compiles both instrumentation variants. [07](../.github/workflows/emulator.yml) executes its selected demo checks only; the new standard functional classes (`CsvReportsInstrumentedTest`, `BulkMedicationRegressionInstrumentedTest`) need an explicitly selected standard emulator job or a separately authorized instrumentation campaign. Extending 07 is a small source/configuration follow-up; no current demo-job pass would establish these functional results.
+
+Source-only checks: lexical delimiter structure across 66 Kotlin test/fixture files and scoped whitespace passed; all three newly introduced documentation destinations/anchors resolved. The full repository integrity scan inspected 315 text files and 226 local links, reporting five pre-existing absolute `/opt/android-shared/` guide links that its repository-relative resolver cannot resolve; those references were confirmed unchanged against the pre-batch source. No other integrity problems were reported. These are not Kotlin compilation or test results. All current new and updated test source remains uncompiled and unexecuted; Kotlin type correctness, Room generation, emulator synchronization, rollback fault behavior and PDF rendering await the user-run workflows. Physical/live campaigns and local lint remain stopped.
+
 ## Logic-review enhancements — 2026-11-14
 
 Implemented the agreed production-source changes: safe admin/publication/restore errors and refresh feedback/guards/read cooldowns; shared name/strength/form duplicate matching (including `500mg` = `500 mg` = `٥٠٠ mg`); flexible CSV parsing, match actions, dependent preview revisions and atomic chunks of up to 50 rows; incremental catalog writes and typed-row diff filtering; retained-history option caching/type filters; all-active-sections shortages and compact OUT location hints; four-digit-minimum numeric credentials, secure connection-password generation and same-PIN rejection; complete lazy selection previews with original saved expectations; recoverable selected-section cleanup and shared one-shot catalog reads. Product/crypto guidance and the changelog reflect these choices. Existing availability defaults, search, expiry-report policy, weekly reminder, pending-operation counting and explicit startup recovery remain intact. The superseded external review document was removed after confirming that the agreed implementation, retained policies and outstanding verification are captured in the canonical documentation.
