@@ -62,6 +62,23 @@ def adb(*args, timeout=30, check=True):
     return subprocess.run(['adb', '-s', SERIAL, *args], capture_output=True, timeout=timeout, check=check)
 
 
+def installation_identity(package):
+    details = adb('shell', 'dumpsys', 'package', package).stdout.decode(errors='replace')
+    identity = {}
+    for field in ('userId', 'codePath', 'firstInstallTime', 'lastUpdateTime'):
+        match = re.search(r'^\s*' + field + r'=([^\r\n]+)', details, re.M)
+        if match is None:
+            raise RuntimeError(f'Missing {field} ownership evidence for {package}')
+        identity[field] = match.group(1).strip()
+    return identity, details
+
+
+def require_absent(package):
+    probe = adb('shell', 'pm', 'path', package, check=False)
+    if probe.returncode not in (0, 1) or probe.stdout.strip() or probe.stderr.strip():
+        raise RuntimeError(f'Package must be absent on the fresh AVD: {package}')
+
+
 def main():
     global PACKAGE
     parser = argparse.ArgumentParser(description=__doc__)
@@ -75,6 +92,7 @@ def main():
         raise SystemExit('Expected the owned emulator; refusing another device.')
     OUTPUT.mkdir(parents=True, exist_ok=True)
     results = []
+    installations = {}
     capture_errors = []
     provenance = {'serial': SERIAL, 'package': PACKAGE, 'commit': os.environ.get('GITHUB_SHA'),
                   'suite': args.suite, 'runId': os.environ.get('GITHUB_RUN_ID'),
@@ -101,12 +119,15 @@ def main():
             signer = subprocess.run([str(tools / 'apksigner'), 'verify', '--print-certs', str(path)],
                                     capture_output=True, text=True, timeout=30, check=True).stdout
             provenance['apks'][label]['signer'] = signer
-            if b'package:' in adb('shell', 'pm', 'path', package, check=False).stdout:
-                raise RuntimeError(f'Unexpected existing installation: {package}')
+            require_absent(package)
             provenance[label + 'BeforeInstall'] = 'absent on fresh owned AVD'
             (OUTPUT / 'provenance.json').write_text(json.dumps(provenance, indent=2) + '\n')
             adb('install', '-t', str(path), timeout=90)
-            provenance[label + 'Installation'] = adb('shell', 'dumpsys', 'package', package).stdout.decode(errors='replace')
+            identity, details = installation_identity(package)
+            installations[package] = identity
+            provenance[label + 'Identity'] = identity
+            provenance[label + 'Installation'] = details
+            (OUTPUT / 'provenance.json').write_text(json.dumps(provenance, indent=2) + '\n')
         for name, method, record in cases:
             recorder = None
             recorder_log = None
@@ -183,7 +204,10 @@ def main():
                         recorder_log.close()
                         adb('shell', 'rm', '-f', remote, check=False)
                 # A timed-out instrumentation must not overlap the next case.
-                adb('shell', 'am', 'force-stop', PACKAGE, check=False)
+                current, _ = installation_identity(PACKAGE)
+                if current != installations[PACKAGE]:
+                    raise RuntimeError('Installation ownership changed; refusing delayed force-stop.')
+                adb('shell', 'am', 'force-stop', PACKAGE)
     finally:
         # Assertion-time captures are made inside the live Compose activity. Keep the
         # host screenshot as a fallback for setup crashes/timeouts that bypass JUnit.
