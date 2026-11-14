@@ -10,40 +10,57 @@ class CsvRowPlannerTest {
     private val med = catalog.medications.single()
     private fun preview(text: String, decisions: Map<Int, CsvDecision> = emptyMap()) =
         CsvRowPlanner.preview(F.publishId, catalog, CsvCodec.read(text.byteInputStream()) {}, decisions) {}
-    @Test fun newRowsDefaultToCreateAndBlankArabicStaysNull() {
-        val row = preview("nameEn,strength,nameAr\nNew,10 mg,\n").rows.single()
+
+    @Test fun newRowsDefaultToCreateWithTabletAndAvailableDefaults() {
+        val row = preview("genericEn,strength,nameAr\nNew,10 mg,\n").rows.single()
         assertNull(row.error); assertEquals(CsvAction.CREATE, row.decision.action)
         assertNull(row.plan!!.medication.nameAr)
-        assertEquals(CatalogSeeds.OTHER_FORM_ID, row.plan.medication.formId)
+        assertEquals(CatalogSeeds.TABLET_FORM_ID, row.plan.medication.formId)
         assertEquals(60, row.plan.medication.expirySoonThresholdDays)
+        assertEquals(catalog.sections.associate { it.id to AvailabilityStatus.AVAILABLE }, row.plan.statuses)
         CatalogRules.validate(row.plan.apply(catalog, F.editor, F.time))
     }
-    @Test fun duplicatesRequireExplicitChoiceAndRepeatedUpdateTargetsAreRejected() {
-        val text = "nameEn,strength\n${med.nameEn},10 mg\n${med.nameEn},20 mg"
+    @Test fun duplicatesUseStrengthAndFormAndRepeatedUpdateTargetsAreRejected() {
+        val text = "genericEn,strength,formAr\n${med.genericEn},10 mg,أخرى\n${med.genericEn},10mg,أخرى"
         assertTrue(preview(text).rows.all { it.error != null && it.warnings.isNotEmpty() })
         val update = CsvDecision(CsvAction.UPDATE, med.id)
         assertTrue(preview(text, mapOf(2 to update, 3 to update)).rows.all { it.error != null })
         assertNull(preview(text, mapOf(2 to CsvDecision(CsvAction.CREATE_ANOTHER), 3 to CsvDecision(CsvAction.SKIP))).rows.first().error)
+        assertNull(preview("genericEn,strength,formAr\n${med.genericEn},20 mg,أخرى").rows.single().error)
     }
     @Test fun blankUpdatesPreserveValuesAndExplicitClearingRemovesOptionalValues() {
-        val enriched = catalog.copy(medications = listOf(med.copy(note = "keep", priceMinor = 123L, currency = Currency.USD)))
-        val table = CsvCodec.read("nameEn,note,price,currency\n,,,".byteInputStream()) {}
+        val enriched = catalog.copy(medications = listOf(med.copy(note = "keep", brand = "Brand")))
+        val table = CsvCodec.read("nameEn,note,brand\n,,".byteInputStream()) {}
         fun plan(clear: Set<String>) = CsvRowPlanner.plan(F.publishId, enriched, table, table.records.single(), CsvDecision(CsvAction.UPDATE, med.id, clear = clear))
         assertEquals("keep", plan(emptySet()).medication.note)
-        assertEquals(123L, plan(emptySet()).medication.priceMinor)
-        val cleared = plan(setOf("note", "price")).medication
-        assertNull(cleared.note); assertNull(cleared.priceMinor); assertNull(cleared.currency)
-        assertThrows(CsvProblem::class.java) { plan(setOf("nameEn")) }
+        assertEquals("Brand", plan(emptySet()).medication.brand)
+        assertNull(plan(setOf("note")).medication.note)
+        assertEquals("Brand", plan(setOf("note")).medication.brand)
     }
-    @Test fun invalidPricesDatesReferencesAndMissingRequiredFieldsProduceRowErrors() {
-        listOf("nameEn,strength,price\nNew,10 mg,12", "nameEn,strength,expiryDate\nNew,10 mg,2026-02-30",
-            "nameEn\nNew", "nameEn,strength,section:missing\nNew,10 mg,OUT",
-            "nameEn,strength,expirySoonThresholdDays\nNew,10 mg,-1").forEach { assertNotNull(it, preview(it).rows.single().error) }
+    @Test fun unsupportedClearFieldsRejectRatherThanSilentlyErase() {
+        val table = CsvCodec.read("genericEn\nNew".byteInputStream()) {}
+        for (field in listOf("strength", "formAr", "categoryAr", "brand", "expirySoonThresholdDays")) {
+            assertThrows(CsvProblem::class.java) {
+                CsvRowPlanner.plan(F.publishId, catalog, table, table.records.single(), CsvDecision(CsvAction.UPDATE, med.id, clear = setOf(field)))
+            }
+        }
     }
-    @Test fun taxonomyIdsAreStableAndArabicDigitsParseWithoutChangingBusinessDates() {
-        val text = "nameEn,strength,categoryAr,formAr,price,currency,expiryDate\nNew,10 mg,جديد,جديد,١٢.٣٤,USD,٢٠٢٦-١٢-٣١"
+    @Test fun invalidDatesReferencesAndMissingScientificNameProduceRowErrors() {
+        listOf("genericEn,strength,expiryDate\nNew,10 mg,2026-02-30", "genericEn\nNew",
+            "nameEn,strength\nCommercial only,10 mg", "genericEn,strength,section:missing\nNew,10 mg,OUT",
+            "genericEn,strength,expirySoonThresholdDays\nNew,10 mg,-1").forEach { assertNotNull(it, preview(it).rows.single().error) }
+    }
+    @Test fun taxonomyIdsAreStableAndArabicDigitsPreserveGregorianBusinessDates() {
+        val text = "genericEn,strength,categoryAr,formAr,expiryDate\nNew,١٠ mg,جديد,جديد,٢٠٢٦-١٢-٣١"
         val a = preview(text).rows.single().plan!!; val b = preview(text).rows.single().plan!!
         assertEquals(a.category!!.id, b.category!!.id); assertEquals(a.form!!.id, b.form!!.id)
-        assertEquals(1234L, a.medication.priceMinor); assertEquals("2026-12-31", a.medication.expiryDate.toString())
+        assertEquals("10 mg", a.medication.strength); assertEquals("2026-12-31", a.medication.expiryDate.toString())
+    }
+    @Test fun clearingLastScientificNameRejectsButRetainingAlternateSucceeds() {
+        val table = CsvCodec.read("genericEn\n\"\"".byteInputStream()) {}
+        val decision = CsvDecision(CsvAction.UPDATE, med.id, clear = setOf("genericEn"))
+        assertThrows(CsvProblem::class.java) { CsvRowPlanner.plan(F.publishId, catalog, table, table.records.single(), decision) }
+        val bilingual = catalog.copy(medications = listOf(med.copy(genericAr = "علمي")))
+        assertNull(CsvRowPlanner.plan(F.publishId, bilingual, table, table.records.single(), decision).medication.genericEn)
     }
 }

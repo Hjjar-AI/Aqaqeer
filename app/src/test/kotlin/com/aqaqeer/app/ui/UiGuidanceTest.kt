@@ -1,6 +1,5 @@
 package com.aqaqeer.app.ui
 
-import com.aqaqeer.app.data.Currency
 import org.junit.Assert.*
 import org.junit.Test
 
@@ -15,13 +14,14 @@ class UiGuidanceTest {
     }
     @Test fun pinHintsAcceptArabicDigitsAndRejectLengthAndText() {
         assertNull(FormGuidance.pin("١٢٣٤٥٦")); assertNull(FormGuidance.pin("123456"))
-        listOf("", "12345", "1234567", "12a456", "      ").forEach { assertNotNull(FormGuidance.pin(it)) }
+        listOf("", "123", "1234 ", "12a456", "      ").forEach { assertNotNull(FormGuidance.pin(it)) }
     }
-    @Test fun priceHintsMatchCurrencyPrecisionAndOverflow() {
-        assertNull(FormGuidance.price("١٢٫٥٠", Currency.USD)); assertNull(FormGuidance.price("", Currency.SYP))
-        assertNull(FormGuidance.price("0", Currency.SYP))
-        assertNotNull(FormGuidance.price("1.5", Currency.SYP)); assertNotNull(FormGuidance.price("1.001", Currency.USD))
-        assertNotNull(FormGuidance.price("-1", Currency.USD)); assertNotNull(FormGuidance.price("999999999999999999999", Currency.SYP))
+    @Test fun simpleNumericWarningsDoNotRejectValidCredentials() {
+        listOf("1111", "1234", "4321", "121212", "١٢٣٤").forEach {
+            assertTrue(it, FormGuidance.simpleNumericPattern(it)); assertNull(FormGuidance.pin(it))
+        }
+        assertFalse(FormGuidance.simpleNumericPattern("1907"))
+        assertFalse(FormGuidance.simpleNumericPattern(""))
     }
     @Test fun dateThresholdTimezoneAndGroupHintsRespectBoundaries() {
         assertNull(FormGuidance.date("2024-02-29")); assertNull(FormGuidance.date(""))

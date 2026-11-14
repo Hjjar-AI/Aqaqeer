@@ -31,7 +31,7 @@ class MedicationPresentationTest {
             med("generic", en = "Y").copy(genericEn = "alpha"),
             med("substring", en = "Xalpha"), med("prefix", en = "Alpha beta"),
             med("exact", en = "Alpha"), med("arabic", ar = "alpha", en = "Last"))
-        assertEquals(listOf("arabic", "exact", "prefix", "substring", "generic", "brand"), browse(meds.reversed(), "alpha"))
+        assertEquals(listOf("generic", "arabic", "exact", "prefix", "substring", "brand"), browse(meds.reversed(), "alpha"))
     }
     @Test fun searchTiesAndArabicSortHaveEnglishFallbackAndStableIdentity() {
         val a = med("a", en = "Saline")
@@ -112,22 +112,15 @@ class MedicationPresentationTest {
         assertTrue(MedicationPresentation.availableElsewhere(catalog, "med", null).isEmpty())
         assertTrue(MedicationPresentation.availableElsewhere(catalog, "missing", current.id).isEmpty())
     }
-    @Test fun moneyFormattingIsDecimalSafeIncludingZeroAndLongMax() {
-        assertEquals("١٣٬٠٠٠ ل.س", MedicationPresentation.price(13_000, Currency.SYP))
-        assertEquals("$12.50", MedicationPresentation.price(1250, Currency.USD))
-        assertEquals("$0.00", MedicationPresentation.price(0, Currency.USD))
-        assertEquals("٠ ل.س", MedicationPresentation.price(0, Currency.SYP))
-        assertEquals("$92233720368547758.07", MedicationPresentation.price(Long.MAX_VALUE, Currency.USD))
+    @Test fun scientificIdentityPrefersScientificNamesAndNormalizesStrengthDigits() {
+        val value = med("1", ar = "تجاري").copy(genericAr = "علمي", genericEn = "Generic", strength = "٥٠٠ mg")
+        assertEquals("علمي", MedicationPresentation.scientificName(value))
+        assertEquals("علمي · 500 mg · أقراص", MedicationPresentation.identity(value, "أقراص"))
+        assertEquals("Generic", MedicationPresentation.scientificName(value.copy(genericAr = null)))
     }
-    @Test fun decimalPriceInputNormalizesDigitsAndRejectsPrecisionNegativesAndOverflow() {
-        assertEquals(1250L, MedicationPresentation.parsePrice("١٢٫٥٠", Currency.USD))
-        assertEquals(13000L, MedicationPresentation.parsePrice("۱۳۰۰۰", Currency.SYP))
-        assertEquals(0L, MedicationPresentation.parsePrice("0", Currency.USD))
-        for ((value, currency) in listOf("-1" to Currency.SYP, "1.0" to Currency.SYP,
-            "1.001" to Currency.USD, "1e3" to Currency.USD, "NaN" to Currency.USD, "1,000" to Currency.SYP, "" to Currency.USD)) {
-            assertThrows(IllegalArgumentException::class.java) { MedicationPresentation.parsePrice(value, currency) }
-        }
-        assertThrows(ArithmeticException::class.java) { MedicationPresentation.parsePrice("9223372036854775808", Currency.SYP) }
+    @Test fun editableStatusesExcludeUnknownWithoutConvertingMissingAvailability() {
+        assertEquals(listOf(AvailabilityStatus.AVAILABLE, AvailabilityStatus.LOW, AvailabilityStatus.OUT), MedicationPresentation.editableStatuses)
+        assertEquals(AvailabilityStatus.UNKNOWN, seed.status("missing", seed.sections.single().id))
     }
     @Test fun freshnessTimestampsAreGregorianInPharmacyTimezone() {
         assertEquals("2026-11-09 00:00", MedicationPresentation.timestamp(Instant.parse("2026-11-08T21:00:00Z"), "Asia/Damascus"))

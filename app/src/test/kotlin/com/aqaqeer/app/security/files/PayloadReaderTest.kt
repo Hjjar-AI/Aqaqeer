@@ -91,10 +91,10 @@ class PayloadReaderTest {
             rejects(PayloadError.INVALID_PAYLOAD) { snapshot(bad) }
         }
     }
-    @Test fun invalidReferencesPricesEditorsAndPinVerifierCannotReturnSupportedCatalog() = runBlocking {
+    @Test fun invalidReferencesScientificNamesEditorsAndPinVerifierCannotReturnSupportedCatalog() = runBlocking {
         val catalog = F.catalog(); val med = catalog.medications.single(); val pharmacy = catalog.pharmacy!!
         val invalid = listOf(catalog.copy(medications = listOf(med.copy(categoryId = F.otherPharmacyId))),
-            catalog.copy(medications = listOf(med.copy(priceMinor = -1, currency = com.aqaqeer.app.data.Currency.USD))),
+            catalog.copy(medications = listOf(med.copy(genericAr = null, genericEn = null))),
             catalog.copy(medications = listOf(med.copy(updatedBy = F.editor.copy(name = " ")))),
             catalog.copy(pharmacy = pharmacy.copy(adminPinVerifier = pharmacy.adminPinVerifier.copy(hash = "AA=="))),
             catalog.copy(availability = catalog.availability + catalog.availability))

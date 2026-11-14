@@ -26,4 +26,4 @@
 
 ## Shared Android workstation
 
-For Android toolchain/build-path work, read [the shared workstation guide](/opt/android-shared/AGENTS.md) and its README before changing configuration. Project rules and explicit session authorization still apply; the guide does not authorize execution. Existing generated data must remain unmoved; only future working outputs use the registered /opt layout.
+For Android toolchain/build-path work, read [the shared workstation guide](/opt/android-shared/AGENTS.md) and its README before changing configuration. Project rules and explicit session authorization still apply; the guide does not authorize execution. Use the registered common Gradle home and separate per-checkout work directories. Preserve `.idea`, useful downloads, keys and original evidence. Inspect any recreated `.gradle`/`.kotlin` contents before cleanup; their names alone do not establish that everything inside is disposable. Consult current shared records before using historical paths; no automatic cleanup or additional execution authorization is granted.

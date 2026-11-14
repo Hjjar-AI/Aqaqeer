@@ -15,7 +15,7 @@ class CatalogRulesTest {
     private val editor = EditorRef("00000000-0000-4000-8000-000000000900", "اختبار")
     private fun medication() = Medication("00000000-0000-4000-8000-000000000999",
         "Example", "10 mg", CatalogSeeds.OTHER_FORM_ID, CatalogSeeds.UNCATEGORIZED_ID,
-        Instant.EPOCH, Instant.EPOCH, editor)
+        Instant.EPOCH, Instant.EPOCH, editor, genericEn = "Example")
 
     @Test fun seedsContainOnlyOneProtectedCategoryAndAllFifteenForms() {
         CatalogRules.validate(seed)
@@ -35,7 +35,7 @@ class CatalogRulesTest {
         CatalogRules.validate(seed.copy(medications = listOf(medication())))
         assertNull(medication().nameAr)
     }
-    @Test fun requiredEnglishAndStrengthCannotBeBlank() {
+    @Test fun PresentNamesAndStrengthCannotBeBlank() {
         assertThrows(IllegalArgumentException::class.java) {
             CatalogRules.validate(seed.copy(medications = listOf(medication().copy(nameEn = " "))))
         }
@@ -81,14 +81,14 @@ class CatalogRulesTest {
             CatalogRules.validate(seed.copy(forms = seed.forms.map { if (it.isSystem) it.copy(nameEn = "Renamed") else it }))
         }
     }
-    @Test fun basicPricePairingAndNonnegativeValuesAreStorageInvariants() {
+    @Test fun scientificNameAndNonnegativeExpiryThresholdAreStorageInvariants() {
         assertThrows(IllegalArgumentException::class.java) {
-            CatalogRules.validate(seed.copy(medications = listOf(medication().copy(priceMinor = 0))))
+            CatalogRules.validate(seed.copy(medications = listOf(medication().copy(genericEn = null))))
         }
         assertThrows(IllegalArgumentException::class.java) {
-            CatalogRules.validate(seed.copy(medications = listOf(medication().copy(priceMinor = -1, currency = Currency.SYP))))
+            CatalogRules.validate(seed.copy(medications = listOf(medication().copy(expirySoonThresholdDays = -1))))
         }
-        CatalogRules.validate(seed.copy(medications = listOf(medication().copy(priceMinor = 0, currency = Currency.SYP))))
+        CatalogRules.validate(seed.copy(medications = listOf(medication().copy(nameEn = null, expirySoonThresholdDays = 0))))
     }
     @Test fun buildFlavorSeedDoesNotCrossIntoTheStandardProfile() {
         val actual = BuildSeed.catalog()

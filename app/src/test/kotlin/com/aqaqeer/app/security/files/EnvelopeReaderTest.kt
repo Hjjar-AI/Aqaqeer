@@ -225,7 +225,7 @@ class EnvelopeReaderTest {
         reader.snapshot(input,key).close()
     }
     @Test fun invalidCredentialInputsAreRejectedWithoutChangingCallerArrays() {
-        for (password in listOf("12345", "12 3456", "abcdef")) {
+        for (password in listOf("123", "12 3456", "abcdef")) {
             val chars = password.toCharArray()
             fails(EnvelopeError.INVALID_CREDENTIAL) { reader.password(encoded("aqz:v1").inputStream(), EnvelopeDomain.CONNECTION,chars) }
             assertArrayEquals(password.toCharArray(),chars)

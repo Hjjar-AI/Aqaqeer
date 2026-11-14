@@ -31,7 +31,7 @@ object M3Fixtures {
         val pharmacy = Pharmacy(pharmacyId, "صيدلية الاختبار", "Asia/Damascus",
             PinVerifier(b64(ByteArray(16)), 200_000, b64(ByteArray(32))))
         val med = Medication("00000000-0000-4000-8000-000000000789", "Fixture medication", "10 mg",
-            CatalogSeeds.OTHER_FORM_ID, CatalogSeeds.UNCATEGORIZED_ID, time, time, editor)
+            CatalogSeeds.OTHER_FORM_ID, CatalogSeeds.UNCATEGORIZED_ID, time, time, editor, genericEn = "Fixture medication")
         return seed.copy(pharmacy = pharmacy, medications = listOf(med), availability = listOf(
             Availability(med.id, seed.sections.single().id, AvailabilityStatus.AVAILABLE, time, editor)))
     }

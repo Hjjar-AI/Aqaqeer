@@ -30,7 +30,7 @@ class HomeFixtureUiTest {
         val sections = seed.sections + Section("second", "الفرع الآخر", orderIndex = 1)
         val categories = seed.categories + Category("long", "تصنيف ذو اسم عربي طويل يمكن الوصول إليه بالتمرير الأفقي", orderIndex = 1)
         val med = Medication("m", "English only", "10 mg", CatalogSeeds.OTHER_FORM_ID, "long",
-            Instant.EPOCH, Instant.EPOCH, editor, expiryDate = LocalDate.of(2026, 11, 9), priceMinor = 1250, currency = Currency.USD)
+            Instant.EPOCH, Instant.EPOCH, editor, expiryDate = LocalDate.of(2026, 11, 9), genericEn = "English only")
         return seed.copy(pharmacy = Pharmacy("test", "صيدلية الاختبار", "Asia/Damascus", PinVerifier("", 200_000, "")),
             sections = sections, categories = categories, medications = listOf(med), availability = listOf(
                 Availability(med.id, sections[0].id, AvailabilityStatus.OUT, Instant.EPOCH, editor),

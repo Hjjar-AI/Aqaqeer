@@ -34,7 +34,6 @@ class AcceptancePdfInstrumentedTest {
                 nameEn="Arabic review $i / Amoxicillin & Clavulanate 500 mg + 125 mg",
                 genericAr="أموكسيسيلين مع حمض الكلافولانيك",genericEn="Amoxicillin / Clavulanic acid",
                 strength="500 mg + 125 mg",note=("ملاحظة عربية ممتدة لاختبار اتصال الحروف واتجاه النص مع English reference 12345. ").repeat(if(i==3) 80 else 2),
-                priceMinor=if(i%2==0) 12500 else 1299,currency=if(i%2==0) Currency.SYP else Currency.USD,
                 expiryDate=today.plusDays(20))
             profile.admin.saveMedication(medication)
             profile.admin.availability(medication.id,section.id,if(i%2==0) AvailabilityStatus.OUT else AvailabilityStatus.UNKNOWN)

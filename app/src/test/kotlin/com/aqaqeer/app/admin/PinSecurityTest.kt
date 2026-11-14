@@ -17,7 +17,7 @@ class PinSecurityTest {
         assertNotEquals(verifier.salt, PinSecurity.create(input).salt)
     }
     @Test fun invalidDigitsLengthsAndIterationCountsReject() {
-        listOf("", "12345", "1234567", " 12345", "12a456").forEach {
+        listOf("", "123", " 1234", "1234 ", "12a456").forEach {
             assertThrows(IllegalArgumentException::class.java) { PinSecurity.create(it.toCharArray()) }
         }
         assertThrows(IllegalArgumentException::class.java) {

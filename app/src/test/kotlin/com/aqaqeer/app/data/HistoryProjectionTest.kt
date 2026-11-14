@@ -14,7 +14,7 @@ class HistoryProjectionTest {
     }
     @Test fun namesResolveAvailabilityPairsAndMissingEntitiesStayUnknown() {
         val c = F.catalog(); val m = c.medications.single()
-        assertEquals(m.nameEn, c.historyName("availability", "${m.id}/${c.sections.single().id}"))
+        assertEquals(MedicationPresentation.identity(m, c.formsById[m.formId]!!.nameAr), c.historyName("availability", "${m.id}/${c.sections.single().id}"))
         assertEquals(c.pharmacy!!.name, c.historyName("pharmacy", F.pharmacyId))
         assertNull(c.historyName("medication", "missing")); assertNull(c.historyName("unknown", m.id))
     }

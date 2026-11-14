@@ -11,7 +11,7 @@ import java.time.LocalDate
 class SerializationTest {
     @Test fun catalogRoundTripPreservesUnicodeDatesInstantsAndOptionalFields() {
         val c = F.catalog(); val m = c.medications.single().copy(nameAr = "دواء 😀", expiryDate = LocalDate.of(2024,2,29),
-            note = "line\nquote\"", priceMinor = 1234L, currency = Currency.USD)
+            note = "line\nquote\"", genericAr = "مادة علمية", brand = "Example")
         val value = c.copy(medications = listOf(m))
         assertEquals(value, Json.decodeFromString<CatalogSnapshot>(Json.encodeToString(value)))
     }

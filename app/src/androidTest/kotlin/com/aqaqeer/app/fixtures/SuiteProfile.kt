@@ -43,7 +43,7 @@ internal class SuiteProfile : AutoCloseable {
         ready(); admin.create("صيدلية الاختبار", "Asia/Damascus", "محرر الاختبار", "الرئيسي", "123456".toCharArray(), "123456".toCharArray())
     }
     suspend fun medication(name: String = "Suite medicine"): Medication {
-        val value = M3Fixtures.catalog().medications.single().copy(id = newId(), nameEn = name)
+        val value = M3Fixtures.catalog().medications.single().copy(id = newId(), nameEn = name, genericEn = name)
         admin.saveMedication(value)
         return ready().catalog.medications.single { it.id == value.id }
     }
