@@ -1,4 +1,5 @@
 import com.android.build.api.artifact.SingleArtifact
+import com.android.build.api.variant.HostTestBuilder
 import java.io.File
 import java.util.ArrayDeque
 
@@ -169,7 +170,12 @@ val runtimeNoticeInventory = tasks.register<RuntimeNoticeInventory>("generateRun
 
 androidComponents {
     beforeVariants(selector().withBuildType("release")) { variant ->
-        if (variant.productFlavors.any { it.second == "demo" }) variant.enable = false
+        if (variant.productFlavors.any { it.second == "demo" }) {
+            variant.enable = false
+        } else {
+            // AGP 9.5 Preview runfiles require the standard-release host component too.
+            variant.hostTests.getValue(HostTestBuilder.UNIT_TEST_TYPE).enable = true
+        }
     }
     onVariants(selector().all()) { variant ->
         if (variant.buildType == "release") {

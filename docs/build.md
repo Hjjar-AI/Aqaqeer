@@ -416,7 +416,7 @@ Locate the first failed step and retain its public diagnostics. For signing, the
 | Alias already exists during key generation | Inspect and preserve the existing key entry. Repeated releases do not need repeated key generation. |
 | Environment allows `main`, workflow default branch is `Final` | Set the environment's selected **Branch** rule to the actual default branch; changing the rule does not rename Git branches. |
 | VS Code still flags configured environments/secrets | Verify names/access, reload the window and refresh GitHub Actions; editor diagnostics can retain stale metadata. |
-| Build dependency discovery creates `generate…ComposePreviewRunfiles` and fails on excluded unit resources | AGP 9.5 requires `android.testOptions.unitTests.isIncludeAndroidResources = true` for that task. The module now enables it. Lazy `tasks.named { name -> … }` filters remain useful, but the code-2 hosted run proved they did not resolve this error alone. The resource correction awaits a new hosted build. |
+| Build dependency discovery creates `generate…ComposePreviewRunfiles` and rejects its unit-test prerequisites | AGP 9.5 requires both included Android unit-test resources and an enabled unit-test host component for the active variant. The module enables resources globally and explicitly enables the standard-release `hostTests[HostTestBuilder.UNIT_TEST_TYPE]` builder; demo release remains disabled. Code 3 cleared the earlier debug-resource error but exposed the disabled release component. The host-component correction awaits a new hosted build. |
 | Signing settings are missing | Supply the local keystore path or the hosted Base64 secret, plus alias/passwords and expected certificate. Use exactly one key source. |
 | Password/alias error | Check the saved key alias and passwords. For PKCS12, use the store password for the key password unless your existing store requires otherwise. Do not substitute a new key. |
 | Certificate mismatch or debug signer rejected | Compare the public fingerprint from the original production key/APK. Use that original key and fingerprint; do not change the expected value just to accept a different identity. |
@@ -533,6 +533,12 @@ All debug release/prerelease/draft choices set Latest to false. Release records 
 Workflow 03 offers opt-in per-flavor unit coverage with AGP JaCoCo 0.8.16. Reports have no percentage threshold and do not run device tests. Verification APK workflows 07/08 are also default-branch-only. Workflow 08 generates/inspects the three production outputs and separately opens the universal APK on an owned GitHub-hosted API 35 emulator with a throwaway signer. Its 30-second process observation is startup evidence only. No local emulators or production signing credentials are involved.
 
 The pinned setup-gradle action already validates wrapper JARs; policy forbids disabling this. Workflow YAML checks reject expressions inside shell bodies and permit secrets only in explicit signing-step environments. All new workflows are manual, public-only, bounded Ubuntu jobs with full action pins and one-day artifacts where appropriate. Only the existing run-cleanup workflow has a schedule.
+
+### Why hosted retries can download Gradle again
+
+The basic Gradle cache requires an exact key from the build scripts, wrapper properties and version catalogs. Changing `app/build.gradle.kts` to correct configuration failures therefore produces a new key, even when the Gradle version stays the same. The code-1/2/3 builds each restored zero entries and saved one under a different key. Code 3 saved approximately 346 MB including reusable Gradle state; Java 21.0.13 came from the runner tool cache. A generic "cache enabled/restored" summary sentence does not override the actual zero-restored count.
+
+A subsequent run with unchanged key inputs should reuse its entry if it remains available and accessible. A corrected configuration can still download dependencies the earlier failed run never reached. Fresh runners also check/install required SDK packages separately; an SDK-manager command is not itself proof of a download. This source change adds no cache quota, alternate cache home, SDK download or additional caching service. Cache reuse on an unchanged graph remains to be observed.
 
 ### History scans and cleanup
 
