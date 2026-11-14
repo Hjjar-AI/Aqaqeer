@@ -16,6 +16,14 @@ Workflow 07's demo selection covers read-only navigation, LIGHT/DARK/AMOLED Arab
 
 Latest original logs, metadata, XML/transcripts, results/provenance and captures are retained under local-only `../local/verification/runs/current/ci-run-43619086956/` and `../local/verification/runs/current/ci-run-43624312398/`. Their inventories and the manifest retain hashes; all 42 Android transcripts reconcile with successful single-case completion. GitHub artifacts have one-day retention and may expire under run cleanup.
 
+## Focused repository fixes — 2026-11-15
+
+Source changes protect `.aqz`/private-key files and known workflow outputs, reject sensitive filenames before reading contents, skip deletion-only pushes in the optional hook, retain debug tags while showing the reserved APK version in release titles/notes, categorize reservation failures without raw API output/retries, cover composite actions with Dependabot and provide short bilingual issue forms/private reporting fallback. Workstation-only links are inline paths. No public fixture exemptions were added; no dependency/action versions changed.
+
+GitHub private reporting, Dependabot alerts/security-update PRs and both reviewed branch/tag rulesets were applied and read back; the [settings receipt](evidence/repository-review-20261114.md#focused-settings-update--2026-11-15) records IDs and limits. Local hook activation was not changed.
+
+Hosted [08 / 43644861384](https://github.com/Hjjar-AI/Aqaqeer/actions/runs/43644861384) was dispatched on `Final`, source `b1d777218316da8556d939f0f1a2b5ea12b4dcf6`. Before dispatch, hosted workflow/helper blob hashes matched the local files containing the existing package-absence correction. The run is pending; this does not verify the uncommitted housekeeping changes. No local builds, Gradle, lint, test-suite inspection/execution or migration inspection accompanied this work.
+
 ## Expanded test source — 2026-11-14
 
 The authorized authoring batch expanded the static inventory below; the three separately repaired initial-schema tests are excluded from these figures. JVM parameter rows count separately.
