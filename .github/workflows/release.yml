@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       expected_certificate_sha256:
-        description: Optional original release certificate SHA-256 (leave blank for unsigned inspection)
+        description: "Optional original release certificate SHA-256: 64 hex digits, with or without colons; never a private key or APK hash. Default: blank = unsigned inspection; a supplied fingerprint requires a matching signed APK."
         type: string
         required: false
         default: ''

@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       coverage:
-        description: Include unit-test coverage reports for both flavors
+        description: "Options: false = run JVM tests without coverage reports; true = also generate JVM coverage reports for both flavors. Default: false."
         type: boolean
         default: false
 

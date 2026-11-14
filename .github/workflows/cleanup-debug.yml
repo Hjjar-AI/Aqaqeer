@@ -4,15 +4,15 @@ on:
   workflow_dispatch:
     inputs:
       preview:
-        description: Preview only; turn off to delete eligible owned debug releases and their tags
+        description: "Options: true = preview only; false = delete eligible owned debug releases and their tags. Default: true."
         type: boolean
         default: true
       older_than_days:
-        description: Only releases older than this many days (1–365)
+        description: "Integer from 1 to 365; select releases older than this many days. Default: 30."
         type: number
         default: 30
       keep:
-        description: Keep at least this many newest releases (minimum 5)
+        description: "Integer of 5 or more; preserve at least this many newest owned debug releases. Default: 5."
         type: number
         default: 5
 

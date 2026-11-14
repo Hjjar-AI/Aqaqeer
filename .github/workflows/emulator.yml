@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       standard_functional:
-        description: Also run 30 offline standard CSV/report and bulk/PIN regression cases on API 35
+        description: "Options: false = demo checks only; true = also run 30 offline standard CSV/report and bulk/PIN cases on API 35 after demo checks. Default: false."
         type: boolean
         default: false
 

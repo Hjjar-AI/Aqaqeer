@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       flavor:
-        description: Build standard, demo with local sample data, or both independently
+        description: "Options: standard = normal app; demo = local sample data; both = build each independently. Default: standard."
         type: choice
         required: true
         default: standard
@@ -13,7 +13,7 @@ on:
           - demo
           - both
       publication:
-        description: Publish a regular release, publish a prerelease, or save a draft
+        description: "Options: release = publish a regular release; prerelease = publish a prerelease; draft = save unpublished. Default: prerelease."
         type: choice
         required: true
         default: prerelease

@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       flavor:
-        description: Build standard, demo with local sample data, or both independently
+        description: "Options: standard = normal app; demo = local sample data; both = build each independently. Default: standard."
         type: choice
         required: true
         default: standard

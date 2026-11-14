@@ -137,6 +137,24 @@ def check(path):
         expected_group = 'cleanup-ci-evidence' if path.name == 'cleanup-evidence.yml' else '${{ github.workflow }}-${{ github.ref }}'
         if concurrency != {'group': expected_group, 'cancel-in-progress': False}:
             problem(path.name, 'non-cancelling workflow concurrency required')
+        dispatch = triggers.get('workflow_dispatch') or {}
+        for input_name, spec in dispatch.get('inputs', {}).items():
+            context = f'{path.name}/input {input_name}'
+            description = spec.get('description', '')
+            if not isinstance(description, str) or not description.strip():
+                problem(context, 'input hint must explain accepted values')
+                continue
+            options = spec.get('options', []) if spec.get('type') == 'choice' else (
+                ['true', 'false'] if spec.get('type') == 'boolean' else [])
+            for option in options:
+                if not re.search(r'(?<![\w-])' + re.escape(str(option)) + r'(?![\w-])', description):
+                    problem(context, 'input hint must list every allowed option')
+            if 'default' in spec:
+                default = spec['default']
+                label = 'blank' if default == '' else str(default).lower() if isinstance(default, bool) else str(default)
+                if not re.search(r'default:\s*' + re.escape(label) + r'(?![\w-])', description, re.I):
+                    problem(context, 'input hint must state its configured default')
+
         jobs = workflow.get('jobs')
         if not isinstance(jobs, dict) or not jobs:
             return errors + ['nonempty jobs mapping required']
@@ -177,7 +195,7 @@ def check(path):
                 dispatch = triggers.get('workflow_dispatch', {})
                 inputs = dispatch.get('inputs', {}) if isinstance(dispatch, dict) else {}
                 if inputs.get('standard_functional') != {
-                    'description': 'Also run 30 offline standard CSV/report and bulk/PIN regression cases on API 35',
+                    'description': 'Options: false = demo checks only; true = also run 30 offline standard CSV/report and bulk/PIN cases on API 35 after demo checks. Default: false.',
                     'type': 'boolean', 'default': False,
                 } or job.get('needs') != 'emulator':
                     problem(name, 'standard functional checks must be opt-in and wait for the demo emulators')
