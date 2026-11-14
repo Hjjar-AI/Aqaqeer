@@ -1,5 +1,6 @@
 """Selected offline checks on an ephemeral GitHub-hosted emulator only."""
 
+import argparse
 import hashlib
 import json
 import os
@@ -14,7 +15,7 @@ ROOT = Path(__file__).resolve().parents[2]
 OUTPUT = ROOT / 'ci-output/emulator'
 SERIAL = 'emulator-5554'
 PACKAGE = 'com.aqaqeer.app.demo.debug'
-CASES = (
+DEMO_CASES = (
     ('read-only-details', 'ReadOnlyUiTest#medicationDetailsRemainReadOnlyAndNavigateBack', True),
     ('light-large-arabic', 'CiPresentationUiTest#arabicLargeTextThemeAndRecreationRemainUsable', True),
     ('dark-large-arabic', 'CiPresentationUiTest#arabicLargeTextThemeAndRecreationRemainUsable', True),
@@ -23,12 +24,51 @@ CASES = (
     ('authentication-rejection', 'EnvelopeInstrumentedTest#androidAuthenticationFailureLeavesNoStagingFileOrPayload', False),
 )
 
+STANDARD_CASES = (
+    ('CsvReports-contentProviderImportCommitsValidRowsAndRetainsFailedRowResults', 'CsvReportsInstrumentedTest#contentProviderImportCommitsValidRowsAndRetainsFailedRowResults', False),
+    ('CsvReports-staleUpdateRollsBackAndTaxonomyRequiresExplicitConsent', 'CsvReportsInstrumentedTest#staleUpdateRollsBackAndTaxonomyRequiresExplicitConsent', False),
+    ('CsvReports-cancellationAfterChunkCallbackRetainsAllCommittedRows', 'CsvReportsInstrumentedTest#cancellationAfterChunkCallbackRetainsAllCommittedRows', False),
+    ('CsvReports-reportsDefaultToPublishedAndOutNeverIncludesUnknown', 'CsvReportsInstrumentedTest#reportsDefaultToPublishedAndOutNeverIncludesUnknown', False),
+    ('CsvReports-draftsRequireOptInAndExpiryPresetExcludesExpired', 'CsvReportsInstrumentedTest#draftsRequireOptInAndExpiryPresetExcludesExpired', False),
+    ('CsvReports-arabicPdfRendersMultiplePagesAndHasNoBlankContinuationPages', 'CsvReportsInstrumentedTest#arabicPdfRendersMultiplePagesAndHasNoBlankContinuationPages', False),
+    ('CsvReports-authorizationLossBlocksExternalOutputAndImportBeforeFileAccess', 'CsvReportsInstrumentedTest#authorizationLossBlocksExternalOutputAndImportBeforeFileAccess', False),
+    ('CsvReports-fiftyOneRowsReportCommittedChunksInOrder', 'CsvReportsInstrumentedTest#fiftyOneRowsReportCommittedChunksInOrder', False),
+    ('CsvReports-cancellationAfterFirstFiftyRowsDoesNotStartSecondChunk', 'CsvReportsInstrumentedTest#cancellationAfterFirstFiftyRowsDoesNotStartSecondChunk', False),
+    ('CsvReports-failedStorageWriteRollsBackWholeChunkAndReportsNoSuccesses', 'CsvReportsInstrumentedTest#failedStorageWriteRollsBackWholeChunkAndReportsNoSuccesses', False),
+    ('CsvReports-semicolonSectionAliasImportPersistsExplicitAndDefaultStatuses', 'CsvReportsInstrumentedTest#semicolonSectionAliasImportPersistsExplicitAndDefaultStatuses', False),
+    ('CsvReports-duplicateChoiceUpdatesExactlyOneExistingMedication', 'CsvReportsInstrumentedTest#duplicateChoiceUpdatesExactlyOneExistingMedication', False),
+    ('CsvReports-staleAvailabilityFailsImportWithoutChangingMedicationFields', 'CsvReportsInstrumentedTest#staleAvailabilityFailsImportWithoutChangingMedicationFields', False),
+    ('CsvReports-allSectionShortagesExcludeInactiveOnlyAndUnknownMedication', 'CsvReportsInstrumentedTest#allSectionShortagesExcludeInactiveOnlyAndUnknownMedication', False),
+    ('CsvReports-emptyA5ReportStillProducesRenderablePage', 'CsvReportsInstrumentedTest#emptyA5ReportStillProducesRenderablePage', False),
+    ('BulkMedicationRegression-statusAndFormCommitTogetherAndUndoRestoresBoth', 'BulkMedicationRegressionInstrumentedTest#statusAndFormCommitTogetherAndUndoRestoresBoth', False),
+    ('BulkMedicationRegression-unchangedRequestedValuesCreateNoReceiptHistoryOrPending', 'BulkMedicationRegressionInstrumentedTest#unchangedRequestedValuesCreateNoReceiptHistoryOrPending', False),
+    ('BulkMedicationRegression-staleSelectedFieldRollsBackEveryMedication', 'BulkMedicationRegressionInstrumentedTest#staleSelectedFieldRollsBackEveryMedication', False),
+    ('BulkMedicationRegression-changedUncheckedFieldDoesNotRejectOrOverwriteStatusEdit', 'BulkMedicationRegressionInstrumentedTest#changedUncheckedFieldDoesNotRejectOrOverwriteStatusEdit', False),
+    ('BulkMedicationRegression-deletedSelectedTargetCannotResurrectDuringBulkEdit', 'BulkMedicationRegressionInstrumentedTest#deletedSelectedTargetCannotResurrectDuringBulkEdit', False),
+    ('BulkMedicationRegression-undoRejectsStaleSelectedFieldAtomically', 'BulkMedicationRegressionInstrumentedTest#undoRejectsStaleSelectedFieldAtomically', False),
+    ('BulkMedicationRegression-undoPreservesConcurrentUncheckedFields', 'BulkMedicationRegressionInstrumentedTest#undoPreservesConcurrentUncheckedFields', False),
+    ('BulkMedicationRegression-undoRestoresMissingLegacyPairAsAbsence', 'BulkMedicationRegressionInstrumentedTest#undoRestoresMissingLegacyPairAsAbsence', False),
+    ('BulkMedicationRegression-wrongPharmacyRejectsBeforeAnyMutation', 'BulkMedicationRegressionInstrumentedTest#wrongPharmacyRejectsBeforeAnyMutation', False),
+    ('BulkMedicationRegression-expectedKeysMustExactlyMatchSelectedIds', 'BulkMedicationRegressionInstrumentedTest#expectedKeysMustExactlyMatchSelectedIds', False),
+    ('BulkMedicationRegression-staleRequiredExistingEditorDoesNotRecreateDeletedMedication', 'BulkMedicationRegressionInstrumentedTest#staleRequiredExistingEditorDoesNotRecreateDeletedMedication', False),
+    ('BulkMedicationRegression-samePinInDifferentDigitScriptRejectsWithoutPendingWork', 'BulkMedicationRegressionInstrumentedTest#samePinInDifferentDigitScriptRejectsWithoutPendingWork', False),
+    ('BulkMedicationRegression-fourDigitPinChangeCreatesBoundOperationAndWipesInputs', 'BulkMedicationRegressionInstrumentedTest#fourDigitPinChangeCreatesBoundOperationAndWipesInputs', False),
+    ('BulkMedicationRegression-historyTypeFilterSeparatesAvailabilityFromMedication', 'BulkMedicationRegressionInstrumentedTest#historyTypeFilterSeparatesAvailabilityFromMedication', False),
+    ('BulkMedicationRegression-taxonomyReassignmentPreservesUntouchedAvailabilityAndMedication', 'BulkMedicationRegressionInstrumentedTest#taxonomyReassignmentPreservesUntouchedAvailabilityAndMedication', False),
+)
+
 
 def adb(*args, timeout=30, check=True):
     return subprocess.run(['adb', '-s', SERIAL, *args], capture_output=True, timeout=timeout, check=check)
 
 
 def main():
+    global PACKAGE
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--suite', choices=('demo', 'standard'), default='demo')
+    args = parser.parse_args()
+    cases = STANDARD_CASES if args.suite == 'standard' else DEMO_CASES
+    PACKAGE = 'com.aqaqeer.app.debug' if args.suite == 'standard' else 'com.aqaqeer.app.demo.debug'
     if os.environ.get('GITHUB_ACTIONS') != 'true' or os.environ.get('RUNNER_ENVIRONMENT') != 'github-hosted':
         raise SystemExit('This helper only runs on ephemeral GitHub-hosted runners.')
     if adb('shell', 'getprop', 'ro.kernel.qemu').stdout.strip() != b'1':
@@ -37,11 +77,13 @@ def main():
     results = []
     capture_errors = []
     provenance = {'serial': SERIAL, 'package': PACKAGE, 'commit': os.environ.get('GITHUB_SHA'),
+                  'suite': args.suite, 'runId': os.environ.get('GITHUB_RUN_ID'),
+                  'attempt': os.environ.get('GITHUB_RUN_ATTEMPT'), 'job': os.environ.get('GITHUB_JOB'),
                   'api': adb('shell', 'getprop', 'ro.build.version.sdk').stdout.decode().strip(), 'apks': {}}
     try:
         for label, pattern in (
-            ('application', 'app/build/outputs/apk/demo/debug/*.apk'),
-            ('instrumentation', 'app/build/outputs/apk/androidTest/demo/debug/*.apk'),
+            ('application', f'app/build/outputs/apk/{args.suite}/debug/*.apk'),
+            ('instrumentation', f'app/build/outputs/apk/androidTest/{args.suite}/debug/*.apk'),
         ):
             paths = list(ROOT.glob(pattern))
             if len(paths) != 1:
@@ -65,7 +107,7 @@ def main():
             (OUTPUT / 'provenance.json').write_text(json.dumps(provenance, indent=2) + '\n')
             adb('install', '-t', str(path), timeout=90)
             provenance[label + 'Installation'] = adb('shell', 'dumpsys', 'package', package).stdout.decode(errors='replace')
-        for name, method, record in CASES:
+        for name, method, record in cases:
             recorder = None
             recorder_log = None
             remote = f'/sdcard/aqaqeer-ci-{name}.mp4'
@@ -85,17 +127,22 @@ def main():
                     command += ['-e', 'ciTheme', name.split('-')[0].upper()]
                 command += [PACKAGE + '.test/com.aqaqeer.app.SuiteRunner']
                 try:
-                    run = adb(*command, timeout=120, check=False)
+                    run = adb(*command, timeout=180 if args.suite == 'standard' else 120, check=False)
                     transcript = run.stdout + run.stderr
                     passed = run.returncode == 0 and bool(re.search(rb'OK \(1 tests?\)', transcript))
                     passed &= b'INSTRUMENTATION_CODE: -1' in transcript
+                    passed &= not bool(re.search(rb'INSTRUMENTATION_STATUS_CODE: -(?:3|4)\b', transcript))
+                    expected_class, expected_method = method.split('#')
+                    passed &= ('INSTRUMENTATION_STATUS: class=com.aqaqeer.app.' + expected_class).encode() in transcript
+                    passed &= ('INSTRUMENTATION_STATUS: test=' + expected_method).encode() in transcript
                     status = 'passed' if passed else 'failed / incomplete instrumentation'
                 except subprocess.TimeoutExpired as error:
                     transcript = (error.stdout or b'') + (error.stderr or b'')
                     status = 'timed out'
                     passed = False
                 (OUTPUT / f'{name}-instrumentation.log').write_bytes(transcript)
-                results.append({'case': name, 'method': method, 'status': status})
+                results.append({'case': name, 'method': method, 'status': status,
+                                'instrumentationExitCode': run.returncode if status != 'timed out' else None})
                 if not passed:
                     try:
                         screenshot = adb('exec-out', 'screencap', '-p').stdout
@@ -157,13 +204,13 @@ def main():
         except (OSError, subprocess.SubprocessError):
             capture_errors.append('Final screenshot collection/font-scale cleanup incomplete')
         (OUTPUT / 'provenance.json').write_text(json.dumps(provenance, indent=2) + '\n')
-        (OUTPUT / 'results.json').write_text(json.dumps({'cases': results, 'captureErrors': capture_errors}, indent=2) + '\n')
-        lines = ['### Emulator results', '', *[f'- {r["case"]}: {r["status"]}' for r in results],
+        (OUTPUT / 'results.json').write_text(json.dumps({'suite': args.suite, 'selected': len(cases), 'cases': results, 'captureErrors': capture_errors}, indent=2) + '\n')
+        lines = [f'### {args.suite.title()} emulator results', '', *[f'- {r["case"]}: {r["status"]}' for r in results],
                  *[f'- Capture limitation: {message}' for message in capture_errors], '',
                  'Download emulator-evidence for MP4/PNG/logs within one day; GitHub storage quota can block uploads.',
                  'Clips cover at most the first 45 seconds of each UI case. ui-screenshots holds live-activity captures; host failure PNGs are post-instrumentation fallbacks.']
         (OUTPUT / 'results.md').write_text('\n'.join(lines) + '\n')
-    if len(results) != len(CASES) or any(r['status'] != 'passed' for r in results) or capture_errors:
+    if len(results) != len(cases) or any(r['status'] != 'passed' for r in results) or capture_errors:
         raise SystemExit(1)
 
 

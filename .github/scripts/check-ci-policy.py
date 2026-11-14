@@ -172,6 +172,15 @@ def check(path):
             cleanup = path.name == 'cleanup-evidence.yml' and name == 'cleanup'
             default_only = path.name in ('android.yml', 'publish-debug.yml', 'publish-release.yml', 'emulator.yml', 'release.yml', 'build-tooling.yml', 'secret-history.yml', 'cleanup-debug.yml', 'actionlint-updates.yml')
             expected_guard = CLEANUP_GUARD if cleanup or default_only else PUBLIC_GUARD
+            if path.name == 'emulator.yml' and name == 'standard-functional':
+                expected_guard = "${{ !cancelled() && inputs.standard_functional && github.event.repository.private == false && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}"
+                dispatch = triggers.get('workflow_dispatch', {})
+                inputs = dispatch.get('inputs', {}) if isinstance(dispatch, dict) else {}
+                if inputs.get('standard_functional') != {
+                    'description': 'Also run 30 offline standard CSV/report and bulk/PIN regression cases on API 35',
+                    'type': 'boolean', 'default': False,
+                } or job.get('needs') != 'emulator':
+                    problem(name, 'standard functional checks must be opt-in and wait for the demo emulators')
             if job.get('if') != expected_guard:
                 problem(name, 'exact public/default-branch guard required')
             if job.get('runs-on') != 'ubuntu-24.04':
