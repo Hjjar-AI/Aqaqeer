@@ -16,6 +16,10 @@ local.properties
 *.keystore
 *.p12
 *.pfx
+*.pem
+*.key
+*.p8
+*.aqz
 *.b64
 *.base64
 keystore.properties
@@ -30,6 +34,11 @@ telegram-test-config.local.json
 *.aab
 *.idsig
 *.hprof
+/release-files/
+/unsigned-debug/
+/smoke-apks/
+/release-notes.md
+/release-url.txt
 
 # IDE metadata
 .idea/

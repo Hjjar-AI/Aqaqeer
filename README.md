@@ -21,6 +21,8 @@ python3 tools/build_debug.py demo --offline
 
 ## Documentation
 
+Optional local pre-push checks: run `git config core.hooksPath .githooks` from the repository root. The hook checks the working tree before pushes and skips deletion-only pushes. Restore Git's default hook location with `git config --unset core.hooksPath`.
+
 | Document | Purpose |
 | --- | --- |
 | [Requirements](docs/requirements.md) | Complete product rules and milestone acceptance |

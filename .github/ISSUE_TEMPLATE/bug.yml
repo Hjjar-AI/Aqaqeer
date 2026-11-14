@@ -1,13 +1,17 @@
-name: Bug report
-description: Describe a bug without private pharmacy information
+name: "بلاغ خطأ / Bug report"
+description: "صف المشكلة دون بيانات الصيدلية الخاصة / Describe a bug without private pharmacy data"
 body:
   - type: markdown
     attributes:
-      value: Never paste PINs, tokens, passwords, connection files/links, private keys or backups. Report security vulnerabilities privately using the Security tab.
+      value: |
+        لا ترفق رموز الإدارة أو التوكنات أو كلمات المرور أو ملفات/روابط الاتصال أو المفاتيح الخاصة أو النسخ الاحتياطية. أخفِ بيانات الصيدلية في الصور.
+        Never attach PINs, tokens, passwords, connection files/links, private keys or backups. Hide pharmacy data in screenshots.
+
+        أبلغ عن الثغرات بشكل خاص / Report vulnerabilities privately: [GitHub](https://github.com/Hjjar-AI/Aqaqeer/security/advisories/new) · [البريد / Email](mailto:hjjarmhmmdali@gmail.com).
   - type: textarea
     id: description
     attributes:
-      label: Description
-      description: Explain the problem or requested behavior. For bugs, include steps, app version and Android version.
+      label: "وصف المشكلة / Bug description"
+      description: "اذكر خطوات التكرار والمتوقع وما حدث، وإصدار التطبيق وأندرويد، والنسخة العادية أو التجريبية إن أمكن. / Include steps, expected and actual behavior, app/Android versions, and standard or demo flavor if known."
     validations:
       required: true

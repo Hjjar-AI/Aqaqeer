@@ -166,7 +166,7 @@ jobs:
 
   publish:
     name: Publish debug APKs to GitHub Releases
-    needs: sign-debug
+    needs: [reserve, sign-debug]
     if: ${{ github.event.repository.private == false && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
     runs-on: ubuntu-24.04
     timeout-minutes: 10
@@ -204,6 +204,7 @@ jobs:
           CI_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           CI_RELEASE_RUN: ${{ github.run_id }}
           CI_RELEASE_NUMBER: ${{ github.run_number }}
+          CI_BUILD_CODE: ${{ needs.reserve.outputs.code }}
           CI_RELEASE_ATTEMPT: ${{ github.run_attempt }}
         run: |
           set -euo pipefail
@@ -218,11 +219,12 @@ jobs:
             printf 'Debug APK distribution (%s). These are debuggable builds signed with the permanent dedicated debug key, not production-signed Android releases.\n\n' "$CI_RELEASE_FLAVOR"
             printf '<!-- aqaqeer-debug-distribution:v1 run=%s attempt=%s flavors=%s source=%s -->\n' "$CI_RELEASE_RUN" "$CI_RELEASE_ATTEMPT" "$CI_RELEASE_FLAVOR" "$CI_SOURCE_SHA"
             printf 'Source commit: %s\nTemporary build-run link: %s\n\n' "$CI_SOURCE_SHA" "$CI_RUN_URL"
+            printf 'APK version: 0.0.%s (version code %s).\n\n' "$CI_BUILD_CODE" "$CI_BUILD_CODE"
             printf 'Standard: com.aqaqeer.app.debug. Demo: com.aqaqeer.app.demo.debug (fictional sample data).\n\n'
             printf 'Verified signer/package/version receipts and SHA-256 checksums are attached. Debug and production versions share android-build-N reservations. Existing installations require the same signer; never uninstall or clear pharmacy data to bypass a conflict.\n'
           } > release-notes.md
           gh release create "$tag" release-files/*/* \
-            --target "$CI_SOURCE_SHA" --title "Aqaqeer debug build $CI_RELEASE_NUMBER ($CI_RELEASE_FLAVOR)" \
+            --target "$CI_SOURCE_SHA" --title "Aqaqeer debug 0.0.$CI_BUILD_CODE ($CI_RELEASE_FLAVOR)" \
             --notes-file release-notes.md "${options[@]}" | tee release-url.txt
           {
             printf '### Debug GitHub Release\n\n'

@@ -18,7 +18,15 @@ def api(path, payload=None):
     result = subprocess.run(arguments, input=json.dumps(payload) if payload is not None else None,
                             text=True, capture_output=True, timeout=60)
     if result.returncode:
-        raise ValueError('Version registry API failed; inspect repository permissions/rules. No reservation is retried automatically.')
+        status = re.search(r'\(HTTP (\d{3})\)', result.stderr)
+        code = status.group(1) if status else None
+        if code in ('401', '403'):
+            reason = f'permission/authentication denied (HTTP {code}); inspect token permissions and repository rules'
+        elif code in ('409', '422'):
+            reason = f'reservation conflict or rejected request (HTTP {code}); inspect existing reservations and the requested code'
+        else:
+            reason = 'request failed; inspect repository access and service availability'
+        raise ValueError(f'Version registry API: {reason}. No reservation is retried automatically.')
     return json.loads(result.stdout)
 
 

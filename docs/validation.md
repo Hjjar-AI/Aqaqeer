@@ -113,7 +113,7 @@ Historical **123 JVM passes/flavor; 75 standard device passes + one credential-d
 
 ## Shared workstation paths — 2026-11-14
 
-[Shared Android instructions](/opt/android-shared/AGENTS.md) and [layout](/opt/android-shared/README.md) own machine paths. Five projects use pinned wrappers, the common Gradle home, JDK 21 and registered future work directories; helpers keep portable CI defaults. Aqaqeer's Gradle 9.8.2 distribution was downloaded with authorization and SHA-256 verified without invoking Gradle.
+`/opt/android-shared/AGENTS.md` and `/opt/android-shared/README.md` own machine paths. Five projects use pinned wrappers, the common Gradle home, JDK 21 and registered future work directories; helpers keep portable CI defaults. Aqaqeer's Gradle 9.8.2 distribution was downloaded with authorization and SHA-256 verified without invoking Gradle.
 
 Authorized cache consolidation verified 4,977 dependency files and four distribution trees against active copies, then removed redundant/regeneratable data (97,856 readable files, 11,478,857,070 bytes). Resolver metadata was not merged. Private keys/configuration/original APK/evidence were preserved under `maintenance/organization-20261114/retained-consolidation/preserved`; its administrator receipt owns remaining old-account daemon cleanup status. `.idea`, existing build outputs, exports and counters were preserved. These were source/storage operations, not local build/sync/runtime verification; removed regeneratable caches are not available for byte-for-byte rollback.
 

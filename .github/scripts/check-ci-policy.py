@@ -223,7 +223,7 @@ def check(path):
                 problem(name, 'unexpected job permissions')
             if (len(allowed) > 1 or allowed.get('contents') == 'write') and job.get('permissions') != allowed:
                 problem(name, 'required scoped job permissions missing')
-            if path.name == 'publish-debug.yml' and name == 'publish' and job.get('needs') != 'sign-debug':
+            if path.name == 'publish-debug.yml' and name == 'publish' and job.get('needs') != ['reserve', 'sign-debug']:
                 problem(name, 'publication must depend on all selected debug builds succeeding')
             if path.name == 'publish-release.yml':
                 expected_dependencies = {'reserve': None, 'build': 'reserve', 'publish': 'build'}

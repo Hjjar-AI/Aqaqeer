@@ -22,6 +22,10 @@ SECRET_PATTERNS = {
     'slack-token': re.compile(r'\bxox[baprs]-[A-Za-z0-9-]{20,}\b|\bxapp-[A-Za-z0-9-]{20,}\b'),
 }
 
+# Add only exact paths of explicitly reviewed public fixtures, never directories/globs.
+PUBLIC_FIXTURE_PATHS = frozenset()
+SENSITIVE_SUFFIXES = frozenset(('.jks', '.keystore', '.p12', '.pfx', '.pem', '.key', '.p8', '.aqz'))
+
 
 def markdown_body(text):
     return re.sub(r'(?ms)^(```|~~~).*?^\1[^\n]*$', '', text)
@@ -57,8 +61,8 @@ def main():
             continue
         if re.search(r'migrat|(^|/)schemas/', name, re.I) or not path.is_file():
             continue
-        if path.suffix.lower() in ('.jks', '.keystore', '.p12', '.pfx') or path.name in ('.env', 'keystore.properties', 'telegram-test-config.local.json', 'id_rsa', 'id_ed25519'):
-            problems.append(f'{name}: possible private signing/credential file (contents not read)')
+        if name not in PUBLIC_FIXTURE_PATHS and (path.suffix.lower() in SENSITIVE_SUFFIXES or path.name in ('.env', 'keystore.properties', 'telegram-test-config.local.json', 'id_rsa', 'id_ed25519')):
+            problems.append(f'{name}: possible private signing/credential/connection/backup file (contents not read)')
             continue
         raw = path.read_bytes()
         if b'\0' in raw:

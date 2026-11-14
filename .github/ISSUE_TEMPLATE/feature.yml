@@ -1,13 +1,17 @@
-name: Feature report
-description: Describe a feature without private pharmacy information
+name: "اقتراح ميزة / Feature request"
+description: "اقترح تحسينًا دون بيانات الصيدلية الخاصة / Suggest an improvement without private pharmacy data"
 body:
   - type: markdown
     attributes:
-      value: Never paste PINs, tokens, passwords, connection files/links, private keys or backups. Report security vulnerabilities privately using the Security tab.
+      value: |
+        لا ترفق رموز الإدارة أو التوكنات أو كلمات المرور أو ملفات/روابط الاتصال أو المفاتيح الخاصة أو النسخ الاحتياطية. أخفِ بيانات الصيدلية في الصور.
+        Never attach PINs, tokens, passwords, connection files/links, private keys or backups. Hide pharmacy data in screenshots.
+
+        أبلغ عن الثغرات بشكل خاص / Report vulnerabilities privately: [GitHub](https://github.com/Hjjar-AI/Aqaqeer/security/advisories/new) · [البريد / Email](mailto:hjjarmhmmdali@gmail.com).
   - type: textarea
     id: description
     attributes:
-      label: Description
-      description: Explain the problem or requested behavior. For bugs, include steps, app version and Android version.
+      label: "الاقتراح / Feature request"
+      description: "اشرح الحاجة والسلوك المطلوب وكيف يساعد العمل. / Describe the need, proposed behavior and how it helps your work."
     validations:
       required: true
