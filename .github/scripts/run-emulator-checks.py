@@ -62,14 +62,22 @@ def adb(*args, timeout=30, check=True):
     return subprocess.run(['adb', '-s', SERIAL, *args], capture_output=True, timeout=timeout, check=check)
 
 
-def installation_identity(package):
+def installation_identity(package, observation='current'):
     details = adb('shell', 'dumpsys', 'package', package).stdout.decode(errors='replace')
-    identity = {}
-    for field in ('userId', 'codePath', 'firstInstallTime', 'lastUpdateTime'):
-        match = re.search(r'^\s*' + field + r'=([^\r\n]+)', details, re.M)
-        if match is None:
-            raise RuntimeError(f'Missing {field} ownership evidence for {package}')
-        identity[field] = match.group(1).strip()
+    # Keep the raw response even when parsing fails; never relax ownership to proceed.
+    (OUTPUT / f'{package}-{observation}-package-dump.txt').write_text(details)
+    # Android 15 renamed the package's userId field to appId. Fresh AVDs use user 0.
+    identifiers = set(re.findall(r'^\s*(?:userId|appId)=([0-9]+)[ \t]*\r?$', details, re.M))
+    if len(identifiers) != 1 or int(next(iter(identifiers))) < 10000:
+        raise RuntimeError(f'Missing or ambiguous application UID ownership evidence for {package}')
+    identity = {'userId': next(iter(identifiers))}
+    for field in ('codePath', 'firstInstallTime', 'lastUpdateTime'):
+        values = {value.strip() for value in re.findall(r'^\s*' + field + r'=([^\r\n]+)', details, re.M)}
+        if len(values) != 1 or not next(iter(values)):
+            raise RuntimeError(f'Missing or ambiguous {field} ownership evidence for {package}')
+        identity[field] = next(iter(values))
+    if not identity['codePath'].startswith('/data/app/'):
+        raise RuntimeError(f'Unexpected installed code path for {package}')
     return identity, details
 
 
@@ -100,6 +108,8 @@ def main():
         raise SystemExit('This helper only runs on ephemeral GitHub-hosted runners.')
     if adb('shell', 'getprop', 'ro.kernel.qemu').stdout.strip() != b'1':
         raise SystemExit('Expected the owned emulator; refusing another device.')
+    if adb('shell', 'am', 'get-current-user').stdout.strip() != b'0':
+        raise SystemExit('Expected user 0 on the owned fresh AVD.')
     OUTPUT.mkdir(parents=True, exist_ok=True)
     results = []
     installations = {}
@@ -108,13 +118,15 @@ def main():
                   'suite': args.suite, 'runId': os.environ.get('GITHUB_RUN_ID'),
                   'attempt': os.environ.get('GITHUB_RUN_ATTEMPT'), 'job': os.environ.get('GITHUB_JOB'),
                   'selectedMethods': [method for _, method, _ in cases],
-                  'api': adb('shell', 'getprop', 'ro.build.version.sdk').stdout.decode().strip(), 'apks': {}}
+                  'api': adb('shell', 'getprop', 'ro.build.version.sdk').stdout.decode().strip(),
+                  'user': 0, 'phase': 'APK inspection', 'apks': {}}
     save_results(args.suite, cases, results, capture_errors)
     try:
         for label, pattern in (
             ('application', f'app/build/outputs/apk/{args.suite}/debug/*.apk'),
             ('instrumentation', f'app/build/outputs/apk/androidTest/{args.suite}/debug/*.apk'),
         ):
+            provenance['phase'] = label + ': APK inspection'
             paths = list(ROOT.glob(pattern))
             if len(paths) != 1:
                 raise RuntimeError(f'Expected exactly one fresh {label} APK.')
@@ -134,13 +146,17 @@ def main():
             require_absent(package)
             provenance[label + 'BeforeInstall'] = 'absent on fresh owned AVD'
             (OUTPUT / 'provenance.json').write_text(json.dumps(provenance, indent=2) + '\n')
+            provenance['phase'] = label + ': installation'
+            (OUTPUT / 'provenance.json').write_text(json.dumps(provenance, indent=2) + '\n')
             adb('install', '-t', str(path), timeout=90)
-            identity, details = installation_identity(package)
+            provenance['phase'] = label + ': ownership evidence'
+            identity, details = installation_identity(package, observation='installed')
             installations[package] = identity
             provenance[label + 'Identity'] = identity
             provenance[label + 'Installation'] = details
             (OUTPUT / 'provenance.json').write_text(json.dumps(provenance, indent=2) + '\n')
         for name, method, record in cases:
+            provenance['phase'] = 'instrumentation: ' + method
             recorder = None
             recorder_log = None
             remote = f'/sdcard/aqaqeer-ci-{name}.mp4'
@@ -221,6 +237,10 @@ def main():
                 if current != installations[PACKAGE]:
                     raise RuntimeError('Installation ownership changed; refusing delayed force-stop.')
                 adb('shell', 'am', 'force-stop', PACKAGE)
+        provenance['phase'] = 'all selected invocations completed'
+    except Exception as error:
+        provenance['failure'] = {'type': type(error).__name__, 'message': str(error)}
+        raise
     finally:
         # Assertion-time captures are made inside the live Compose activity. Keep the
         # host screenshot as a fallback for setup crashes/timeouts that bypass JUnit.
@@ -242,7 +262,10 @@ def main():
             capture_errors.append('Final screenshot collection/font-scale cleanup incomplete')
         (OUTPUT / 'provenance.json').write_text(json.dumps(provenance, indent=2) + '\n')
         save_results(args.suite, cases, results, capture_errors)
-        lines = [f'### {args.suite.title()} emulator results', '', *[f'- {r["case"]}: {r["status"]}' for r in results],
+        lines = [f'### {args.suite.title()} emulator results', '',
+                 'Last phase: ' + provenance['phase'],
+                 *(['Runner/setup failure: ' + provenance['failure']['message']] if 'failure' in provenance else []),
+                 *[f'- {r["case"]}: {r["status"]}' for r in results],
                  *[f'- Capture limitation: {message}' for message in capture_errors], '',
                  f'Download {"emulator-standard-functional" if args.suite == "standard" else "emulator-evidence"} artifacts within one day; GitHub storage quota can block uploads.',
                  ('Standard cases retain individual instrumentation logs and post-instrumentation failure PNG/logcat fallbacks; no recordings or human visual acceptance.' if args.suite == 'standard' else 'Clips cover at most the first 45 seconds of each UI case. ui-screenshots holds live-activity captures; host failure PNGs are post-instrumentation fallbacks.')]

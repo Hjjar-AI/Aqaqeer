@@ -13,11 +13,22 @@ import java.util.UUID
 
 @RunWith(AndroidJUnit4::class)
 class EnvelopeInstrumentedTest {
+    private fun providerReader(root: File): EnvelopeReader {
+        // These cases verify Android crypto providers, not runtime memory policy.
+        // The three public envelopes are <= 266 bytes; retain a bounded 1 MiB
+        // workspace through the existing seam rather than depending on heap reserve.
+        val runtime = Runtime.getRuntime()
+        val headroom = runtime.maxMemory() - runtime.totalMemory() + runtime.freeMemory()
+        assertTrue("Public vector fixture needs 2 MiB headroom; observed $headroom", headroom >= 2L * 1024 * 1024)
+        android.util.Log.i("EnvelopeProviderFixture", "maxHeap=${runtime.maxMemory()} headroom=$headroom fixtureBudget=1048576")
+        return EnvelopeReader(root) { 1024L * 1024 }
+    }
+
     @Test fun androidProviderReadsAllPublicVectorsIncludingExactUnicodePassphrase(): Unit = runBlocking {
         val instrumentation = InstrumentationRegistry.getInstrumentation()
         val root = File(instrumentation.targetContext.noBackupFilesDir,"envelope-test-${UUID.randomUUID()}")
         try {
-            val reader = EnvelopeReader(root)
+            val reader = providerReader(root)
             val vectors = instrumentation.context.assets.open("v1-vectors.json").bufferedReader().use {
                 Json.parseToJsonElement(it.readText()).jsonObject["vectors"]!!.jsonArray
             }
@@ -43,7 +54,7 @@ class EnvelopeInstrumentedTest {
                 Json.parseToJsonElement(it.readText()).jsonObject["vectors"]!!.jsonArray[0].jsonObject
             }
             try {
-                EnvelopeReader(root).password(vector["envelope"]!!.toString().byteInputStream(),EnvelopeDomain.CONNECTION,"654321".toCharArray())
+                providerReader(root).password(vector["envelope"]!!.toString().byteInputStream(),EnvelopeDomain.CONNECTION,"654321".toCharArray())
                 fail("Wrong password accepted")
             } catch (error: EnvelopeException) { assertEquals(EnvelopeError.AUTHENTICATION,error.error) }
             assertTrue(root.walk().none { it.name.endsWith(".stage") })

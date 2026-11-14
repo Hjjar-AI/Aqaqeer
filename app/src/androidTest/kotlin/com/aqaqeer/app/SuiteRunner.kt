@@ -12,7 +12,10 @@ import java.io.File
 class SuiteRunner : AndroidJUnitRunner() {
     private var secretPath: String? = null
     override fun newApplication(loader: ClassLoader, name: String, context: Context): Application =
-        super.newApplication(loader, HiltTestApplication::class.java.name, context)
+        super.newApplication(loader, HiltTestApplication::class.java.name, context).also {
+            // Hilt replaces AqaqeerApplication, including its resource initialization.
+            AppStrings.resources = it.resources
+        }
 
     override fun onCreate(arguments: Bundle) {
         secretPath = arguments.getString("suiteSecretPath")
