@@ -1,0 +1,75 @@
+name: 08 - Verify - Release output
+
+on:
+  workflow_dispatch:
+    inputs:
+      expected_certificate_sha256:
+        description: Optional original release certificate SHA-256 (leave blank for unsigned inspection)
+        type: string
+        required: false
+        default: ''
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    if: ${{ github.event.repository.private == false }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Prepare diagnostics
+        run: mkdir -p ci-output/release
+
+      - name: Set up Android tooling
+        uses: ./.github/actions/setup-android
+        with:
+          diagnostics-directory: ci-output/release
+
+      - name: Build shrunk standard release through the wrapper
+        shell: bash
+        run: |
+          set -euo pipefail
+          ./gradlew --no-daemon --console=plain --no-configuration-cache \
+            -Paqaqeer.exportApks=false :app:assembleStandardRelease \
+            2>&1 | tee ci-output/release/gradle-release.log
+
+      - name: Inspect packaged release resources, native libraries and signature
+        env:
+          CI_RELEASE_CERT_SHA256: ${{ inputs.expected_certificate_sha256 }}
+        run: python3 .github/scripts/check-release.py
+
+      - name: Summarize release inspection status
+        if: ${{ !cancelled() }}
+        env:
+          CI_JOB_STATUS: ${{ job.status }}
+        run: python3 .github/scripts/ci-summary.py release
+
+      - name: Retain release diagnostics
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: release-diagnostics-${{ github.run_number }}-${{ github.run_attempt }}
+          path: |
+            ci-output/release/
+            app/build/outputs/mapping/standardRelease/
+          retention-days: 1
+          if-no-files-found: error
+
+      - name: Retain inspected unsigned release APK
+        if: ${{ success() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: aqaqeer-standard-release-unsigned-verification-${{ github.run_number }}-${{ github.run_attempt }}
+          path: app/build/outputs/apk/standard/release/*.apk
+          retention-days: 1
+          if-no-files-found: error

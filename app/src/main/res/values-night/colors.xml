@@ -1,0 +1,4 @@
+<resources>
+    <color name="splash_background">@color/launch_dark</color>
+    <bool name="splash_light_bars">false</bool>
+</resources>

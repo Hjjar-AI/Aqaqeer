@@ -1,0 +1,50 @@
+{
+  "notice": "PUBLIC TEST MATERIAL ONLY. Fixed nonces/keys/passwords must never be used for production encryption. Payloads test crypto, not full import schemas.",
+  "vectors": [
+    {
+      "domain": "aqz:v1",
+      "publicTestPassword": "123456",
+      "keyHex": "56e0f12982d8214698f473a77b69d38525948dfc7fefe58a8594e0447a4f8eea",
+      "aadHex": "61717a3a7631000102030405060708090a0b0c0d0e0f202122232425262728292a2b",
+      "plaintextUtf8": "{\"fixture\":\"connection-crypto-only\",\"message\":\"اختبار\"}",
+      "envelope": {
+        "v": 1,
+        "kdf": "PBKDF2-HMAC-SHA256",
+        "iter": 200000,
+        "salt": "AAECAwQFBgcICQoLDA0ODw==",
+        "nonce": "ICEiIyQlJicoKSor",
+        "ct": "oSLj58wbJyyDNrFiSthOxLN4RV/jNtXr3IFWARdHyPo6evCjOaERnvr43r4rD3aRiCvLm52X8UFRkS6B3Q==",
+        "tag": "WFTSmsQWPX4BCie1kF7Ytg=="
+      }
+    },
+    {
+      "domain": "aqbak:v1",
+      "publicTestPassword": "  اختبار Passé  ",
+      "keyHex": "f07472e5310948a4ed9bc273bfef90541c501fbfe2a7335030890f35343f2add",
+      "aadHex": "617162616b3a7631101112131415161718191a1b1c1d1e1f303132333435363738393a3b",
+      "plaintextUtf8": "{\"schemaVersion\":1,\"exportedAt\":\"2026-11-09T00:00:00Z\",\"fixture\":\"backup-crypto-only\"}",
+      "envelope": {
+        "v": 1,
+        "kdf": "PBKDF2-HMAC-SHA256",
+        "iter": 200000,
+        "salt": "EBESExQVFhcYGRobHB0eHw==",
+        "nonce": "MDEyMzQ1Njc4OTo7",
+        "ct": "kmsHciGavURYsXfmt5iudbkXYWFT+NS/aG1oitNThU8M8t4H2taCwkhvDaicIFJJCTRKDTLsah1RuyiiJovtB/Y9OMaeMkiDS0l9leQlK21L02OqB2s=",
+        "tag": "1/BgpcBROyXbw1cGOsfQLg=="
+      }
+    },
+    {
+      "domain": "aqsnapshot:v1",
+      "publicTestPassword": null,
+      "keyHex": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+      "aadHex": "6171736e617073686f743a7631404142434445464748494a4b",
+      "plaintextUtf8": "{\"compatibility\":{\"schemaVersion\":1,\"minVersionCode\":1,\"keyVersion\":1},\"fixture\":\"snapshot-crypto-only\"}",
+      "envelope": {
+        "v": 1,
+        "nonce": "QEFCQ0RFRkdISUpL",
+        "ct": "mZvNTEtM5nekpn5a8hBqeUO9cC/UXWpOFhErl+R6grW6MsKA/NS2OneReRz4YrGZpBXPEwn2zivqf61SQphbqYt995A1oweIMagb8eMKmUp0WiGlShpn5xiiCFxpeVQh2N4VhOR5Rb0=",
+        "tag": "M2XjA/1d/TMAzSAyUuW/WQ=="
+      }
+    }
+  ]
+}

@@ -1,0 +1,51 @@
+<resources>
+    <style name="Theme.Aqaqeer" parent="android:style/Theme.Material.Light.NoActionBar">
+        <item name="android:fontFamily">sans</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:colorAccent">#7A5A12</item>
+        <item name="android:windowActionModeOverlay">true</item>
+        <item name="android:windowBackground">@color/splash_background</item>
+    </style>
+    <style name="Theme.Aqaqeer.Starting.Base" parent="Theme.SplashScreen">
+        <item name="android:windowLightStatusBar">@bool/splash_light_bars</item>
+        <item name="android:windowLightNavigationBar">@bool/splash_light_bars</item>
+        <item name="windowSplashScreenBackground">@color/splash_background</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_logo</item>
+        <item name="postSplashScreenTheme">@style/Theme.Aqaqeer</item>
+    </style>
+    <style name="Theme.Aqaqeer.Starting" parent="Theme.Aqaqeer.Starting.Base" />
+    <style name="Theme.Aqaqeer.Starting.Light" parent="Theme.Aqaqeer.Starting">
+        <item name="windowSplashScreenBackground">@color/launch_gold</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowLightNavigationBar">true</item>
+    </style>
+    <style name="Theme.Aqaqeer.Starting.Dark" parent="Theme.Aqaqeer.Starting">
+        <item name="windowSplashScreenBackground">@color/launch_dark</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar">false</item>
+    </style>
+    <style name="Theme.Aqaqeer.Starting.Black" parent="Theme.Aqaqeer.Starting">
+        <item name="windowSplashScreenBackground">@color/launch_black</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar">false</item>
+    </style>
+    <style name="Theme.Aqaqeer.Starting.CrimsonLight" parent="Theme.Aqaqeer.Starting">
+        <item name="windowSplashScreenBackground">@color/launch_crimson</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowLightNavigationBar">true</item>
+    </style>
+    <style name="Theme.Aqaqeer.Starting.CrimsonDark" parent="Theme.Aqaqeer.Starting">
+        <item name="windowSplashScreenBackground">@color/launch_crimson_dark</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar">false</item>
+    </style>
+    <style name="Theme.Aqaqeer.Starting.BlueLight" parent="Theme.Aqaqeer.Starting.Light">
+        <item name="windowSplashScreenBackground">@color/launch_blue</item>
+    </style>
+    <style name="Theme.Aqaqeer.Starting.GreenLight" parent="Theme.Aqaqeer.Starting.Light">
+        <item name="windowSplashScreenBackground">@color/launch_green</item>
+    </style>
+    <style name="Theme.Aqaqeer.Starting.PinkLight" parent="Theme.Aqaqeer.Starting.Light">
+        <item name="windowSplashScreenBackground">@color/launch_pink</item>
+    </style>
+</resources>

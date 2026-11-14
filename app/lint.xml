@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<lint>
+    <!-- The approved transparent gold/teal wordmark uses real transparency without a circular plate. Keep
+         shape checks active for every other asset rather than disabling the detector. -->
+    <issue id="IconLauncherShape">
+        <ignore path="src/main/res/drawable-nodpi/aqaqeer_launcher.png" />
+    </issue>
+</lint>

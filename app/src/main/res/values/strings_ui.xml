@@ -1,0 +1,752 @@
+<resources>
+    <string name="ui_screen_titles_001" formatted="false">"إنشاء صيدلية"</string>
+    <string name="ui_screen_titles_002" formatted="false">"أدوات الإدارة"</string>
+    <string name="ui_screen_titles_003" formatted="false">"إعداد تيليغرام"</string>
+    <string name="ui_screen_titles_004" formatted="false">"مراجعة التعديلات والنشر"</string>
+    <string name="ui_screen_titles_005" formatted="false">"الأقسام والتصنيفات والأشكال"</string>
+    <string name="ui_screen_titles_006" formatted="false">"تفعيل الإدارة"</string>
+    <string name="ui_screen_titles_007" formatted="false">"مغادرة الصيدلية"</string>
+    <string name="ui_screen_titles_008" formatted="false">"إصدار ملف اتصال"</string>
+    <string name="ui_screen_titles_009" formatted="false">"إضافة دواء"</string>
+    <string name="ui_screen_titles_010" formatted="false">"تعديل الدواء"</string>
+    <string name="ui_screen_titles_011" formatted="false">"النسخ الاحتياطي والاستعادة"</string>
+    <string name="ui_screen_titles_012" formatted="false">"الإعدادات"</string>
+    <string name="ui_screen_titles_013" formatted="false">"حول التطبيق"</string>
+    <string name="ui_screen_titles_014" formatted="false">"ملف الاتصال"</string>
+    <string name="ui_screen_titles_015" formatted="false">"السجل المحلي"</string>
+    <string name="ui_screen_titles_016" formatted="false">"استيراد CSV"</string>
+    <string name="ui_screen_titles_017" formatted="false">"التقارير"</string>
+    <string name="ui_screen_titles_018" formatted="false">"الاتصال وصيانة الاعتماد"</string>
+    <string name="ui_screen_titles_019" formatted="false">"تفاصيل الدواء"</string>
+    <string name="ui_screen_titles_020" formatted="false">"عقاقير"</string>
+    <string name="ui_admin_components_001" formatted="false">"أكمل هذا الحقل المطلوب"</string>
+    <string name="ui_admin_components_002" formatted="false">"مطلوب"</string>
+    <string name="ui_admin_components_003" formatted="false">"اختياري"</string>
+    <string name="ui_admin_components_004">"إخفاء %1$s"</string>
+    <string name="ui_admin_components_005">"إظهار %1$s"</string>
+    <string name="ui_admin_components_006" formatted="false">"إلغاء العملية"</string>
+    <string name="ui_admin_components_007" formatted="false">"مراجعة التغييرات"</string>
+    <string name="ui_admin_components_008" formatted="false">"حذف عنصر تغير في النسخة المنشورة؛ راجع جميع التغييرات والعناصر المرتبطة قبل الاختيار."</string>
+    <string name="ui_admin_components_009" formatted="false">"اختر القيمة التي ستُستخدم."</string>
+    <string name="ui_admin_components_010">"نسختك: %1$s"</string>
+    <string name="ui_admin_components_011">"النسخة المنشورة: %1$s"</string>
+    <string name="ui_admin_components_012" formatted="false">"القيمة قبل التعديل"</string>
+    <string name="ui_admin_components_013" formatted="false">"تأكيد الحذف وتحديث العناصر المرتبطة"</string>
+    <string name="ui_admin_components_014" formatted="false">"إبقاء العنصر المنشور وإلغاء الحذف"</string>
+    <string name="ui_admin_components_015" formatted="false">"استعادة العنصر المرتبط"</string>
+    <string name="ui_admin_components_016" formatted="false">"إلغاء تعديل التوافر"</string>
+    <string name="ui_admin_components_017" formatted="false">"استعادة التصنيف أو الشكل"</string>
+    <string name="ui_admin_components_018" formatted="false">"استخدام التصنيف أو الشكل الافتراضي"</string>
+    <string name="ui_admin_components_019" formatted="false">"استخدم نسختي"</string>
+    <string name="ui_admin_components_020" formatted="false">"استخدم النسخة المنشورة"</string>
+    <string name="ui_admin_components_021" formatted="false">"حان وقت حفظ نسخة احتياطية"</string>
+    <string name="ui_admin_components_022" formatted="false">"احفظ بيانات هذا الجهاز وسجله وتعديلاته في ملف مشفّر."</string>
+    <string name="ui_admin_components_023" formatted="false">"حفظ نسخة"</string>
+    <string name="ui_admin_components_024" formatted="false">"ذكّرني بعد أسبوع"</string>
+    <string name="ui_admin_components_025" formatted="false">"عبارة مرور النسخة"</string>
+    <string name="ui_admin_components_026" formatted="false">"ثمانية محارف على الأقل؛ تُحفظ المسافات كما كتبتها"</string>
+    <string name="ui_admin_components_027" formatted="false">"أدخل ثمانية محارف على الأقل دون حذف المسافات"</string>
+    <string name="ui_admin_components_028" formatted="false">"تأكيد عبارة مرور النسخة"</string>
+    <string name="ui_admin_components_029" formatted="false">"عبارتا المرور غير متطابقتين"</string>
+    <string name="ui_admin_components_030">"إخفاء: %1$s"</string>
+    <string name="ui_choice_components_001" formatted="false">"اختر"</string>
+    <string name="ui_choice_components_002" formatted="false">"بحث"</string>
+    <string name="ui_choice_components_003" formatted="false">"لا توجد نتائج مطابقة"</string>
+    <string name="ui_choice_components_004" formatted="false">"إغلاق"</string>
+    <string name="ui_form_guidance_001" formatted="false">"أدخل ستة أرقام عربية أو إنجليزية"</string>
+    <string name="ui_form_guidance_002" formatted="false">"أدخل منطقة زمنية صحيحة مثل Asia/Damascus"</string>
+    <string name="ui_form_guidance_003" formatted="false">"أدخل تاريخاً ميلادياً صحيحاً مثل 2026-11-12"</string>
+    <string name="ui_form_guidance_004" formatted="false">"أدخل عدداً صحيحاً غير سالب للأيام"</string>
+    <string name="ui_form_guidance_005" formatted="false">"أدخل معرّف المجموعة السالب الصحيح"</string>
+    <string name="ui_history_screen_001" formatted="false">"يلزم تفويض إدارة على هذا الجهاز لعرض السجل."</string>
+    <string name="ui_history_screen_002" formatted="false">"تصفية السجل"</string>
+    <string name="ui_history_screen_003">"صفحة %1$s"</string>
+    <string name="ui_history_screen_004" formatted="false">"عن سجل هذا الجهاز"</string>
+    <string name="ui_history_screen_005" formatted="false">"لا يُشارك السجل عبر تيليغرام. الهاتف الجديد يبدأ دون سجل سابق؛ لا يمكن استنتاج التغييرات التي لم يرصدها هذا الجهاز."</string>
+    <string name="ui_history_screen_006" formatted="false">"إعادة المحاولة"</string>
+    <string name="ui_history_screen_007" formatted="false">"لا توجد أحداث مطابقة"</string>
+    <string name="ui_history_screen_008" formatted="false">"قد يكون السجل فارغاً على هذا الجهاز، أو لا توجد أحداث ضمن الفلاتر المختارة."</string>
+    <string name="ui_history_screen_009" formatted="false">"الأحدث"</string>
+    <string name="ui_history_screen_010" formatted="false">"الأقدم"</string>
+    <string name="ui_history_screen_011" formatted="false">"من تاريخ"</string>
+    <string name="ui_history_screen_012" formatted="false">"إلى تاريخ شامل"</string>
+    <string name="ui_history_screen_013" formatted="false">"المحرر"</string>
+    <string name="ui_history_screen_014" formatted="false">"الدواء"</string>
+    <string name="ui_history_screen_015" formatted="false">"أدخل تاريخاً صحيحاً مثل 2026-11-10، على أن تكون البداية قبل النهاية أو مساوية لها."</string>
+    <string name="ui_history_screen_016" formatted="false">"تطبيق الفلاتر"</string>
+    <string name="ui_history_screen_017" formatted="false">"مسح الفلاتر"</string>
+    <string name="ui_history_screen_018" formatted="false">"الكل"</string>
+    <string name="ui_history_screen_019">"معرّف: %1$s"</string>
+    <string name="ui_pharmacy_admin_screen_001" formatted="false">"التعديل غير متاح"</string>
+    <string name="ui_pharmacy_admin_screen_002" formatted="false">"يلزم تفويض إدارة وحالة تسمح بالتعديل"</string>
+    <string name="ui_pharmacy_admin_screen_003" formatted="false">"لم يعد هذا الدواء موجوداً."</string>
+    <string name="ui_pharmacy_admin_screen_004" formatted="false">"هذا الجهاز مُعدّ مسبقاً"</string>
+    <string name="ui_pharmacy_admin_screen_005" formatted="false">"القسم الرئيسي"</string>
+    <string name="ui_pharmacy_admin_screen_006" formatted="false">"بيانات الصيدلية والإدارة"</string>
+    <string name="ui_pharmacy_admin_screen_007" formatted="false">"اسم الصيدلية"</string>
+    <string name="ui_pharmacy_admin_screen_008" formatted="false">"اسم المحرر"</string>
+    <string name="ui_pharmacy_admin_screen_009" formatted="false">"اسم القسم الأول"</string>
+    <string name="ui_pharmacy_admin_screen_010" formatted="false">"جارٍ إنشاء الصيدلية…"</string>
+    <string name="ui_pharmacy_admin_screen_011" formatted="false">"رمز الإدارة — ستة أرقام"</string>
+    <string name="ui_pharmacy_admin_screen_012" formatted="false">"تأكيد رمز الإدارة"</string>
+    <string name="ui_pharmacy_admin_screen_013" formatted="false">"رمزا الإدارة غير متطابقين"</string>
+    <string name="ui_pharmacy_admin_screen_014" formatted="false">"يمكنك البدء دون اتصال. لن تُشارك البيانات حتى إعداد تيليغرام وتأكيد النشر."</string>
+    <string name="ui_pharmacy_admin_screen_015" formatted="false">"إنشاء الصيدلية"</string>
+    <string name="ui_pharmacy_admin_screen_016" formatted="false">"تفويض الإدارة"</string>
+    <string name="ui_pharmacy_admin_screen_017" formatted="false">"رمز الإدارة"</string>
+    <string name="ui_pharmacy_admin_screen_018" formatted="false">"تفويض الإدارة يُحفظ على هذا الجهاز؛ لا يلزم الرمز عند كل تشغيل."</string>
+    <string name="ui_pharmacy_admin_screen_019" formatted="false">"تأكيد المغادرة"</string>
+    <string name="ui_pharmacy_admin_screen_020" formatted="false">"ستُحذف البيانات المحلية والتعديلات غير المنشورة والاتصال من هذا الجهاز. لن تُحذف بيانات تيليغرام أو الملفات التي صدّرتها. قد توجد تعديلات غير منشورة على أجهزة أخرى."</string>
+    <string name="ui_pharmacy_admin_screen_021" formatted="false">"اكتب اسم الصيدلية للتأكيد"</string>
+    <string name="ui_pharmacy_admin_screen_022" formatted="false">"اكتب اسم الصيدلية كما يظهر تماماً"</string>
+    <string name="ui_pharmacy_admin_screen_023" formatted="false">"أفهم وأؤكد المغادرة"</string>
+    <string name="ui_pharmacy_admin_screen_024" formatted="false">"مغادرة وحذف البيانات المحلية"</string>
+    <string name="ui_pharmacy_admin_screen_025" formatted="false">"نتيجة النشر غير مؤكدة؛ المغادرة تحذف سجل المحاولة المحلي ولا تلغي ما قد نُشر بالفعل."</string>
+    <string name="ui_pharmacy_admin_screen_026" formatted="false">"يلزم تفويض إدارة"</string>
+    <string name="ui_pharmacy_admin_screen_027" formatted="false">"يلزم إصدار متوافق"</string>
+    <string name="ui_pharmacy_admin_screen_028" formatted="false">"أكمل صيانة الاتصال أولاً"</string>
+    <string name="ui_pharmacy_admin_screen_029" formatted="false">"مراجعة صيانة الاتصال أولاً"</string>
+    <string name="ui_pharmacy_admin_screen_030" formatted="false">"إكمال مراجعة الاستعادة أولاً"</string>
+    <string name="ui_pharmacy_admin_screen_031">"التعديلات غير المنشورة: %1$s"</string>
+    <string name="ui_pharmacy_admin_screen_032" formatted="false">"النشر متوقف حتى إكمال صيانة الاتصال ومراجعتها."</string>
+    <string name="ui_pharmacy_admin_screen_033" formatted="false">"النشر متوقف حتى مراجعة الاستعادة ومقارنة النسخة المستعادة بالنسخة المشتركة."</string>
+    <string name="ui_pharmacy_admin_screen_034" formatted="false">"قد تُنشر التعديلات المنتظرة تلقائياً عند عودة الاتصال. النسخ المشتركة لا تشمل السجل المحلي."</string>
+    <string name="ui_pharmacy_admin_screen_035" formatted="false">"قبل"</string>
+    <string name="ui_pharmacy_admin_screen_036" formatted="false">"بعد"</string>
+    <string name="ui_pharmacy_admin_screen_037" formatted="false">"نشر والتحقق"</string>
+    <string name="ui_pharmacy_admin_screen_038" formatted="false">"مسودة محلية — غير مشتركة"</string>
+    <string name="ui_pharmacy_admin_screen_039" formatted="false">"أضف الأدوية، ثم أكمل إعداد تيليغرام وانشر. يمكنك تأجيل نشر الصيدلية الفارغة."</string>
+    <string name="ui_pharmacy_admin_screen_040" formatted="false">"بيانات الجهاز والاتصال"</string>
+    <string name="ui_pharmacy_admin_screen_041" formatted="false">"صيانة الاتصال ورمز الإدارة"</string>
+    <string name="ui_pharmacy_admin_screen_042" formatted="false">"التعديل والنشر متوقفان حتى إكمال الصيانة"</string>
+    <string name="ui_pharmacy_admin_screen_043" formatted="false">"يلزم إصدار متوافق للتعديل والنشر؛ السجل والنسخ الاحتياطي متاحان."</string>
+    <string name="ui_pharmacy_admin_screen_044" formatted="false">"مراجعة العمل المحفوظ"</string>
+    <string name="ui_pharmacy_admin_screen_045" formatted="false">"الكتالوج"</string>
+    <string name="ui_pharmacy_admin_screen_046" formatted="false">"استيراد الأدوية من CSV"</string>
+    <string name="ui_pharmacy_admin_screen_047" formatted="false">"تقارير CSV وPDF"</string>
+    <string name="ui_pharmacy_admin_screen_048" formatted="false">"المشاركة"</string>
+    <string name="ui_pharmacy_admin_screen_049" formatted="false">"دواء"</string>
+    <string name="ui_pharmacy_admin_screen_050" formatted="false">"التوفر"</string>
+    <string name="ui_pharmacy_admin_screen_051" formatted="false">"تصنيف"</string>
+    <string name="ui_pharmacy_admin_screen_052" formatted="false">"شكل دوائي"</string>
+    <string name="ui_pharmacy_admin_screen_053" formatted="false">"قسم"</string>
+    <string name="ui_pharmacy_admin_screen_054" formatted="false">"الصيدلية"</string>
+    <string name="ui_pharmacy_admin_screen_055" formatted="false">"تفعيل اتصال متحقق"</string>
+    <string name="ui_pharmacy_admin_screen_056" formatted="false">"اكتمال مراجعة صيانة الاتصال"</string>
+    <string name="ui_pharmacy_admin_screen_057" formatted="false">"إضافة أو حذف مرصود"</string>
+    <string name="ui_pharmacy_admin_screen_058" formatted="false">"بيانات التحقق من رمز الإدارة"</string>
+    <string name="ui_pharmacy_admin_screen_059" formatted="false">"مصالحة النسخة المستعادة"</string>
+    <string name="ui_pharmacy_admin_screen_060" formatted="false">"مراجعة استبدال المحتوى المستعاد"</string>
+    <string name="ui_pharmacy_admin_screen_061" formatted="false">"إضافة أو حذف"</string>
+    <string name="ui_pharmacy_admin_screen_062" formatted="false">"الاسم التجاري بالإنجليزية"</string>
+    <string name="ui_pharmacy_admin_screen_063" formatted="false">"الاسم الإنجليزي"</string>
+    <string name="ui_pharmacy_admin_screen_064" formatted="false">"الاسم التجاري بالعربية"</string>
+    <string name="ui_pharmacy_admin_screen_065" formatted="false">"الاسم العربي"</string>
+    <string name="ui_pharmacy_admin_screen_066" formatted="false">"العيار"</string>
+    <string name="ui_pharmacy_admin_screen_067" formatted="false">"الاسم العلمي بالعربية"</string>
+    <string name="ui_pharmacy_admin_screen_068" formatted="false">"الاسم العلمي بالإنجليزية"</string>
+    <string name="ui_pharmacy_admin_screen_069" formatted="false">"العلامة التجارية"</string>
+    <string name="ui_pharmacy_admin_screen_070" formatted="false">"ملاحظة"</string>
+    <string name="ui_pharmacy_admin_screen_071" formatted="false">"تاريخ الانتهاء"</string>
+    <string name="ui_pharmacy_admin_screen_072" formatted="false">"أيام تنبيه الانتهاء"</string>
+    <string name="ui_pharmacy_admin_screen_073" formatted="false">"التصنيف"</string>
+    <string name="ui_pharmacy_admin_screen_074" formatted="false">"الشكل"</string>
+    <string name="ui_pharmacy_admin_screen_075" formatted="false">"نشط"</string>
+    <string name="ui_pharmacy_admin_screen_076" formatted="false">"الترتيب"</string>
+    <string name="ui_pharmacy_admin_screen_077" formatted="false">"غير موجود / حذف"</string>
+    <string name="ui_pharmacy_admin_screen_078" formatted="false">"فارغ"</string>
+    <string name="ui_pharmacy_admin_screen_079" formatted="false">"عنصر مرتبط"</string>
+    <string name="ui_pharmacy_admin_screen_080" formatted="false">"تصنيف محذوف"</string>
+    <string name="ui_pharmacy_admin_screen_081" formatted="false">"شكل محذوف"</string>
+    <string name="ui_pharmacy_admin_screen_082" formatted="false">"نعم"</string>
+    <string name="ui_pharmacy_admin_screen_083" formatted="false">"لا"</string>
+    <string name="ui_pharmacy_admin_screen_084" formatted="false">"١. إنشاء البوت"</string>
+    <string name="ui_pharmacy_admin_screen_085" formatted="false">"أنشئ بوتاً مخصصاً عبر BotFather وأدخل الرمز."</string>
+    <string name="ui_pharmacy_admin_screen_086" formatted="false">"٢. إعداد المجموعة"</string>
+    <string name="ui_pharmacy_admin_screen_087" formatted="false">"أنشئ مجموعة خاصة وأضف البوت مشرفاً بصلاحية إرسال الملفات وتثبيت الرسائل."</string>
+    <string name="ui_pharmacy_admin_screen_088" formatted="false">"٣. اكتشاف المجموعة والتحقق"</string>
+    <string name="ui_pharmacy_admin_screen_089" formatted="false">"أرسل الأمر التالي داخل المجموعة. استخدم جهازاً واحداً للاكتشاف."</string>
+    <string name="ui_pharmacy_admin_screen_090" formatted="false">"اتصال تيليغرام"</string>
+    <string name="ui_pharmacy_admin_screen_091" formatted="false">"رمز البوت"</string>
+    <string name="ui_pharmacy_admin_screen_092" formatted="false">"نسخ الأمر"</string>
+    <string name="ui_pharmacy_admin_screen_093" formatted="false">"اكتشاف المجموعة"</string>
+    <string name="ui_pharmacy_admin_screen_094" formatted="false">"معرّف المجموعة"</string>
+    <string name="ui_pharmacy_admin_screen_095" formatted="false">"بديل للاكتشاف؛ الصق المعرّف السالب كاملاً مثل -1001234567890"</string>
+    <string name="ui_pharmacy_admin_screen_096" formatted="false">"تحقق من المجموعة والصلاحيات"</string>
+    <string name="ui_pharmacy_admin_screen_097">"المجموعة: %1$s"</string>
+    <string name="ui_pharmacy_admin_screen_098" formatted="false">"تأكيد المجموعة وحفظ الاتصال — النشر لاحقاً"</string>
+    <string name="ui_pharmacy_admin_screen_099" formatted="false">"نشر صيدلية فارغة الآن؟"</string>
+    <string name="ui_pharmacy_admin_screen_100" formatted="false">"يمكنك البدء بإضافة الأدوية أولاً ثم النشر. لن يُصدر ملف اتصال حتى يتم التحقق من أول نشر."</string>
+    <string name="ui_pharmacy_admin_screen_101" formatted="false">"لاحقاً"</string>
+    <string name="ui_pharmacy_admin_screen_102" formatted="false">"نشر الآن"</string>
+    <string name="ui_pharmacy_admin_screen_103" formatted="false">"لن يُحذف أي webhook قائم. استخدم بوتاً مخصصاً إذا كان البوت مرتبطاً بخدمة أخرى. بعد الحفظ اختر مراجعة التعديلات والنشر؛ يمكنك نشر صيدلية فارغة أيضاً."</string>
+    <string name="ui_pharmacy_admin_screen_104" formatted="false">"يحصل المستورد على صلاحية القراءة. اختر ١٦ رقماً عشوائياً على الأقل؛ تجنب التواريخ والتسلسلات والأرقام المكررة. شارك الملف وكلمته عبر قناتين منفصلتين."</string>
+    <string name="ui_pharmacy_admin_screen_105" formatted="false">"حماية ملف الاتصال"</string>
+    <string name="ui_pharmacy_admin_screen_106" formatted="false">"كلمة ملف الاتصال — ١٦ رقماً عشوائياً على الأقل"</string>
+    <string name="ui_pharmacy_admin_screen_107" formatted="false">"حفظ ملف الاتصال"</string>
+    <string name="ui_pharmacy_admin_screen_108" formatted="false">"أدخل اسماً علمياً بالعربية أو الإنجليزية على الأقل"</string>
+    <string name="ui_pharmacy_admin_screen_109" formatted="false">"حفظ محلياً"</string>
+    <string name="ui_pharmacy_admin_screen_110" formatted="false">"سيُضاف الدواء بحالة متوفر في الأقسام الحالية؛ يمكنك تعديل التوافر بعد الحفظ."</string>
+    <string name="ui_pharmacy_admin_screen_111" formatted="false">"الاسم العلمي وبيانات الدواء"</string>
+    <string name="ui_pharmacy_admin_screen_112" formatted="false">"أحد الاسمين العلميين مطلوب"</string>
+    <string name="ui_pharmacy_admin_screen_113" formatted="false">"العيار — مطلوب"</string>
+    <string name="ui_pharmacy_admin_screen_114" formatted="false">"الشكل الدوائي"</string>
+    <string name="ui_pharmacy_admin_screen_115" formatted="false">"إخفاء المعلومات الاختيارية"</string>
+    <string name="ui_pharmacy_admin_screen_116" formatted="false">"الاسم التجاري ومعلومات إضافية"</string>
+    <string name="ui_pharmacy_admin_screen_117" formatted="false">"الاسم التجاري — اختياري"</string>
+    <string name="ui_pharmacy_admin_screen_118" formatted="false">"معلومات إضافية"</string>
+    <string name="ui_pharmacy_admin_screen_119" formatted="false">"تنبيه: يوجد دواء بالاسم نفسه؛ لن يُدمج تلقائياً."</string>
+    <string name="ui_pharmacy_admin_screen_120" formatted="false">"تعديل التوافر"</string>
+    <string name="ui_pharmacy_admin_screen_121" formatted="false">"افتح التفاصيل ثم اختر شارة القسم لتعديل التوافر في ورقة مستقلة."</string>
+    <string name="ui_pharmacy_admin_screen_122" formatted="false">"حذف الدواء"</string>
+    <string name="ui_pharmacy_admin_screen_123" formatted="false">"تأكيد حذف الدواء"</string>
+    <string name="ui_pharmacy_admin_screen_124" formatted="false">"النوع"</string>
+    <string name="ui_pharmacy_admin_screen_125" formatted="false">"العناصر"</string>
+    <string name="ui_pharmacy_admin_screen_126" formatted="false">" — محمي"</string>
+    <string name="ui_pharmacy_admin_screen_127" formatted="false">" — غير نشط"</string>
+    <string name="ui_pharmacy_admin_screen_128" formatted="false">"إضافة جديد"</string>
+    <string name="ui_pharmacy_admin_screen_129" formatted="false">"تحرير العنصر"</string>
+    <string name="ui_pharmacy_admin_screen_130" formatted="false">"الاسم الإنجليزي — اختياري"</string>
+    <string name="ui_pharmacy_admin_screen_131" formatted="false">"قسم نشط"</string>
+    <string name="ui_pharmacy_admin_screen_132" formatted="false">"حفظ"</string>
+    <string name="ui_pharmacy_admin_screen_133" formatted="false">"حذف العنصر"</string>
+    <string name="ui_pharmacy_admin_screen_134" formatted="false">"حذف التصنيف أو الشكل يعيد الأدوية إلى غير مصنف / أخرى. حذف القسم يزيل حالات توفره؛ لا يمكن حذف القسم الأخير."</string>
+    <string name="ui_pharmacy_admin_screen_135" formatted="false">"اكتب اسم القسم لتأكيد الحذف"</string>
+    <string name="ui_pharmacy_admin_screen_136" formatted="false">"تأكيد الحذف وإعادة الإسناد"</string>
+    <string name="ui_pharmacy_admin_screen_137" formatted="false">"حذف"</string>
+    <string name="ui_aqaqeer_app_001" formatted="false">"تراجع"</string>
+    <string name="ui_aqaqeer_app_002" formatted="false">"عرض"</string>
+    <string name="ui_aqaqeer_app_003" formatted="false">"عرض أوقات التحديث والنشر"</string>
+    <string name="ui_aqaqeer_app_004" formatted="false">"بيانات تجريبية"</string>
+    <string name="ui_aqaqeer_app_005" formatted="false">"مسودة محلية — لم تُنشر"</string>
+    <string name="ui_aqaqeer_app_006" formatted="false">"وقت البيانات: "</string>
+    <string name="ui_aqaqeer_app_007" formatted="false">"لا يوجد نشر متحقق منه"</string>
+    <string name="ui_aqaqeer_app_008" formatted="false">"فتح القائمة الجانبية"</string>
+    <string name="ui_aqaqeer_app_009" formatted="false">"رجوع"</string>
+    <string name="ui_aqaqeer_app_010" formatted="false">"أوقات البيانات"</string>
+    <string name="ui_aqaqeer_app_011">"نشر (%1$s)"</string>
+    <string name="ui_aqaqeer_app_012" formatted="false">"تعديل الدواء والتوافر"</string>
+    <string name="ui_aqaqeer_app_013" formatted="false">"خيارات الدواء"</string>
+    <string name="ui_aqaqeer_app_014" formatted="false">"سجل الدواء على هذا الجهاز"</string>
+    <string name="ui_aqaqeer_app_015" formatted="false">"لا يوجد تطبيق بريد. العنوان ظاهر أدناه للتواصل."</string>
+    <string name="ui_aqaqeer_app_016" formatted="false">"تعذر فتح تطبيق البريد. يمكنك استخدام العنوان الظاهر."</string>
+    <string name="ui_aqaqeer_app_017" formatted="false">"صيانة الاتصال — النشر متوقف"</string>
+    <string name="ui_aqaqeer_app_018" formatted="false">"البيانات المحفوظة متاحة. أكمل التحقق والمراجعة قبل استئناف التعديل أو النشر."</string>
+    <string name="ui_aqaqeer_app_019" formatted="false">"متابعة صيانة الاتصال"</string>
+    <string name="ui_aqaqeer_app_020" formatted="false">"نسخة مستعادة — النشر متوقف"</string>
+    <string name="ui_aqaqeer_app_021" formatted="false">"البيانات متاحة محلياً. تحقق من الاتصال ورمز الإدارة الحالي ثم راجع الاستعادة قبل النشر."</string>
+    <string name="ui_aqaqeer_app_022" formatted="false">"مراجعة الاستعادة"</string>
+    <string name="ui_aqaqeer_app_023" formatted="false">"اختر دواء لعرض تفاصيله"</string>
+    <string name="ui_aqaqeer_app_024" formatted="false">"عرض تجريبي · للقراءة فقط"</string>
+    <string name="ui_aqaqeer_app_025" formatted="false">"بيانات توضيحية منفصلة عن أي صيدلية حقيقية"</string>
+    <string name="ui_aqaqeer_app_026" formatted="false">"شكل غير معروف"</string>
+    <string name="ui_aqaqeer_app_027" formatted="false">"غير مصنف"</string>
+    <string name="ui_aqaqeer_app_028" formatted="false">"تاريخ الانتهاء (ميلادي)"</string>
+    <string name="ui_aqaqeer_app_029" formatted="false">"التوافر حسب الأقسام"</string>
+    <string name="ui_aqaqeer_app_030" formatted="false">" · قسم مغلق"</string>
+    <string name="ui_aqaqeer_app_031" formatted="false">"وقت التحديث والمحرر غير مسجلين"</string>
+    <string name="ui_aqaqeer_app_032" formatted="false">"ملاحظات"</string>
+    <string name="ui_aqaqeer_app_033" formatted="false">"المظهر والعرض"</string>
+    <string name="ui_aqaqeer_app_034" formatted="false">"المظهر"</string>
+    <string name="ui_aqaqeer_app_035" formatted="false">"حسب النظام"</string>
+    <string name="ui_aqaqeer_app_036" formatted="false">"فاتح"</string>
+    <string name="ui_aqaqeer_app_037" formatted="false">"داكن"</string>
+    <string name="ui_aqaqeer_app_038" formatted="false">"أسود"</string>
+    <string name="ui_aqaqeer_app_039" formatted="false">"اللون الأساسي"</string>
+    <string name="ui_aqaqeer_app_040" formatted="false">"ذهبي"</string>
+    <string name="ui_aqaqeer_app_041" formatted="false">"أزرق"</string>
+    <string name="ui_aqaqeer_app_042" formatted="false">"أخضر"</string>
+    <string name="ui_aqaqeer_app_043" formatted="false">"أرجواني"</string>
+    <string name="ui_aqaqeer_app_044" formatted="false">"قرمزي"</string>
+    <string name="ui_aqaqeer_app_045" formatted="false">"ترتيب الأدوية"</string>
+    <string name="ui_aqaqeer_app_046" formatted="false">"الاسم العلمي"</string>
+    <string name="ui_aqaqeer_app_047" formatted="false">"الاسم التجاري العربي"</string>
+    <string name="ui_aqaqeer_app_048" formatted="false">"الاسم التجاري الإنجليزي"</string>
+    <string name="ui_aqaqeer_app_049" formatted="false">"التوافر في القسم الحالي"</string>
+    <string name="ui_aqaqeer_app_050" formatted="false">"بطاقات الأدوية"</string>
+    <string name="ui_aqaqeer_app_051" formatted="false">"مختصرة"</string>
+    <string name="ui_aqaqeer_app_052" formatted="false">"موسعة"</string>
+    <string name="ui_aqaqeer_app_053" formatted="false">"معاينة البطاقة"</string>
+    <string name="ui_aqaqeer_app_054" formatted="false">"اسم علمي · 500 mg"</string>
+    <string name="ui_aqaqeer_app_055" formatted="false">"الاسم التجاري · الشكل الدوائي · التصنيف"</string>
+    <string name="ui_aqaqeer_app_056" formatted="false">"عرض أسماء الأدوية"</string>
+    <string name="ui_aqaqeer_app_057" formatted="false">"العربية"</string>
+    <string name="ui_aqaqeer_app_058" formatted="false">"الإنجليزية"</string>
+    <string name="ui_aqaqeer_app_059" formatted="false">"العربية والإنجليزية"</string>
+    <string name="ui_aqaqeer_app_060" formatted="false">"تاريخ هجري ثانوي للعرض فقط"</string>
+    <string name="ui_aqaqeer_app_061" formatted="false">"يظهر بجانب الميلادي في التفاصيل والسجل؛ الإدخال والحسابات تبقى ميلادية."</string>
+    <string name="ui_aqaqeer_app_062" formatted="false">"إظهار تاريخ هجري ثانوي للعرض فقط"</string>
+    <string name="ui_aqaqeer_app_063" formatted="false">"طريقة التقويم الهجري"</string>
+    <string name="ui_aqaqeer_app_064" formatted="false">"التقويم الهجري الحسابي المدني بدورة 30 سنة؛ قد يختلف عن رؤية الهلال محلياً. الفلاتر والتقارير تبقى ميلادية."</string>
+    <string name="ui_aqaqeer_app_065" formatted="false">"بيانات الصيدلية"</string>
+    <string name="ui_aqaqeer_app_066" formatted="false">"استبدال اتصال هذه الصيدلية وصيانة الاعتماد"</string>
+    <string name="ui_aqaqeer_app_067" formatted="false">"الإصدار والمطوّر والتواصل"</string>
+    <string name="ui_aqaqeer_app_068" formatted="false">"نسخة تجريبية منفصلة"</string>
+    <string name="ui_aqaqeer_app_069" formatted="false">"عن عقاقير"</string>
+    <string name="ui_aqaqeer_app_070" formatted="false">"لمعرفة توافر الأدوية حسب أقسام الصيدلية، والاطلاع على البيانات المحفوظة دون اتصال."</string>
+    <string name="ui_aqaqeer_app_071" formatted="false">"تطوير"</string>
+    <string name="ui_aqaqeer_app_072" formatted="false">"محمد علي حجار"</string>
+    <string name="ui_aqaqeer_app_073" formatted="false">"التواصل بالبريد الإلكتروني"</string>
+    <string name="ui_aqaqeer_app_074" formatted="false">"تحديث التطبيق"</string>
+    <string name="ui_aqaqeer_app_075" formatted="false">"للحصول على تحديث، اطلب ملف APK أحدث من مسؤول الصيدلية وثبّته يدوياً."</string>
+    <string name="ui_aqaqeer_app_076" formatted="false">"إعداد الصيدلية"</string>
+    <string name="ui_aqaqeer_app_077" formatted="false">"لدي ملف اتصال — انضمام"</string>
+    <string name="ui_aqaqeer_app_078" formatted="false">"افتح ملف الاتصال الذي أرسله المسؤول لعرض أدوية الصيدلية."</string>
+    <string name="ui_aqaqeer_app_079" formatted="false">"الانضمام بملف اتصال"</string>
+    <string name="ui_aqaqeer_app_080" formatted="false">"أنا المسؤول — إنشاء صيدلية"</string>
+    <string name="ui_aqaqeer_app_081" formatted="false">"ابدأ محلياً وأضف الأدوية، ثم أعدّ المشاركة عندما تكون جاهزاً."</string>
+    <string name="ui_aqaqeer_app_082" formatted="false">"استعادة نسخة احتياطية"</string>
+    <string name="ui_aqaqeer_app_083" formatted="false">"الإعدادات وحول التطبيق"</string>
+    <string name="ui_aqaqeer_app_084" formatted="false">"جار تحميل البيانات…"</string>
+    <string name="ui_aqaqeer_app_085" formatted="false">"لم تُحذف بياناتك"</string>
+    <string name="ui_aqaqeer_app_086" formatted="false">"تعذر فتح البيانات المحمية"</string>
+    <string name="ui_aqaqeer_app_087" formatted="false">"قد يكون مفتاح الجهاز غير متاح أو تعذرت قراءة قاعدة البيانات. يمكنك إعادة المحاولة بأمان؛ لن يستبدل التطبيق المفتاح أو يمسح البيانات."</string>
+    <string name="ui_aqaqeer_app_088" formatted="false">"إذا استمرت المشكلة، تواصل مع المسؤول بشأن نسخة احتياطية. استعادة النسخ تتطلب تخزيناً محمياً قابلاً للفتح؛ لا تحذف بيانات التطبيق لتجاوز المشكلة."</string>
+    <string name="ui_aqaqeer_app_089" formatted="false">"المساعدة وحول التطبيق"</string>
+    <string name="ui_aqaqeer_app_090">"آخر تعديل: %1$s · %2$s"</string>
+    <string name="ui_home_screen_001">" · %1$s غير متوفر"</string>
+    <string name="ui_home_screen_002" formatted="false">"الفلاتر"</string>
+    <string name="ui_home_screen_003">" · %1$s محددة"</string>
+    <string name="ui_home_screen_004" formatted="false">"الاسم أو العيار"</string>
+    <string name="ui_home_screen_005" formatted="false">"مسح البحث"</string>
+    <string name="ui_home_screen_006">"%1$s من %2$s أدوية"</string>
+    <string name="ui_home_screen_007" formatted="false">"تعديل المحدد"</string>
+    <string name="ui_home_screen_008" formatted="false">"مسح التحديد"</string>
+    <string name="ui_home_screen_009" formatted="false">"البحث والفلاتر لا يزيلان الأدوية المحددة. اختيار قسم آخر يبدأ تحديداً جديداً."</string>
+    <string name="ui_home_screen_010" formatted="false">"جميع الأقسام مغلقة"</string>
+    <string name="ui_home_screen_011" formatted="false">"لا يوجد قسم نشط؛ افتح التفاصيل للاطلاع على التوافر المسجل."</string>
+    <string name="ui_home_screen_012" formatted="false">"لا توجد أدوية بعد"</string>
+    <string name="ui_home_screen_013" formatted="false">"لم تُضف أدوية إلى هذه الصيدلية."</string>
+    <string name="ui_home_screen_014" formatted="false">"جرّب تغيير البحث أو الفلاتر."</string>
+    <string name="ui_home_screen_015" formatted="false">"إضافة دواء بهذا الاسم"</string>
+    <string name="ui_home_screen_016" formatted="false">"مسح البحث والفلاتر"</string>
+    <string name="ui_home_screen_017" formatted="false">"آخر تحديث"</string>
+    <string name="ui_home_screen_018" formatted="false">"لم يتم التحديث بعد"</string>
+    <string name="ui_home_screen_019" formatted="false">"آخر تحديث ناجح"</string>
+    <string name="ui_home_screen_020" formatted="false">"لم يتم بعد"</string>
+    <string name="ui_home_screen_021" formatted="false">"وقت النشر"</string>
+    <string name="ui_home_screen_022" formatted="false">"توقيت الصيدلية"</string>
+    <string name="ui_home_screen_023" formatted="false">"تصفية الأدوية"</string>
+    <string name="ui_home_screen_024" formatted="false">"التوافر"</string>
+    <string name="ui_home_screen_025" formatted="false">"تجميع الأدوية"</string>
+    <string name="ui_home_screen_026" formatted="false">"إظهار عناوين للمجموعات دون تغيير البحث أو الفلاتر."</string>
+    <string name="ui_home_screen_027" formatted="false">"التجميع حسب"</string>
+    <string name="ui_home_screen_028" formatted="false">"حرف الاسم العلمي"</string>
+    <string name="ui_home_screen_029" formatted="false">"عرض النتائج"</string>
+    <string name="ui_home_screen_030" formatted="false">"جار تحديث البيانات…"</string>
+    <string name="ui_home_screen_031" formatted="false">"تحديث البيانات"</string>
+    <string name="ui_home_screen_032">"الحالات المحددة: %1$s · التصنيفات المحددة: %2$s"</string>
+    <string name="ui_home_screen_033" formatted="false">"دون اتصال — تُعرض البيانات المحفوظة"</string>
+    <string name="ui_home_screen_034" formatted="false">"لم يُسجل تحديث ناجح بعد"</string>
+    <string name="ui_home_screen_035" formatted="false">"مرّ يوم أو أكثر منذ آخر تحديث ناجح"</string>
+    <string name="ui_home_screen_036" formatted="false">"يلزم إصدار متوافق قبل التعديل أو النشر"</string>
+    <string name="ui_home_screen_037" formatted="false">"النشر متوقف — أكمل صيانة الاتصال"</string>
+    <string name="ui_home_screen_038" formatted="false">"النشر متوقف — راجع النسخة المستعادة"</string>
+    <string name="ui_home_screen_039" formatted="false">"تعذر تحديث البيانات"</string>
+    <string name="ui_home_screen_040" formatted="false">"جار نشر التعديلات والتحقق منها"</string>
+    <string name="ui_home_screen_041" formatted="false">"نتيجة نشر تحتاج إلى مراجعة"</string>
+    <string name="ui_home_screen_042">"%1$s تعديلات غير منشورة"</string>
+    <string name="ui_home_screen_043">" · %1$s تنبيهات"</string>
+    <string name="ui_home_screen_044" formatted="false">"تعديلات غير منشورة"</string>
+    <string name="ui_home_screen_045" formatted="false">"يلزم إصدار متوافق من التطبيق"</string>
+    <string name="ui_home_screen_046" formatted="false">"البيانات المحفوظة متاحة للقراءة. اطلب من المسؤول ملف APK متوافقاً؛ التعديل والنشر متوقفان."</string>
+    <string name="ui_home_screen_047" formatted="false">"وقت مسجل لاحق للساعة الحالية"</string>
+    <string name="ui_home_screen_048" formatted="false">"الآن"</string>
+    <string name="ui_home_screen_049">"منذ %1$s دقيقة"</string>
+    <string name="ui_home_screen_050">"منذ %1$s ساعة"</string>
+    <string name="ui_home_screen_051">"منذ %1$s يوم"</string>
+    <string name="ui_bulk_medication_editor_001" formatted="false">"دون تغيير"</string>
+    <string name="ui_bulk_medication_editor_002" formatted="false">"الشكل والتصنيف يخصان الدواء في كل الأقسام."</string>
+    <string name="ui_bulk_medication_editor_003">"سيتغير %1$s من %2$s أدوية."</string>
+    <string name="ui_bulk_medication_editor_004">"التوافر: %1$s ← %2$s"</string>
+    <string name="ui_bulk_medication_editor_005" formatted="false">"غير متاح"</string>
+    <string name="ui_bulk_medication_editor_006">"الشكل: %1$s ← %2$s"</string>
+    <string name="ui_bulk_medication_editor_007">"التصنيف: %1$s ← %2$s"</string>
+    <string name="ui_bulk_medication_editor_008" formatted="false">"تغيرت البيانات المختارة أو القسم أو حُذف دواء؛ أنهِ التحديد وابدأ مجدداً."</string>
+    <string name="ui_bulk_medication_editor_009" formatted="false">"راجع الخيارات واختر قيمة موجودة لكل حقل مفعّل قبل الحفظ."</string>
+    <string name="ui_bulk_medication_editor_010" formatted="false">"معاينة"</string>
+    <string name="ui_bulk_medication_editor_011" formatted="false">"تغيير الاختيارات"</string>
+    <string name="ui_bulk_medication_editor_012" formatted="false">"إلغاء"</string>
+    <string name="ui_backup_screen_001" formatted="false">"حُفظت النسخة الاحتياطية المشفّرة"</string>
+    <string name="ui_backup_screen_002" formatted="false">"النشر متوقف بعد الاستعادة"</string>
+    <string name="ui_backup_screen_003" formatted="false">"يمكنك عرض البيانات دون اتصال. يلزم تفويض الإدارة والتحقق من المجموعة ومصالحة النسخة المنشورة قبل النشر. رمز الإدارة المنشور يبقى كما هو."</string>
+    <string name="ui_backup_screen_004" formatted="false">"تفعيل الإدارة برمز الصيدلية"</string>
+    <string name="ui_backup_screen_005" formatted="false">"حفظ نسخة احتياطية"</string>
+    <string name="ui_backup_screen_006" formatted="false">"تشمل البيانات وكل السجل المحلي والتعديلات والاتصال. لا تشمل تفويض الإدارة. احتفظ بالملف وعبارة مروره بأمان؛ لا يمكن استعادة عبارة مرور منسية."</string>
+    <string name="ui_backup_screen_007" formatted="false">"تعذر فتح منتقي الملفات؛ حاول مجدداً"</string>
+    <string name="ui_backup_screen_008" formatted="false">"اختيار مكان الحفظ"</string>
+    <string name="ui_backup_screen_009" formatted="false">"الحد الأقصى للملف المشفّر ٦٤ ميغابايت (٦٧٬١٠٨٬٨٦٤ بايت). لا تُحذف أجزاء من السجل لتقليل الحجم."</string>
+    <string name="ui_backup_screen_010" formatted="false">"النسخ متاح؛ الاستعادة متوقفة أثناء الصيانة"</string>
+    <string name="ui_backup_screen_011" formatted="false">"أكمل صيانة الاتصال أو ألغها بأمان قبل استبدال بيانات هذا الجهاز."</string>
+    <string name="ui_backup_screen_012" formatted="false">"مراجعة صيانة الاتصال"</string>
+    <string name="ui_backup_screen_013" formatted="false">"يجري فحص الملف كاملاً قبل استبدال البيانات. تبدأ الاستعادة محلياً دون نشر تلقائي، وتحتاج رمز الإدارة مجدداً."</string>
+    <string name="ui_backup_screen_014" formatted="false">"اختيار ملف .aqbak"</string>
+    <string name="ui_backup_screen_015" formatted="false">"تغيير الملف المحدد"</string>
+    <string name="ui_backup_screen_016" formatted="false">"عبارة مرور الملف"</string>
+    <string name="ui_backup_screen_017">"ستُستبدل بيانات هذا الجهاز وسجله وتعديلاته غير المنشورة (%1$s). احفظ نسخة حالية أولاً إن احتجتها."</string>
+    <string name="ui_backup_screen_018" formatted="false">"اكتب اسم الصيدلية الحالية للتأكيد"</string>
+    <string name="ui_backup_screen_019" formatted="false">"أفهم استبدال البيانات والتعديلات المحلية"</string>
+    <string name="ui_backup_screen_020" formatted="false">"فحص النسخة واستعادتها"</string>
+    <string name="ui_backup_screen_021" formatted="false">"الاستعادة من الإعدادات متاحة للمسؤول فقط."</string>
+    <string name="ui_backup_screen_022" formatted="false">"متابعة العمل بالمسودة المحلية"</string>
+    <string name="ui_backup_screen_023" formatted="false">"استبدال محتوى المنشور بالنسخة الاحتياطية بدلاً من دمج التعديلات"</string>
+    <string name="ui_backup_screen_024" formatted="false">"اكتب اسم الصيدلية المستعادة للتأكيد"</string>
+    <string name="ui_backup_screen_025" formatted="false">"فحص المنشور ومراجعة المصالحة — دون نشر"</string>
+    <string name="ui_backup_screen_026" formatted="false">"تأكيد اتصال النسخة المستعادة"</string>
+    <string name="ui_backup_screen_027" formatted="false">"رمز بديل للبوت نفسه — اختياري"</string>
+    <string name="ui_backup_screen_028" formatted="false">"اتركه فارغاً للإبقاء على الاتصال. الانتقال إلى بوت أو مجموعة أخرى يحتاج ترحيل اتصال منفصلاً."</string>
+    <string name="ui_backup_screen_029" formatted="false">"التحقق من الاتصال والمجموعة"</string>
+    <string name="ui_backup_screen_030" formatted="false">"تأكيد المجموعة"</string>
+    <string name="ui_backup_screen_031" formatted="false">"هذه المجموعة الصحيحة"</string>
+    <string name="ui_backup_screen_032" formatted="false">"تم تأكيد المجموعة؛ سيُفحص المنشور مجدداً عند المصالحة."</string>
+    <string name="ui_backup_screen_033" formatted="false">"الاتصال غير مؤكّد على هذا الجهاز."</string>
+    <string name="ui_reports_screen_001" formatted="false">"يلزم تفويض إدارة وإصدار متوافق"</string>
+    <string name="ui_reports_screen_002" formatted="false">"تعذر فتح منتقي الحفظ"</string>
+    <string name="ui_reports_screen_003" formatted="false">"إعداد التقرير"</string>
+    <string name="ui_reports_screen_004" formatted="false">"التقرير"</string>
+    <string name="ui_reports_screen_005" formatted="false">"غير المتوفر في قسم"</string>
+    <string name="ui_reports_screen_006" formatted="false">"التوافر الكامل"</string>
+    <string name="ui_reports_screen_007" formatted="false">"صلاحية قصيرة — يستثني المنتهي"</string>
+    <string name="ui_reports_screen_008" formatted="false">"القسم"</string>
+    <string name="ui_reports_screen_009" formatted="false">"تضمين التعديلات غير المنشورة"</string>
+    <string name="ui_reports_screen_010" formatted="false">"إعداد التقرير ومعاينته"</string>
+    <string name="ui_reports_screen_011" formatted="false">"عن مصدر التقرير وحفظه"</string>
+    <string name="ui_reports_screen_012" formatted="false">"المصدر الافتراضي هو النسخة المنشورة المتحققة. لتصدير المسودة فعّل تضمين التعديلات. إذا لم يوجد القسم في المصدر المنشور، اختر قسماً آخر أو ضمّن التعديلات. تبقى اللقطة ثابتة؛ أعد إعدادها لتضمين تغييرات لاحقة. قد يبقى ملف جزئي عند الإلغاء أو فشل مزود التخزين. ملف الجداول CSV يُجهّز للعرض الآمن في تطبيقات الجداول ويختلف عن قالب الاستيراد وملف إعادة المحاولة."</string>
+    <string name="ui_reports_screen_013" formatted="false">"معاينة التقرير"</string>
+    <string name="ui_reports_screen_014">"الأدوية: %1$s"</string>
+    <string name="ui_reports_screen_015" formatted="false">"يشمل التعديلات غير المنشورة"</string>
+    <string name="ui_reports_screen_016" formatted="false">"البيانات المنشورة فقط"</string>
+    <string name="ui_reports_screen_017" formatted="false">"أُنشئ"</string>
+    <string name="ui_reports_screen_018" formatted="false">"توقيت التقرير والنشر"</string>
+    <string name="ui_reports_screen_019">"توقيت الصيدلية: %1$s\nوقت النشر: "</string>
+    <string name="ui_reports_screen_020" formatted="false">"لم يُنشر"</string>
+    <string name="ui_reports_screen_021" formatted="false">"الانتهاء"</string>
+    <string name="ui_reports_screen_022" formatted="false">"عرض أول خمسة أدوية"</string>
+    <string name="ui_reports_screen_023" formatted="false">"عرض جميع الأدوية"</string>
+    <string name="ui_reports_screen_024">"حفظ التقرير الكامل (%1$s أدوية)"</string>
+    <string name="ui_reports_screen_025" formatted="false">"ملف جداول (CSV)"</string>
+    <string name="ui_reports_screen_026" formatted="false">"ملف PDF عربي"</string>
+    <string name="ui_pending_changes_banner_001">"التعديلات المنتظرة: %1$s"</string>
+    <string name="ui_pending_changes_banner_002" formatted="false">"مسودة محلية — النشر الأول يبدأ المشاركة."</string>
+    <string name="ui_pending_changes_banner_003" formatted="false">"تعديلات محلية لم تُؤكد بعد؛ قد يُستأنف النشر المنتظر عند عودة الاتصال."</string>
+    <string name="ui_pending_changes_banner_004" formatted="false">"مراجعة"</string>
+    <string name="ui_pending_changes_banner_005" formatted="false">"نشر"</string>
+    <string name="ui_pending_changes_banner_006" formatted="false">"يلزم إصدار متوافق قبل النشر؛ احتُفظ بالعمل."</string>
+    <string name="ui_pending_changes_banner_007" formatted="false">"جار تنفيذ عملية؛ احتُفظ بالعمل حتى اكتمال التحقق."</string>
+    <string name="ui_pending_changes_banner_008" formatted="false">"أكمل إعداد تيليغرام من أدوات الإدارة قبل النشر."</string>
+    <string name="ui_pending_changes_banner_009" formatted="false">"توجد تعارضات تحتاج مراجعة قبل النشر."</string>
+    <string name="ui_pending_changes_banner_010" formatted="false">"توجد محاولة نشر محفوظة؛ راجع نتيجتها قبل المتابعة."</string>
+    <string name="ui_maintenance_screen_001" formatted="false">"صيانة الاتصال"</string>
+    <string name="ui_maintenance_screen_002" formatted="false">"يلزم إعداد صيدلية حقيقية أولاً"</string>
+    <string name="ui_maintenance_screen_003" formatted="false">"تعذر قراءة صيانة الاتصال المحمية"</string>
+    <string name="ui_maintenance_screen_004" formatted="false">"احتُفظ بالبيانات. لا تكرر الاستبدال أو تمسح بيانات التطبيق؛ احتفظ بنسخة وتواصل مع المسؤول للاسترداد."</string>
+    <string name="ui_maintenance_screen_005" formatted="false">"راجع الاستعادة أولاً"</string>
+    <string name="ui_maintenance_screen_006" formatted="false">"أكمل تأكيد الاتصال ومصالحة النسخة المستعادة قبل بدء صيانة أخرى."</string>
+    <string name="ui_maintenance_screen_007" formatted="false">"ملف اتصال جديد للصيدلية نفسها يغيّر اتصال هذا الجهاز فقط، ولا يمنح القارئ صلاحيات إدارة."</string>
+    <string name="ui_maintenance_screen_008" formatted="false">"صيانة النقل واستبدال الاتصال متاحان بعد مشاركة الصيدلية أولاً."</string>
+    <string name="ui_maintenance_screen_009" formatted="false">"صيانة المشاركة"</string>
+    <string name="ui_maintenance_screen_010" formatted="false">"تغيير رمز البوت والمفتاح أو نقل المجموعة يحتاج نسخة احتياطية جديدة داخل العملية، بعد التحقق من المصدر. لا تكفي نسخة سابقة أو تذكير النسخ."</string>
+    <string name="ui_maintenance_screen_011" formatted="false">"صالح التعديلات ومحاولة النشر أولاً."</string>
+    <string name="ui_maintenance_screen_012" formatted="false">"بدء استبدال رمز البوت ومفتاح النسخ"</string>
+    <string name="ui_maintenance_screen_013" formatted="false">"بدء نقل الصيدلية لبوت أو مجموعة أخرى"</string>
+    <string name="ui_maintenance_screen_014" formatted="false">"النشر والتعديل متوقفان أثناء المراجعة"</string>
+    <string name="ui_maintenance_screen_015" formatted="false">"المصدر"</string>
+    <string name="ui_maintenance_screen_016" formatted="false">"المصدر غير متحقق الآن. النسخة المحتفظ بها قد لا تشمل تغييرات بعيدة لم يرصدها الجهاز."</string>
+    <string name="ui_maintenance_screen_017" formatted="false">"الوجهة"</string>
+    <string name="ui_maintenance_screen_018" formatted="false">"خطوة الصيانة الحالية"</string>
+    <string name="ui_maintenance_screen_019" formatted="false">"التحقق من الاتصال والنسخة المنشورة"</string>
+    <string name="ui_maintenance_screen_020" formatted="false">"راجع الصيدلية والمجموعة أعلاه. التفعيل يتحقق مجدداً ويحفظ نسخة القراءة؛ لا ينشر العمل المحتفظ به."</string>
+    <string name="ui_maintenance_screen_021" formatted="false">"تأكيد هذا الاتصال وتفعيل القراءة"</string>
+    <string name="ui_maintenance_screen_022" formatted="false">"فحص استكمال التفعيل المنقطع"</string>
+    <string name="ui_maintenance_screen_023" formatted="false">"التحقق وإنهاء استبدال اتصال القراءة"</string>
+    <string name="ui_maintenance_screen_024" formatted="false">"راجع العمل المحتفظ به والمحاولات السابقة. نية تغيير رمز لا تطابق تفويض الرمز الحالي تحتاج إلغاءً صريحاً ثم طلب تغيير جديد."</string>
+    <string name="ui_maintenance_screen_025" formatted="false">"فحص ومصالحة العمل — دون نشر"</string>
+    <string name="ui_maintenance_screen_026" formatted="false">"احتُفظ بالاتصال والعمل؛ راجع مسؤول الصيدلية."</string>
+    <string name="ui_maintenance_screen_027" formatted="false">"إذا تعذر المصدر، أريد مراجعة الاسترداد بالنسخة المحتفظ بها صراحة"</string>
+    <string name="ui_maintenance_screen_028" formatted="false">"فحص المصدر ومراجعة حالته"</string>
+    <string name="ui_maintenance_screen_029" formatted="false">"اكتمل حفظ نسخة داخل هذه الصيانة؛ سيُفحص المصدر مجدداً قبل المتابعة."</string>
+    <string name="ui_maintenance_screen_030" formatted="false">"فحص المصدر والانتقال لخطوة BotFather"</string>
+    <string name="ui_maintenance_screen_031" formatted="false">"اطلب إلغاء الرمز القديم من BotFather، ثم أدخل الرمز البديل للبوت نفسه. الإلغاء هنا لا يعيد رمزاً ألغيتَه خارج التطبيق. البيانات القديمة والنسخ المصدّرة لا يمكن سحبها."</string>
+    <string name="ui_maintenance_screen_032" formatted="false">"رمز البوت البديل"</string>
+    <string name="ui_maintenance_screen_033" formatted="false">"التحقق من الرمز وتجهيز المفتاح الجديد"</string>
+    <string name="ui_maintenance_screen_034" formatted="false">"مراجعة إبقاء الرمز البديل مع المفتاح السابق دون نشر جديد"</string>
+    <string name="ui_maintenance_screen_035" formatted="false">"يُفحص المصدر والوجهة قبل المتابعة. إعادة المحاولة تفحص النتيجة الحالية قبل أي إرسال جديد؛ لا يوجد قفل مضمون بين أجهزة المسؤولين."</string>
+    <string name="ui_maintenance_screen_036" formatted="false">"فحص النتيجة والمتابعة بالنشر والتحقق"</string>
+    <string name="ui_maintenance_screen_037" formatted="false">"مراجعة نسخة مختلفة موثقة في الوجهة"</string>
+    <string name="ui_maintenance_screen_038" formatted="false">"فحص إمكان الرجوع باتصال موثق ومراجعته"</string>
+    <string name="ui_maintenance_screen_039" formatted="false">"تم التفعيل بعد التحقق. تحتاج الأجهزة الأخرى ملف اتصال جديداً. النقل لا يمسح المصدر ولا يوقف أجهزته؛ نسّق إيقاف استخدامه وإلغاء اعتماده يدوياً لتجنب نسختين منفصلتين."</string>
+    <string name="ui_maintenance_screen_040" formatted="false">"فحص الوجهة وتأكيد اكتمال الصيانة"</string>
+    <string name="ui_maintenance_screen_041" formatted="false">"إلغاء الصيانة إذا أمكن الرجوع بأمان"</string>
+    <string name="ui_maintenance_screen_042" formatted="false">"قد يكون التفعيل أو النشر اكتمل؛ يلزم فحص نتيجته قبل الإلغاء أو الرجوع."</string>
+    <string name="ui_maintenance_screen_043" formatted="false">"استبدال اتصال هذا الجهاز"</string>
+    <string name="ui_maintenance_screen_044" formatted="false">"تعذر فتح منتقي الملفات"</string>
+    <string name="ui_maintenance_screen_045" formatted="false">"اختيار .aqz للصيدلية نفسها"</string>
+    <string name="ui_maintenance_screen_046" formatted="false">"كلمة مرور ملف الاتصال"</string>
+    <string name="ui_maintenance_screen_047" formatted="false">"فحص الملف وحفظ استبدال معلق"</string>
+    <string name="ui_maintenance_screen_048" formatted="false">"تغيير رمز الإدارة"</string>
+    <string name="ui_maintenance_screen_049" formatted="false">"رمز الإدارة الحالي"</string>
+    <string name="ui_maintenance_screen_050" formatted="false">"رمز الإدارة الجديد — ستة أرقام"</string>
+    <string name="ui_maintenance_screen_051" formatted="false">"تأكيد رمز الإدارة الجديد"</string>
+    <string name="ui_maintenance_screen_052" formatted="false">"حفظ تغيير الرمز محلياً ثم مراجعته للنشر"</string>
+    <string name="ui_maintenance_screen_053" formatted="false">"يبقى هذا الجهاز مفوضاً بعد التحقق من نشر تغييره نفسه. الأجهزة الأخرى تخرج من الإدارة عندما ترصد الرمز الجديد؛ الأجهزة غير المتصلة لا تُقفل فوراً."</string>
+    <string name="ui_maintenance_screen_054" formatted="false">"القراءة متاحة. مراجعة العمل المحتفظ به وصيانة الاعتماد تحتاج تفويض الإدارة الحالي وإصداراً متوافقاً."</string>
+    <string name="ui_maintenance_screen_055" formatted="false">"تفعيل الإدارة بالرمز الحالي ثم العودة للصيانة"</string>
+    <string name="ui_maintenance_screen_056" formatted="false">"البوت"</string>
+    <string name="ui_maintenance_screen_057" formatted="false">"غير متحقق حالياً"</string>
+    <string name="ui_maintenance_screen_058" formatted="false">"المجموعة"</string>
+    <string name="ui_maintenance_screen_059" formatted="false">"النسخة"</string>
+    <string name="ui_maintenance_screen_060" formatted="false">"وقت النشر (UTC)"</string>
+    <string name="ui_maintenance_screen_061" formatted="false">"نسخة احتياطية جديدة لهذه الصيانة"</string>
+    <string name="ui_maintenance_screen_062" formatted="false">"حفظ نسخة مشفرة والتحقق من إغلاقها"</string>
+    <string name="ui_maintenance_screen_063" formatted="false">"يشمل الحد المشفر 64 ميبيبايت كامل السجل. الفشل أو الإلغاء أو تغير المصدر لا يجيز المتابعة؛ لا تُحفظ عبارة المرور."</string>
+    <string name="ui_maintenance_screen_064" formatted="false">"اتصال الوجهة"</string>
+    <string name="ui_maintenance_screen_065" formatted="false">"رمز بوت الوجهة"</string>
+    <string name="ui_maintenance_screen_066" formatted="false">"معرّف المجموعة الخاصة للوجهة"</string>
+    <string name="ui_maintenance_screen_067" formatted="false">"الصق معرّف المجموعة السالب كاملاً؛ لا تدخل رابط المجموعة"</string>
+    <string name="ui_maintenance_screen_068" formatted="false">"اختر مجموعة خاصة مخصصة دون أي رسالة مثبتة، وأضف البوت مشرفاً بصلاحيات المستندات والتثبيت."</string>
+    <string name="ui_maintenance_screen_069" formatted="false">"فحص الوجهة والصلاحيات"</string>
+    <string name="ui_maintenance_screen_070" formatted="false">"تأكيد الوجهة"</string>
+    <string name="ui_maintenance_screen_071" formatted="false">"أؤكد نقل الصيدلية نفسها إلى هذه الوجهة"</string>
+    <string name="ui_maintenance_screen_072" formatted="false">"تجهيز الصيانة مع إبقاء الاتصال الحالي"</string>
+    <string name="ui_maintenance_screen_073" formatted="false">"اتصال بديل معلق؛ لم يُفعّل بعد"</string>
+    <string name="ui_maintenance_screen_074" formatted="false">"تم التحقق؛ التفعيل يحتاج تأكيداً جديداً"</string>
+    <string name="ui_maintenance_screen_075" formatted="false">"المصدر مراجع؛ احفظ نسخة احتياطية داخل العملية"</string>
+    <string name="ui_maintenance_screen_076" formatted="false">"اكتملت نسخة الصيانة؛ تحقق المصدر يسبق المتابعة"</string>
+    <string name="ui_maintenance_screen_077" formatted="false">"استبدال رمز البوت نفسه؛ قد يتعذر الرجوع للرمز القديم"</string>
+    <string name="ui_maintenance_screen_078" formatted="false">"الوجهة مؤكدة والمفتاح الجديد محفوظ؛ لم يُتحقق من نشره بعد"</string>
+    <string name="ui_maintenance_screen_079" formatted="false">"نسخة النشر مجهزة؛ لا تؤكد هذه الحالة أنها نُشرت"</string>
+    <string name="ui_maintenance_screen_080" formatted="false">"بدأ إرسال الملف؛ ستُفحص نتيجة المحاولة قبل المتابعة"</string>
+    <string name="ui_maintenance_screen_081" formatted="false">"أُرسل ملف مرشح؛ لم يُتحقق من اعتماده كنسخة منشورة"</string>
+    <string name="ui_maintenance_screen_082" formatted="false">"قد تكون الوجهة تغيرت؛ يلزم فحص النتيجة قبل أي إعادة"</string>
+    <string name="ui_maintenance_screen_083" formatted="false">"استكمال تبديل محلي قابل للاسترداد؛ احتُفظ بالبيانات"</string>
+    <string name="ui_maintenance_screen_084" formatted="false">"الاتصال مفعل للقراءة؛ راجع العمل المحتفظ به دون نشر تلقائي"</string>
+    <string name="ui_maintenance_screen_085" formatted="false">"تأكيد اكتمال الصيانة ومراجعة بقية الأجهزة"</string>
+    <string name="ui_maintenance_screen_086" formatted="false">"استكمال الإلغاء الآمن مع إبقاء الاتصال الأصلي"</string>
+    <string name="ui_home_drawer_001" formatted="false">"الرئيسية"</string>
+    <string name="ui_home_drawer_002" formatted="false">"التصنيفات"</string>
+    <string name="ui_home_drawer_003" formatted="false">"عدة تصنيفات محددة؛ اختيار تصنيف هنا يستبدلها."</string>
+    <string name="ui_home_drawer_004" formatted="false">"كل التصنيفات"</string>
+    <string name="ui_home_drawer_005" formatted="false">"الأدوية والسجل"</string>
+    <string name="ui_home_drawer_006" formatted="false">"المشاركة والحماية"</string>
+    <string name="ui_home_drawer_007" formatted="false">"إعداد المشاركة"</string>
+    <string name="ui_home_drawer_008" formatted="false">"التطبيق"</string>
+    <string name="ui_home_drawer_009" formatted="false">"أوقات التحديث والنشر"</string>
+    <string name="ui_home_drawer_010" formatted="false">"موسّع"</string>
+    <string name="ui_home_drawer_011" formatted="false">"مطوي"</string>
+    <string name="ui_technical_fields_001" formatted="false">"المنطقة الزمنية"</string>
+    <string name="ui_technical_fields_002" formatted="false">"اختيار المنطقة الزمنية"</string>
+    <string name="ui_technical_fields_003" formatted="false">"ابحث عن منطقة زمنية"</string>
+    <string name="ui_technical_fields_004" formatted="false">"لا توجد منطقة مطابقة؛ جرّب اسم مدينة بالإنجليزية مثل Damascus."</string>
+    <string name="ui_technical_fields_005" formatted="false">"تاريخ ميلادي: YYYY-MM-DD"</string>
+    <string name="ui_technical_fields_006">"اختيار %1$s من التقويم الميلادي"</string>
+    <string name="ui_technical_fields_007" formatted="false">"اختيار"</string>
+    <string name="ui_technical_fields_008" formatted="false">"اختيار تاريخ ميلادي"</string>
+    <string name="ui_medication_components_001">"الاسم التجاري: %1$s"</string>
+    <string name="ui_medication_components_002" formatted="false">"الاسم التجاري"</string>
+    <string name="ui_medication_components_003" formatted="false">"تحديد أدوية للتعديل الجماعي"</string>
+    <string name="ui_medication_components_004">"تحديد %1$s · %2$s"</string>
+    <string name="ui_medication_components_005" formatted="false">" · تعديلات غير منشورة"</string>
+    <string name="ui_medication_components_006" formatted="false">"تحديد الدواء"</string>
+    <string name="ui_medication_components_007" formatted="false">"متوفر في: "</string>
+    <string name="ui_medication_components_008" formatted="false">"، "</string>
+    <string name="ui_medication_components_009">"تعديل توافر %1$s"</string>
+    <string name="ui_medication_components_010" formatted="false">"منتهي الصلاحية"</string>
+    <string name="ui_medication_components_011" formatted="false">"صلاحية قصيرة"</string>
+    <string name="ui_connection_import_state_001" formatted="false">"كلمة المرور غير صحيحة أو الملف تالف."</string>
+    <string name="ui_connection_import_state_002" formatted="false">"أدخل كلمة مرور الملف: ستة أرقام على الأقل."</string>
+    <string name="ui_connection_import_state_003" formatted="false">"يتجاوز الملف الحد المسموح: ١٠ ميبيبايت."</string>
+    <string name="ui_connection_import_state_004" formatted="false">"لا تكفي الموارد لمعالجة هذا الملف."</string>
+    <string name="ui_connection_import_state_005" formatted="false">"تنسيق الملف غير مدعوم. اطلب ملف اتصال متوافقاً من المسؤول."</string>
+    <string name="ui_connection_import_state_006" formatted="false">"هذا ليس ملف اتصال صالحاً."</string>
+    <string name="ui_connection_import_state_007" formatted="false">"تعذرت قراءة الملف أو تنظيف النسخة المؤقتة. اختر الملف مجدداً وحاول مرة أخرى."</string>
+    <string name="ui_connection_import_state_008" formatted="false">"تعذرت خدمة التشفير على هذا الجهاز."</string>
+    <string name="ui_connection_import_state_009" formatted="false">"يتطلب الملف إصداراً متوافقاً أحدث من التطبيق."</string>
+    <string name="ui_connection_import_state_010" formatted="false">"بيانات ملف الاتصال غير صالحة لهذه العملية."</string>
+    <string name="ui_connection_import_state_011" formatted="false">"هذا الجهاز مُعدّ لصيدلية. لا يمكن استبدالها باستيراد ملف انضمام."</string>
+    <string name="ui_connection_import_state_012" formatted="false">"النسخة التجريبية لا تستورد اتصالات صيدليات حقيقية."</string>
+    <string name="ui_connection_import_state_013" formatted="false">"يوجد اتصال بانتظار التحقق. ألغِه قبل اختيار اتصال آخر."</string>
+    <string name="ui_connection_import_state_014" formatted="false">"اختر ملف الاتصال من تطبيق الملفات."</string>
+    <string name="ui_connection_import_state_015" formatted="false">"تعذرت قراءة البيانات المحمية. احتُفظ بها؛ حاول مجدداً أو تواصل مع المسؤول."</string>
+    <string name="ui_connection_import_state_016" formatted="false">"تغير الاتصال المعلق. أعد فتح الشاشة وحاول مجدداً."</string>
+    <string name="ui_connection_import_state_017" formatted="false">"لم يعد إذن قراءة الملف متاحاً. اختره مجدداً."</string>
+    <string name="ui_connection_import_state_018" formatted="false">"تعذرت العملية. احتُفظ بالبيانات الحالية؛ حاول مرة أخرى."</string>
+    <string name="ui_connection_import_state_019" formatted="false">"بيانات البوت غير صالحة. اطلب ملف اتصال حديثاً من المسؤول."</string>
+    <string name="ui_connection_import_state_020" formatted="false">"تعذر الوصول إلى مجموعة الصيدلية. راجع المسؤول بشأن صلاحيات البوت."</string>
+    <string name="ui_connection_import_state_021" formatted="false">"نسخة الصيدلية غير متاحة في الرسالة المثبّتة. تواصل مع المسؤول."</string>
+    <string name="ui_connection_import_state_022" formatted="false">"تتجاوز البيانات المستلمة الحد المسموح. احتُفظ بالاتصال المعلق."</string>
+    <string name="ui_connection_import_state_023" formatted="false">"لا تكفي الموارد لمعالجة النسخة المنشورة."</string>
+    <string name="ui_connection_import_state_024" formatted="false">"طلب تيليغرام الانتظار. حاول مجدداً لاحقاً."</string>
+    <string name="ui_connection_import_state_025" formatted="false">"تعذر الاتصال بتيليغرام. تحقق من الإنترنت وحاول مجدداً؛ احتُفظ بالاتصال المعلق."</string>
+    <string name="ui_connection_import_state_026" formatted="false">"تغيرت النسخة أثناء التحقق. أعد التحقق للحصول على النسخة الحالية."</string>
+    <string name="ui_connection_import_state_027" formatted="false">"بيانات وصف النسخة لا تطابق محتواها المحمي. تواصل مع المسؤول."</string>
+    <string name="ui_connection_import_state_028" formatted="false">"استجابة تيليغرام أو بيانات النسخة غير صالحة. احتُفظ بالاتصال المعلق."</string>
+    <string name="ui_connection_import_state_029" formatted="false">"تعذر توثيق نسخة الصيدلية. قد تكون تالفة أو تغير مفتاحها؛ اطلب ملف اتصال حديثاً."</string>
+    <string name="ui_connection_import_state_030" formatted="false">"تتجاوز النسخة المنشورة الحد المسموح: ١٠ ميبيبايت."</string>
+    <string name="ui_connection_import_state_031" formatted="false">"تنسيق النسخة المنشورة غير مدعوم. اطلب إصداراً متوافقاً من التطبيق."</string>
+    <string name="ui_connection_import_state_032" formatted="false">"تعذرت قراءة نسخة الصيدلية المحمية. احتُفظ بالاتصال المعلق."</string>
+    <string name="ui_connection_import_state_033" formatted="false">"تتطلب النسخة إصداراً متوافقاً أحدث من التطبيق. احتُفظ بالاتصال المعلق دون تفعيل."</string>
+    <string name="ui_connection_import_state_034" formatted="false">"النسخة المنشورة تخص صيدلية أخرى. احتُفظ بالاتصال المعلق."</string>
+    <string name="ui_connection_import_state_035" formatted="false">"إصدار مفتاح النسخة لا يطابق ملف الاتصال. اطلب ملفاً حديثاً من المسؤول."</string>
+    <string name="ui_connection_import_state_036" formatted="false">"بيانات النسخة المنشورة غير صالحة. احتُفظ بالاتصال المعلق."</string>
+    <string name="ui_connection_import_state_037" formatted="false">"يلزم إصدار متوافق من التطبيق. احتُفظ بالبيانات المحفوظة؛ اطلب APK متوافقاً من المسؤول."</string>
+    <string name="ui_connection_import_state_038" formatted="false">"تسلسل النسخة المنشورة يحتاج مراجعة المسؤول. احتُفظ بالنسخة الواردة والبيانات المحلية دون استبدالها."</string>
+    <string name="ui_connection_import_state_039" formatted="false">"توجد تغييرات محلية أو محاولة نشر معلقة تحتاج مراجعة قبل تطبيق النسخة الواردة. احتُفظ بها جميعاً."</string>
+    <string name="ui_connection_import_state_040" formatted="false">"تغيرت البيانات المحلية أثناء التحديث. احتُفظ بها؛ حاول مجدداً."</string>
+    <string name="ui_connection_import_state_041" formatted="false">"التحديث غير متاح لهذا الجهاز."</string>
+    <string name="ui_connection_import_state_042" formatted="false">"الاتصال المعلق"</string>
+    <string name="ui_connection_import_state_043" formatted="false">"البيانات المحفوظة"</string>
+    <string name="ui_catalog_view_model_001" formatted="false">"؛ "</string>
+    <string name="ui_catalog_view_model_002" formatted="false">"لم يُعالج الصف؛ أُوقفت العملية. أعد المعاينة قبل المحاولة"</string>
+    <string name="ui_catalog_view_model_003" formatted="false">"اكتمل حفظ ملف CSV وإغلاقه"</string>
+    <string name="ui_catalog_view_model_004" formatted="false">"اكتمل حفظ التقرير وإغلاقه"</string>
+    <string name="ui_catalog_view_model_005" formatted="false">"انتظر اكتمال العملية الحالية"</string>
+    <string name="ui_catalog_view_model_006" formatted="false">"راجع الخيارات ثم أعد العملية"</string>
+    <string name="ui_catalog_view_model_007" formatted="false">"عبارة المرور غير صحيحة أو الملف تالف"</string>
+    <string name="ui_catalog_view_model_008" formatted="false">"الملف أكبر من الحد المسموح؛ احتُفظ بالبيانات والسجل كاملاً"</string>
+    <string name="ui_catalog_view_model_009" formatted="false">"لا توجد موارد كافية لمعالجة الملف بأمان؛ احتُفظ بالبيانات"</string>
+    <string name="ui_catalog_view_model_010" formatted="false">"تنسيق النسخة غير مدعوم؛ قد يلزم تحديث التطبيق"</string>
+    <string name="ui_catalog_view_model_011" formatted="false">"استخدم عبارة مرور من ثمانية أحرف على الأقل دون تغيير المسافات أو الأحرف"</string>
+    <string name="ui_catalog_view_model_012" formatted="false">"تعذر إتمام العملية. تحقق من الحقول والتفويض والاتصال والمساحة المتاحة؛ احتُفظ بالبيانات."</string>
+    <string name="ui_catalog_view_model_013" formatted="false">"حُفظت التعديلات محلياً"</string>
+    <string name="ui_catalog_view_model_014" formatted="false">"أُضيف الدواء محلياً"</string>
+    <string name="ui_catalog_view_model_015" formatted="false">"حُفظ الدواء محلياً"</string>
+    <string name="ui_catalog_view_model_016" formatted="false">"تعذر استئناف النشر؛ احتُفظ بالعمل."</string>
+    <string name="ui_catalog_view_model_017" formatted="false">"تعذر قراءة السجل. تحقق من التفويض ثم حاول مجدداً؛ احتُفظ بالبيانات."</string>
+    <string name="ui_brand_assets_001" formatted="false">"شعار عقاقير"</string>
+    <string name="ui_csv_import_screen_001" formatted="false">"UTF-8، حتى ١٠ ميبيبايت و١٠٠٠٠ صف و٦٤ كيبيبايت للخلية. لا تُحفظ بيانات قبل التأكيد. الملف الجديد يستبدل جلسة المعاينة ونتائجها فقط."</string>
+    <string name="ui_csv_import_screen_002" formatted="false">"اختيار ملف ومعاينته"</string>
+    <string name="ui_csv_import_screen_003" formatted="false">"حفظ القالب"</string>
+    <string name="ui_csv_import_screen_004" formatted="false">"أعمدة التوافر اختيارية وتستخدم AVAILABLE / LOW / OUT / UNKNOWN. معرّفات أقسام القالب الحالي:"</string>
+    <string name="ui_csv_import_screen_005" formatted="false">"نجاح الحفظ يتطلب إغلاق الملف. قد يبقى ملف جزئي عند الإلغاء أو فشل مزود التخزين."</string>
+    <string name="ui_csv_import_screen_006" formatted="false">"في التحديث، الخلايا الفارغة تبقي القيم. مسح قيمة اختيارية يحتاج اختياراً صريحاً. السعر والعملة يقدمان أو يمسحان معاً."</string>
+    <string name="ui_csv_import_screen_007" formatted="false">"جلسة الاستيراد"</string>
+    <string name="ui_csv_import_screen_008">"الصفوف: %1$s"</string>
+    <string name="ui_csv_import_screen_009" formatted="false">"اختر الصفوف المطلوبة. الأسماء المكررة تحتاج قراراً صريحاً، وإضافة تصنيف أو شكل تحتاج موافقتك."</string>
+    <string name="ui_csv_import_screen_010" formatted="false">"تحديد الصفوف الصالحة والموافق عليها"</string>
+    <string name="ui_csv_import_screen_011" formatted="false">"مراجعة تأكيد الحفظ"</string>
+    <string name="ui_csv_import_screen_012" formatted="false">"إعداد تقرير الأخطاء والتخطي دون حفظ صفوف"</string>
+    <string name="ui_csv_import_screen_013" formatted="false">"اكتملت الجلسة أو أُوقفت. المحفوظ يبقى محلياً؛ راجع التعديلات للنشر. لا تعاد الصفوف تلقائياً."</string>
+    <string name="ui_csv_import_screen_014" formatted="false">"حفظ تقرير النتائج الآمن للجداول"</string>
+    <string name="ui_csv_import_screen_015" formatted="false">"حفظ الصفوف الفاشلة لإعادة المحاولة"</string>
+    <string name="ui_csv_import_screen_016" formatted="false">"ملف إعادة المحاولة يحفظ القيم الخام، وقد يتضمن صيغاً إذا فتحته في برنامج جداول. تقرير النتائج يحيد الصيغ وقد يضيف فاصلة عليا؛ استخدم ملف إعادة المحاولة للاستيراد."</string>
+    <string name="ui_csv_import_screen_017" formatted="false">"تأكيد الاستيراد المحلي"</string>
+    <string name="ui_csv_import_screen_018">"حفظ %1$s صفوف محددة في %2$s؟ يحفظ كل صف وارتباطاته معاً. قد تنجح صفوف وتفشل أخرى؛ تبقى النتائج لكل صف. المعاينة أعلاه لا تنشر مباشرة."</string>
+    <string name="ui_csv_import_screen_019" formatted="false">"حفظ الصفوف المحددة"</string>
+    <string name="ui_csv_import_screen_020">"صف %1$s"</string>
+    <string name="ui_csv_import_screen_021">"النتيجة: %1$s"</string>
+    <string name="ui_csv_import_screen_022" formatted="false">"تحديد هذا الصف للحفظ"</string>
+    <string name="ui_csv_import_screen_023" formatted="false">"القرار"</string>
+    <string name="ui_csv_import_screen_024" formatted="false">"الدواء المستهدف"</string>
+    <string name="ui_csv_import_screen_025" formatted="false">"أوافق على إضافة التصنيف أو الشكل المقترح"</string>
+    <string name="ui_csv_import_screen_026" formatted="false">"إخفاء التفاصيل"</string>
+    <string name="ui_csv_import_screen_027" formatted="false">"القيم والتغييرات وخيارات المسح"</string>
+    <string name="ui_csv_import_screen_028" formatted="false">"… (مختصر)"</string>
+    <string name="ui_csv_import_screen_029" formatted="false">"تطابق موجود: "</string>
+    <string name="ui_csv_import_screen_030" formatted="false">"مسح هذه القيمة: "</string>
+    <string name="ui_csv_import_screen_031" formatted="false">"إنشاء"</string>
+    <string name="ui_csv_import_screen_032" formatted="false">"إنشاء دواء آخر"</string>
+    <string name="ui_csv_import_screen_033" formatted="false">"تحديث دواء محدد"</string>
+    <string name="ui_csv_import_screen_034" formatted="false">"تخطي"</string>
+    <string name="ui_csv_import_screen_035" formatted="false">"حُدّث"</string>
+    <string name="ui_csv_import_screen_036" formatted="false">"تُخطي"</string>
+    <string name="ui_csv_import_screen_037" formatted="false">"فشل / لم يُعالج"</string>
+    <string name="ui_csv_import_screen_038" formatted="false">"التوافر: "</string>
+    <string name="ui_csv_import_screen_039">"قبل: %1$s"</string>
+    <string name="ui_csv_import_screen_040">"بعد: %1$s"</string>
+    <string name="ui_availability_editor_001" formatted="false">"تأكيد التوافر في قسم واحد"</string>
+    <string name="ui_availability_editor_002">"القسم: %1$s"</string>
+    <string name="ui_availability_editor_003">"الحالة الحالية: %1$s"</string>
+    <string name="ui_availability_editor_004" formatted="false">"اختر حالة أخرى لحفظها محلياً فوراً."</string>
+    <string name="ui_availability_editor_005">"قبل: %1$s؛ بعد: %2$s"</string>
+    <string name="ui_availability_editor_006" formatted="false">" (دون تغيير)"</string>
+    <string name="ui_availability_editor_007" formatted="false">"الحفظ محلي؛ راجع التعديلات للنشر. قد يُستأنف النشر المنتظر عند عودة الاتصال."</string>
+    <string name="ui_availability_editor_008" formatted="false">"تغيرت الحالات أو حُذف دواء منذ فتح المحرر. أغلقه وافتحه مجدداً قبل التعديل."</string>
+    <string name="ui_availability_editor_009" formatted="false">"معاينة جميع الأدوية المحددة"</string>
+    <string name="ui_availability_editor_010" formatted="false">"تغيير الحالة"</string>
+    <string name="ui_history_components_001">"معرّف العنصر: %1$s"</string>
+    <string name="ui_history_components_002" formatted="false">"غير معروف"</string>
+    <string name="ui_history_components_003" formatted="false">"نشر موثّق"</string>
+    <string name="ui_history_components_004" formatted="false">"نسخة محفوظة للمراجعة — لم تُطبّق"</string>
+    <string name="ui_history_components_005" formatted="false">"صيانة اتصال محلية"</string>
+    <string name="ui_history_components_006" formatted="false">"مراجعة استعادة — لا تعني النشر"</string>
+    <string name="ui_history_components_007" formatted="false">"تغيير بعيد رصده هذا الجهاز"</string>
+    <string name="ui_history_components_008" formatted="false">"تغيير محلي"</string>
+    <string name="ui_history_components_009" formatted="false">"المصدر غير معروف"</string>
+    <string name="ui_history_components_010" formatted="false">"القسم: "</string>
+    <string name="ui_history_components_011" formatted="false">"قسم محذوف"</string>
+    <string name="ui_history_components_012" formatted="false">"تفاصيل الاسترداد محفوظة في التخزين المحمي ولا تُعرض هنا."</string>
+    <string name="ui_history_components_013" formatted="false">"لا تُعرض قيم بيانات التحقق أو محتوى سجل الصيدلية هنا."</string>
+    <string name="ui_history_components_014" formatted="false">"الناشر: "</string>
+    <string name="ui_history_components_015" formatted="false">"المحرر الأصلي: "</string>
+    <string name="ui_history_components_016" formatted="false">"المحرر: "</string>
+    <string name="ui_history_components_017" formatted="false">"رُصد: "</string>
+    <string name="ui_history_components_018" formatted="false">"وقت غير معروف"</string>
+    <string name="ui_history_components_019" formatted="false">"وقت الرصد لا يثبت وقت التعديل الأصلي."</string>
+    <string name="ui_history_components_020" formatted="false">"إخفاء التفاصيل التقنية"</string>
+    <string name="ui_history_components_021" formatted="false">"تفاصيل تقنية"</string>
+    <string name="ui_history_components_022" formatted="false">"معرّف الحدث"</string>
+    <string name="ui_history_components_023" formatted="false">"معرّف النشر"</string>
+    <string name="ui_history_components_024" formatted="false">"معرّف العنصر"</string>
+    <string name="ui_history_components_025" formatted="false">"معرّف المحرر"</string>
+    <string name="ui_history_components_026" formatted="false">"النسبة للناشر تخص حدث النشر فقط؛ لا تثبت مؤلف كل تعديل."</string>
+    <string name="ui_history_components_027" formatted="false">"هذا الحدث لا يمثل تعديلاً على الأدوية."</string>
+    <string name="ui_history_components_028" formatted="false">"وقت التعديل الأصلي: "</string>
+    <string name="ui_history_components_029">"وقت الرصد على هذا الجهاز: %1$s"</string>
+    <string name="ui_history_components_030">"رقم النسخة المنشورة: %1$s"</string>
+    <string name="ui_history_components_031" formatted="false">"لا يوجد رقم نشر مرتبط بهذا الحدث؛ راجع قائمة التعديلات لمعرفة العمل المنتظر."</string>
+    <string name="ui_history_components_032" formatted="false">"دواء محذوف — السجل محفوظ"</string>
+    <string name="ui_history_components_033">"تعديل %1$s"</string>
+    <string name="ui_history_components_034" formatted="false">"غير موجود / غير مسجّل"</string>
+    <string name="ui_history_components_035" formatted="false">"سجل عنصر مرتبط"</string>
+    <string name="ui_history_components_036" formatted="false">"قيمة مختصرة للعرض؛ السجل المحفوظ لم يُختصر."</string>
+    <string name="ui_hijri_display_001" formatted="false">"الهجري الحسابي المدني: غير متاح قبل بداية التقويم"</string>
+    <string name="ui_hijri_display_002">"هجري حسابي مدني: %1$s هـ"</string>
+    <string name="ui_connection_import_screen_001" formatted="false">"الاستيراد غير متاح"</string>
+    <string name="ui_connection_import_screen_002" formatted="false">"النسخة التجريبية منفصلة ولا تستورد اتصالات صيدليات حقيقية."</string>
+    <string name="ui_connection_import_screen_003" formatted="false">"هذا الجهاز مُعدّ لصيدلية. ملف الانضمام لا يستبدلها. استبدال اتصال الصيدلية نفسها سيُتاح من مسار صيانة منفصل."</string>
+    <string name="ui_connection_import_screen_004" formatted="false">"يجب استعادة إمكانية فتح البيانات المحمية قبل استيراد اتصال. يمكنك الرجوع إلى الإعدادات والمساعدة."</string>
+    <string name="ui_connection_import_screen_005" formatted="false">"اتصال معلق"</string>
+    <string name="ui_connection_import_screen_006" formatted="false">"احفظ ملف الاتصال ثم تحقق من النسخة المنشورة عبر تيليغرام. يظل الاتصال معلقاً ولن تظهر الأدوية حتى تفعيل الصيدلية على هذا الجهاز."</string>
+    <string name="ui_connection_import_screen_007" formatted="false">"حاول قراءة البيانات المحمية مجدداً"</string>
+    <string name="ui_connection_import_screen_008" formatted="false">"اتصال محفوظ ومعلق"</string>
+    <string name="ui_connection_import_screen_009" formatted="false">"اطلب من المسؤول ملف APK متوافقاً وثبّته يدوياً. لن يزيل ملف اتصال أقدم هذا المتطلب."</string>
+    <string name="ui_connection_import_screen_010" formatted="false">"تم توثيق النسخة؛ يلزم تحديث التطبيق"</string>
+    <string name="ui_connection_import_screen_011" formatted="false">"تم التحقق من النسخة المنشورة"</string>
+    <string name="ui_connection_import_screen_012" formatted="false">"تم التحقق من هوية الصيدلية ومتطلبات النسخة."</string>
+    <string name="ui_connection_import_screen_013" formatted="false">"وقت التحقق (التوقيت العالمي): "</string>
+    <string name="ui_connection_import_screen_014" formatted="false">"وقت النشر (التوقيت العالمي): "</string>
+    <string name="ui_connection_import_screen_015" formatted="false">"عدد الأدوية في النسخة: "</string>
+    <string name="ui_connection_import_screen_016" formatted="false">"لم تُفعّل بيانات الصيدلية على هذا الجهاز بعد. لا يمنح ملف الاتصال صلاحية مسؤول."</string>
+    <string name="ui_connection_import_screen_017" formatted="false">"التحقق عبر تيليغرام"</string>
+    <string name="ui_connection_import_screen_018" formatted="false">"إعادة التحقق عبر تيليغرام"</string>
+    <string name="ui_connection_import_screen_019" formatted="false">"سيعيد التفعيل التحقق عبر الإنترنت ويحفظ بيانات الصيدلية للقراءة دون اتصال. لا يمنحك صلاحية مسؤول."</string>
+    <string name="ui_connection_import_screen_020" formatted="false">"تفعيل الصيدلية للقراءة"</string>
+    <string name="ui_connection_import_screen_021" formatted="false">"إلغاء الاتصال المعلق"</string>
+    <string name="ui_connection_import_screen_022" formatted="false">"لا يوجد تطبيق ملفات متاح للاختيار."</string>
+    <string name="ui_connection_import_screen_023" formatted="false">"تعذر فتح تطبيق الملفات."</string>
+    <string name="ui_connection_import_screen_024" formatted="false">"اختيار ملف اتصال .aqz"</string>
+    <string name="ui_connection_import_screen_025" formatted="false">"اختيار ملف آخر"</string>
+    <string name="ui_connection_import_screen_026" formatted="false">"فتح ملف الاتصال"</string>
+    <string name="ui_connection_import_screen_027" formatted="false">"تم اختيار ملف. أدخل كلمة المرور التي أعطاك إياها المسؤول."</string>
+    <string name="ui_connection_import_screen_028" formatted="false">"كلمة مرور الملف"</string>
+    <string name="ui_connection_import_screen_029" formatted="false">"أدخل ستة أرقام على الأقل"</string>
+    <string name="ui_connection_import_screen_030" formatted="false">"فك التشفير وحفظ الاتصال المعلق"</string>
+    <string name="ui_connection_import_screen_031" formatted="false">"ستة أرقام على الأقل؛ تُقبل الأرقام العربية والإنجليزية. لا تُحفظ كلمة المرور."</string>
+    <string name="ui_connection_import_screen_032" formatted="false">"جار التحقق وتفعيل الصيدلية…"</string>
+    <string name="ui_connection_import_screen_033" formatted="false">"جار التحقق عبر تيليغرام…"</string>
+    <string name="ui_connection_import_screen_034" formatted="false">"جار تنفيذ العملية…"</string>
+    <string name="ui_connection_import_screen_035" formatted="false">"إلغاء الاتصال المعلق؟"</string>
+    <string name="ui_connection_import_screen_036">"ستُزال نسخة الاتصال المحفوظة داخل التطبيق للصيدلية «%1$s». يبقى الملف الأصلي في مكانه."</string>
+    <string name="ui_connection_import_screen_037" formatted="false">"إلغاء الاتصال"</string>
+    <string name="ui_connection_import_screen_038" formatted="false">"احتفاظ"</string>
+    <string name="ui_bulk_selection_bar_001">"المحدد: %1$s — %2$s"</string>
+    <string name="ui_bulk_selection_bar_002" formatted="false">"تحديد الظاهر"</string>
+    <string name="ui_bulk_selection_bar_003" formatted="false">"إنهاء التحديد"</string>
+    <string name="ui_bulk_selection_bar_004" formatted="false">"حُذف دواء محدد؛ امسح التحديد وابدأ مجدداً."</string>
+    <string name="status_available">متوفر</string>
+    <string name="status_low">توفر محدود</string>
+    <string name="status_out">غير متوفر</string>
+    <string name="status_unknown">غير معروف</string>
+    <string name="home_two_columns">عرض البطاقات في عمودين</string>
+    <string name="home_two_columns_help">أوقفه لعرض بطاقة واحدة في كل صف.</string>
+</resources>

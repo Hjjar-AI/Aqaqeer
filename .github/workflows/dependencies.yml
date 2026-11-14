@@ -1,0 +1,56 @@
+name: 02 - Checks - Dependency vulnerabilities
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  dependencies:
+    if: ${{ github.event.repository.private == false }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Prepare diagnostics
+        run: mkdir -p ci-output/dependencies
+
+      - name: Set up Android tooling
+        uses: ./.github/actions/setup-android
+        with:
+          diagnostics-directory: ci-output/dependencies
+
+      - name: Resolve public Maven dependency inventory
+        shell: bash
+        run: |
+          set -euo pipefail
+          ./gradlew --no-daemon --no-configuration-cache --console=plain \
+            -I .github/dependency-inventory.init.gradle :app:ciDependencyInventory \
+            2>&1 | tee ci-output/dependencies/resolution.log
+
+      - name: Check resolved versions against OSV advisories
+        run: python3 .github/scripts/check-dependencies.py
+
+      - name: Summarize review status
+        if: ${{ !cancelled() }}
+        env:
+          CI_JOB_STATUS: ${{ job.status }}
+        run: python3 .github/scripts/ci-summary.py dependencies
+
+      - name: Retain dependency diagnostics
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: dependency-diagnostics-${{ github.run_number }}-${{ github.run_attempt }}
+          path: ci-output/dependencies/
+          retention-days: 1
+          if-no-files-found: error

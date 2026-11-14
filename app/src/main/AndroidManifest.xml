@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <application
+        android:name=".AqaqeerApplication"
+        android:allowBackup="false"
+        android:fullBackupContent="@xml/backup_rules"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:icon="@drawable/aqaqeer_launcher"
+        android:roundIcon="@drawable/aqaqeer_launcher"
+        android:label="@string/app_name"
+        android:supportsRtl="true"
+        android:usesCleartextTraffic="false"
+        android:theme="@style/Theme.Aqaqeer">
+        <activity android:name=".MainActivity" android:exported="true"
+            android:launchMode="singleTop"
+            android:theme="@style/Theme.Aqaqeer.Starting">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:scheme="content" />
+                <data android:mimeType="application/vnd.aqaqeer.connection" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:scheme="content" />
+                <data android:host="*" />
+                <data android:pathPattern=".*\\.aqz" />
+                <data android:mimeType="application/octet-stream" />
+                <data android:mimeType="application/json" />
+            </intent-filter>
+        </activity>
+    </application>
+</manifest>

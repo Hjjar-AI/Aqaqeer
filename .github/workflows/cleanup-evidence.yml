@@ -1,0 +1,56 @@
+name: 09 - Maintenance - Clear workflow runs and logs
+
+on:
+  schedule:
+    # Daily at 06:23 Asia/Damascus (03:23 UTC), away from the busy top of the hour.
+    - cron: '23 3 * * *'
+  workflow_dispatch:
+    inputs:
+      older_than_days:
+        description: Delete completed runs older than this many days (0–365; 0 clears all completed runs)
+        type: number
+        default: 7
+        required: true
+      scope:
+        description: All workflows (including Dependabot), or emulator only
+        type: choice
+        options:
+          - all-workflows
+          - emulator
+        default: all-workflows
+      dry_run:
+        description: Preview only; turn off to delete runs, logs and all attached artifacts (including APKs)
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cleanup-ci-evidence
+  cancel-in-progress: false
+
+jobs:
+  cleanup:
+    if: ${{ github.event.repository.private == false && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      actions: write
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          persist-credentials: false
+
+      - name: Preview or clear completed runs
+        env:
+          CLEANUP_DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+          GH_TOKEN: ${{ github.token }}
+          CLEANUP_EVENT: ${{ github.event_name }}
+          CLEANUP_DAYS: ${{ github.event_name == 'schedule' && '7' || format('{0}', inputs.older_than_days) }}
+          CLEANUP_SCOPE: ${{ github.event_name == 'schedule' && 'all-workflows' || inputs.scope }}
+          CLEANUP_DRY_RUN: ${{ github.event_name == 'schedule' && 'false' || format('{0}', inputs.dry_run) }}
+        run: python3 .github/scripts/cleanup-ci-evidence.py

@@ -1,0 +1,29 @@
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      github-actions:
+        patterns:
+          - '*'
+  - package-ecosystem: gradle
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    cooldown:
+      default-days: 7
+    groups:
+      android-toolchain:
+        patterns:
+          - 'com.android.tools.build*'
+          - 'com.android.application*'
+          - 'org.jetbrains.kotlin*'
+          - 'com.google.devtools.ksp*'
+          - 'com.google.dagger*'
+      androidx:
+        patterns:
+          - 'androidx.*'

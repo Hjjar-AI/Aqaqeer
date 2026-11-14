@@ -1,0 +1,959 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 1,
+    "identityHash": "10699cc282ddb16b85336212184bc00c",
+    "entities": [
+      {
+        "tableName": "pharmacy",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`pharmacyId` TEXT NOT NULL, `name` TEXT NOT NULL, `timezone` TEXT NOT NULL, `adminPinVerifier` TEXT NOT NULL, `schemaVersion` INTEGER NOT NULL, `minVersionCode` INTEGER NOT NULL, `keyVersion` INTEGER NOT NULL, PRIMARY KEY(`pharmacyId`))",
+        "fields": [
+          {
+            "fieldPath": "pharmacyId",
+            "columnName": "pharmacyId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "timezone",
+            "columnName": "timezone",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "adminPinVerifier",
+            "columnName": "adminPinVerifier",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "schemaVersion",
+            "columnName": "schemaVersion",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "minVersionCode",
+            "columnName": "minVersionCode",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "keyVersion",
+            "columnName": "keyVersion",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "pharmacyId"
+          ]
+        }
+      },
+      {
+        "tableName": "categories",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `nameAr` TEXT NOT NULL, `nameEn` TEXT, `orderIndex` INTEGER NOT NULL, `isSystem` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "nameAr",
+            "columnName": "nameAr",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "nameEn",
+            "columnName": "nameEn",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "orderIndex",
+            "columnName": "orderIndex",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "isSystem",
+            "columnName": "isSystem",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_categories_orderIndex",
+            "unique": false,
+            "columnNames": [
+              "orderIndex"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_categories_orderIndex` ON `${TABLE_NAME}` (`orderIndex`)"
+          }
+        ]
+      },
+      {
+        "tableName": "forms",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `nameAr` TEXT NOT NULL, `nameEn` TEXT, `orderIndex` INTEGER NOT NULL, `isSystem` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "nameAr",
+            "columnName": "nameAr",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "nameEn",
+            "columnName": "nameEn",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "orderIndex",
+            "columnName": "orderIndex",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "isSystem",
+            "columnName": "isSystem",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_forms_orderIndex",
+            "unique": false,
+            "columnNames": [
+              "orderIndex"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_forms_orderIndex` ON `${TABLE_NAME}` (`orderIndex`)"
+          }
+        ]
+      },
+      {
+        "tableName": "sections",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `nameAr` TEXT NOT NULL, `nameEn` TEXT, `orderIndex` INTEGER NOT NULL, `isActive` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "nameAr",
+            "columnName": "nameAr",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "nameEn",
+            "columnName": "nameEn",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "orderIndex",
+            "columnName": "orderIndex",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "isActive",
+            "columnName": "isActive",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_sections_orderIndex",
+            "unique": false,
+            "columnNames": [
+              "orderIndex"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_sections_orderIndex` ON `${TABLE_NAME}` (`orderIndex`)"
+          }
+        ]
+      },
+      {
+        "tableName": "medications",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `nameEn` TEXT, `strength` TEXT NOT NULL, `formId` TEXT NOT NULL, `categoryId` TEXT NOT NULL, `createdAt` INTEGER NOT NULL, `updatedAt` INTEGER NOT NULL, `updatedBy` TEXT NOT NULL, `nameAr` TEXT, `genericAr` TEXT, `genericEn` TEXT, `brand` TEXT, `note` TEXT, `expiryDate` TEXT, `expirySoonThresholdDays` INTEGER NOT NULL, PRIMARY KEY(`id`), FOREIGN KEY(`categoryId`) REFERENCES `categories`(`id`) ON UPDATE NO ACTION ON DELETE RESTRICT , FOREIGN KEY(`formId`) REFERENCES `forms`(`id`) ON UPDATE NO ACTION ON DELETE RESTRICT )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "nameEn",
+            "columnName": "nameEn",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "strength",
+            "columnName": "strength",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "formId",
+            "columnName": "formId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "categoryId",
+            "columnName": "categoryId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "createdAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "updatedAt",
+            "columnName": "updatedAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "updatedBy",
+            "columnName": "updatedBy",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "nameAr",
+            "columnName": "nameAr",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "genericAr",
+            "columnName": "genericAr",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "genericEn",
+            "columnName": "genericEn",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "brand",
+            "columnName": "brand",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "note",
+            "columnName": "note",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "expiryDate",
+            "columnName": "expiryDate",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "expirySoonThresholdDays",
+            "columnName": "expirySoonThresholdDays",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_medications_categoryId",
+            "unique": false,
+            "columnNames": [
+              "categoryId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_medications_categoryId` ON `${TABLE_NAME}` (`categoryId`)"
+          },
+          {
+            "name": "index_medications_formId",
+            "unique": false,
+            "columnNames": [
+              "formId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_medications_formId` ON `${TABLE_NAME}` (`formId`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "categories",
+            "onDelete": "RESTRICT",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "categoryId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          },
+          {
+            "table": "forms",
+            "onDelete": "RESTRICT",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "formId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "availability",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`medicationId` TEXT NOT NULL, `sectionId` TEXT NOT NULL, `status` TEXT NOT NULL, `updatedAt` INTEGER NOT NULL, `updatedBy` TEXT NOT NULL, PRIMARY KEY(`medicationId`, `sectionId`), FOREIGN KEY(`medicationId`) REFERENCES `medications`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`sectionId`) REFERENCES `sections`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "medicationId",
+            "columnName": "medicationId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "sectionId",
+            "columnName": "sectionId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "status",
+            "columnName": "status",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "updatedAt",
+            "columnName": "updatedAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "updatedBy",
+            "columnName": "updatedBy",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "medicationId",
+            "sectionId"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_availability_sectionId",
+            "unique": false,
+            "columnNames": [
+              "sectionId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_availability_sectionId` ON `${TABLE_NAME}` (`sectionId`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "medications",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "medicationId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          },
+          {
+            "table": "sections",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "sectionId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "tombstones",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`entityType` TEXT NOT NULL, `entityId` TEXT NOT NULL, `deletedAt` INTEGER NOT NULL, `operationId` TEXT NOT NULL, PRIMARY KEY(`entityType`, `entityId`, `operationId`))",
+        "fields": [
+          {
+            "fieldPath": "entityType",
+            "columnName": "entityType",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "entityId",
+            "columnName": "entityId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "deletedAt",
+            "columnName": "deletedAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "operationId",
+            "columnName": "operationId",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "entityType",
+            "entityId",
+            "operationId"
+          ]
+        }
+      },
+      {
+        "tableName": "history",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `operationId` TEXT, `entityType` TEXT NOT NULL, `entityId` TEXT NOT NULL, `entityName` TEXT NOT NULL, `field` TEXT NOT NULL, `oldValue` TEXT, `newValue` TEXT, `editorId` TEXT, `editorName` TEXT, `editedAt` INTEGER, `observedAt` INTEGER, `publishedRevision` INTEGER, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "operationId",
+            "columnName": "operationId",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "entityType",
+            "columnName": "entityType",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "entityId",
+            "columnName": "entityId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "entityName",
+            "columnName": "entityName",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "field",
+            "columnName": "field",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "oldValue",
+            "columnName": "oldValue",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "newValue",
+            "columnName": "newValue",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "editorId",
+            "columnName": "editorId",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "editorName",
+            "columnName": "editorName",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "editedAt",
+            "columnName": "editedAt",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "observedAt",
+            "columnName": "observedAt",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "publishedRevision",
+            "columnName": "publishedRevision",
+            "affinity": "INTEGER"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_history_entityId",
+            "unique": false,
+            "columnNames": [
+              "entityId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_history_entityId` ON `${TABLE_NAME}` (`entityId`)"
+          },
+          {
+            "name": "index_history_operationId",
+            "unique": false,
+            "columnNames": [
+              "operationId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_history_operationId` ON `${TABLE_NAME}` (`operationId`)"
+          }
+        ]
+      },
+      {
+        "tableName": "device_identity",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `displayName` TEXT, `adminMode` INTEGER NOT NULL, `createdAt` INTEGER NOT NULL, `lastSeenAt` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "displayName",
+            "columnName": "displayName",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "adminMode",
+            "columnName": "adminMode",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "createdAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "lastSeenAt",
+            "columnName": "lastSeenAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        }
+      },
+      {
+        "tableName": "snapshot_state",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`slot` INTEGER NOT NULL, `publishedAt` TEXT, `confirmedPayloadJson` TEXT, `revision` INTEGER, `publishId` TEXT, `pinnedMessageId` INTEGER, `documentFileId` TEXT, `documentFileUniqueId` TEXT, `lastSuccessfulSyncAt` INTEGER, `requiredSchemaVersion` INTEGER, `requiredMinVersionCode` INTEGER, PRIMARY KEY(`slot`))",
+        "fields": [
+          {
+            "fieldPath": "slot",
+            "columnName": "slot",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "publishedAt",
+            "columnName": "publishedAt",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "confirmedPayloadJson",
+            "columnName": "confirmedPayloadJson",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "revision",
+            "columnName": "revision",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "publishId",
+            "columnName": "publishId",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "pinnedMessageId",
+            "columnName": "pinnedMessageId",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "documentFileId",
+            "columnName": "documentFileId",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "documentFileUniqueId",
+            "columnName": "documentFileUniqueId",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "lastSuccessfulSyncAt",
+            "columnName": "lastSuccessfulSyncAt",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "requiredSchemaVersion",
+            "columnName": "requiredSchemaVersion",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "requiredMinVersionCode",
+            "columnName": "requiredMinVersionCode",
+            "affinity": "INTEGER"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "slot"
+          ]
+        }
+      },
+      {
+        "tableName": "pending_operations",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `transactionId` TEXT NOT NULL, `entityType` TEXT NOT NULL, `targetId` TEXT NOT NULL, `field` TEXT NOT NULL, `baseValueJson` TEXT NOT NULL, `intendedValueJson` TEXT NOT NULL, `authorId` TEXT NOT NULL, `authorName` TEXT NOT NULL, `authoredAt` INTEGER NOT NULL, `basePublishId` TEXT, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "transactionId",
+            "columnName": "transactionId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "entityType",
+            "columnName": "entityType",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "targetId",
+            "columnName": "targetId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "field",
+            "columnName": "field",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "baseValueJson",
+            "columnName": "baseValueJson",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "intendedValueJson",
+            "columnName": "intendedValueJson",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "authorId",
+            "columnName": "authorId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "authorName",
+            "columnName": "authorName",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "authoredAt",
+            "columnName": "authoredAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "basePublishId",
+            "columnName": "basePublishId",
+            "affinity": "TEXT"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_pending_operations_transactionId",
+            "unique": false,
+            "columnNames": [
+              "transactionId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_pending_operations_transactionId` ON `${TABLE_NAME}` (`transactionId`)"
+          },
+          {
+            "name": "index_pending_operations_targetId",
+            "unique": false,
+            "columnNames": [
+              "targetId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_pending_operations_targetId` ON `${TABLE_NAME}` (`targetId`)"
+          }
+        ]
+      },
+      {
+        "tableName": "publish_attempts",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`publishId` TEXT NOT NULL, `basePayloadJson` TEXT, `candidatePayloadJson` TEXT NOT NULL, `includedOperationIdsJson` TEXT NOT NULL, `transportPhase` TEXT NOT NULL, `uploadedFileId` TEXT, `uploadedMessageId` INTEGER, PRIMARY KEY(`publishId`))",
+        "fields": [
+          {
+            "fieldPath": "publishId",
+            "columnName": "publishId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "basePayloadJson",
+            "columnName": "basePayloadJson",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "candidatePayloadJson",
+            "columnName": "candidatePayloadJson",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "includedOperationIdsJson",
+            "columnName": "includedOperationIdsJson",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "transportPhase",
+            "columnName": "transportPhase",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "uploadedFileId",
+            "columnName": "uploadedFileId",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "uploadedMessageId",
+            "columnName": "uploadedMessageId",
+            "affinity": "INTEGER"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "publishId"
+          ]
+        }
+      },
+      {
+        "tableName": "installation_state",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`slot` INTEGER NOT NULL, `seedVersion` INTEGER NOT NULL, `isDemo` INTEGER NOT NULL, PRIMARY KEY(`slot`))",
+        "fields": [
+          {
+            "fieldPath": "slot",
+            "columnName": "slot",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "seedVersion",
+            "columnName": "seedVersion",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "isDemo",
+            "columnName": "isDemo",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "slot"
+          ]
+        }
+      },
+      {
+        "tableName": "local_control",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`slot` INTEGER NOT NULL, `lifecycle` TEXT NOT NULL, `failedPins` INTEGER NOT NULL, `retryPinAt` INTEGER NOT NULL, `reconnectPending` INTEGER NOT NULL, `leaving` INTEGER NOT NULL, `observedPinVerifier` TEXT, `authorizedPinVerifier` TEXT, `restoreConnectionConfirmed` INTEGER NOT NULL DEFAULT 0, `restorePaused` INTEGER NOT NULL DEFAULT 0, `restoreActivationId` TEXT, `firstAdminAt` INTEGER, `lastBackupAt` INTEGER, `backupDismissedAt` INTEGER, PRIMARY KEY(`slot`))",
+        "fields": [
+          {
+            "fieldPath": "slot",
+            "columnName": "slot",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "lifecycle",
+            "columnName": "lifecycle",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "failedPins",
+            "columnName": "failedPins",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "retryPinAt",
+            "columnName": "retryPinAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "reconnectPending",
+            "columnName": "reconnectPending",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "leaving",
+            "columnName": "leaving",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "observedPinVerifier",
+            "columnName": "observedPinVerifier",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "authorizedPinVerifier",
+            "columnName": "authorizedPinVerifier",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "restoreConnectionConfirmed",
+            "columnName": "restoreConnectionConfirmed",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "0"
+          },
+          {
+            "fieldPath": "restorePaused",
+            "columnName": "restorePaused",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "0"
+          },
+          {
+            "fieldPath": "restoreActivationId",
+            "columnName": "restoreActivationId",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "firstAdminAt",
+            "columnName": "firstAdminAt",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "lastBackupAt",
+            "columnName": "lastBackupAt",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "backupDismissedAt",
+            "columnName": "backupDismissedAt",
+            "affinity": "INTEGER"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "slot"
+          ]
+        }
+      }
+    ],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '10699cc282ddb16b85336212184bc00c')"
+    ]
+  }
+}

@@ -1,0 +1,14 @@
+# Normalize detected text files and use LF in working copies.
+* text=auto eol=lf
+
+# Windows scripts use CRLF; preserve the wrapper whitespace exception.
+*.bat text eol=crlf
+gradlew.bat whitespace=cr-at-eol
+
+# Binary assets and archives must not undergo text conversion or merging.
+*.jar binary
+*.png binary
+*.ttf binary
+*.aqz binary
+*.zip binary
+*.pdf binary

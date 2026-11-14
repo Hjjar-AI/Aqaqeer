@@ -1,0 +1,84 @@
+name: 06 - Build - Debug APKs
+
+on:
+  workflow_dispatch:
+    inputs:
+      flavor:
+        description: Build standard, demo with local sample data, or both independently
+        type: choice
+        required: true
+        default: standard
+        options:
+          - standard
+          - demo
+          - both
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build-debug:
+    name: Build ${{ matrix.flavor }} debug APK
+    if: ${{ github.event.repository.private == false }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        flavor: ${{ fromJSON(inputs.flavor == 'both' && '["standard","demo"]' || format('["{0}"]', inputs.flavor)) }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Prepare diagnostics
+        run: mkdir -p ci-output/build
+
+      - name: Set up Android tooling
+        uses: ./.github/actions/setup-android
+        with:
+          diagnostics-directory: ci-output/build
+
+      # The selector invokes the wrapper once, reserving its normal build code.
+      - name: Build selected debug APK
+        id: build
+        shell: bash
+        env:
+          CI_BUILD_FLAVOR: ${{ matrix.flavor }}
+        run: |
+          set -euo pipefail
+          python3 tools/build_debug.py "$CI_BUILD_FLAVOR" --no-export \
+            2>&1 | tee ci-output/build/gradle-build.log
+
+      - name: Upload selected debug APK
+        if: ${{ success() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: aqaqeer-${{ matrix.flavor }}-debug-${{ github.run_number }}-${{ github.run_attempt }}
+          path: app/build/outputs/apk/${{ matrix.flavor }}/debug/*.apk
+          if-no-files-found: error
+          retention-days: 1
+
+      - name: Write build summary and APK checksums
+        if: ${{ !cancelled() }}
+        env:
+          CI_JOB_STATUS: ${{ job.status }}
+          CI_COMMAND_OUTCOME: ${{ steps.build.outcome }}
+          CI_BUILD_FLAVOR: ${{ matrix.flavor }}
+        run: python3 .github/scripts/ci-summary.py build
+
+      - name: Retain build diagnostics
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: build-diagnostics-${{ matrix.flavor }}-${{ github.run_number }}-${{ github.run_attempt }}
+          path: ci-output/build/
+          if-no-files-found: error
+          retention-days: 1

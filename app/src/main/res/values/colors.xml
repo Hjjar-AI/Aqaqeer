@@ -1,0 +1,4 @@
+<resources>
+    <color name="splash_background">@color/launch_gold</color>
+    <bool name="splash_light_bars">true</bool>
+</resources>

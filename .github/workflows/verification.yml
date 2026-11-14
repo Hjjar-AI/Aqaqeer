@@ -1,0 +1,128 @@
+name: 03 - Checks - Tests and compilation
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    name: ${{ matrix.check }}
+    if: ${{ github.event.repository.private == false }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - check: standard-unit-tests
+            kind: unit
+            tasks: :app:testStandardDebugUnitTest
+          - check: demo-unit-tests
+            kind: unit
+            tasks: :app:testDemoDebugUnitTest
+          - check: debug-and-instrumentation-compilation
+            kind: compile
+            tasks: >-
+              :app:compileStandardDebugSources :app:compileDemoDebugSources
+              :app:compileStandardDebugAndroidTestSources :app:compileDemoDebugAndroidTestSources
+          - check: release-compilation
+            kind: compile
+            tasks: :app:compileStandardReleaseSources
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Prepare diagnostics
+        run: mkdir -p ci-output/verification
+
+      - name: Set up Android tooling
+        uses: ./.github/actions/setup-android
+        with:
+          diagnostics-directory: ci-output/verification
+
+      # Exact tasks only: no connected/device tasks, packaging or version reservation.
+      - name: Run selected check
+        id: verify
+        shell: bash
+        env:
+          CI_GRADLE_TASKS: ${{ matrix.tasks }}
+        run: |
+          set -euo pipefail
+          read -r -a tasks <<< "$CI_GRADLE_TASKS"
+          ./gradlew --no-daemon --console=plain --no-configuration-cache --continue \
+            "${tasks[@]}" 2>&1 | tee ci-output/verification/gradle.log
+
+      - name: Write verification summary
+        if: ${{ !cancelled() }}
+        env:
+          CI_JOB_STATUS: ${{ job.status }}
+          CI_COMMAND_OUTCOME: ${{ steps.verify.outcome }}
+          CI_CHECK_NAME: ${{ matrix.check }}
+          CI_CHECK_KIND: ${{ matrix.kind }}
+          CI_GRADLE_TASKS: ${{ matrix.tasks }}
+        run: python3 .github/scripts/ci-summary.py verification
+
+      - name: Retain reports and diagnostics
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: verification-${{ matrix.check }}-${{ github.run_number }}-${{ github.run_attempt }}
+          path: |
+            ci-output/verification/
+            app/build/reports/tests/
+            app/build/test-results/test*UnitTest/TEST-*.xml
+          if-no-files-found: error
+          retention-days: 1
+
+  crypto-vectors:
+    name: Public crypto vectors (JDK)
+    if: ${{ github.event.repository.private == false }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Prepare diagnostics
+        run: mkdir -p ci-output/crypto
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@77dd5b2ce225ea11469928ac317850245a74ae78 # v6.2.0
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Verify public crypto fixtures with the JDK provider
+        id: verify
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 .github/scripts/export-crypto-vectors.py "$RUNNER_TEMP/crypto-vectors.tsv"
+          java tools/VerifyCryptoVectors.java "$RUNNER_TEMP/crypto-vectors.tsv" \
+            2>&1 | tee ci-output/crypto/vectors.log
+
+      - name: Write crypto summary
+        if: ${{ !cancelled() }}
+        env:
+          CI_JOB_STATUS: ${{ job.status }}
+          CI_COMMAND_OUTCOME: ${{ steps.verify.outcome }}
+        run: python3 .github/scripts/ci-summary.py crypto
+
+      - name: Retain crypto diagnostics
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: crypto-vectors-${{ github.run_number }}-${{ github.run_attempt }}
+          path: ci-output/crypto/
+          if-no-files-found: error
+          retention-days: 1

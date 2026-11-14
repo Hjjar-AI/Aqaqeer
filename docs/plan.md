@@ -1,0 +1,59 @@
+# Remaining-work plan
+
+[Requirements](requirements.md) define acceptance; [architecture](architecture.md) describes implementation; [validation](validation.md) records results. This plan grants no execution authorization.
+
+## Baseline and current stop
+
+Core administration, sharing/recovery, search/grouping, demo and presentation workflows are implemented. Current builds/packaging, selected hosted CI, demo initialization/refresh and browsing checks are [user-reported complete](validation.md#user-reported-completion--2026-11-13); do not repeat them without a relevant change or new request.
+
+**Physical/live campaigns and local lint remain stopped.** Extra Telegram-resource campaigns, additional device/emulator/provider coverage and human visual/print/spoken TalkBack acceptance are excluded from required delivery. Their outcomes remain unverified. Production signing/update continuity still requires the signing identity. Source/document maintenance and existing hosted configuration do not resume stopped activities.
+
+On an explicitly authorized physical resume, verify serial/package/signer/install/run ownership and fresh instrumentation first. Diagnose the missing instrumentation at the interrupted checkpoint, retain valid passes, run only unfinished checks and recheck owned resources before cleanup. Final lint requires separate applicable authorization.
+
+<a id="sharing-review-follow-up--p1"></a>
+<a id="ui-review-follow-up--p1"></a>
+<a id="ordered-packages"></a>
+
+## Remaining verification
+
+The latest Home changes (section swipes, narrower drawer, category grouping/two-column defaults, simplified search/filters, inline accent dots and unavailable-card stripes) have source-only checks. The expanded 40-entry demo seed and its guarded refresh also have source-only checks. Compilation and runtime verification of these changes remain pending explicit authorization; earlier browsing completion does not cover them.
+
+| ID / priority | Dependencies | Remaining checks / completion criteria |
+| --- | --- | --- |
+| **R1 / P1 — Admin workflow** | Domain commands | Single/bulk edits, hidden selections/full preview, stale/deleted/requested versus unchecked values, role/busy/modal/context races, atomic Undo, saved editor/navigation drafts and completion restoration. Check history, clipboard/setup feedback and View/snackbar targeting; admin sheets/dialogs/keyboard/detail panes and automated accessibility semantics remain separate from completed Home browsing. |
+| **R2 / P2 — Imports/reports** | R1; shared transactions | CSV duplicate/row/clear/retry behavior and report data/resource/provider correctness. PDF appearance belongs to the later redesign below. |
+| **R3 / P2 — Sharing/security/recovery** | Reconciliation; V1 | Merge taxonomy-name/section-count choices and rename/retry, preserved ordering, empty shared publish/reconnect versus draft bootstrap, uncertain-attempt recovery, rejected-snapshot PIN preservation, cooldown/reconnect timing, large-ID acknowledgment, cancellation, new/legacy connection passwords and boot/process/clock-aware PIN delays. Preserve pending bases, attribution and identity. |
+| **R4 / P3 — Storage/time/presentation** | R1 details/history | Fresh initialization, database lease/reset concurrency/cancellation, protected-cache invalidation on successful/failed writes, exact publication-time persistence, restore/leave recovery and safe rejection of unsupported development files. Check pharmacy midnight/resume/clock changes, missing/future/24-hour refresh boundaries, validated connectivity, startup/saved-theme splash and optional civil Hijri alongside authoritative Gregorian dates. |
+| **R5 / P3 — Release readiness** | R1–R4; V1 | Production signing/update continuity, resources/native libraries and retained process/Keystore/resource/automated-accessibility checks. Signing identity is unavailable. |
+| **PERF / P3 — Performance tooling** | Stable startup/Home flows; compatible pins | Implement the planned configuration/scenarios below; no generation, benchmark or measurement run is authorized. |
+
+Repair stale test APIs/fixtures only if encountered in an explicitly authorized batch. Demo wrapper failure-isolation/diagnostics and refusal of unexpected real work are not separately established by the reported startup checks.
+
+<a id="demo-and-separate-flavor-builds--p1"></a>
+<a id="deferred-search-and-grouping-preferences--p2"></a>
+<a id="search-and-grouping-verification--p2"></a>
+<a id="user-correction-follow-up--2026-11-12"></a>
+
+Completed demo, search/grouping and Home layout checks are recorded once in validation; they are not open implementation packages.
+
+### Performance tooling — planned
+
+Plan an isolated Baseline Profile generation/consumption target and repeatable offline startup/Home-scroll Macrobenchmark scenarios, using compatible pinned tooling, documented opt-in commands and source/artifact/device/result provenance. Keep performance campaigns out of ordinary builds and automatic hosted execution. Scenario/test development follows the repository's separate authorization rules. Completion requires reviewable configuration/scenario source and commands; generation, compilation, execution and measured improvement require separately applicable authorization. The user requested planning without running the tooling.
+
+### PDF redesign — later
+
+Wait for the user's new layout direction before changing report presentation. The user wants a major redesign, including entry grouping/page density. Preserve report data selection, Arabic/bidi/digit correctness, complete text, metadata, resource caps and failure behavior. Deliver the agreed layout/rendering with separately authorized correctness checks in retained environments; broader hardware/provider and human print acceptance are not delivery gates.
+
+<a id="v1--deferred-backuprestore-validation-gate--p1"></a>
+
+## V1 — Backup/restore verification gate / P1
+
+Depends on implemented backup/restore and explicit validation resumption. Verify current [backup/restore requirements](requirements.md#11-backup-and-restore): complete history above 10 MiB within the 64 MiB envelope cap; excluded identity/authorization/reminders; Unicode passphrases/randomness; malformed/schema/role/resource/cancellation/provider-close/storage failures; staging/replacement/activation interruption; live-PIN/conflict/uncertain-attempt/replacement-lineage recovery; isolated restore→reconcile→explicit republication. Failures preserve data and success state without blindly replaying transport steps. Only separately authorized upgrade checks belong here; development formats are unsupported.
+
+Maintenance **PREPARING**, post-active verification and logical-cleanup interruption remain unfinished. Retain the six maintenance, three export, four native-SQL and seven focused backup-method passes. Complete the retained live PIN/manual-republication/reader-connection extension only on authorized resumption. SIGKILL/controlled-pressure evidence does not establish OS low-memory termination or power-loss behavior.
+
+## Build follow-up
+
+Manual debug and signed production GitHub Release publishers are configured; the production signer requires the owner’s permanent keystore, passwords, expected certificate and coordinated version code. Local signing and hosted reservation/signing/artifact-transfer/publication/update checks remain unexecuted. The debug publisher also remains unexecuted on a hosted runner. Source policy/syntax checks do not establish publication or signing/update continuity.
+
+Remaining tool checks: non-packaging configuration-cache store/reuse, dry-run counter preservation, concurrent counter locking, Windows startup and export-destination overrides. Preserve wrappers, shared caches and counters. Commands and current CI policy belong in [build](build.md).

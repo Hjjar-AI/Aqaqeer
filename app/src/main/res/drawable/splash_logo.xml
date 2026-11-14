@@ -1,0 +1,7 @@
+<!-- The gold artwork fits the 192dp system mask at a 190dp bitmap edge.
+     The exit transition then grows the complete unmasked emblem further. -->
+<inset xmlns:android="http://schemas.android.com/apk/res/android"
+    android:insetLeft="17%" android:insetTop="17%"
+    android:insetRight="17%" android:insetBottom="17%">
+    <bitmap android:src="@drawable/aqaqeer_logo" android:gravity="fill" />
+</inset>

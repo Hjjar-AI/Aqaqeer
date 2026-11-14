@@ -1,0 +1,37 @@
+# Gradle, Kotlin and Android build state
+.gradle/
+.kotlin/
+**/build/
+.cxx/
+
+# Machine-local configuration and verification evidence
+local/
+local.properties
+ci-output/
+
+# Private signing material and credentials
+*.jks
+*.keystore
+*.p12
+*.pfx
+keystore.properties
+.env
+.env.*
+!.env.example
+telegram-test-config.local.json
+
+# Generated packages and runtime dumps
+*.apk
+*.aab
+*.hprof
+
+# IDE metadata
+.idea/
+*.iml
+
+# Python bytecode
+__pycache__/
+*.py[cod]
+
+# Operating-system metadata
+.DS_Store

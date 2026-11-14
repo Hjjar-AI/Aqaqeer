@@ -1,0 +1,40 @@
+name: Set up Aqaqeer Android tooling
+description: Shared pinned JDK, default-branch Gradle cache writes and SDK setup after checkout
+inputs:
+  diagnostics-directory:
+    description: Directory under ci-output for SDK setup diagnostics
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Read Android configuration and verify wrapper mode
+      shell: bash
+      run: |
+        set -euo pipefail
+        python3 .github/scripts/android_config.py --github-env
+        test "$(git ls-files -s -- gradlew | cut -d ' ' -f 1)" = 100755
+        test -x gradlew
+
+    - name: Set up JDK 21
+      uses: actions/setup-java@77dd5b2ce225ea11469928ac317850245a74ae78 # v6.2.0
+      with:
+        distribution: temurin
+        java-version: '21'
+
+    - name: Set up Gradle cache
+      uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6.4.1
+      with:
+        cache-provider: basic
+        cache-read-only: ${{ github.ref_name != github.event.repository.default_branch }}
+
+    - name: Install Android SDK packages
+      shell: bash
+      env:
+        CI_SETUP_DIAGNOSTICS: ${{ inputs.diagnostics-directory }}
+      run: |
+        set -euo pipefail
+        [[ "$CI_SETUP_DIAGNOSTICS" =~ ^ci-output/[a-zA-Z0-9_-]+$ ]]
+        mkdir -p "$CI_SETUP_DIAGNOSTICS"
+        "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" \
+          "platforms;$CI_ANDROID_PLATFORM" "build-tools;$CI_ANDROID_BUILD_TOOLS" \
+          2>&1 | tee "$CI_SETUP_DIAGNOSTICS/sdk-setup.log"

@@ -1,0 +1,10 @@
+<resources>
+    <color name="launch_gold">#FFFEFA</color>
+    <color name="launch_blue">#FAFDFF</color>
+    <color name="launch_green">#FAFFFC</color>
+    <color name="launch_pink">#FFFAFE</color>
+    <color name="launch_crimson">#FFFAFB</color>
+    <color name="launch_dark">#171914</color>
+    <color name="launch_crimson_dark">#12090D</color>
+    <color name="launch_black">#000000</color>
+</resources>

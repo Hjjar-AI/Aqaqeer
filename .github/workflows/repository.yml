@@ -1,0 +1,66 @@
+name: 01 - Checks - Repository integrity
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  repository:
+    if: ${{ github.event.repository.private == false }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Check documentation, configuration and credential patterns
+        run: python3 .github/scripts/check-repository.py
+
+      - name: Install pinned workflow parser
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3.12 -m venv "$RUNNER_TEMP/ci-policy"
+          "$RUNNER_TEMP/ci-policy/bin/python" -m pip install --disable-pip-version-check \
+            --only-binary=:all: --require-hashes -r .github/requirements-ci.txt
+
+      - name: Enforce public-runner and storage safeguards
+        run: '"$RUNNER_TEMP/ci-policy/bin/python" .github/scripts/check-ci-policy.py'
+
+      - name: Prepare diagnostics
+        run: mkdir -p ci-output/workflows
+
+      - name: Install verified actionlint
+        run: bash .github/scripts/install-actionlint.sh
+
+      - name: Validate all workflow files
+        id: validate
+        shell: bash
+        run: |
+          set -euo pipefail
+          actionlint -version
+          actionlint -no-color 2>&1 | tee ci-output/workflows/actionlint.log
+
+      - name: Write workflow validation summary
+        if: ${{ !cancelled() }}
+        env:
+          CI_JOB_STATUS: ${{ job.status }}
+          CI_COMMAND_OUTCOME: ${{ steps.validate.outcome }}
+        run: python3 .github/scripts/ci-summary.py workflows
+
+      - name: Retain workflow diagnostics
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: workflow-diagnostics-${{ github.run_number }}-${{ github.run_attempt }}
+          path: ci-output/workflows/
+          if-no-files-found: error
+          retention-days: 1

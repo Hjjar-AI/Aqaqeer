@@ -1,0 +1,158 @@
+name: 11 - Publish - Release APK to GitHub Releases
+
+on:
+  workflow_dispatch:
+    inputs:
+      version_code:
+        description: New production code, greater than all local releases and android-build-N tags
+        type: string
+        required: true
+      publication:
+        description: Publish a regular release, prerelease, or save a draft
+        type: choice
+        required: true
+        default: draft
+        options:
+          - release
+          - prerelease
+          - draft
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  reserve:
+    if: ${{ github.event.repository.private == false && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Reserve the requested production version
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CI_RELEASE_CODE: ${{ inputs.version_code }}
+          CI_DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: python3 .github/scripts/reserve-release.py
+
+  build:
+    needs: reserve
+    if: ${{ github.event.repository.private == false && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Prepare diagnostics
+        run: mkdir -p ci-output/release
+      - name: Set up Android tooling
+        uses: ./.github/actions/setup-android
+        with:
+          diagnostics-directory: ci-output/release
+      - name: Build the unsigned standard release through the wrapper
+        env:
+          AQAQEER_MIN_BUILD_CODE: ${{ inputs.version_code }}
+        run: |
+          set -euo pipefail
+          # A failed packaging retry must consume a new code on a new dispatch.
+          test "$GITHUB_RUN_ATTEMPT" = 1
+          ./gradlew --no-daemon --console=plain --no-configuration-cache \
+            -Paqaqeer.exportApks=false :app:assembleStandardRelease \
+            2>&1 | tee ci-output/release/gradle-release.log
+      - name: Retain unsigned build and shrinker evidence for signing
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: production-build-${{ github.run_id }}
+          path: |
+            app/build/outputs/apk/standard/release/
+            app/build/outputs/mapping/standardRelease/
+          retention-days: 1
+          if-no-files-found: error
+      - name: Retain build diagnostics
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: production-build-diagnostics-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ci-output/release/
+          retention-days: 1
+          if-no-files-found: error
+
+  publish:
+    needs: build
+    if: ${{ github.event.repository.private == false && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    environment: release-signing
+    permissions:
+      contents: write
+      actions: read
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Prepare diagnostics
+        run: mkdir -p ci-output/release
+      - name: Set up Android tooling
+        uses: ./.github/actions/setup-android
+        with:
+          diagnostics-directory: ci-output/release
+      - name: Download this run's unsigned APK and shrinker evidence
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          gh run download "$GITHUB_RUN_ID" --name "production-build-$GITHUB_RUN_ID" --dir app/build/outputs
+      - name: Sign and verify the production release
+        env:
+          AQAQEER_RELEASE_KEYSTORE_BASE64: ${{ secrets.AQAQEER_RELEASE_KEYSTORE_BASE64 }}
+          AQAQEER_RELEASE_KEY_ALIAS: ${{ secrets.AQAQEER_RELEASE_KEY_ALIAS }}
+          AQAQEER_RELEASE_STORE_PASSWORD: ${{ secrets.AQAQEER_RELEASE_STORE_PASSWORD }}
+          AQAQEER_RELEASE_KEY_PASSWORD: ${{ secrets.AQAQEER_RELEASE_KEY_PASSWORD }}
+          AQAQEER_RELEASE_CERT_SHA256: ${{ vars.AQAQEER_RELEASE_CERT_SHA256 }}
+          AQAQEER_EXPECTED_RELEASE_CODE: ${{ inputs.version_code }}
+        run: python3 tools/sign_release.py --output-directory release-files
+      - name: Publish only the signed inspected APK and public metadata
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          CI_PUBLICATION: ${{ inputs.publication }}
+          CI_RELEASE_CODE: ${{ inputs.version_code }}
+        run: |
+          set -euo pipefail
+          case "$CI_PUBLICATION" in
+            release) options=(--latest) ;;
+            prerelease) options=(--prerelease --latest=false) ;;
+            draft) options=(--draft --latest=false) ;;
+            *) exit 1 ;;
+          esac
+          directory="release-files/v0.0.$CI_RELEASE_CODE"
+          (cd "$directory" && sha256sum --check SHA256SUMS.txt)
+          {
+            printf 'Signed standard release APK for com.aqaqeer.app. Version 0.0.%s (code %s).\n\n' "$CI_RELEASE_CODE" "$CI_RELEASE_CODE"
+            printf 'Source: %s\nBuild: %s/%s/actions/runs/%s\n\n' "$GITHUB_SHA" "$GITHUB_SERVER_URL" "$GITHUB_REPOSITORY" "$GITHUB_RUN_ID"
+            printf 'Signature/certificate, package/version, non-debuggable manifest, shrinker evidence, resources and native alignment inspected. Runtime and installed-update acceptance are separate.\n'
+          } > release-notes.md
+          gh release create "v0.0.$CI_RELEASE_CODE" "$directory"/* \
+            --target "$GITHUB_SHA" --title "Aqaqeer 0.0.$CI_RELEASE_CODE" \
+            --notes-file release-notes.md "${options[@]}" | tee release-url.txt
+          cat release-url.txt >> "$GITHUB_STEP_SUMMARY"
+      - name: Retain public signing and inspection evidence
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: production-signing-diagnostics-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ci-output/release/
+          retention-days: 1
+          if-no-files-found: error

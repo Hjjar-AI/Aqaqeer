@@ -1,0 +1,2 @@
+# Ubuntu 24.04 system Python 3.12, x86_64 wheel; install with --only-binary=:all: --require-hashes.
+PyYAML==6.0.3 --hash=sha256:ba1cc08a7ccde2d2ec775841541641e4548226580ab850948cbfda66a1befcdc
