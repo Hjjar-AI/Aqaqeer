@@ -24,4 +24,31 @@ class PinSecurityTest {
             PinSecurity.matches("123456".toCharArray(), PinVerifier("AA==", 1, "AA=="))
         }
     }
+    @Test fun fourDigitMinimumRoundTripsAcrossDigitScripts() {
+        val verifier = PinSecurity.create("١٩٠٧".toCharArray())
+        assertTrue(PinSecurity.matches("1907".toCharArray(), verifier))
+        assertTrue(PinSecurity.matches("۱۹۰۷".toCharArray(), verifier))
+        assertFalse(PinSecurity.matches("1908".toCharArray(), verifier))
+    }
+    @Test fun longerNumericCredentialsRemainValid() {
+        val input = "190728460513".toCharArray(); val before = input.copyOf()
+        val verifier = PinSecurity.create(input)
+        assertTrue(PinSecurity.matches(input, verifier)); assertArrayEquals(before, input)
+    }
+    @Test fun mixedScriptsNormalizeWithoutDroppingLeadingZeroes() {
+        assertArrayEquals("0123456789".toCharArray(), PinSecurity.digits("٠1۲٣4۵٦7۸٩".toCharArray()))
+        val verifier = PinSecurity.create("0019".toCharArray())
+        assertTrue(PinSecurity.matches("٠٠١٩".toCharArray(), verifier))
+        assertFalse(PinSecurity.matches("0190".toCharArray(), verifier))
+    }
+    @Test fun malformedVerifierEncodingFailsInsteadOfAcceptingCredential() {
+        assertThrows(IllegalArgumentException::class.java) {
+            PinSecurity.matches("1907".toCharArray(), PinVerifier("not base64!", 200000, "AA=="))
+        }
+    }
+    @Test fun rejectedInputIsNotModifiedByValidation() {
+        val input = "19x7".toCharArray(); val before = input.copyOf()
+        assertThrows(AdminProblem::class.java) { PinSecurity.create(input) }
+        assertArrayEquals(before, input)
+    }
 }
