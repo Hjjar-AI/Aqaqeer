@@ -95,13 +95,13 @@ APP_BASE_NAME=${0##*/}
 APP_HOME=$( cd -P "${APP_HOME:-./}" > /dev/null && printf '%s\n' "$PWD" ) || exit
 # Select the registered project cache before Gradle starts; explicit CLI selection wins.
 if [ "${GITHUB_ACTIONS:-}" != true ] && [ "${ANDROID_SHARED_DISABLE:-}" != 1 ] &&
-    [ -r /opt/android-shared/paths.py ]; then
+    [ -r /opt/android-shared/tools/paths.py ]; then
     shared_cache_explicit=false
     for shared_arg in "$@"; do
         case "$shared_arg" in --project-cache-dir|--project-cache-dir=*) shared_cache_explicit=true ;; esac
     done
     if [ "$shared_cache_explicit" = false ]; then
-        shared_project_cache=$(python3 /opt/android-shared/paths.py "$APP_HOME" project-cache "$@") || exit 1
+        shared_project_cache=$(python3 /opt/android-shared/tools/paths.py "$APP_HOME" project-cache "$@") || exit 1
         if [ -n "$shared_project_cache" ]; then set -- --project-cache-dir "$shared_project_cache" "$@"; fi
     fi
     unset shared_cache_explicit shared_arg shared_project_cache
@@ -221,8 +221,8 @@ fi
 
 # Aqaqeer integration: preserve when regenerating the Gradle wrapper.
 if [ "${AQAQEER_SHARED_DEPENDENCIES:-1}" != 0 ] && [ -z "${GRADLE_RO_DEP_CACHE:-}" ] &&
-    [ -r /opt/android-shared/dependency-seeds/mukhtabir-v1/modules-2 ]; then
-    GRADLE_RO_DEP_CACHE=/opt/android-shared/dependency-seeds/mukhtabir-v1
+    [ -r /opt/android-shared/gradle/dependency-seeds/mukhtabir-v1/modules-2 ]; then
+    GRADLE_RO_DEP_CACHE=/opt/android-shared/gradle/dependency-seeds/mukhtabir-v1
     export GRADLE_RO_DEP_CACHE
 fi
 AQAQEER_BUILD_CODE=$(python3 "$APP_HOME/gradle/build_version.py" "$@") || exit $?
