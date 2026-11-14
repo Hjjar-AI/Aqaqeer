@@ -1,5 +1,6 @@
 package com.aqaqeer.app.security.files
 
+import com.aqaqeer.app.security.PasswordEnvelopeKdfV1
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.sync.withLock
@@ -85,7 +86,7 @@ internal class V1BackupEnvelope(private val workspace: () -> Long = {
             destination.outputStream().buffered().use { raw ->
                 val out = LimitedOutput(raw)
                 fun text(s: String) = out.write(s.toByteArray(Charsets.UTF_8))
-                text("{\"v\":1,\"kdf\":\"PBKDF2-HMAC-SHA256\",\"iter\":200000,\"salt\":\"${b64(salt)}\",\"nonce\":\"${b64(nonce)}\",\"ct\":\"")
+                text("{\"v\":1,\"kdf\":\"${PasswordEnvelopeKdfV1.NAME}\",\"iter\":${PasswordEnvelopeKdfV1.ITERATIONS},\"salt\":\"${b64(salt)}\",\"nonce\":\"${b64(nonce)}\",\"ct\":\"")
                 val encoded = Base64.getEncoder().wrap(object : FilterOutputStream(out) { override fun close() { flush() } })
                 plain.input().use { input ->
                     val buffer = ByteArray(64 * 1024)
@@ -131,7 +132,7 @@ internal class V1BackupEnvelope(private val workspace: () -> Long = {
                             } }; json.end()
                         }
                         if (version != "1") throw EnvelopeException(EnvelopeError.UNSUPPORTED_FORMAT)
-                        if (kdf != "PBKDF2-HMAC-SHA256" || iterations != "200000" || !hasCiphertext) invalid()
+                        if (kdf != PasswordEnvelopeKdfV1.NAME || iterations != PasswordEnvelopeKdfV1.ITERATIONS.toString() || !hasCiphertext) invalid()
                         val s = salt ?: invalid(); val n = nonce ?: invalid(); val t = tag ?: invalid()
                         // Android/JCA providers may buffer every decrypted byte until authentication.
                         if (ciphertext.length() * 4 + 2L * 1024 * 1024 > workspace().coerceAtLeast(0)) throw EnvelopeException(EnvelopeError.RESOURCE_LIMIT)
@@ -166,7 +167,7 @@ internal class V1BackupEnvelope(private val workspace: () -> Long = {
         const val LIMIT = 67_108_864L
         fun validatePassword(password: CharArray) { if (Character.codePointCount(password, 0, password.size) < 8 || password.any { it.isSurrogate() } && !validSurrogates(password)) throw EnvelopeException(EnvelopeError.INVALID_CREDENTIAL) }
         private fun validSurrogates(chars: CharArray): Boolean { var i = 0; while (i < chars.size) { val c = chars[i++]; if (c.isHighSurrogate()) { if (i == chars.size || !chars[i++].isLowSurrogate()) return false } else if (c.isLowSurrogate()) return false }; return true }
-        private fun derive(password: CharArray, salt: ByteArray): ByteArray { validatePassword(password); val spec = PBEKeySpec(password, salt, 200000, 256); return try { SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256").generateSecret(spec).encoded } finally { spec.clearPassword() } }
+        private fun derive(password: CharArray, salt: ByteArray): ByteArray { validatePassword(password); val spec = PBEKeySpec(password, salt, PasswordEnvelopeKdfV1.ITERATIONS, 256); return try { SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256").generateSecret(spec).encoded } finally { spec.clearPassword() } }
         private fun cipher(mode: Int, key: ByteArray, salt: ByteArray, nonce: ByteArray): Cipher = Cipher.getInstance("AES/GCM/NoPadding").apply { init(mode, SecretKeySpec(key, "AES"), GCMParameterSpec(128, nonce)); updateAAD("aqbak:v1".toByteArray(Charsets.UTF_8) + salt + nonce) }
         private fun b64(bytes: ByteArray): String = Base64.getEncoder().encodeToString(bytes)
         private fun binary(s: String, size: Int): ByteArray = try { Base64.getDecoder().decode(s).also { if (it.size != size || b64(it) != s) invalid() } } catch (_: IllegalArgumentException) { invalid() }

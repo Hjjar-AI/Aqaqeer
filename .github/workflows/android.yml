@@ -21,9 +21,33 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  reserve:
+    if: ${{ github.event.repository.private == false && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    concurrency:
+      group: aqaqeer-version-reservations
+      cancel-in-progress: false
+    outputs:
+      code: ${{ steps.reserve.outputs.code }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Reserve a shared version
+        id: reserve
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CI_DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: python3 .github/scripts/reserve-release.py
+
   build-debug:
+    needs: reserve
     name: Build ${{ matrix.flavor }} debug APK
-    if: ${{ github.event.repository.private == false }}
+    if: ${{ github.event.repository.private == false && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
     runs-on: ubuntu-24.04
     timeout-minutes: 45
     strategy:
@@ -52,19 +76,19 @@ jobs:
         shell: bash
         env:
           CI_BUILD_FLAVOR: ${{ matrix.flavor }}
+          AQAQEER_MIN_BUILD_CODE: ${{ needs.reserve.outputs.code }}
         run: |
           set -euo pipefail
           python3 tools/build_debug.py "$CI_BUILD_FLAVOR" --no-export \
             2>&1 | tee ci-output/build/gradle-build.log
 
-      - name: Upload selected debug APK
-        if: ${{ success() }}
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+      - name: Retain unsigned debug build for isolated signing
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
-          name: aqaqeer-${{ matrix.flavor }}-debug-${{ github.run_number }}-${{ github.run_attempt }}
-          path: app/build/outputs/apk/${{ matrix.flavor }}/debug/*.apk
-          if-no-files-found: error
+          name: unsigned-debug-${{ matrix.flavor }}-${{ github.run_id }}
+          path: app/build/outputs/apk/${{ matrix.flavor }}/debug/
           retention-days: 1
+          if-no-files-found: error
 
       - name: Write build summary and APK checksums
         if: ${{ !cancelled() }}
@@ -82,3 +106,51 @@ jobs:
           path: ci-output/build/
           if-no-files-found: error
           retention-days: 1
+
+  sign-debug:
+    needs: [reserve, build-debug]
+    if: ${{ github.event.repository.private == false && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    environment: debug-signing
+    permissions:
+      contents: read
+      actions: read
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        flavor: ${{ fromJSON(inputs.flavor == 'both' && '["standard","demo"]' || format('["{0}"]', inputs.flavor)) }}
+    steps:
+      - name: Check out trusted signing tools
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Set up Android tooling
+        uses: ./.github/actions/setup-android
+        with:
+          diagnostics-directory: ci-output/debug-signing
+      - name: Download this run's selected build
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          CI_BUILD_FLAVOR: ${{ matrix.flavor }}
+        run: gh run download "$GITHUB_RUN_ID" --name "unsigned-debug-$CI_BUILD_FLAVOR-$GITHUB_RUN_ID" --dir unsigned-debug
+      - name: Sign selected debug APK
+        env:
+          CI_DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+          CI_BUILD_FLAVOR: ${{ matrix.flavor }}
+          CI_BUILD_CODE: ${{ needs.reserve.outputs.code }}
+          AQAQEER_DEBUG_KEYSTORE_BASE64: ${{ secrets.AQAQEER_DEBUG_KEYSTORE_BASE64 }}
+          AQAQEER_DEBUG_KEY_ALIAS: ${{ secrets.AQAQEER_DEBUG_KEY_ALIAS }}
+          AQAQEER_DEBUG_STORE_PASSWORD: ${{ secrets.AQAQEER_DEBUG_STORE_PASSWORD }}
+          AQAQEER_DEBUG_KEY_PASSWORD: ${{ secrets.AQAQEER_DEBUG_KEY_PASSWORD }}
+          AQAQEER_DEBUG_CERT_SHA256: ${{ vars.AQAQEER_DEBUG_CERT_SHA256 }}
+        run: python3 tools/sign_debug.py "$CI_BUILD_FLAVOR"
+      - name: Retain signed debug distribution bundle
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: debug-release-${{ matrix.flavor }}-${{ github.run_id }}
+          path: release-files/${{ matrix.flavor }}/
+          retention-days: 1
+          if-no-files-found: error

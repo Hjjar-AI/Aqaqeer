@@ -30,9 +30,33 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  reserve:
+    if: ${{ github.event.repository.private == false && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    concurrency:
+      group: aqaqeer-version-reservations
+      cancel-in-progress: false
+    outputs:
+      code: ${{ steps.reserve.outputs.code }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Reserve a shared version
+        id: reserve
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CI_DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: python3 .github/scripts/reserve-release.py
+
   build-debug:
+    needs: reserve
     name: Build ${{ matrix.flavor }} debug APK
-    if: ${{ github.event.repository.private == false }}
+    if: ${{ github.event.repository.private == false && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
     runs-on: ubuntu-24.04
     timeout-minutes: 45
     strategy:
@@ -61,32 +85,19 @@ jobs:
         shell: bash
         env:
           CI_BUILD_FLAVOR: ${{ matrix.flavor }}
+          AQAQEER_MIN_BUILD_CODE: ${{ needs.reserve.outputs.code }}
         run: |
           set -euo pipefail
           python3 tools/build_debug.py "$CI_BUILD_FLAVOR" --no-export \
             2>&1 | tee ci-output/build/gradle-build.log
 
-      - name: Prepare release files
-        env:
-          CI_BUILD_FLAVOR: ${{ matrix.flavor }}
-        run: |
-          set -euo pipefail
-          mkdir -p release-files
-          cp "app/build/outputs/apk/$CI_BUILD_FLAVOR/debug/app-$CI_BUILD_FLAVOR-debug.apk" \
-            "release-files/Aqaqeer-$CI_BUILD_FLAVOR-debug.apk"
-          cp "app/build/outputs/apk/$CI_BUILD_FLAVOR/debug/output-metadata.json" \
-            "release-files/$CI_BUILD_FLAVOR-output-metadata.json"
-          (cd release-files && sha256sum ./*.apk ./*.json > "$CI_BUILD_FLAVOR-SHA256SUMS.txt")
-
-      - name: Upload selected debug APK
-        if: ${{ success() }}
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+      - name: Retain unsigned debug build for isolated signing
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
-          name: debug-release-${{ matrix.flavor }}-${{ github.run_id }}
-          path: release-files/
-          overwrite: true
-          if-no-files-found: error
+          name: unsigned-debug-${{ matrix.flavor }}-${{ github.run_id }}
+          path: app/build/outputs/apk/${{ matrix.flavor }}/debug/
           retention-days: 1
+          if-no-files-found: error
 
       - name: Write build summary and APK checksums
         if: ${{ !cancelled() }}
@@ -105,10 +116,58 @@ jobs:
           if-no-files-found: error
           retention-days: 1
 
+  sign-debug:
+    needs: [reserve, build-debug]
+    if: ${{ github.event.repository.private == false && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    environment: debug-signing
+    permissions:
+      contents: read
+      actions: read
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        flavor: ${{ fromJSON(inputs.flavor == 'both' && '["standard","demo"]' || format('["{0}"]', inputs.flavor)) }}
+    steps:
+      - name: Check out trusted signing tools
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Set up Android tooling
+        uses: ./.github/actions/setup-android
+        with:
+          diagnostics-directory: ci-output/debug-signing
+      - name: Download this run's selected build
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          CI_BUILD_FLAVOR: ${{ matrix.flavor }}
+        run: gh run download "$GITHUB_RUN_ID" --name "unsigned-debug-$CI_BUILD_FLAVOR-$GITHUB_RUN_ID" --dir unsigned-debug
+      - name: Sign selected debug APK
+        env:
+          CI_DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+          CI_BUILD_FLAVOR: ${{ matrix.flavor }}
+          CI_BUILD_CODE: ${{ needs.reserve.outputs.code }}
+          AQAQEER_DEBUG_KEYSTORE_BASE64: ${{ secrets.AQAQEER_DEBUG_KEYSTORE_BASE64 }}
+          AQAQEER_DEBUG_KEY_ALIAS: ${{ secrets.AQAQEER_DEBUG_KEY_ALIAS }}
+          AQAQEER_DEBUG_STORE_PASSWORD: ${{ secrets.AQAQEER_DEBUG_STORE_PASSWORD }}
+          AQAQEER_DEBUG_KEY_PASSWORD: ${{ secrets.AQAQEER_DEBUG_KEY_PASSWORD }}
+          AQAQEER_DEBUG_CERT_SHA256: ${{ vars.AQAQEER_DEBUG_CERT_SHA256 }}
+        run: python3 tools/sign_debug.py "$CI_BUILD_FLAVOR"
+      - name: Retain signed debug distribution bundle
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: debug-release-${{ matrix.flavor }}-${{ github.run_id }}
+          path: release-files/${{ matrix.flavor }}/
+          retention-days: 1
+          if-no-files-found: error
+
   publish:
     name: Publish debug APKs to GitHub Releases
-    needs: build-debug
-    if: ${{ github.event.repository.private == false }}
+    needs: sign-debug
+    if: ${{ github.event.repository.private == false && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     permissions:
@@ -143,22 +202,24 @@ jobs:
           CI_RELEASE_FLAVOR: ${{ inputs.flavor }}
           CI_SOURCE_SHA: ${{ github.sha }}
           CI_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          CI_RELEASE_RUN: ${{ github.run_id }}
           CI_RELEASE_NUMBER: ${{ github.run_number }}
           CI_RELEASE_ATTEMPT: ${{ github.run_attempt }}
         run: |
           set -euo pipefail
           case "$CI_PUBLICATION" in
-            release) options=(--latest) ;;
+            release) options=(--latest=false) ;;
             prerelease) options=(--prerelease --latest=false) ;;
             draft) options=(--draft --prerelease --latest=false) ;;
             *) exit 1 ;;
           esac
           tag="debug-$CI_RELEASE_NUMBER-$CI_RELEASE_ATTEMPT"
           {
-            printf 'Debug APK distribution (%s). These are debuggable builds signed with the runner debug key, not production-signed Android releases.\n\n' "$CI_RELEASE_FLAVOR"
-            printf 'Source commit: %s\nBuild run: %s\n\n' "$CI_SOURCE_SHA" "$CI_RUN_URL"
+            printf 'Debug APK distribution (%s). These are debuggable builds signed with the permanent dedicated debug key, not production-signed Android releases.\n\n' "$CI_RELEASE_FLAVOR"
+            printf '<!-- aqaqeer-debug-distribution:v1 run=%s attempt=%s flavors=%s source=%s -->\n' "$CI_RELEASE_RUN" "$CI_RELEASE_ATTEMPT" "$CI_RELEASE_FLAVOR" "$CI_SOURCE_SHA"
+            printf 'Source commit: %s\nTemporary build-run link: %s\n\n' "$CI_SOURCE_SHA" "$CI_RUN_URL"
             printf 'Standard: com.aqaqeer.app.debug. Demo: com.aqaqeer.app.demo.debug (fictional sample data).\n\n'
-            printf 'APK metadata and SHA-256 checksums are attached. The tag/run number is not the embedded app version. Fresh hosted counters normally start at code 1; signing keys and version counters are not persisted across runs. Matching package/signer and an appropriate version code are required for updates. Do not uninstall or clear existing pharmacy data to bypass a signing conflict.\n'
+            printf 'Verified signer/package/version receipts and SHA-256 checksums are attached. Debug and production versions share android-build-N reservations. Existing installations require the same signer; never uninstall or clear pharmacy data to bypass a conflict.\n'
           } > release-notes.md
           gh release create "$tag" release-files/*/* \
             --target "$CI_SOURCE_SHA" --title "Aqaqeer debug build $CI_RELEASE_NUMBER ($CI_RELEASE_FLAVOR)" \

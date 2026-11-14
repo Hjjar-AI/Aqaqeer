@@ -40,7 +40,7 @@ After verified activation, confirm completion, issue/distribute replacement `.aq
 
 ## Verification tools
 
-`local/verification/runs` keeps the latest delivery at the top level and older campaigns under `history/`. The [evidence manifest](../local/verification/manifest.json) indexes their current paths. Historical result/log files retain their original bytes and execution paths; resolve an old recorded path before opening it:
+`local/verification/runs` keeps the latest delivery at the top level and older campaigns under `history/`. The evidence manifest (local-only: `../local/verification/manifest.json`) indexes their current paths. Historical result/log files retain their original bytes and execution paths; resolve an old recorded path before opening it:
 
 ```sh
 python3 local/verification/resolve_evidence.py 'runs/OLD-RUN/results.json'
@@ -48,10 +48,14 @@ python3 local/verification/resolve_evidence.py 'runs/OLD-RUN/results.json'
 
 The lookup accepts original absolute paths, project-relative `local/verification/...` paths and manifest-relative paths. It only locates retained evidence; it does not run verification or access credential contents. Missing retired artifacts remain missing, with their identity/retirement receipts in the manifest. Keep the current preview, original failure/interruption evidence and reference mappings during future cleanup.
 
-The single private configuration is `local/verification/credentials/telegram-test-config.local.json`, Git-ignored and mode `0600`. Never log it, token-bearing URLs or credential hashes. Do not copy it into source/assets/APKs. [Manifest](../local/verification/manifest.json) inventories retained public artifacts without exposing credentials.
+The single private configuration is `local/verification/credentials/telegram-test-config.local.json`, Git-ignored and mode `0600`. Never log it, token-bearing URLs or credential hashes. Do not copy it into source/assets/APKs. Manifest (local-only: `../local/verification/manifest.json`) inventories retained public artifacts without exposing credentials.
 
-[Preflight](../local/verification/tools/preflight.py) resolves credentials relative to its file and performs read-only Telegram identity/group/membership/webhook checks. [Integration runner](../local/verification/tools/run-real.py) requires freshly built/installed isolated verification application and test APKs, ADB at `/opt/android-shared/Sdk/platform-tools/adb`, and the authorized dedicated group. It injects a protected temporary configuration, runs the real integration case, and removes only test-recorded Telegram messages/pin and injected phone files. It performs device actions and remote mutations: execute only when those checks are explicitly requested. New output goes to ignored `local/verification/runs/<UTC timestamp>/`, preserving baseline evidence. Documentation cleanup alone does not authorize either script.
+Preflight (local-only: `../local/verification/tools/preflight.py`) resolves credentials relative to its file and performs read-only Telegram identity/group/membership/webhook checks. Integration runner (local-only: `../local/verification/tools/run-real.py`) requires freshly built/installed isolated verification application and test APKs, ADB at `/opt/android-shared/Sdk/platform-tools/adb`, and the authorized dedicated group. It injects a protected temporary configuration, runs the real integration case, and removes only test-recorded Telegram messages/pin and injected phone files. It performs device actions and remote mutations: execute only when those checks are explicitly requested. New output goes to ignored `local/verification/runs/<UTC timestamp>/`, preserving baseline evidence. Documentation cleanup alone does not authorize either script.
 
 ## Fresh initial database and file baseline
 
 Production uses Room version 1 and initial shared/file schema version 1, without price/currency or historical development-format upgrades. Earlier development databases/files are unsupported; never wipe an installed database or replace keys to bypass a mismatch. Current export/build instructions belong in [build](build.md), implementation ownership in [architecture](architecture.md), and verification status in [validation](validation.md).
+
+### Portable verification prerequisites
+
+The campaign runners accept `--sdk-root`, `--adb`, `--gradle-user-home` and `--verification-init`. SDK discovery otherwise uses `ANDROID_HOME`/`ANDROID_SDK_ROOT`; adb can use the SDK or PATH. Explicit cache paths must already exist and be accessible. Missing SDK/tools/init scripts fail before campaign work; they never trigger downloads or replacement caches. The private campaign init script remains a separately retained prerequisite and supplies verification-only package isolation; the ordinary app Gradle variants do not supply those IDs. Existing phone apps/data, target-serial binding and ownership/cleanup rules remain mandatory. No campaign is resumed by these portability changes.

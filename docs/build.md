@@ -34,15 +34,15 @@ The complete walkthrough below expands these points with commands, settings, out
 | Component | Version |
 | --- | --- |
 | Gradle wrapper | 9.4.1; official distribution SHA-256 pinned |
-| Android Gradle plugin | 9.2.1 |
-| Built-in Kotlin / Compose compiler | 2.4.20 |
-| KSP / Hilt | 2.3.12 / 2.60.1 |
+| Android Gradle plugin | 9.5.1 |
+| Built-in Kotlin / Compose compiler | 2.4.21 |
+| KSP / Hilt | 2.3.13 / 2.60.1 |
 | Compose BOM / Room | 2026.09.00 / 2.8.5 |
 | SQLCipher Community | 4.19.1 |
 | Compile / target / minimum SDK | 37 / 37 / 26 |
 | Build JDK / Java bytecode target | 21 / 17 |
 
-Use the pinned [catalog](../gradle/libs.versions.toml) and AGP built-in Kotlin; do not add the deprecated Android Kotlin plugin. The root buildscript explicitly selects patched KGP 2.4.20 using [AGP’s supported override](https://developer.android.com/build/releases/agp-9-0-0-release-notes#runtime-dependency-on-kotlin-gradle-plugin), aligned with Compose/serialization. KSP 2.3.12 retains shared Room/Hilt processor declarations through `ksp.allow.all.target.configuration=true`. Reviewed buildscript constraints and the separate processor Guava constraint address the reported transitive advisories; current resolution/compilation remains unverified. Commands below require applicable authorization; [plan](plan.md) records stops, [validation](validation.md) executed evidence.
+Use the pinned [catalog](../gradle/libs.versions.toml) and AGP built-in Kotlin; do not add the deprecated Android Kotlin plugin. The root buildscript explicitly selects patched KGP 2.4.21 using [AGP’s supported override](https://developer.android.com/build/releases/agp-9-0-0-release-notes#runtime-dependency-on-kotlin-gradle-plugin), aligned with Compose/serialization. KSP 2.3.13 retains shared Room/Hilt processor declarations through `ksp.allow.all.target.configuration=true`. Reviewed buildscript constraints and the separate processor Guava constraint address the reported transitive advisories; current resolution/compilation remains unverified. Commands below require applicable authorization; [plan](plan.md) records stops, [validation](validation.md) executed evidence.
 
 ## Setup and commands
 
@@ -82,7 +82,7 @@ On Windows, use the same JDK and SDK versions, the SDK's `.bat` commands, the pr
 
 [Gradle properties](../gradle.properties) enable task-output/configuration caching; no remote build cache exists. Use `--no-build-cache` / `--no-configuration-cache` to disable them. Authorized local verification uses the canonical home and `--offline --no-configuration-cache`; historical consolidation/offline-build results belong in validation. Cache reuse/performance, Windows and locking remain unverified.
 
-Hosted CI's pinned `basic` cache restores only an exact key derived from Gradle build scripts, wrapper properties and version catalogs; it does not fall back to an older dependency graph ([pinned implementation](https://github.com/gradle/actions/blob/8da46b539cd8fe6ab27ca75128919a18d757604c/sources/src/cache-service-basic.ts)). It stores Gradle User Home `caches` and `wrapper`, including the downloaded distribution. Gradle/dependency updates can therefore cause another full download even when earlier cache entries exist. A Kotlin-source-only fix does not change this key. Failed builds can still save the basic cache; inspect restored/saved counts and the actual entry, not the generic summary sentence. A fresh hosted checkout also starts with no ignored local version counter, so its first packaging reservation is code 1; this is separate from Gradle caching, and persistent cross-run/release numbering remains unverified.
+Hosted CI's pinned `basic` cache restores only an exact key derived from Gradle build scripts, wrapper properties and version catalogs; it does not fall back to an older dependency graph ([pinned implementation](https://github.com/gradle/actions/blob/8da46b539cd8fe6ab27ca75128919a18d757604c/sources/src/cache-service-basic.ts)). It stores Gradle User Home `caches` and `wrapper`, including the downloaded distribution. Gradle/dependency updates can therefore cause another full download even when earlier cache entries exist. A Kotlin-source-only fix does not change this key. Failed builds can still save the basic cache; inspect restored/saved counts and the actual entry, not the generic summary sentence. Distributed builds obtain an android-build-N reservation before their fresh checkout-local wrapper counter runs; verification-only packaging remains separate. Cross-run installed-update acceptance is unverified.
 
 The POSIX wrapper optionally selects readable `/opt/android-shared/dependency-seeds/mukhtabir-v1` as `GRADLE_RO_DEP_CACHE`. Explicit nonempty values win; `AQAQEER_SHARED_DEPENDENCIES=0` disables automatic selection. Point to the parent of `modules-2`, never an active writable cache. Missing optional seeds are skipped without copying/merging. Older seed metadata (`2.106` versus `2.107`) may still require repository resolution; no download-free guarantee follows. [Read-only cache contract](https://docs.gradle.org/current/userguide/dependency_caching.html#sub:shared-readonly-cache).
 
@@ -121,7 +121,7 @@ Linux reads `XDG_DESKTOP_DIR` from `${XDG_CONFIG_HOME:-$HOME/.config}/user-dirs.
 
 After publication to the default branch, select **Actions → workflow name → Run workflow**. The [general tutorial](github-actions-guide.md) explains Actions; [CI controls](ci-free-tier.md) owns storage/billing, emulator capture, dependency review, cleanup and signing limits.
 
-All eleven workflows retain manual dispatch; cleanup alone also runs on its approved daily schedule. Jobs are public-repository-only, standard Ubuntu 24.04, with reviewed full action pins and non-cancelling workflow/ref concurrency. Shared [Android setup](../.github/actions/setup-android/action.yml) runs after checkout, selects JDK 21 and setup-gradle's basic GitHub cache provider. Default-branch runs can save caches; other branches remain read-only. No cache allowance is increased. Each debug APK flavor uses its wrapper assemble task through `tools/build_debug.py`, with Desktop exports disabled. Workflow 11 separately builds/signs the standard release APK. A fresh runner's checkout-local counter starts at code 1; run-number artifact names do not change embedded versions. For debug and unsigned inspection workflows, neither counter nor signing key is persisted, so their cross-run/local signing-update continuity is unproven. Workflow 11 uses explicit version reservations and a supplied permanent release key, as described below; executed update acceptance remains separate. Workflow 10 separately offers manual GitHub Release publication of debug APKs; this does not change their Android build type or signing.
+All fifteen workflows retain manual dispatch; cleanup alone also runs on its approved daily schedule. Jobs are public-repository-only, standard Ubuntu 24.04, with reviewed full action pins and non-cancelling workflow/ref concurrency. Shared [Android setup](../.github/actions/setup-android/action.yml) runs after checkout, selects JDK 21 and setup-gradle's basic GitHub cache provider. Default-branch runs can save caches; other branches remain read-only. No cache allowance is increased. Each debug APK flavor uses its wrapper assemble task through `tools/build_debug.py`, with Desktop exports disabled. Workflow 11 separately builds/signs the standard release APK. Distribution workflows 06/10 reserve shared version codes and sign in the separate debug-signing environment; workflow 11 uses the same registry with an explicit production code and its permanent release identity. Verification-only unsigned builds do not claim distribution/update continuity. Installed-update acceptance remains unverified. Workflow 10 separately offers manual GitHub Release publication of debug APKs; this does not change their Android build type or signing.
 
 API 37 installs as **`platforms;android-37.0`**, plus build tools `36.0.0`. The [SDK reader](../.github/scripts/android_config.py) derives compile/minimum/target expectations from the current literal module declarations and rejects ambiguous/unsupported DSL; [CI toolchain configuration](../.github/android-toolchain.json) owns the shared build-tools version. No Gradle execution is needed to read these values. Shared setup verifies the wrapper's tracked executable mode. Execution status is recorded in [validation](validation.md#ci-quality-security-and-diagnostics--2026-11-13). [AGP compatibility](https://developer.android.com/build/releases/agp-9-2-0-release-notes).
 
@@ -229,7 +229,7 @@ Use the pinned JDK/SDK/Python setup above. Select a production code greater than
 
 ```bash
 AQAQEER_MIN_BUILD_CODE=123 ./gradlew --no-daemon --console=plain \
-  --no-configuration-cache -Paqaqeer.exportApks=false :app:assembleStandardRelease
+  --no-configuration-cache -Paqaqeer.exportApks=false -Paqaqeer.releaseApkSet=distribution :app:assembleStandardRelease
 ```
 
 A successful build creates the unsigned APK, `output-metadata.json` and fresh R8/resource evidence. Then configure signing in the same Bash session, reading passwords without putting them in command history:
@@ -312,17 +312,17 @@ Push the workflow/helper changes to the default branch, then open **Actions → 
 
 The three jobs appear in order as **reserve**, **build** and **publish**. The build job packages unsigned output without receiving the signing secrets. The publish job downloads that exact run's unsigned output and shrinker evidence, signs it, checks the expected public certificate and version, and only then invokes GitHub Release creation. The signing job may wait at your configured environment approval gate. Passing reservation alone does not mean a build or publication succeeded.
 
-After a successful published run, open the repository's **Releases** page and find `v0.0.<code>`. Under its downloadable assets, use `Aqaqeer-v0.0.<code>-release.apk`. GitHub's automatically generated source-code ZIP/tar archives are not Android apps. A draft is visible only to users with the relevant repository access until published. You can review the attached files/notes and publish that same draft from the Releases page; this action does not rebuild or re-sign the APK.
+After a successful published run, open the repository's **Releases** page and find `v0.0.<code>`. Under its downloadable assets, use `Aqaqeer-v0.0.<code>-universal-release.apk`. GitHub's automatically generated source-code ZIP/tar archives are not Android apps. A draft is visible only to users with the relevant repository access until published. You can review the attached files/notes and publish that same draft from the Releases page; this action does not rebuild or re-sign the APK.
 
 The reservation job records `android-build-<code>` at the exact source SHA before packaging, rejecting codes at or below any existing reservation. Preserve these tags after failures, draft deletion and workflow cleanup. Repository rules must allow the workflow token to create these tags and the final `v0.0.<code>` tag/Release. A failed reservation/API response is not blindly retried. If reservation or packaging fails/interruption occurs, start a new dispatch with a higher code; re-running packaging is refused. A failed **signing/publishing job only** can be rerun against the same successful unsigned bundle while its one-day retention lasts. Expired bundles require a new full dispatch/code. Local releases are not registered automatically: coordinate them and choose a higher hosted input afterward.
 
 The build job has contents-read and no signing secrets. Only the final job uses the `release-signing` environment; the helper decodes the key into a private temporary directory, removes its temporary material on normal completion/failure, and never uploads it or puts it in Gradle caches. Ordinary cancellation/runner loss can interrupt cleanup; GitHub-hosted runners are ephemeral. Reservation and publication alone receive contents-write; the publisher also needs Actions-read to fetch the exact run's artifact. Missing/invalid secrets or a certificate mismatch fail before publication. No unsigned APK is attached to a Release. Existing Release assets are not overwritten; an interrupted asset upload may leave a draft for explicit review.
 
-Published assets are the signed APK, its public certificate/package/version/native-inspection receipt and SHA-256 list. R8 mappings, unsigned build and diagnostics remain one-day Actions artifacts; retain mappings privately if needed for future crash deobfuscation. Release assets and version-reservation tags survive workflow cleanup. First local/hosted build/signing/transfer/publication/update checks remain unexecuted; configuration does not resume stopped local tests/lint or physical/live campaigns.
+Published assets are the universal/ARM32/ARM64 signed APKs, public inspection receipts, SHA-256 list and matching compressed R8 mapping. Unsigned builds and diagnostics remain one-day Actions artifacts. Release assets and version-reservation tags survive workflow cleanup. First local/hosted build/signing/transfer/publication/update checks remain unexecuted; configuration does not resume stopped local tests/lint or physical/live campaigns.
 
 #### Updates and distribution
 
-For the first production distribution, retain the signed APK, its public receipt/checksums, the exact source revision, the actual production version code, and the permanent key backup. For a hosted run, source/run identities are recorded in the release receipt/notes. For a local run, record the actual source commit and any uncommitted source changes separately; the local helper does not populate GitHub run provenance. Preserve the matching R8 mapping files privately if you need to interpret future obfuscated crash traces.
+For the first production distribution, retain the signed APK, its public receipt/checksums, the exact source revision, the actual production version code, and the permanent key backup. For a hosted run, source/run identities are recorded in the release receipt/notes. For a local run, record the actual source commit and any uncommitted source changes separately; the local helper does not populate GitHub run provenance. Retain the matching published R8 mapping with the release for future crash deobfuscation.
 
 For each later update, use the same production package and signing identity, choose a higher coordinated code, build/sign it, and share the new signed APK. Do not regenerate the key for an update. Do not try to solve a version conflict by resetting the local counter or removing reservation tags. Switching between local and hosted builds is possible when both use the same permanent key, the same expected certificate and a coordinated version sequence. It is not automatic synchronization between computers.
 
@@ -357,7 +357,7 @@ Locate the first failed step and retain its public diagnostics. For signing, the
 | Tag reservation fails | Check the requested integer, existing reservations, token permissions, rulesets and default branch. Start a new dispatch with a higher code after a consumed/uncertain reservation; do not delete old reservations. |
 | Build failed or runner was interrupted | Preserve the reservation tag and diagnostics. A new packaging attempt requires a new dispatch/code. The one-day bundle may not exist if upload was never reached. |
 | Only signing/publishing failed | Fix that stage and rerun the failed job while the successful same-run unsigned bundle remains available. Do not rebuild just to retry signing. |
-| Intermediate artifact expired | Start a new full workflow with a higher code. Releases retain assets separately, but they do not recreate expired unsigned build/mapping bundles. |
+| Intermediate artifact expired | Start a new full workflow with a higher code. Releases retain published signed outputs and mappings separately, but cannot recreate expired unsigned build bundles. |
 | Release creation says the tag/Release already exists | Inspect the existing page/assets and the prior run. The workflow does not overwrite Releases or automatically delete a partial draft. Reconcile the existing output before another publication attempt. |
 | I selected draft and cannot find a public download | Open repository Releases with suitable access. Review and publish the draft when ready; selecting draft intentionally keeps it unpublished. |
 | Workflow cleanup removed the run | Release assets and `android-build-N` tags are separate and preserved. Attached Actions artifacts/logs are subject to the configured retention/deletion. |
@@ -409,7 +409,7 @@ Updates require the original package and signer. No release key is supplied. Nev
 
 ## Isolated verification tools
 
-Ignored [verification init](../local/verification/tools/verification.init.gradle) supplies `.verification.creation.debug`; [preview init](../local/verification/tools/preview.init.gradle) supplies `.preview.debug` and resolves its [labels](../local/verification/tools/preview-res/values/strings.xml) relative to itself. Supply exactly one, from repository root. An authorized standard preview uses:
+Ignored verification init (local-only: `../local/verification/tools/verification.init.gradle`) supplies `.verification.creation.debug`; preview init (local-only: `../local/verification/tools/preview.init.gradle`) supplies `.preview.debug` and resolves its labels (local-only: `../local/verification/tools/preview-res/values/strings.xml`) relative to itself. Supply exactly one, from repository root. An authorized standard preview uses:
 
 ```sh
 ./gradlew --gradle-user-home /opt/android-shared/aqaqeer/gradle-home \
@@ -434,3 +434,46 @@ The [helper](../.github/production-lint.init.gradle) disables both test-source a
 ## Fresh initial Room export
 
 Current production declares database version 1 without historical upgrade registrations. [Schema status](../app/schemas/README.md) links its generated/reviewed export. Future exports require separately authorized KSP compilation and review of entities, publication-time column, price/currency exclusion and identity hash. Do not handwrite generated hashes, restore old exports or treat this instruction as build/test/schema-change authorization.
+
+## Repository and release maintenance
+
+### Shared numbering and signing
+
+Hosted distribution workflows 06, 10 and 11 build only the default branch and share durable `android-build-N` reservations. Debug dispatches select the next number automatically; production keeps its explicit code input, which must exceed every reservation, including debug/failed attempts. Reservation jobs share `aqaqeer-version-reservations`; numbers are never recovered by deleting tags. Start a new dispatch after a consumed reservation, rather than rerunning packaging. GitHub may replace a pending concurrency-group job; a canceled job is not a build pass.
+
+The POSIX/Windows wrappers run `gradle/build_version.py` before Gradle; callers must not supply `aqaqeer.buildCode`. The local locked counter remains independent while offline. `python3 tools/next_release_code.py --distributed-maximum N` reads local state and hosted tags without reserving anything. Include any distributed code unknown to the registry. Failed API access produces no suggestion. Coordinate local packaging with hosted dispatches; the helper is not a distributed lock.
+
+Hosted debug builds are built without permanent signing secrets, then signed in a separate `debug-signing` environment. Configure environment secrets `AQAQEER_DEBUG_KEYSTORE_BASE64`, `AQAQEER_DEBUG_KEY_ALIAS`, `AQAQEER_DEBUG_STORE_PASSWORD`, `AQAQEER_DEBUG_KEY_PASSWORD` and the public environment variable `AQAQEER_DEBUG_CERT_SHA256`. Restrict that environment to the default branch. Keep this permanent debug identity separate from production. The signing job decodes the key only in temporary storage and verifies the packaged identity/code/certificate before uploading a distribution bundle. Existing installations signed by former runner keys cannot silently adopt this identity. Preserve their data and follow the documented pharmacy export/restore procedure; never uninstall or clear data to bypass a conflict.
+
+Production uses its existing `release-signing` identity. `-Paqaqeer.releaseApkSet=distribution` on an explicit release-only wrapper invocation enables architecture generation. The distribution helper selects universal, ARM32 (`armeabi-v7a`) and ARM64 (`arm64-v8a`); the universal output retains x86/x86_64 support. Additional generated x86-specific APKs are not published. Ordinary debug packaging stays universal. Every selected output uses the same version and certificate; receipts inspect each APK separately. A production bundle includes all three signed APKs, their inspections, `release-info.json`, matching `mapping.txt.gz` and `SHA256SUMS.txt`. Keep all listed files together when checking the full checksum list.
+
+All debug release/prerelease/draft choices set Latest to false. Release records carry durable source/run identifiers; run hyperlinks are temporary under seven-day Actions cleanup. Signing fingerprints come from inspected APKs. Neither structural inspection nor a checksum establishes an installed-update pass.
+
+### Manual workflows added
+
+| Workflow | Filename | Purpose |
+| --- | --- | --- |
+| 12 - Checks - Build tooling | [build-tooling.yml](../.github/workflows/build-tooling.yml) | Two `help` invocations with configuration cache, reuse check and packaging dry-run; counter must remain unchanged |
+| 13 - Checks - Secret history | [secret-history.yml](../.github/workflows/secret-history.yml) | Full-history pinned Gitleaks scan; public output contains counts only; no raw findings artifact |
+| 14 - Maintenance - Debug release cleanup | [cleanup-debug.yml](../.github/workflows/cleanup-debug.yml) | Preview by default; explicit deletion choice; only identifiable publisher-owned debug releases/tags |
+| 15 - Maintenance - Actionlint updates | [actionlint-updates.yml](../.github/workflows/actionlint-updates.yml) | Stable upstream version/SHA-256 proposal as a patch; never executes the candidate or applies it |
+
+Workflow 03 offers opt-in per-flavor unit coverage with AGP JaCoCo 0.8.16. Reports have no percentage threshold and do not run device tests. Verification APK workflows 07/08 are also default-branch-only. Workflow 08 generates/inspects the three production outputs and separately opens the universal APK on an owned GitHub-hosted API 35 emulator with a throwaway signer. Its 30-second process observation is startup evidence only. No local emulators or production signing credentials are involved.
+
+The pinned setup-gradle action already validates wrapper JARs; policy forbids disabling this. Workflow YAML checks reject expressions inside shell bodies and permit secrets only in explicit signing-step environments. All new workflows are manual, public-only, bounded Ubuntu jobs with full action pins and one-day artifacts where appropriate. Only the existing run-cleanup workflow has a schedule.
+
+### History scans and cleanup
+
+`python3 tools/scan_history.py --install` explicitly obtains the missing checksum-pinned Linux x86_64 scanner and runs the local history scan. Without `--install`, a missing archive is a prerequisite error. It preserves an existing archive and rejects checksum mismatches instead of replacing it. Local findings/logs have mode 0600 under a private run directory in `local/verification/security/`. Hosted mode keeps detailed findings temporary and prints counts only. Scanner execution is separately authorized; adding this entrypoint did not run it.
+
+Debug cleanup defaults to older than 30 days, keeping at least five newest identifiable releases and the newest for each flavor. Legacy releases lacking the new ownership marker and drafts are retained. Deletion rechecks release/assets/tag identity and confirms absence; failures remain failures. No `android-build-*` or `v0.0.*` tag is eligible. It never runs on a schedule. GitHub release immutability is not enabled by this change: asset/tag protections differ from whole-release deletion, and deleted immutable tag names cannot be reused. Unique debug tags avoid intended reuse, but setting adoption remains a separate decision.
+
+### Keys, collaboration and repository settings
+
+For each permanent signing identity, maintain two separately stored protected backups, record who controls access and how the passphrase is recovered, and verify access to the original backup before relying on it. Keep locations/passphrases outside the repository. Record only the public fingerprint and custody responsibilities in public records. Loss of the original key can end ordinary update continuity. Debug and production backups must remain distinguishable. No additional signing reviewer gate is configured.
+
+The [settings review](evidence/repository-review-20261114.md) records observed controls and gaps. The JSON proposals in `.github/repository-settings/` protect shared reservations/production tags against updates and deletion, and protect the default branch against force-push/deletion. Creation/direct pushes remain available. They do not require PRs, signatures, linear history or another person's review; they have not been applied. Enable private vulnerability reporting before relying on its form. Review free Dependabot security updates/alerts and server-side full-SHA enforcement without buying additional services.
+
+Use short-lived branches when useful and `type(scope): summary` commit titles. Production tags are workflow-managed. The optional `.githooks/pre-push` runs repository integrity checks; activation is a deliberate local choice (`git config core.hooksPath .githooks`), not performed by this change. CODEOWNERS does not imply required approval. Dependency updates retain explicit review; nothing auto-merges.
+
+The third-party notice inventory preserves original notice texts from cached runtime-library families. Authorized release builds also generate `assets/runtime-components.txt` from the exact production runtime graph; this is required by release inspection. It is not a newly resolved shipping graph: reconcile exact transitive runtime coordinates and any additional required notices before first production distribution. No license-report plugin or dependency resolution was run for this source batch.

@@ -199,6 +199,19 @@ if "$cygwin" || "$msys" ; then
 fi
 
 
+# Aqaqeer integration: preserve when regenerating the Gradle wrapper.
+if [ -z "${GRADLE_USER_HOME:-}" ] && [ -d /opt/android-shared/aqaqeer/gradle-home ]; then
+    GRADLE_USER_HOME=/opt/android-shared/aqaqeer/gradle-home
+    export GRADLE_USER_HOME
+fi
+if [ "${AQAQEER_SHARED_DEPENDENCIES:-1}" != 0 ] && [ -z "${GRADLE_RO_DEP_CACHE:-}" ] &&
+    [ -r /opt/android-shared/dependency-seeds/mukhtabir-v1/modules-2 ]; then
+    GRADLE_RO_DEP_CACHE=/opt/android-shared/dependency-seeds/mukhtabir-v1
+    export GRADLE_RO_DEP_CACHE
+fi
+AQAQEER_BUILD_CODE=$(python3 "$APP_HOME/gradle/build_version.py" "$@") || exit $?
+set -- "-Paqaqeer.buildCode=$AQAQEER_BUILD_CODE" "$@"
+
 # Add default JVM options here. You can also use JAVA_OPTS and GRADLE_OPTS to pass JVM options to this script.
 DEFAULT_JVM_OPTS='"-Xmx64m" "-Xms64m"'
 

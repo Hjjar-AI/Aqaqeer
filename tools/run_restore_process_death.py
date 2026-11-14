@@ -14,7 +14,7 @@ import time
 import uuid
 
 ROOT = Path(__file__).resolve().parents[1]
-ADB = "/opt/android-shared/Sdk/platform-tools/adb"
+from android_environment import add_options, prepare
 PACKAGE = "com.aqaqeer.app.verification.creation.debug"
 TEST_PACKAGE = PACKAGE + ".test"
 RUNNER = TEST_PACKAGE + "/com.aqaqeer.app.SuiteRunner"
@@ -27,12 +27,12 @@ APKS = ("app/build/outputs/apk/standard/debug/app-standard-debug.apk",
         "app/build/outputs/apk/androidTest/standard/debug/app-standard-debug-androidTest.apk")
 
 
-def sources():
+def sources(init_script):
     paths = [p for p in (ROOT / "app/src").rglob("*") if p.is_file()]
     paths += [ROOT / n for n in ("app/build.gradle.kts", "build.gradle.kts", "gradle.properties",
-                                "gradle/libs.versions.toml", "tools/run_restore_process_death.py",
-                                "local/verification/tools/verification.init.gradle")]
-    return {str(p.relative_to(ROOT)): hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted(paths)}
+                                "gradle/libs.versions.toml", "tools/run_restore_process_death.py")]
+    paths.append(init_script)
+    return {str(p.relative_to(ROOT) if p.is_relative_to(ROOT) else p): hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted(paths)}
 
 
 def scenarios():
@@ -56,6 +56,7 @@ def scenarios():
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
+    add_options(parser)
     parser.add_argument("--serial", required=True)
     parser.add_argument("--retry-build", action="store_true", help="Rebuild only the affected test APK after a test compilation failure.")
     parser.add_argument("--build-only", action="store_true", help="Compile the complete harness while a physical phone is unavailable.")
@@ -63,19 +64,20 @@ def main():
                         help="Run only failed or previously unexecuted scenarios.")
     parser.add_argument("--build-from", type=Path, help="Reuse a prior successful build only if source/APK hashes match.")
     args = parser.parse_args()
+    sdk, adb_path, init_script, gradle_args = prepare(args)
     run_id = uuid.uuid4().hex
     evidence = ROOT / "local/verification/runs" / ("restore-death-" + datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%fZ"))
     evidence.mkdir(parents=True)
     chosen = [c for c in scenarios() if (c["name"] in args.only if args.only else "class" not in c)]
     state = {"runId": run_id, "serial": args.serial, "lintRun": False, "externalNetworkUsed": False,
              "scenarios": [], "planned": [c["name"] for c in chosen]}
-    (evidence / "source-sha256.json").write_text(json.dumps(sources(), indent=2) + "\n")
+    (evidence / "source-sha256.json").write_text(json.dumps(sources(init_script), indent=2) + "\n")
 
     def save():
         (evidence / "results.json").write_text(json.dumps(state, indent=2) + "\n")
 
     def adb(*values, check=True, timeout=30, input=None):
-        return subprocess.run([ADB, "-s", args.serial, *values], capture_output=True, text=True, check=check, timeout=timeout, input=input)
+        return subprocess.run([adb_path, "-s", args.serial, *values], capture_output=True, text=True, check=check, timeout=timeout, input=input)
 
     def owned_file(name):
         if not re.fullmatch(r"(marker|outcome)-[a-f0-9]{32}-[a-f0-9]{32}\.json", name):
@@ -103,7 +105,7 @@ def main():
         values = {"class": case.get("class", CLASS), "crashRun": run_id, "crashCase": case["id"], "crashEvent": event,
                   "crashScenarioCheckpoint": case["checkpoint"], "crashPhase": operation, "crashTarget": case["target"], "crashCheckpoint": checkpoint,
                   "crashRestored": str(case["checkpoint"] not in EARLY).lower(), "crashCold": cold}
-        command = [ADB, "-s", args.serial, "shell", "am", "instrument", "-w", "-r"]
+        command = [adb_path, "-s", args.serial, "shell", "am", "instrument", "-w", "-r"]
         for name, value in values.items():
             command += ["-e", name, value]
         command += [RUNNER]
@@ -204,14 +206,13 @@ def main():
         if args.build_from:
             previous = json.loads((args.build_from / "source-sha256.json").read_text())
             relevant = lambda values: {k: v for k, v in values.items() if k != "tools/run_restore_process_death.py"}
-            if relevant(previous) != relevant(sources()):
+            if relevant(previous) != relevant(sources(init_script)):
                 raise RuntimeError("Build source hashes differ; compile changed tests")
             for item in json.loads((args.build_from / "artifacts.json").read_text()):
                 if hashlib.sha256((ROOT / item["path"]).read_bytes()).hexdigest() != item["sha256"]:
                     raise RuntimeError("Cached APK differs from the verified build")
         else:
-            command = ["./gradlew", "--gradle-user-home", "/opt/android-shared/aqaqeer/gradle-home", "-I",
-                       "local/verification/tools/verification.init.gradle", "--offline", "--no-configuration-cache", "--console=plain", "--continue",
+            command = ["./gradlew", *gradle_args, "-I", str(init_script), "--offline", "--no-configuration-cache", "--console=plain", "--continue",
                        *([":app:packageStandardDebugAndroidTest"] if args.retry_build else [":app:packageStandardDebug", ":app:packageStandardDebugAndroidTest"])]
             (evidence / "build-command.json").write_text(json.dumps(command, indent=2) + "\n")
             with (evidence / "build.log").open("w") as log:
@@ -224,7 +225,7 @@ def main():
                 return built.returncode
         if counter.read_bytes() != version_before:
             raise RuntimeError("Version counter changed")
-        aapt = sorted(Path("/opt/android-shared/Sdk/build-tools").glob("*/aapt2"))[-1]
+        aapt = sdk / "build-tools" / json.loads((ROOT / ".github/android-toolchain.json").read_text())["buildTools"] / "aapt2"
         artifacts = []
         for name, package in zip(APKS, (PACKAGE, TEST_PACKAGE)):
             apk = ROOT / name

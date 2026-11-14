@@ -1,6 +1,7 @@
 @file:OptIn(kotlinx.serialization.ExperimentalSerializationApi::class)
 package com.aqaqeer.app.security.files
 
+import com.aqaqeer.app.security.PasswordEnvelopeKdfV1
 import com.aqaqeer.app.admin.PinSecurity
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.*
@@ -28,7 +29,7 @@ internal object EnvelopeWriter {
         try {
             require(digits.size >= 16) { "استخدم كلمة ملف اتصال عشوائية من ١٦ رقماً على الأقل" }
             val salt = ByteArray(16).also { SecureRandom().nextBytes(it) }
-            val spec = PBEKeySpec(digits, salt, 200_000, 256)
+            val spec = PBEKeySpec(digits, salt, PasswordEnvelopeKdfV1.ITERATIONS, 256)
             val key = try { SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256").generateSecret(spec).encoded }
                 finally { spec.clearPassword() }
             val plain = encode(wire, ConnectionWire.serializer())
@@ -57,7 +58,7 @@ internal object EnvelopeWriter {
         return try {
             val envelope = buildJsonObject {
                 put("v", 1)
-                if (salt != null) { put("kdf", "PBKDF2-HMAC-SHA256"); put("iter", 200000); put("salt", b64(salt)) }
+                if (salt != null) { put("kdf", PasswordEnvelopeKdfV1.NAME); put("iter", PasswordEnvelopeKdfV1.ITERATIONS); put("salt", b64(salt)) }
                 put("nonce", b64(nonce)); put("ct", b64(encrypted.copyOfRange(0, encrypted.size - 16)))
                 put("tag", b64(encrypted.copyOfRange(encrypted.size - 16, encrypted.size)))
             }

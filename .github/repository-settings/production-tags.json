@@ -1,0 +1,13 @@
+{
+  "name": "Preserve shared version reservations and production tags",
+  "target": "tag",
+  "enforcement": "active",
+  "conditions": {
+    "ref_name": {
+      "include": ["refs/tags/android-build-*", "refs/tags/v0.0.*"],
+      "exclude": []
+    }
+  },
+  "rules": [{"type": "update"}, {"type": "deletion"}],
+  "bypass_actors": []
+}

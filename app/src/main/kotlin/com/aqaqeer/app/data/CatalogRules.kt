@@ -1,5 +1,6 @@
 package com.aqaqeer.app.data
 
+import com.aqaqeer.app.security.AdminPinKdfV1
 import java.text.Normalizer
 import java.time.ZoneId
 import java.util.Locale
@@ -60,7 +61,7 @@ object CatalogRules {
             uuid(it.pharmacyId); require(it.name.isNotBlank() && it.name == it.name.trim())
             ZoneId.of(it.timezone)
             require(it.schemaVersion > 0 && it.minVersionCode > 0 && it.keyVersion > 0)
-            require(it.adminPinVerifier.iterations == 200_000)
+            require(it.adminPinVerifier.iterations == AdminPinKdfV1.ITERATIONS)
         }
         val categories = catalog.categories.map { it.id }.toSet()
         val forms = catalog.forms.map { it.id }.toSet()

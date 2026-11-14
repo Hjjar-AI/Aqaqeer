@@ -16,15 +16,17 @@ import uuid
 from datetime import datetime, timezone
 
 ROOT = Path(__file__).resolve().parents[1]
-ADB = '/opt/android-shared/Sdk/platform-tools/adb'
+from android_environment import add_options, prepare
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
+    add_options(parser)
     parser.add_argument('--serial', required=True)
     parser.add_argument('--defer-live', action='store_true', help='Keep live test as an explicit missing-prerequisite failure; run independent checks.')
     parser.add_argument('--retry', nargs=argparse.REMAINDER, help='Exact failed Gradle task(s) and filters; omits initial batch.')
     args = parser.parse_args()
+    sdk, adb_path, init_script, gradle_args = prepare(args)
     run = ROOT / 'local/verification/runs' / datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%S%fZ')
     run.mkdir(parents=True, exist_ok=False)
     secret = ROOT / 'local/verification/credentials/telegram-test-config.local.json'
@@ -36,7 +38,7 @@ def main():
     remote_owned = remote_secret + '.owned'
 
     def adb(*values, **kwargs):
-        return subprocess.run([ADB, '-s', args.serial, *values], check=True, **kwargs)
+        return subprocess.run([adb_path, '-s', args.serial, *values], check=True, **kwargs)
 
     def api(method, values=None):
         request = urllib.request.Request('https://api.telegram.org/bot' + config['botToken'] + '/' + method,
@@ -72,7 +74,8 @@ def main():
     source_paths = [p for folder in ('app/src', 'gradle') for p in (ROOT / folder).rglob('*')
                     if p.is_file() and p.suffix in {'.kt', '.java', '.xml', '.toml'}]
     source_paths += [ROOT / p for p in ('app/build.gradle.kts', 'build.gradle.kts', 'gradle.properties')]
-    (run / 'source-sha256.json').write_text(json.dumps({str(p.relative_to(ROOT)): hashlib.sha256(p.read_bytes()).hexdigest()
+    source_paths.append(init_script)
+    (run / 'source-sha256.json').write_text(json.dumps({str(p.relative_to(ROOT) if p.is_relative_to(ROOT) else p): hashlib.sha256(p.read_bytes()).hexdigest()
                                                       for p in sorted(source_paths)}, indent=2) + '\n')
     exit_code = 1
     started_ns = time.time_ns()
@@ -80,8 +83,7 @@ def main():
         if not args.defer_live:
             adb('push', str(secret), remote_secret, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
             adb('shell', 'chmod', '600', remote_secret, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
-        command = ['./gradlew', '--gradle-user-home', '/opt/android-shared/aqaqeer/gradle-home',
-                   '-I', 'local/verification/tools/verification.init.gradle', '--console=plain', '--continue', '--offline']
+        command = ['./gradlew', *gradle_args, '-I', str(init_script), '--console=plain', '--continue', '--offline']
         if not args.defer_live:
             command += ['-Pandroid.testInstrumentationRunnerArguments.suiteSecretPath=' + remote_secret]
         command += args.retry or ['test', 'connectedAndroidTest']
@@ -123,12 +125,12 @@ def main():
         owned_ids = set()
         for package in ('com.aqaqeer.app.verification.creation.debug',
                         'com.aqaqeer.app.demo.verification.creation.debug'):
-            installed = subprocess.run([ADB, '-s', args.serial, 'shell', 'pm', 'path', package], capture_output=True, text=True)
+            installed = subprocess.run([adb_path, '-s', args.serial, 'shell', 'pm', 'path', package], capture_output=True, text=True)
             if 'package:' not in installed.stdout:
                 continue
             adb('shell', 'run-as', package, 'rm', '-f',
                 'no_backup/telegram-test-config.local.json', stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
-            record = subprocess.run([ADB, '-s', args.serial, 'shell', 'run-as', package,
+            record = subprocess.run([adb_path, '-s', args.serial, 'shell', 'run-as', package,
                                      'cat', 'no_backup/telegram-test-owned-message-ids.json'], capture_output=True, text=True)
             if record.returncode == 0 and record.stdout.strip():
                 values = json.loads(record.stdout)
@@ -155,7 +157,7 @@ def main():
                 api('deleteMessage', {'chat_id':config['chatId'],'message_id':message})
         for package in ('com.aqaqeer.app.verification.creation.debug',
                         'com.aqaqeer.app.demo.verification.creation.debug'):
-            installed = subprocess.run([ADB, '-s', args.serial, 'shell', 'pm', 'path', package], capture_output=True, text=True)
+            installed = subprocess.run([adb_path, '-s', args.serial, 'shell', 'pm', 'path', package], capture_output=True, text=True)
             if 'package:' in installed.stdout:
                 adb('shell', 'run-as', package, 'rm', '-f',
                     'no_backup/telegram-test-config.local.json', 'no_backup/telegram-test-owned-message-ids.json',

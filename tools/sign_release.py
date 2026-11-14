@@ -3,6 +3,7 @@
 
 import argparse
 import base64
+import gzip
 import hashlib
 import json
 import os
@@ -43,15 +44,29 @@ def main():
     source = ROOT / 'app/build/outputs/apk/standard/release'
     metadata = json.loads((source / 'output-metadata.json').read_text())
     elements = metadata['elements']
-    if metadata['applicationId'] != 'com.aqaqeer.app' or len(elements) != 1:
-        raise ValueError('Expected one standard production release APK.')
-    element = elements[0]
-    code = element['versionCode']
-    if type(code) is not int or not 1 <= code <= 2_099_999_999:
-        raise ValueError('Invalid packaged version code.')
-    apk = (source / element['outputFile']).resolve()
-    if apk.parent != source.resolve() or not apk.is_file():
-        raise ValueError('Invalid release APK path.')
+    if metadata['applicationId'] != 'com.aqaqeer.app':
+        raise ValueError('Expected the production package')
+    selected = {}
+    seen = set()
+    for element in elements:
+        filters = element.get('filters', [])
+        if filters and (len(filters) != 1 or filters[0]['filterType'] != 'ABI'):
+            raise ValueError('Unexpected APK filters')
+        abi = filters[0]['value'] if filters else 'universal'
+        if abi in seen or abi not in ('universal', 'armeabi-v7a', 'arm64-v8a', 'x86', 'x86_64'):
+            raise ValueError('Duplicate/unexpected APK architecture')
+        seen.add(abi)
+        if abi in ('universal', 'armeabi-v7a', 'arm64-v8a'):
+            selected[abi] = element
+    if seen not in ({'universal'}, {'universal', 'armeabi-v7a', 'arm64-v8a', 'x86', 'x86_64'}):
+        raise ValueError('Incomplete release APK set')
+    codes = {element['versionCode'] for element in elements}
+    names = {element['versionName'] for element in elements}
+    if len(codes) != 1 or len(names) != 1:
+        raise ValueError('APK versions differ')
+    code = next(iter(codes))
+    if type(code) is not int or not 1 <= code <= 2_099_999_999 or names != {f'0.0.{code}'}:
+        raise ValueError('Invalid packaged version')
     requested = os.environ.get('AQAQEER_EXPECTED_RELEASE_CODE', '')
     if requested and requested != str(code):
         raise ValueError('Release metadata differs from the reserved version code.')
@@ -75,28 +90,42 @@ def main():
             key = Path(local_key).expanduser().resolve()
             if not key.is_file():
                 raise ValueError('Local release keystore is missing.')
-        signed = workspace / f'Aqaqeer-v0.0.{code}-release.apk'
-        command([str(tools / 'zipalign'), '-c', '-P', '16', '4', str(apk)])
-        command([str(tools / 'apksigner'), 'sign', '--ks', str(key),
-                 '--ks-key-alias', os.environ['AQAQEER_RELEASE_KEY_ALIAS'],
-                 '--ks-pass', 'env:AQAQEER_RELEASE_STORE_PASSWORD',
-                 '--key-pass', 'env:AQAQEER_RELEASE_KEY_PASSWORD',
-                 '--v4-signing-enabled', 'false', '--out', str(signed), str(apk)])
-        environment = {name: value for name, value in os.environ.items()
-                       if not name.startswith('AQAQEER_RELEASE_')}
-        environment.update(CI_RELEASE_APK_PATH=str(signed), CI_RELEASE_CERT_SHA256=expected,
-                           AQAQEER_EXPECTED_RELEASE_CODE=str(code))
-        command([sys.executable, str(ROOT / '.github/scripts/check-release.py')], environment)
-        inspection = ROOT / 'ci-output/release/inspection.json'
-        report = json.loads(inspection.read_text())
-        if report.get('certificateSha256') != [expected] or report.get('versionCode') != code:
-            raise ValueError('Signed output does not match the expected certificate/version.')
-        report['apk'] = signed.name
-        report['sourceCommit'] = os.environ.get('GITHUB_SHA', '')
-        report['workflowRun'] = os.environ.get('GITHUB_RUN_ID', '')
+        reports = []
+        for abi, element in selected.items():
+            apk = (source / element['outputFile']).resolve()
+            if apk.parent != source.resolve() or not apk.is_file():
+                raise ValueError('Invalid release APK path')
+            signed = workspace / f'Aqaqeer-v0.0.{code}-{abi}-release.apk'
+            command([str(tools / 'zipalign'), '-c', '-P', '16', '4', str(apk)])
+            command([str(tools / 'apksigner'), 'sign', '--ks', str(key),
+                     '--ks-key-alias', os.environ['AQAQEER_RELEASE_KEY_ALIAS'],
+                     '--ks-pass', 'env:AQAQEER_RELEASE_STORE_PASSWORD',
+                     '--key-pass', 'env:AQAQEER_RELEASE_KEY_PASSWORD',
+                     '--v4-signing-enabled', 'false', '--out', str(signed), str(apk)])
+            inspection = ROOT / 'ci-output/release' / abi
+            environment = {name: value for name, value in os.environ.items()
+                           if not name.startswith('AQAQEER_RELEASE_')}
+            environment.update(CI_RELEASE_APK_PATH=str(signed), CI_RELEASE_CERT_SHA256=expected,
+                               CI_RELEASE_ABI=abi, CI_RELEASE_INSPECTION_DIRECTORY=str(inspection),
+                               AQAQEER_EXPECTED_RELEASE_CODE=str(code))
+            command([sys.executable, str(ROOT / '.github/scripts/check-release.py')], environment)
+            report = json.loads((inspection / 'inspection.json').read_text())
+            if report.get('certificateSha256') != [expected] or report.get('versionCode') != code:
+                raise ValueError('Signed output differs from expected identity')
+            report['apk'] = signed.name
+            reports.append(report)
+        # Nothing becomes a publishable bundle until every selected APK passes.
         destination.mkdir()
-        shutil.copyfile(signed, destination / signed.name)
-        (destination / 'release-info.json').write_text(json.dumps(report, indent=2) + '\n')
+        for report in reports:
+            shutil.copyfile(workspace / report['apk'], destination / report['apk'])
+            (destination / (report['architecture'] + '-inspection.json')).write_text(json.dumps(report, indent=2) + '\n')
+        mapping = ROOT / 'app/build/outputs/mapping/standardRelease/mapping.txt'
+        with mapping.open('rb') as source_mapping, gzip.open(destination / 'mapping.txt.gz', 'wb') as compressed:
+            shutil.copyfileobj(source_mapping, compressed)
+        receipt = dict(versionCode=code, versionName=f'0.0.{code}', certificateSha256=expected,
+                       sourceCommit=os.environ.get('GITHUB_SHA', ''), workflowRun=os.environ.get('GITHUB_RUN_ID', ''),
+                       workflowAttempt=os.environ.get('GITHUB_RUN_ATTEMPT', ''), apks=reports)
+        (destination / 'release-info.json').write_text(json.dumps(receipt, indent=2) + '\n')
         files = sorted(destination.iterdir())
         (destination / 'SHA256SUMS.txt').write_text(''.join(
             f'{hashlib.sha256(path.read_bytes()).hexdigest()}  {path.name}\n' for path in files))

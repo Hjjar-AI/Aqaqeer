@@ -1,0 +1,46 @@
+name: 14 - Maintenance - Debug release cleanup
+
+on:
+  workflow_dispatch:
+    inputs:
+      preview:
+        description: Preview only; turn off to delete eligible owned debug releases and their tags
+        type: boolean
+        default: true
+      older_than_days:
+        description: Only releases older than this many days (1–365)
+        type: number
+        default: 30
+      keep:
+        description: Keep at least this many newest releases (minimum 5)
+        type: number
+        default: 5
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  cleanup:
+    if: ${{ github.event.repository.private == false && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: write
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - name: Preview or clean owned debug releases
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CI_DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+          CI_PREVIEW: ${{ format('{0}', inputs.preview) }}
+          CI_DAYS: ${{ inputs.older_than_days }}
+          CI_KEEP: ${{ inputs.keep }}
+        run: python3 .github/scripts/cleanup-debug-releases.py

@@ -31,6 +31,8 @@ def check(path):
                 problem(label, 'exactly one of run/uses required')
                 continue
             if 'run' in step:
+                if not isinstance(step['run'], str) or '${{' in step['run']:
+                    problem(label, 'shell bodies must receive expressions through env, never inline')
                 continue
             action = step['uses']
             inputs = step.get('with', {})
@@ -78,12 +80,35 @@ def check(path):
                     problem(label, 'cache writes are allowed only on the default branch')
                 if inputs.get('cache-provider') != 'basic':
                     problem(label, 'Gradle must use the basic GitHub cache provider')
+                if inputs.get('validate-wrappers', True) is not True:
+                    problem(label, 'built-in wrapper-JAR validation must stay enabled')
                 for key in ('cache-write-only', 'cache-disabled'):
                     if key in inputs and inputs[key] is not False:
                         problem(label, f'{key} must not override cache policy')
 
     try:
         workflow = load_yaml(path)
+        def check_secrets(value, trail=()):
+            if isinstance(value, dict):
+                for key, child in value.items():
+                    check_secrets(child, (*trail, key))
+            elif isinstance(value, list):
+                for index, child in enumerate(value):
+                    check_secrets(child, (*trail, index))
+            elif isinstance(value, str) and 'secrets.' in value:
+                approved = False
+                if len(trail) == 6 and trail[0] == 'jobs' and trail[2] == 'steps' and trail[4] == 'env':
+                    job_name, index, key = trail[1], trail[3], trail[5]
+                    step = workflow['jobs'][job_name]['steps'][index]
+                    production = path.name == 'publish-release.yml' and job_name == 'publish'
+                    debug = path.name in ('android.yml', 'publish-debug.yml') and job_name == 'sign-debug'
+                    prefix = 'AQAQEER_RELEASE_' if production else 'AQAQEER_DEBUG_'
+                    expected_run = 'python3 tools/sign_release.py --output-directory release-files' if production else 'python3 tools/sign_debug.py "$CI_BUILD_FLAVOR"'
+                    allowed = {prefix + suffix for suffix in ('KEYSTORE_BASE64', 'KEY_ALIAS', 'STORE_PASSWORD', 'KEY_PASSWORD')}
+                    approved = (production or debug) and step.get('run') == expected_run and key in allowed and value == '${{ secrets.' + key + ' }}'
+                if not approved:
+                    problem('/'.join(map(str, trail)), 'secret reference outside an approved isolated signing env')
+        check_secrets(workflow)
         triggers = workflow.get('on')
         expected_triggers = {'workflow_dispatch', 'schedule'} if path.name == 'cleanup-evidence.yml' else {'workflow_dispatch'}
         if not isinstance(triggers, dict) or set(triggers) != expected_triggers:
@@ -115,12 +140,38 @@ def check(path):
         jobs = workflow.get('jobs')
         if not isinstance(jobs, dict) or not jobs:
             return errors + ['nonempty jobs mapping required']
+        expected_jobs = {
+            'android.yml': {'reserve', 'build-debug', 'sign-debug'},
+            'publish-debug.yml': {'reserve', 'build-debug', 'sign-debug', 'publish'},
+            'publish-release.yml': {'reserve', 'build', 'publish'},
+        }
+        if path.name in expected_jobs and set(jobs) != expected_jobs[path.name]:
+            problem(path.name, 'distribution jobs must preserve reservation/build/signing boundaries')
+        if path.name == 'cleanup-debug.yml':
+            dispatch = triggers.get('workflow_dispatch', {})
+            inputs = dispatch.get('inputs', {}) if isinstance(dispatch, dict) else {}
+            if (set(inputs) != {'preview', 'older_than_days', 'keep'}
+                    or inputs['preview'].get('default') is not True
+                    or inputs['preview'].get('type') != 'boolean'
+                    or inputs['older_than_days'].get('default') != 30
+                    or inputs['keep'].get('default') != 5):
+                problem(path.name, 'debug cleanup must default to preview, thirty days and keeping five')
+        if path.name == 'secret-history.yml':
+            steps = [step for job in jobs.values() for step in job.get('steps', [])]
+            checkouts = [step for step in steps if str(step.get('uses', '')).startswith('actions/checkout@')]
+            if len(checkouts) != 1 or checkouts[0].get('with', {}).get('fetch-depth') != 0:
+                problem(path.name, 'history scan must fetch full history')
+            if any(str(step.get('uses', '')).startswith('actions/upload-artifact@') for step in steps):
+                problem(path.name, 'history findings must not be uploaded as public artifacts')
+            if [step['run'] for step in steps if 'run' in step] != ['python3 tools/scan_history.py --install --hosted']:
+                problem(path.name, 'history scan output must stay behind the redacting entrypoint')
         for name, job in jobs.items():
             if not isinstance(job, dict):
                 problem(name, 'job must be a mapping')
                 continue
             cleanup = path.name == 'cleanup-evidence.yml' and name == 'cleanup'
-            expected_guard = CLEANUP_GUARD if cleanup or path.name == 'publish-release.yml' else PUBLIC_GUARD
+            default_only = path.name in ('android.yml', 'publish-debug.yml', 'publish-release.yml', 'emulator.yml', 'release.yml', 'build-tooling.yml', 'secret-history.yml', 'cleanup-debug.yml', 'actionlint-updates.yml')
+            expected_guard = CLEANUP_GUARD if cleanup or default_only else PUBLIC_GUARD
             if job.get('if') != expected_guard:
                 problem(name, 'exact public/default-branch guard required')
             if job.get('runs-on') != 'ubuntu-24.04':
@@ -131,17 +182,21 @@ def check(path):
             allowed = {'contents': 'read'}
             if cleanup:
                 allowed['actions'] = 'write'
-            elif path.name == 'publish-release.yml' and name == 'reserve':
+            elif path.name in ('android.yml', 'publish-debug.yml', 'publish-release.yml') and name == 'reserve':
                 allowed = {'contents': 'write'}
             elif path.name in ('publish-debug.yml', 'publish-release.yml') and name == 'publish':
                 allowed = {'contents': 'write', 'actions': 'read'}
+            elif path.name == 'cleanup-debug.yml' and name == 'cleanup':
+                allowed = {'contents': 'write'}
+            elif name == 'sign-debug' and path.name in ('android.yml', 'publish-debug.yml') or path.name == 'release.yml' and name == 'startup':
+                allowed['actions'] = 'read'
             elif path.name == 'security.yml' and name == 'codeql':
                 allowed['security-events'] = 'write'
             if 'permissions' in job and job['permissions'] != allowed:
                 problem(name, 'unexpected job permissions')
-            if (len(allowed) > 1 or path.name == 'publish-release.yml' and name == 'reserve') and job.get('permissions') != allowed:
+            if (len(allowed) > 1 or allowed.get('contents') == 'write') and job.get('permissions') != allowed:
                 problem(name, 'required scoped job permissions missing')
-            if path.name == 'publish-debug.yml' and name == 'publish' and job.get('needs') != 'build-debug':
+            if path.name == 'publish-debug.yml' and name == 'publish' and job.get('needs') != 'sign-debug':
                 problem(name, 'publication must depend on all selected debug builds succeeding')
             if path.name == 'publish-release.yml':
                 expected_dependencies = {'reserve': None, 'build': 'reserve', 'publish': 'build'}
@@ -151,17 +206,26 @@ def check(path):
                     problem(name, 'production signing must use the release-signing environment')
             if 'uses' in job:
                 problem(name, 'reusable workflow jobs are forbidden')
-            if 'concurrency' in job:
-                problem(name, 'job concurrency must not override workflow serialization')
+            reservation = path.name in ('android.yml', 'publish-debug.yml', 'publish-release.yml') and name == 'reserve'
+            if reservation:
+                if job.get('concurrency') != {'group': 'aqaqeer-version-reservations', 'cancel-in-progress': False}:
+                    problem(name, 'all distributed builds require shared reservation serialization')
+            elif 'concurrency' in job:
+                problem(name, 'only reservation jobs may add shared job serialization')
+            if path.name in ('android.yml', 'publish-debug.yml'):
+                if name == 'build-debug' and job.get('needs') != 'reserve':
+                    problem(name, 'debug builds must depend on reservation')
+                if name == 'sign-debug' and (job.get('needs') != ['reserve', 'build-debug'] or job.get('environment') != 'debug-signing'):
+                    problem(name, 'debug signing must be isolated after reservation/build in debug-signing')
             steps_check(job.get('steps'), name)
-            if path.name == 'android.yml' or (path.name == 'publish-debug.yml' and name == 'build-debug'):
+            if path.name in ('android.yml', 'publish-debug.yml') and name == 'build-debug':
                 steps = job.get('steps', [])
                 commands = [step for step in steps if isinstance(step, dict) and step.get('id') == 'build']
                 expected = ('set -euo pipefail\n'
                             'python3 tools/build_debug.py "$CI_BUILD_FLAVOR" --no-export \\\n'
                             '  2>&1 | tee ci-output/build/gradle-build.log\n')
                 if (len(commands) != 1 or commands[0].get('run') != expected
-                        or commands[0].get('env') != {'CI_BUILD_FLAVOR': '${{ matrix.flavor }}'}):
+                        or commands[0].get('env') != {'CI_BUILD_FLAVOR': '${{ matrix.flavor }}', 'AQAQEER_MIN_BUILD_CODE': '${{ needs.reserve.outputs.code }}'}):
                     problem(name, 'debug packaging must use the shared single-flavor selector')
                 expected_matrix = "${{ fromJSON(inputs.flavor == 'both' && '[\"standard\",\"demo\"]' || format('[\"{0}\"]', inputs.flavor)) }}"
                 if job.get('strategy') != {'fail-fast': False, 'max-parallel': 1, 'matrix': {'flavor': expected_matrix}}:

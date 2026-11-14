@@ -5,9 +5,9 @@
 .cxx/
 
 # Machine-local configuration and verification evidence
-local/
+/local/
 local.properties
-ci-output/
+/ci-output/
 
 # Private signing material and credentials
 *.jks
@@ -35,3 +35,9 @@ __pycache__/
 
 # Operating-system metadata
 .DS_Store
+
+# Encoded signing exports remain private.
+*.b64
+*.base64
+release.properties
+/signing/

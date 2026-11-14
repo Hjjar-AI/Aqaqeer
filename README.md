@@ -4,6 +4,12 @@ Arabic RTL Android app for medication availability by pharmacy section, with off
 
 Implemented: offline creation and administration, catalog editing, real Telegram publication/reconciliation, encrypted connection sharing, backup/restore, reminders, credential maintenance and Compose workflows. Current builds, selected hosted CI, demo startup/refresh and browsing checks are user-reported complete; independent evidence and remaining limits are recorded separately. See [current evidence](docs/validation.md) and [remaining work](docs/plan.md); production signing/update continuity and remaining functional/recovery checks remain open.
 
+## Download and verify
+
+Open [Releases](https://github.com/Hjjar-AI/Aqaqeer/releases) and choose a production release. Download the universal APK unless you specifically need ARM32 or ARM64, plus `SHA256SUMS.txt`. With all listed assets downloaded into one folder, run `sha256sum --check SHA256SUMS.txt`; a missing listed asset is an incomplete download, not a verified bundle. Compare the certificate using `apksigner verify --print-certs <downloaded.apk>` and the published fingerprint. Checksums verify bytes; the certificate identifies the signer.
+
+See the [Arabic user guide](docs/user-guide-ar.md). Debug APKs have separate packages/signing and do not transfer an existing production pharmacy automatically.
+
 ## Build
 
 ```sh
@@ -30,3 +36,5 @@ python3 tools/build_debug.py demo --offline
 | [File formats](docs/crypto/FORMATS.md), [reader contracts](docs/crypto/READERS.md) | Crypto, payload/caption rules, bounds and public vectors |
 
 Telegram publishing requires coordinated admins and offers no distributed lock. Shared credentials do not cryptographically enforce reader rights. History is device-local; new installations receive no earlier history. About credits **محمد علي حجار** and opens an email composer for **hjjarmhmmdali@gmail.com** without sending automatically.
+
+Project-owned code uses [Apache-2.0](LICENSE). Third-party terms and notices are retained under [licenses](licenses/THIRD-PARTY-NOTICES.txt). Security issues: [private reporting](SECURITY.md).

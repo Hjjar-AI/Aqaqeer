@@ -2,6 +2,11 @@ name: 03 - Checks - Tests and compilation
 
 on:
   workflow_dispatch:
+    inputs:
+      coverage:
+        description: Include unit-test coverage reports for both flavors
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -54,9 +59,19 @@ jobs:
         shell: bash
         env:
           CI_GRADLE_TASKS: ${{ matrix.tasks }}
+          CI_CHECK_KIND: ${{ matrix.kind }}
+          CI_COVERAGE: ${{ format('{0}', inputs.coverage) }}
         run: |
           set -euo pipefail
           read -r -a tasks <<< "$CI_GRADLE_TASKS"
+          if [ "$CI_COVERAGE" = true ] && [ "$CI_CHECK_KIND" = unit ]; then
+            case "$CI_GRADLE_TASKS" in
+              :app:testStandardDebugUnitTest) tasks=(:app:createStandardDebugUnitTestCoverageReport) ;;
+              :app:testDemoDebugUnitTest) tasks=(:app:createDemoDebugUnitTestCoverageReport) ;;
+              *) exit 1 ;;
+            esac
+            tasks+=(-Paqaqeer.unitCoverage=true)
+          fi
           ./gradlew --no-daemon --console=plain --no-configuration-cache --continue \
             "${tasks[@]}" 2>&1 | tee ci-output/verification/gradle.log
 
@@ -77,6 +92,7 @@ jobs:
           name: verification-${{ matrix.check }}-${{ github.run_number }}-${{ github.run_attempt }}
           path: |
             ci-output/verification/
+            app/build/reports/coverage/
             app/build/reports/tests/
             app/build/test-results/test*UnitTest/TEST-*.xml
           if-no-files-found: error

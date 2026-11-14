@@ -1,5 +1,6 @@
 package com.aqaqeer.app.admin
 
+import com.aqaqeer.app.security.AdminPinKdfV1
 import com.aqaqeer.app.data.PinVerifier
 import java.security.MessageDigest
 import java.security.SecureRandom
@@ -12,7 +13,7 @@ internal object PinSecurity {
         val n = Character.digit(c, 10); require(n in 0..9) { "أدخل أرقاماً فقط" }; ('0'.code + n).toChar()
     }.toCharArray()
     private fun derive(pin: CharArray, salt: ByteArray): ByteArray {
-        val spec = PBEKeySpec(pin, salt, 200_000, 256)
+        val spec = PBEKeySpec(pin, salt, AdminPinKdfV1.ITERATIONS, 256)
         return try { SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256").generateSecret(spec).encoded }
         finally { spec.clearPassword() }
     }
@@ -22,14 +23,14 @@ internal object PinSecurity {
             require(pin.size == 6) { "رمز الإدارة ستة أرقام" }
             val salt = ByteArray(16).also { SecureRandom().nextBytes(it) }
             val hash = derive(pin, salt)
-            return try { PinVerifier(Base64.getEncoder().encodeToString(salt), 200_000, Base64.getEncoder().encodeToString(hash)) }
+            return try { PinVerifier(Base64.getEncoder().encodeToString(salt), AdminPinKdfV1.ITERATIONS, Base64.getEncoder().encodeToString(hash)) }
             finally { hash.fill(0) }
         } finally { pin.fill('\u0000') }
     }
     fun matches(input: CharArray, verifier: PinVerifier): Boolean {
         val pin = digits(input)
         return try {
-            require(pin.size == 6 && verifier.iterations == 200_000)
+            require(pin.size == 6 && verifier.iterations == AdminPinKdfV1.ITERATIONS)
             val hash = derive(pin, Base64.getDecoder().decode(verifier.salt))
             try { MessageDigest.isEqual(hash, Base64.getDecoder().decode(verifier.hash)) } finally { hash.fill(0) }
         } finally { pin.fill('\u0000') }

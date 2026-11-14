@@ -1,5 +1,6 @@
 """Lightweight tracked-source integrity and redacted credential-pattern checks."""
 
+import argparse
 import ast
 import json
 import os
@@ -38,12 +39,17 @@ def anchors(text):
 
 
 def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--source-only', action='store_true', help='Exclude tests/inventories when test inspection is not authorized')
+    args = parser.parse_args()
     root = Path.cwd()
-    tracked = subprocess.run(['git', 'ls-files', '-z'], capture_output=True, check=True).stdout.decode().split('\0')
+    tracked = subprocess.run(['git', 'ls-files', '--cached', '--others', '--exclude-standard', '-z'], capture_output=True, check=True).stdout.decode().split('\0')
     problems = []
     links = 0
     files = 0
-    for name in filter(None, tracked):
+    for name in sorted(set(filter(None, tracked))):
+        if args.source_only and (re.search(r"(^|/)(test|tests|androidTest|sharedTest)(/|$)", name) or name == "docs/test-api-inventory.json"):
+            continue
         path = root / name
         # Never inspect private machine state, generated schemas or migration files.
         if name.startswith(('local/', 'ci-output/')):
@@ -98,6 +104,13 @@ def main():
                 problems.append(f'{name}: missing local link {relative}')
             elif url.fragment and target.suffix == '.md' and unquote(url.fragment) not in anchors(target.read_text()):
                 problems.append(f'{name}: missing local anchor {relative}#{url.fragment}')
+    catalog = tomllib.loads((root / 'gradle/libs.versions.toml').read_text())
+    override = re.findall(r'kotlin-gradle-plugin:([^"\s]+)', (root / 'build.gradle.kts').read_text())
+    if override != [catalog['versions']['kotlin']]:
+        problems.append('Root Kotlin override must match the version catalog')
+    for wrapper in ('gradlew', 'gradlew.bat'):
+        if 'build_version.py' not in (root / wrapper).read_text():
+            problems.append(f'{wrapper}: missing version-reservation integration')
     lines = ['## Repository integrity', '', f'Text files inspected: {files}; local links checked: {links}',
              f'Problems: {len(problems)}', '', *[f'- {problem}' for problem in problems], '',
              'Credential checks cover selected token/private-key formats only, not arbitrary passwords or all secret types.',

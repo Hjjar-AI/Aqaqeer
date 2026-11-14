@@ -1,0 +1,37 @@
+Aqaqeer third-party runtime components
+
+This file covers the runtime dependency families declared by the production source.
+It is not a measured inventory of a newly resolved/shipped APK. Exact transitive
+coordinates and any additional upstream NOTICE files must be reconciled against
+the fresh standardReleaseRuntimeClasspath before first production distribution.
+Compiler plugins, processors and test-only dependencies are not shipped notices.
+
+AndroidX (including Activity, Core, Compose, Lifecycle, Room, SQLite, DataStore,
+Splashscreen and their AndroidX runtime dependencies):
+Copyright The Android Open Source Project / their respective contributors.
+Apache License, Version 2.0; see Apache-2.0.txt.
+https://android.googlesource.com/platform/frameworks/support/
+
+Kotlin standard library and kotlinx.coroutines / kotlinx.serialization:
+Copyright JetBrains s.r.o. and respective contributors.
+Apache License, Version 2.0; see Apache-2.0.txt.
+https://github.com/JetBrains/kotlin
+https://github.com/Kotlin/kotlinx.coroutines
+https://github.com/Kotlin/kotlinx.serialization
+
+Dagger / Hilt runtime:
+Copyright Google and respective contributors.
+Apache License, Version 2.0; see Apache-2.0.txt.
+https://github.com/google/dagger
+
+SQLCipher Android and its native SQLite/SQLCipher component:
+See the original SQLCipher-Android-LICENSE.txt included alongside this file.
+https://github.com/sqlcipher/android-database-sqlcipher
+
+Noto Sans Arabic:
+See assets/licenses/NotoSansArabic-OFL.txt inside the application.
+https://github.com/notofonts/arabic
+
+The project-owned source is licensed separately under Apache-2.0. Third-party
+fonts, libraries and their notices retain their own terms. This notice does not
+relicense them or establish rights in separately supplied artwork.

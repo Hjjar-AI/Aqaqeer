@@ -52,8 +52,19 @@ Depends on implemented backup/restore and explicit validation resumption. Verify
 
 Maintenance **PREPARING**, post-active verification and logical-cleanup interruption remain unfinished. Retain the six maintenance, three export, four native-SQL and seven focused backup-method passes. Complete the retained live PIN/manual-republication/reader-connection extension only on authorized resumption. SIGKILL/controlled-pressure evidence does not establish OS low-memory termination or power-loss behavior.
 
-## Build follow-up
+## Repository/release follow-up — 2026-11-14
 
-Manual debug and signed production GitHub Release publishers are configured; the production signer requires the owner’s permanent keystore, passwords, expected certificate and coordinated version code. Local signing and hosted reservation/signing/artifact-transfer/publication/update checks remain unexecuted. The debug publisher also remains unexecuted on a hosted runner. Source policy/syntax checks do not establish publication or signing/update continuity.
+Source changes implement shared debug/production reservation, wrapper/cache integration, isolated debug signing, production architecture outputs, retained mappings/receipts, maintenance workflows and repository/application housekeeping. Details and commands are in [build](build.md#repository-and-release-maintenance); checks actually executed are in [validation](validation.md).
 
-Remaining tool checks: non-packaging configuration-cache store/reuse, dry-run counter preservation, concurrent counter locking, Windows startup and export-destination overrides. Preserve wrappers, shared caches and counters. Commands and current CI policy belong in [build](build.md).
+| ID / priority | Dependencies | Remaining completion evidence |
+| --- | --- | --- |
+| M1 / P1 — Packaging | Wrapper changes; existing cache ownership | Authorized wrapper argument/locking/Windows verification and builds. Preserve local counters; do not create replacement caches. |
+| M2 / P1 — Distribution | M1; permanent debug/production identities | Configure environment secrets, verify shared reservations and three-output signing/artifact transfer. Installed-update continuity is not established by source or APK inspection. |
+| M3 / P1 — GitHub controls | Reviewable ruleset JSON; owner access | Apply reviewed rulesets when explicitly requested; enable/review private reporting, Dependabot alerts/security updates and full-SHA enforcement. [Observed settings](evidence/repository-review-20261114.md). Release immutability remains unenabled. |
+| M4 / P2 — Manual hosted checks | M1; committed workflows | Dispatch cache, startup, secret-history, cleanup-preview and actionlint-update checks only with applicable authorization. Preserve pending/incomplete status until executed. Keep current resource limits; two available run records are insufficient for tuning. |
+| M5 / P2 — Deferred test work | Later batch start | Publishing seam/offline tests; focused search/backup/bulk/PIN coverage review; inventory-consumer review and removal only if unused. Do not start this review now. Coverage report configuration does not authorize test execution. |
+| M6 / P1 — Dependency notices | Fresh production runtime graph | Reconcile the source/cached-runtime-family notice inventory against the release-generated runtime-components.txt inventory of exact transitive coordinates and retain additional upstream notices before distribution; no dependency resolution was authorized in this batch. |
+
+Portable campaign tools require the existing campaign-specific init script via `--verification-init`, plus an existing SDK and accessible Gradle cache. A fresh checkout does not contain that private harness setup; it now fails before device/build work if missing. Its reproducible harness export and runtime portability remain part of the later authorized test batch, not an executed pass.
+
+Keep screenshot protection, automatic PR checks, scheduled scans, attestations, extra style tools, commit-signature enforcement, a CLI workflow launcher and speculative source splitting excluded. Generated release notes, blame-ignore revisions and reproducibility comparisons remain deferred.

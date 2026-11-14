@@ -25,12 +25,15 @@ internal interface SnapshotWriteTransport {
 }
 
 /** Official HTTPS host only, bounded metadata, no redirects or platform exception text in UI. */
-internal class TelegramPublishing : TelegramSetupTransport, SnapshotWriteTransport {
+internal class TelegramPublishing internal constructor(
+    private val openConnection: (URL) -> HttpsURLConnection,
+) : TelegramSetupTransport, SnapshotWriteTransport {
+    constructor() : this({ it.openConnection() as HttpsURLConnection })
     private suspend fun api(token: String, method: String, parameters: Map<String, String> = emptyMap(),
         document: ByteArray? = null): JsonElement = withContext(Dispatchers.IO) {
         require(token.length <= 1024 && token.matches(Regex("[0-9]+:[A-Za-z0-9_-]+"))) { "رمز البوت غير صالح" }
         require(method in setOf("getMe", "getChat", "getChatMember", "getWebhookInfo", "getUpdates", "sendDocument", "editMessageMedia", "pinChatMessage"))
-        val connection = URL("https://api.telegram.org/bot$token/$method").openConnection() as HttpsURLConnection
+        val connection = openConnection(URL("https://api.telegram.org/bot$token/$method"))
         connection.instanceFollowRedirects = false; connection.connectTimeout = 15000; connection.readTimeout = 15000; connection.useCaches = false
         val started = System.nanoTime()
         fun check() { if (System.nanoTime() - started > 60_000_000_000L) throw TelegramFailure() }

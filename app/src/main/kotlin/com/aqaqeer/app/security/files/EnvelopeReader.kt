@@ -1,5 +1,6 @@
 package com.aqaqeer.app.security.files
 
+import com.aqaqeer.app.security.PasswordEnvelopeKdfV1
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
@@ -177,7 +178,7 @@ class EnvelopeReader(private val stagingRoot: File,
                 if (kdf != null || iterations != null || "salt" in binary) invalid()
             } else {
                 if (kdf == null || iterations == null || "salt" !in binary) invalid()
-                if (kdf != "PBKDF2-HMAC-SHA256" || iterations != "200000") throw EnvelopeException(EnvelopeError.UNSUPPORTED_FORMAT)
+                if (kdf != PasswordEnvelopeKdfV1.NAME || iterations != PasswordEnvelopeKdfV1.ITERATIONS.toString()) throw EnvelopeException(EnvelopeError.UNSUPPORTED_FORMAT)
             }
             val salt = binary["salt"] ?: byteArrayOf()
             val nonce = binary["nonce"] ?: invalid()
@@ -210,7 +211,7 @@ class EnvelopeReader(private val stagingRoot: File,
                 if (char.isHighSurrogate() && (index == normalized.size || !normalized[index++].isLowSurrogate()))
                     throw EnvelopeException(EnvelopeError.INVALID_CREDENTIAL)
             }
-            val spec = PBEKeySpec(normalized, salt, 200_000, 256)
+            val spec = PBEKeySpec(normalized, salt, PasswordEnvelopeKdfV1.ITERATIONS, 256)
             return try { SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256").generateSecret(spec).encoded }
             finally { spec.clearPassword() }
         } finally { normalized.fill('\u0000') }

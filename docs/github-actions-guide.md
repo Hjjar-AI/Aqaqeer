@@ -680,7 +680,7 @@ Review proposed updates, release notes and resulting hashes. Automated proposals
 | Trigger | Manual dispatch only | Workflow `on` declaration |
 | Module | `:app` | [Gradle settings](../settings.gradle.kts) |
 | Wrapper | Gradle 9.4.1 with distribution checksum | [Wrapper properties](../gradle/wrapper/gradle-wrapper.properties) |
-| Android plugin | AGP 9.2.1 | [Version catalog](../gradle/libs.versions.toml) |
+| Android plugin | AGP 9.5.1 | [Version catalog](../gradle/libs.versions.toml) |
 | Build runtime | Temurin JDK 21 | Workflow and [build documentation](build.md) |
 | Java/Kotlin target | 17 | [Module configuration](../app/build.gradle.kts) |
 | Compile/target/minimum SDK | 37.0 / 37 / 26 | Module configuration; explicit compile minor API level 0 |
@@ -693,14 +693,8 @@ These values illustrate inspection, not a requirement for other Android apps. JD
 
 ### Current action references
 
-| Component | Reviewed version | Pinned commit |
-| --- | --- | --- |
-| Checkout | v7.0.1 | `3d3c42e5aac5ba805825da76410c181273ba90b1` |
-| Java setup | v6.2.0 | `77dd5b2ce225ea11469928ac317850245a74ae78` |
-| Gradle setup | v6.4.1 | `8da46b539cd8fe6ab27ca75128919a18d757604c` |
-| Artifact upload | v7.0.2 | `cf430e030ddbb5b0abf93d22962f4752f3646cd9` |
+Current Aqaqeer action pins live in the [workflow files](../.github/workflows/repository.yml) and [shared Android setup](../.github/actions/setup-android/action.yml). Tutorial snippets below/above are dated examples from 2026-11-13, not a second current-pin registry. Pinning does not freeze Ubuntu packages, JDK patch selections or other downloads.
 
-The pins were resolved from the official repositories' public tag metadata for this workflow. Their immutable commit pages are [checkout](https://github.com/actions/checkout/commit/3d3c42e5aac5ba805825da76410c181273ba90b1), [setup-java](https://github.com/actions/setup-java/commit/77dd5b2ce225ea11469928ac317850245a74ae78), [gradle/actions](https://github.com/gradle/actions/commit/8da46b539cd8fe6ab27ca75128919a18d757604c) and [upload-artifact](https://github.com/actions/upload-artifact/commit/cf430e030ddbb5b0abf93d22962f4752f3646cd9). Pinning does not freeze Ubuntu packages, a major-only JDK selection or all downloaded dependencies.
 
 ### What each step accomplishes
 

@@ -1,5 +1,6 @@
 import com.android.build.api.artifact.SingleArtifact
 import java.io.File
+import java.util.ArrayDeque
 
 plugins {
     alias(libs.plugins.android.application)
@@ -7,6 +8,23 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt)
+}
+
+// Generated from the actual production runtime graph during an authorized release build.
+abstract class RuntimeNoticeInventory : DefaultTask() {
+    @get:org.gradle.api.tasks.Input
+    abstract val coordinates: org.gradle.api.provider.ListProperty<String>
+
+    @get:org.gradle.api.tasks.OutputDirectory
+    abstract val outputDirectory: org.gradle.api.file.DirectoryProperty
+
+    @org.gradle.api.tasks.TaskAction
+    fun writeInventory() {
+        val output = outputDirectory.file("runtime-components.txt").get().asFile
+        output.parentFile.mkdirs()
+        output.writeText("Production runtime components; license texts are bundled in assets.\n" +
+            coordinates.get().joinToString("\n", postfix = "\n"))
+    }
 }
 
 // Wrappers reserve before Gradle starts. Reading this tracked property is safe
@@ -65,6 +83,22 @@ android {
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
     }
+    val distributionApks = providers.gradleProperty("aqaqeer.releaseApkSet").orNull == "distribution"
+    if (distributionApks) {
+        require(gradle.startParameter.taskNames.all { it.contains("Release") }) {
+            "Distribution APK sets require explicit release-only tasks."
+        }
+        splits.abi {
+            isEnable = true
+            reset()
+            include("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
+            isUniversalApk = true
+        }
+    }
+    if (providers.gradleProperty("aqaqeer.unitCoverage").orNull == "true") {
+        buildTypes.getByName("debug").enableUnitTestCoverage = true
+        testCoverage.jacocoVersion = "0.8.16"
+    }
     // Arabic is selected locally; every bundle install must include its language resources.
     bundle { language { enableSplit = false } }
     lint {
@@ -105,11 +139,39 @@ val apkExportDirectory = providers.gradleProperty("aqaqeer.apkExportDir")
 require(apkExportDirectory.isAbsolute) { "APK export directory must be absolute." }
 val exportApks = providers.gradleProperty("aqaqeer.exportApks").orNull != "false"
 
+val runtimeNoticeInventory = tasks.register<RuntimeNoticeInventory>("generateRuntimeNoticeInventory") {
+    coordinates.set(configurations.named("standardReleaseRuntimeClasspath")
+        .flatMap { it.incoming.resolutionResult.rootComponent }
+        .map { root ->
+            val seen = mutableSetOf<org.gradle.api.artifacts.component.ComponentIdentifier>()
+            val pending = ArrayDeque<org.gradle.api.artifacts.result.ResolvedComponentResult>()
+            val values = sortedSetOf<String>()
+            pending.add(root)
+            while (pending.isNotEmpty()) {
+                val component = pending.removeFirst()
+                if (!seen.add(component.id)) continue
+                val id = component.id as? org.gradle.api.artifacts.component.ModuleComponentIdentifier
+                if (id != null) values.add("${id.group}:${id.module}:${id.version}")
+                component.dependencies.forEach { dependency ->
+                    require(dependency is org.gradle.api.artifacts.result.ResolvedDependencyResult) {
+                        "Cannot inventory an unresolved production dependency."
+                    }
+                    pending.add(dependency.selected)
+                }
+            }
+            values.toList()
+        })
+    outputDirectory.set(layout.buildDirectory.dir("generated/runtime-notices"))
+}
+
 androidComponents {
     beforeVariants(selector().withBuildType("release")) { variant ->
         if (variant.productFlavors.any { it.second == "demo" }) variant.enable = false
     }
     onVariants(selector().all()) { variant ->
+        if (variant.buildType == "release") {
+            variant.sources.assets?.addGeneratedSourceDirectory(runtimeNoticeInventory, RuntimeNoticeInventory::outputDirectory)
+        }
         if (exportApks) {
             val variantTaskName = variant.name.replaceFirstChar { it.uppercaseChar() }
             val exportApk = tasks.register<Copy>("export${variantTaskName}Apk") {

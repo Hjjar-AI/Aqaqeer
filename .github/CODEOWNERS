@@ -1,0 +1,10 @@
+/.github/ @Hjjar-AI
+/gradle/ @Hjjar-AI
+/*gradle* @Hjjar-AI
+/app/build.gradle.kts @Hjjar-AI
+/app/schemas/ @Hjjar-AI
+/tools/sign*.py @Hjjar-AI
+/docs/crypto/ @Hjjar-AI
+/app/src/main/kotlin/com/aqaqeer/app/security/ @Hjjar-AI
+/app/src/main/kotlin/com/aqaqeer/app/admin/PinSecurity.kt @Hjjar-AI
+/app/src/main/kotlin/com/aqaqeer/app/sync/TelegramPublishing.kt @Hjjar-AI

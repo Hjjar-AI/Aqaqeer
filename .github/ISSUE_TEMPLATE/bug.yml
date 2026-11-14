@@ -1,0 +1,13 @@
+name: Bug report
+description: Describe a bug without private pharmacy information
+body:
+  - type: markdown
+    attributes:
+      value: Never paste PINs, tokens, passwords, connection files/links, private keys or backups. Report security vulnerabilities privately using the Security tab.
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: Explain the problem or requested behavior. For bugs, include steps, app version and Android version.
+    validations:
+      required: true

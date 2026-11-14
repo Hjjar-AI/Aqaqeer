@@ -76,7 +76,7 @@ def inspect_elf(data, abi):
 
 
 def main():
-    directory = Path('ci-output/release')
+    directory = Path(os.environ.get('CI_RELEASE_INSPECTION_DIRECTORY', 'ci-output/release'))
     directory.mkdir(parents=True, exist_ok=True)
     lines = ['## Release APK inspection', '']
     result = {}
@@ -121,7 +121,8 @@ def main():
                 raise ValueError('Corrupt APK entry: ' + corrupt)
             names = set(apk.namelist())
             required = {'AndroidManifest.xml', 'classes.dex', 'resources.arsc',
-                        'assets/licenses/NotoSansArabic-OFL.txt', 'assets/SQLCipher-Android-LICENSE.txt'}
+                        'assets/licenses/NotoSansArabic-OFL.txt', 'assets/SQLCipher-Android-LICENSE.txt',
+                        'assets/Apache-2.0.txt', 'assets/THIRD-PARTY-NOTICES.txt', 'assets/runtime-components.txt'}
             if not required <= names:
                 raise ValueError('Release is missing required code/resources/license entries')
             if any('telegram-test-config' in name or name.endswith('/v1-vectors.json') for name in names):
@@ -132,7 +133,15 @@ def main():
                     if abi not in MACHINES:
                         raise ValueError('Unexpected packaged native ABI: ' + abi)
                     libraries[name] = inspect_elf(apk.read(name), abi)
-            for abi in ('armeabi-v7a', 'arm64-v8a', 'x86_64'):
+            expected_abi = os.environ.get('CI_RELEASE_ABI', 'universal')
+            required_abis = tuple(MACHINES) if expected_abi == 'universal' else (expected_abi,)
+            if any(abi not in MACHINES for abi in required_abis):
+                raise ValueError('Invalid expected ABI')
+            actual_abis = {name.split('/')[1] for name in libraries}
+            if actual_abis != set(required_abis):
+                raise ValueError('Native ABI set differs from the selected output')
+            result['architecture'] = expected_abi
+            for abi in required_abis:
                 if f'lib/{abi}/libsqlcipher.so' not in libraries:
                     raise ValueError('SQLCipher is missing a required runtime ABI: ' + abi)
         result['nativeLoadAlignments'] = libraries

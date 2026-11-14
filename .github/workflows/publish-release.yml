@@ -31,6 +31,9 @@ jobs:
     timeout-minutes: 5
     permissions:
       contents: write
+    concurrency:
+      group: aqaqeer-version-reservations
+      cancel-in-progress: false
     steps:
       - name: Check out repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -67,7 +70,7 @@ jobs:
           # A failed packaging retry must consume a new code on a new dispatch.
           test "$GITHUB_RUN_ATTEMPT" = 1
           ./gradlew --no-daemon --console=plain --no-configuration-cache \
-            -Paqaqeer.exportApks=false :app:assembleStandardRelease \
+            -Paqaqeer.exportApks=false -Paqaqeer.releaseApkSet=distribution :app:assembleStandardRelease \
             2>&1 | tee ci-output/release/gradle-release.log
       - name: Retain unsigned build and shrinker evidence for signing
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -123,7 +126,7 @@ jobs:
           AQAQEER_RELEASE_CERT_SHA256: ${{ vars.AQAQEER_RELEASE_CERT_SHA256 }}
           AQAQEER_EXPECTED_RELEASE_CODE: ${{ inputs.version_code }}
         run: python3 tools/sign_release.py --output-directory release-files
-      - name: Publish only the signed inspected APK and public metadata
+      - name: Publish signed inspected APKs, mappings and public metadata
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
@@ -140,8 +143,10 @@ jobs:
           directory="release-files/v0.0.$CI_RELEASE_CODE"
           (cd "$directory" && sha256sum --check SHA256SUMS.txt)
           {
-            printf 'Signed standard release APK for com.aqaqeer.app. Version 0.0.%s (code %s).\n\n' "$CI_RELEASE_CODE" "$CI_RELEASE_CODE"
-            printf 'Source: %s\nBuild: %s/%s/actions/runs/%s\n\n' "$GITHUB_SHA" "$GITHUB_SERVER_URL" "$GITHUB_REPOSITORY" "$GITHUB_RUN_ID"
+            printf 'Signed standard release APKs (universal, ARM32, ARM64) for com.aqaqeer.app. Version 0.0.%s (code %s).\n\n' "$CI_RELEASE_CODE" "$CI_RELEASE_CODE"
+            printf 'Source: %s\nTemporary build-run link: %s/%s/actions/runs/%s\n\n' "$GITHUB_SHA" "$GITHUB_SERVER_URL" "$GITHUB_REPOSITORY" "$GITHUB_RUN_ID"
+            python3 -c 'import json,sys; print("Signing certificate SHA-256: " + json.load(open(sys.argv[1]))["certificateSha256"])' "$directory/release-info.json"
+            printf '\nVerify: apksigner verify --print-certs <downloaded.apk>\n\n'
             printf 'Signature/certificate, package/version, non-debuggable manifest, shrinker evidence, resources and native alignment inspected. Runtime and installed-update acceptance are separate.\n'
           } > release-notes.md
           gh release create "v0.0.$CI_RELEASE_CODE" "$directory"/* \
