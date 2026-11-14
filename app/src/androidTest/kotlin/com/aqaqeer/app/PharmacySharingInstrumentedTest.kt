@@ -36,8 +36,8 @@ class PharmacySharingInstrumentedTest {
         val secure = KeystoreSecureStore(context, namespace)
         val factory = DatabaseFactory(context, namespace)
         val requirements = SnapshotRequirementsStore(secure)
-        val repository = CatalogRepository(factory, secure, requirements, com.aqaqeer.app.maintenance.MaintenanceStage(context))
-        val admin = AdminRepository(factory, requirements, secure, com.aqaqeer.app.maintenance.MaintenanceStage(context))
+        val repository = CatalogRepository(factory, secure, requirements, com.aqaqeer.app.maintenance.MaintenanceStage(context), com.aqaqeer.app.data.DisplayPreferences(context))
+        val admin = AdminRepository(factory, requirements, secure, com.aqaqeer.app.maintenance.MaintenanceStage(context), com.aqaqeer.app.admin.PinThrottle(context, secure), com.aqaqeer.app.data.DisplayPreferences(context))
         suspend fun ready() = withTimeout(15000) { repository.observe().first { it !is CatalogState.Loading } as CatalogState.Ready }
         suspend fun create() { ready(); admin.create("صيدلية الاختبار", "Asia/Damascus", "المحرر", "الرئيسي", "123456".toCharArray(), "١٢٣٤٥٦".toCharArray()) }
         fun sharing(remote: Remote) = PharmacySharing(admin, secure, requirements,
@@ -108,17 +108,16 @@ class PharmacySharingInstrumentedTest {
         SnapshotRefreshRepository(reader.factory, reader.secure, SnapshotReadClient(remote, EnvelopeReader(reader.root)), reader.requirements).refresh()
         assertEquals("shared update", reader.ready().catalog.medications.single().note)
         val pinClock = java.time.Clock.fixed(Instant.now(), java.time.ZoneOffset.UTC)
-        val pinAdmin = AdminRepository(reader.factory, reader.requirements, reader.secure, com.aqaqeer.app.maintenance.MaintenanceStage(reader.context), pinClock)
+        val pinAdmin = AdminRepository(reader.factory, reader.requirements, reader.secure, com.aqaqeer.app.maintenance.MaintenanceStage(reader.context), com.aqaqeer.app.admin.PinThrottle(reader.context, reader.secure), com.aqaqeer.app.data.DisplayPreferences(reader.context), pinClock)
         var failed = false
         try { pinAdmin.promote("000000".toCharArray(), "محرر ثانٍ") } catch (_: Exception) { failed = true }
         assertTrue(failed)
         val check = reader.factory.open()
         try { assertEquals(1, check.catalogDao().control()!!.failedPins) } finally { check.close() }
         failed = false
-        try { AdminRepository(reader.factory, reader.requirements, reader.secure, com.aqaqeer.app.maintenance.MaintenanceStage(reader.context), pinClock).promote("123456".toCharArray(), "محرر ثانٍ") }
+        try { AdminRepository(reader.factory, reader.requirements, reader.secure, com.aqaqeer.app.maintenance.MaintenanceStage(reader.context), com.aqaqeer.app.admin.PinThrottle(reader.context, reader.secure), com.aqaqeer.app.data.DisplayPreferences(reader.context), pinClock).promote("123456".toCharArray(), "محرر ثانٍ") }
         catch (_: Exception) { failed = true }; assertTrue(failed)
-        AdminRepository(reader.factory, reader.requirements, reader.secure, com.aqaqeer.app.maintenance.MaintenanceStage(reader.context),
-            java.time.Clock.fixed(pinClock.instant().plusSeconds(3), java.time.ZoneOffset.UTC))
+        AdminRepository(reader.factory, reader.requirements, reader.secure, com.aqaqeer.app.maintenance.MaintenanceStage(reader.context), com.aqaqeer.app.admin.PinThrottle(reader.context, reader.secure), com.aqaqeer.app.data.DisplayPreferences(reader.context), java.time.Clock.fixed(pinClock.instant().plusSeconds(3), java.time.ZoneOffset.UTC))
             .promote("123456".toCharArray(), "محرر ثانٍ")
         assertTrue(reader.ready().admin)
         val sharedMed = reader.ready().catalog.medications.single()

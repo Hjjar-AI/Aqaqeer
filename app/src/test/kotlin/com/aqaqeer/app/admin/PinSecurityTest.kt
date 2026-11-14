@@ -18,7 +18,7 @@ class PinSecurityTest {
     }
     @Test fun invalidDigitsLengthsAndIterationCountsReject() {
         listOf("", "123", " 1234", "1234 ", "12a456").forEach {
-            assertThrows(IllegalArgumentException::class.java) { PinSecurity.create(it.toCharArray()) }
+            assertThrows(AdminProblem::class.java) { PinSecurity.create(it.toCharArray()) }
         }
         assertThrows(IllegalArgumentException::class.java) {
             PinSecurity.matches("123456".toCharArray(), PinVerifier("AA==", 1, "AA=="))

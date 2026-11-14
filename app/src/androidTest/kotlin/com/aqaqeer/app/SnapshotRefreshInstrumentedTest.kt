@@ -40,7 +40,7 @@ class SnapshotRefreshInstrumentedTest {
     }
     private val factory = DatabaseFactory(context, namespace)
     private val requirements = SnapshotRequirementsStore(store)
-    private val catalog = CatalogRepository(factory, store, requirements, com.aqaqeer.app.maintenance.MaintenanceStage(context))
+    private val catalog = CatalogRepository(factory, store, requirements, com.aqaqeer.app.maintenance.MaintenanceStage(context), com.aqaqeer.app.data.DisplayPreferences(context))
     private val pending = PendingConnectionStore(store)
     private val active = PendingConnectionStore(store, "active-connection")
     private val document = SnapshotDocument(F.groupId, 12, "public-file", "public-unique", SnapshotPublication(1, F.publishId, F.time))
@@ -167,7 +167,7 @@ class SnapshotRefreshInstrumentedTest {
         }.error)
         assertEquals(original.confirmedPayloadJson,state().confirmedPayloadJson)
         assertEquals(original.lastSuccessfulSyncAt,state().lastSuccessfulSyncAt)
-        assertTrue(ready(CatalogRepository(factory,store,SnapshotRequirementsStore(store),com.aqaqeer.app.maintenance.MaintenanceStage(context))).requiresUpdate)
+        assertTrue(ready(CatalogRepository(factory, store, SnapshotRequirementsStore(store), com.aqaqeer.app.maintenance.MaintenanceStage(context), com.aqaqeer.app.data.DisplayPreferences(context))).requiresUpdate)
         assertEquals(RefreshError.UPDATE_REQUIRED,rejects<RefreshException> { refresh(transport()).refresh() }.error)
         assertEquals(SnapshotRequirements(2,100),requirements.read(F.pharmacyId)); assertEquals(F.catalog(),ready().catalog)
     }

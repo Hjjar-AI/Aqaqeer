@@ -37,7 +37,7 @@ class ConnectionVerificationInstrumentedTest {
         override fun write(name: String, value: ByteArray) { protected.write(name,value); afterWrite(name) }
     }
     private val factory = DatabaseFactory(context,namespace)
-    private val catalog = CatalogRepository(factory,store,SnapshotRequirementsStore(store),com.aqaqeer.app.maintenance.MaintenanceStage(context))
+    private val catalog = CatalogRepository(factory, store, SnapshotRequirementsStore(store), com.aqaqeer.app.maintenance.MaintenanceStage(context), com.aqaqeer.app.data.DisplayPreferences(context))
     private val pending = PendingConnectionStore(store)
     private val requirements = SnapshotRequirementsStore(store)
     private val document = SnapshotDocument(F.groupId,12,"public-file","public-unique",SnapshotPublication(1,F.publishId,F.time))

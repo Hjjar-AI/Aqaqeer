@@ -40,7 +40,7 @@ class ReaderActivationInstrumentedTest {
     }
     private val factory = DatabaseFactory(context, namespace)
     private val requirements = SnapshotRequirementsStore(store)
-    private val catalog = CatalogRepository(factory, store, requirements, com.aqaqeer.app.maintenance.MaintenanceStage(context))
+    private val catalog = CatalogRepository(factory, store, requirements, com.aqaqeer.app.maintenance.MaintenanceStage(context), com.aqaqeer.app.data.DisplayPreferences(context))
     private val pending = PendingConnectionStore(store)
     private val active = PendingConnectionStore(store, "active-connection")
     private val document = SnapshotDocument(F.groupId, 12, "public-file", "public-unique", SnapshotPublication(1, F.publishId, F.time))
@@ -98,7 +98,7 @@ class ReaderActivationInstrumentedTest {
             try { assertArrayEquals(F.key, secrets.snapshotKey); assertEquals(F.token, secrets.botToken) }
             finally { secrets.snapshotKey.fill(0) }
         }
-        val reopened = CatalogRepository(DatabaseFactory(context,namespace),store,SnapshotRequirementsStore(store),com.aqaqeer.app.maintenance.MaintenanceStage(context))
+        val reopened = CatalogRepository(DatabaseFactory(context,namespace), store, SnapshotRequirementsStore(store), com.aqaqeer.app.maintenance.MaintenanceStage(context), com.aqaqeer.app.data.DisplayPreferences(context))
         assertEquals(current, ready(reopened))
         val check = factory.open()
         try {
@@ -254,7 +254,7 @@ class ReaderActivationInstrumentedTest {
         assumeFalse(BuildConfig.IS_DEMO)
         val info=stage(); repository().activate(info.id)
         requirements.observe(F.pharmacyId,SnapshotCompatibility(2,100,1))
-        val reopened=CatalogRepository(DatabaseFactory(context,namespace),store,SnapshotRequirementsStore(store),com.aqaqeer.app.maintenance.MaintenanceStage(context))
+        val reopened=CatalogRepository(DatabaseFactory(context,namespace), store, SnapshotRequirementsStore(store), com.aqaqeer.app.maintenance.MaintenanceStage(context), com.aqaqeer.app.data.DisplayPreferences(context))
         val current=ready(reopened)
         assertEquals(F.catalog(),current.catalog); assertTrue(current.requiresUpdate)
         assertEquals(checkedAt,current.lastSuccessfulRefreshAt); assertEquals(F.time,current.publishedAt)

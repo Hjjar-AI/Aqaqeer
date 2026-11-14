@@ -24,7 +24,7 @@ class CreationUiTest {
         if (created) {
             val context = compose.activity.applicationContext
             val store = KeystoreSecureStore(context)
-            runBlocking { AdminRepository(DatabaseFactory(context), SnapshotRequirementsStore(store), store, com.aqaqeer.app.maintenance.MaintenanceStage(context)).leave("صيدلية واجهة الاختبار", true) }
+            runBlocking { AdminRepository(DatabaseFactory(context), SnapshotRequirementsStore(store), store, com.aqaqeer.app.maintenance.MaintenanceStage(context), com.aqaqeer.app.admin.PinThrottle(context, store), com.aqaqeer.app.data.DisplayPreferences(context)).leave("صيدلية واجهة الاختبار", true) }
         }
     }
     @Test fun createOfflineThenAddMedicineAndRetainItAfterActivityRecreation() {

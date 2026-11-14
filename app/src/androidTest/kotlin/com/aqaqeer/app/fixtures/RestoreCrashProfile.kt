@@ -129,8 +129,8 @@ internal class RestoreCrashProfile(val base: Context, val root: File, val namesp
     val factory = DatabaseFactory(context, namespace)
     val requirements = SnapshotRequirementsStore(secure)
     val clock: Clock = Clock.fixed(Instant.parse("2026-11-11T12:00:00Z"), ZoneOffset.UTC)
-    val admin = AdminRepository(factory, requirements, secure, MaintenanceStage(context), clock)
-    val repository = CatalogRepository(factory, secure, requirements, MaintenanceStage(context))
+    val admin = AdminRepository(factory, requirements, secure, MaintenanceStage(context), com.aqaqeer.app.admin.PinThrottle(context, secure), com.aqaqeer.app.data.DisplayPreferences(context), clock)
+    val repository = CatalogRepository(factory, secure, requirements, MaintenanceStage(context), com.aqaqeer.app.data.DisplayPreferences(context))
     val backups = BackupRepository(context, factory, secure, admin, requirements, clock,
         openDatabase = {
             factory.open().also { database ->

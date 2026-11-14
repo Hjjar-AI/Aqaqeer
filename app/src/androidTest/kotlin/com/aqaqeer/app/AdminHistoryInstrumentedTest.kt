@@ -17,17 +17,18 @@ class AdminHistoryInstrumentedTest {
     @After fun cleanup() { if (::p.isInitialized) p.close() }
     @Test fun staleBulkPreviewAndMissingTargetsRollBackEveryRow(): Unit = runBlocking {
         val a = p.medication("A"); val b = p.medication("B"); val section = p.ready().catalog.sections.single().id
-        val expected = mapOf(a.id to AvailabilityStatus.UNKNOWN, b.id to AvailabilityStatus.UNKNOWN)
+        val expected = mapOf(a.id to AvailabilityStatus.AVAILABLE, b.id to AvailabilityStatus.AVAILABLE)
         p.admin.availability(a.id, section, AvailabilityStatus.LOW)
         val before = p.admin.transaction { Triple(it.catalog(), it.pending(), it.historyCount()) }
-        assertThrows(IllegalStateException::class.java) { runBlocking { p.admin.bulkAvailability(expected.keys, section, AvailabilityStatus.OUT, expected) } }
+        assertThrows(AdminProblem::class.java) { runBlocking { p.admin.bulkAvailability(expected.keys, section, AvailabilityStatus.OUT, expected) } }
         assertEquals(before, p.admin.transaction { Triple(it.catalog(), it.pending(), it.historyCount()) })
-        assertThrows(IllegalArgumentException::class.java) { runBlocking { p.admin.bulkAvailability(setOf(a.id, "missing"), section, AvailabilityStatus.OUT) } }
+        assertThrows(AdminProblem::class.java) { runBlocking { p.admin.bulkAvailability(setOf(a.id, "missing"), section, AvailabilityStatus.OUT) } }
         p.admin.bulkAvailability(setOf(a.id, b.id), section, AvailabilityStatus.OUT)
         assertTrue(p.ready().catalog.availability.all { it.status == AvailabilityStatus.OUT })
     }
     @Test fun unchangedUnknownSaveCreatesNoHistoryOrPendingWork(): Unit = runBlocking {
         val a = p.medication(); val section = p.ready().catalog.sections.single().id
+        p.admin.transaction { it.clearAvailability() }
         val before = p.admin.transaction { it.historyCount() to it.pending() }
         p.admin.availability(a.id, section, AvailabilityStatus.UNKNOWN)
         assertEquals(before, p.admin.transaction { it.historyCount() to it.pending() })
@@ -38,9 +39,9 @@ class AdminHistoryInstrumentedTest {
         val a = p.medication(); p.admin.saveMedication(a.copy(categoryId = category.id))
         p.admin.delete("category", category.id)
         assertEquals(CatalogSeeds.UNCATEGORIZED_ID, p.ready().catalog.medications.single().categoryId)
-        assertThrows(IllegalArgumentException::class.java) { runBlocking { p.admin.delete("category", CatalogSeeds.UNCATEGORIZED_ID) } }
+        assertThrows(AdminProblem::class.java) { runBlocking { p.admin.delete("category", CatalogSeeds.UNCATEGORIZED_ID) } }
         val section = p.ready().catalog.sections.single()
-        assertThrows(IllegalArgumentException::class.java) { runBlocking { p.admin.delete("section", section.id, section.nameAr) } }
+        assertThrows(AdminProblem::class.java) { runBlocking { p.admin.delete("section", section.id, section.nameAr) } }
     }
     @Test fun historyCombinesTimezoneEditorAndMedicationFiltersAndRedactsVerifiers(): Unit = runBlocking {
         val med = p.medication(); val id = p.ready().catalog.pharmacy!!.pharmacyId

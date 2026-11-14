@@ -5,6 +5,7 @@ import android.graphics.pdf.PdfRenderer
 import android.os.ParcelFileDescriptor
 import androidx.test.platform.app.InstrumentationRegistry
 import com.aqaqeer.app.data.*
+import com.aqaqeer.app.admin.AdminProblem
 import com.aqaqeer.app.fixtures.*
 import com.aqaqeer.app.reports.*
 import kotlinx.coroutines.*
@@ -30,10 +31,10 @@ class CsvReportsInstrumentedTest {
     private fun importer() = CsvImportRepository(p.admin, DocumentOutput(p.context), p.context)
     private fun reports() = ReportRepository(p.admin, DocumentOutput(p.context), PdfReports(p.context))
     @Test fun contentProviderImportCommitsValidRowsAndRetainsFailedRowResults(): Unit = runBlocking {
-        val repo = importer(); val session = repo.selectValid(repo.load(document("nameEn,strength\nGood,10 mg\nBad,")))
+        val repo = importer(); val session = repo.selectValid(repo.load(document("genericEn,strength\nGood,10 mg\nBad,")))
         val results = mutableListOf<CsvRowResult>(); repo.commit(session) { results += it }
         assertEquals(listOf(CsvOutcome.CREATED, CsvOutcome.FAILED), results.map { it.outcome })
-        assertEquals(listOf("Good"), p.ready().catalog.medications.map { it.nameEn })
+        assertEquals(listOf("Good"), p.ready().catalog.medications.map { it.genericEn })
         val state = CsvImportState(session, results.associateBy { it.number }, true)
         val retry = document(); repo.exportResults(retry, state, true)
         val table = p.context.contentResolver.openInputStream(retry)!!.use { CsvCodec.read(it) {} }
@@ -52,24 +53,25 @@ class CsvReportsInstrumentedTest {
         val results = mutableListOf<CsvRowResult>(); repo.commit(session) { results += it }
         assertEquals(CsvOutcome.FAILED, results.single().outcome)
         assertEquals("concurrent", p.ready().catalog.medications.single().note)
-        val taxonomy = repo.load(document("nameEn,strength,categoryAr\nAnother,10 mg,جديد"))
+        val taxonomy = repo.load(document("genericEn,strength,categoryAr\nAnother,10 mg,جديد"))
         assertFalse(repo.selectValid(taxonomy).rows.single().decision.selected)
         val approved = repo.revise(taxonomy, 2, taxonomy.rows.single().decision.copy(selected = true, approveTaxonomy = true))
-        repo.commit(approved) { assertEquals(CsvOutcome.CREATED, it.outcome) }
+        repo.commit(approved) { assertEquals(CsvOutcome.CREATED, it.single().outcome) }
         assertTrue(p.ready().catalog.categories.any { it.nameAr == "جديد" })
     }
-    @Test fun cancellationBetweenRowsRetainsCompletedOutcomeAndDoesNotReplay(): Unit = runBlocking {
-        val repo = importer(); val session = repo.selectValid(repo.load(document("nameEn,strength\nFirst,10 mg\nSecond,20 mg")))
+    @Test fun cancellationAfterChunkCallbackRetainsAllCommittedRows(): Unit = runBlocking {
+        val repo = importer(); val session = repo.selectValid(repo.load(document("genericEn,strength\nFirst,10 mg\nSecond,20 mg")))
         val results = mutableListOf<CsvRowResult>()
         val job = launch { repo.commit(session) { results += it; this@launch.cancel() } }
         job.join()
-        assertEquals(1, results.size); assertEquals(CsvOutcome.CREATED, results.single().outcome)
-        assertEquals(listOf("First"), p.ready().catalog.medications.map { it.nameEn })
+        assertEquals(2, results.size); assertTrue(results.all { it.outcome == CsvOutcome.CREATED })
+        assertEquals(listOf("First", "Second"), p.ready().catalog.medications.map { it.genericEn })
     }
     @Test fun reportsDefaultToPublishedAndOutNeverIncludesUnknown(): Unit = runBlocking {
         val a = p.medication("Published"); p.medication("Unknown")
         val section = p.ready().catalog.sections.single().id
         p.admin.availability(a.id, section, AvailabilityStatus.OUT)
+        p.admin.transaction { dao -> dao.deleteAvailability(dao.availability().filter { it.medicationId != a.id }) }
         p.publish(SuiteRemote()); p.admin.saveMedication(a.copy(nameEn = "Draft change"))
         val repo = reports(); val published = repo.capture(ReportRequest(ReportPreset.OUT, section))
         assertEquals(listOf("Published"), published.medications.map { it.nameEn })
@@ -111,7 +113,7 @@ class CsvReportsInstrumentedTest {
     @Test fun authorizationLossBlocksExternalOutputAndImportBeforeFileAccess(): Unit = runBlocking {
         val snapshot = reports().capture(ReportRequest(ReportPreset.FULL, includeUnpublished = true))
         p.admin.transaction { it.updateDeviceIdentity(it.deviceIdentity()!!.copy(adminMode = false)) }
-        assertThrows(IllegalStateException::class.java) { runBlocking { reports().csv(document(), snapshot) } }
-        assertThrows(IllegalStateException::class.java) { runBlocking { importer().load(Uri.parse("content://missing/file")) } }
+        assertThrows(AdminProblem::class.java) { runBlocking { reports().csv(document(), snapshot) } }
+        assertThrows(AdminProblem::class.java) { runBlocking { importer().load(Uri.parse("content://missing/file")) } }
     }
 }

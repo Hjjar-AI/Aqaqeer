@@ -34,8 +34,8 @@ internal class SuiteProfile : AutoCloseable {
     val factory = DatabaseFactory(context, namespace)
     val requirements = SnapshotRequirementsStore(secure)
     val clock: Clock = Clock.fixed(Instant.parse("2026-11-11T12:00:00Z"), ZoneOffset.UTC)
-    val repository = CatalogRepository(factory, secure, requirements, com.aqaqeer.app.maintenance.MaintenanceStage(context))
-    val admin = AdminRepository(factory, requirements, secure, com.aqaqeer.app.maintenance.MaintenanceStage(context), clock)
+    val repository = CatalogRepository(factory, secure, requirements, com.aqaqeer.app.maintenance.MaintenanceStage(context), com.aqaqeer.app.data.DisplayPreferences(context))
+    val admin = AdminRepository(factory, requirements, secure, com.aqaqeer.app.maintenance.MaintenanceStage(context), com.aqaqeer.app.admin.PinThrottle(context, secure), com.aqaqeer.app.data.DisplayPreferences(context), clock)
     val backups = BackupRepository(context, factory, secure, admin, requirements, clock)
     suspend fun ready(): CatalogState.Ready = withTimeout(20000) { repository.observe().first { it !is CatalogState.Loading } as CatalogState.Ready }
     suspend fun create() {

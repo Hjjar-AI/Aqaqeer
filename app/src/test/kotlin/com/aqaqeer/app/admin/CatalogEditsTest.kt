@@ -54,6 +54,6 @@ class CatalogEditsTest {
         val first = PinSecurity.create("١٢٣٤٥٦".toCharArray()); val second = PinSecurity.create("123456".toCharArray())
         assertNotEquals(first.salt, second.salt); assertNotEquals(first.hash, second.hash)
         assertTrue(PinSecurity.matches("123456".toCharArray(), first)); assertFalse(PinSecurity.matches("123457".toCharArray(), first))
-        assertThrows(IllegalArgumentException::class.java) { PinSecurity.create("123".toCharArray()) }
+        assertThrows(AdminProblem::class.java) { PinSecurity.create("123".toCharArray()) }
     }
 }
