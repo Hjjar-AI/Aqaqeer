@@ -2,7 +2,7 @@
 
 Arabic RTL Android app for medication availability by pharmacy section, with offline viewing. No patients, prescribing, quantities, billing or inventory transactions.
 
-Implemented: offline creation and administration, catalog editing, real Telegram publication/reconciliation, encrypted connection sharing, backup/restore, reminders, credential maintenance and Compose workflows. Current builds, selected hosted CI, demo startup/refresh and browsing checks are user-reported complete; independent evidence and remaining limits are recorded separately. See [current evidence](docs/validation.md) and [remaining work](docs/plan.md); production signing/update continuity and remaining functional/recovery checks remain open.
+Implemented: offline creation and administration, catalog editing, real Telegram publication/reconciliation, encrypted connection sharing, backup/restore, reminders, credential maintenance and Compose workflows. Hosted JVM/compilation and selected API-29/35 Android checks passed; broader demo startup/refresh and browsing also have user-reported completion. See [current evidence](docs/validation.md) and [remaining work](docs/plan.md); production signing/update continuity and remaining functional/recovery checks remain open.
 
 ## Download and verify
 

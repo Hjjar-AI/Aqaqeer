@@ -728,19 +728,15 @@ The expected conventional names are `app-standard-debug.apk` and `app-demo-debug
 
 ### Versioning and installation limits
 
-The wrapper's counter lives in ignored `local/versioning/`. A fresh hosted checkout starts at code 1 under the normal helper rules. The workflow does not override the reserved property, reset a local counter, or persist an authoritative counter across runners. The artifact's run number labels the download independently of the app version.
+The local wrapper preserves its locked counter in ignored `local/versioning/`. Distribution workflows 06/10/11 first reserve a shared `android-build-N` code; the wrapper honors that reservation without resetting local state. Debug distribution uses a separate permanent `debug-signing` identity, while production uses `release-signing`. Run numbers label artifacts and release tags independently of the embedded app version.
 
-The workflow also does not persist an Android debug signing key. Fresh runners can therefore produce different debug signing identities. These APKs do not establish reliable update continuity with one another or with locally signed previews. Standard debug and demo debug have different package identities; neither is the isolated preview package used for earlier local deliveries. Do not uninstall or clear an existing installation to bypass a mismatch.
-
-The separate production publisher, workflow 11, now defines explicit version reservations and permanent-key signing. Its [complete build/signing/release walkthrough](build.md#signed-release-apks-local-and-github) covers setup, local versus hosted codes, GitHub secrets and publication choices. The debug workflow above retains its own numbering/signing limits. A cache is not a reliable release authority: it can be evicted, be unavailable to a branch or be written concurrently.
+Standard debug, demo debug, production and isolated previews have different package identities. Update continuity requires the same package and signer; never uninstall/clear an existing pharmacy to bypass a conflict. A cache can be evicted or written concurrently and is not a release-number authority. The [build/signing guide](build.md#signed-release-apks-local-and-github) owns exact reservation, key and publication commands.
 
 ### What is implemented and what remains unverified
 
-The source workflow defines manual builds with a standard/demo/both selector, prerequisites and an APK upload for each selected flavor job. It contains no push/PR trigger, deployment, release publishing, test run or lint step. The optional examples elsewhere in this guide do not enable those features.
+The build workflow has a manual standard/demo/both selector, prerequisite setup, shared reservation and isolated signing/artifact jobs. It contains no push/PR trigger, test run or lint step. Separate manual workflows provide dependency/security/quality checks, JVM tests and compilation, selected emulators, release inspection and publication. Cleanup alone also has a daily seven-day schedule; by owner choice it deletes completed runs and their artifacts/APKs, while GitHub Releases survive.
 
-YAML/source checks establish configuration structure. Build/runtime results and their source revisions belong in [validation](validation.md#ci-quality-security-and-diagnostics--2026-11-13); configuration alone does not establish execution success.
-
-Aqaqeer now also defines separate manual [quality](../.github/workflows/quality.yml) and [security](../.github/workflows/security.yml) workflows: actionlint checks workflow correctness, production-only lint produces HTML/XML reports, and CodeQL analyzes both Java/Kotlin production flavors plus Python and Actions, with separate result categories. Java/Kotlin and Python use extended security queries. Summaries record source/run identity, results, findings or APK checksums; narrow diagnostics survive ordinary failures where the runner remains available. The separate manual [tests and compilation workflow](../.github/workflows/verification.yml) now adds standard/demo JVM tests, debug/instrumentation and standard release compilation, plus public JDK crypto-vector verification. That workflow runs no device tests. A separate manual [emulator workflow](../.github/workflows/emulator.yml) now selects six offline invocations per API 29/35 emulator and retains short UI video/failure screenshots; [cleanup](../.github/workflows/cleanup-evidence.yml) now runs daily with seven-day retention and keeps a manual preview/clear button. By explicit owner choice, it deletes completed runs including logs and workflow artifacts/APKs; GitHub Release assets survive. Physical-phone campaigns remain excluded. The newer manual dependency, release-output and repository-integrity workflows add the checks described in [free-tier controls](ci-free-tier.md); artifacts upload automatically with one-day retention, subject to GitHub storage quota; the owner confirmed no saved payment method. The [build documentation](build.md#manual-quality-and-security-workflows) is canonical for their commands, permissions and limits; completed checks and remaining work are recorded in [validation](validation.md) and [plan](plan.md).
+The [build workflow table](build.md#manual-quality-and-security-workflows) owns commands, permissions and bounds; [CI controls](ci-free-tier.md) owns storage/billing/evidence limits. [Validation](validation.md#current-hosted-evidence--2026-11-14) records inspected results and [plan](plan.md) the remaining work. Teaching examples elsewhere do not enable additional workflows or grant execution authorization.
 
 ## Adapt the design to other projects
 
@@ -798,15 +794,15 @@ No. Workflow artifacts and release assets are separate delivery mechanisms. Choo
 
 ### Do I need secrets for a debug Android build?
 
-Not usually for public dependencies and ordinary debug signing. Private repositories or dependencies may require authentication. Production signing and deployment have separate credential requirements; do not add them to a basic debug workflow by default.
+Not usually for public dependencies and disposable debug signing. Persistent debug distribution identities do need protected key material: Aqaqeer keeps this in `debug-signing`, separately from production `release-signing`. Private dependencies may also need authentication. Expose only the credentials required by the relevant job.
 
 ### Can manual dispatch build a feature branch?
 
-Yes, after the dispatch workflow is available on the default branch, select the intended branch or use CLI `--ref`. Ensure that branch contains a compatible workflow and the files it references. Review the selected revision before sharing outputs.
+Yes, if the workflow permits it: after the dispatch definition exists on the default branch, select a compatible branch or use CLI `--ref`. Repository guards can restrict execution; Aqaqeer distribution workflows require the default branch. Review the selected revision before sharing outputs.
 
 ### Why is my artifact number different from the app version?
 
-GitHub run metadata and application version metadata are separate systems. Aqaqeer's ignored wrapper counter starts fresh on a new hosted runner. Naming an artifact with `github.run_number` does not change the embedded Android `versionCode`.
+GitHub run metadata and application version metadata are separate systems. Aqaqeer distribution workflows reserve `android-build-N` independently of the workflow run number. Naming an artifact with `github.run_number` does not set the embedded Android `versionCode`.
 
 ### Should every project run every check in one job?
 

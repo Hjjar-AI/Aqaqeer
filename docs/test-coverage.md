@@ -1,6 +1,6 @@
 # Verification scope
 
-[Validation](validation.md) owns executed results and user-reported completion; [plan](plan.md) owns remaining checks. Source inventories and test-class names are not measured declaration/branch coverage or proof of execution. Current standard/demo builds, selected hosted checks, demo startup/refresh and browsing are user-reported complete.
+[Validation](validation.md) owns executed results and user-reported completion; [plan](plan.md) owns remaining checks. Source inventories and test-class names are not measured declaration/branch coverage or proof of execution. Workflow 03 independently passed 520 JVM cases per flavor; workflow 07 passed 42 selected Android invocations. Broader demo startup/refresh and browsing completion also has user-reported evidence.
 
 <a id="recoveryresource-extension"></a>
 
