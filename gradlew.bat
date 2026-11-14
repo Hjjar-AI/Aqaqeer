@@ -97,13 +97,6 @@ if exist "%JAVA_EXE%" goto execute
 goto exitWithErrorLevel
 
 :execute
-@rem Aqaqeer integration: preserve when regenerating the wrapper.
-set "AQAQEER_BUILD_CODE="
-for /f "delims=" %%V in ('python "%APP_HOME%\gradle\build_version.py" %*') do set "AQAQEER_BUILD_CODE=%%V"
-if not defined AQAQEER_BUILD_CODE (
-    "%COMSPEC%" /c exit 1
-    goto exitWithErrorLevel
-)
 @rem Setup the command line
 
 
@@ -111,7 +104,7 @@ if not defined AQAQEER_BUILD_CODE (
 @rem Execute gradlew
 @rem endlocal doesn't take effect until after the line is parsed and variables are expanded
 @rem which allows us to clear the local environment before executing the java command
-endlocal & "%JAVA_EXE%" %DEFAULT_JVM_OPTS% %JAVA_OPTS% %GRADLE_OPTS% "-Dorg.gradle.appname=%APP_BASE_NAME%" -jar "%APP_HOME%\gradle\wrapper\gradle-wrapper.jar" "-Paqaqeer.buildCode=%AQAQEER_BUILD_CODE%" %* & call :exitWithErrorLevel & goto exitWithErrorLevel
+endlocal & "%JAVA_EXE%" %DEFAULT_JVM_OPTS% %JAVA_OPTS% %GRADLE_OPTS% "-Dorg.gradle.appname=%APP_BASE_NAME%" -jar "%APP_HOME%\gradle\wrapper\gradle-wrapper.jar" %* & call :exitWithErrorLevel & goto exitWithErrorLevel
 
 @rem This label must not be changed. We rely on old scripts being able to jump to this point.
 :exitWithErrorLevel
