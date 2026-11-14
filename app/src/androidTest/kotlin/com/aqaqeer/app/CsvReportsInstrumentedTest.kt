@@ -116,4 +116,99 @@ class CsvReportsInstrumentedTest {
         assertThrows(AdminProblem::class.java) { runBlocking { reports().csv(document(), snapshot) } }
         assertThrows(AdminProblem::class.java) { runBlocking { importer().load(Uri.parse("content://missing/file")) } }
     }
+    @Test fun fiftyOneRowsReportCommittedChunksInOrder(): Unit = runBlocking {
+        val repo = importer()
+        val text = "genericEn,strength\n" + (1..51).joinToString("\n") { "Medicine $it,10 mg" }
+        val session = repo.selectValid(repo.load(document(text)))
+        val batches = mutableListOf<List<CsvRowResult>>()
+        repo.commit(session) { batch ->
+            batches += batch
+            assertEquals(batches.sumOf { it.size }, p.ready().catalog.medications.size)
+        }
+        assertEquals(listOf(50, 1), batches.map { it.size })
+        assertEquals((2..52).toList(), batches.flatten().map { it.number })
+        assertTrue(batches.flatten().all { it.outcome == CsvOutcome.CREATED })
+        assertEquals(51, p.ready().catalog.availability.size)
+    }
+    @Test fun cancellationAfterFirstFiftyRowsDoesNotStartSecondChunk(): Unit = runBlocking {
+        val repo = importer()
+        val session = repo.selectValid(repo.load(document("genericEn,strength\n" + (1..51).joinToString("\n") { "Medicine $it,10 mg" })))
+        val results = mutableListOf<CsvRowResult>()
+        val job = launch { repo.commit(session) { batch -> results += batch; this@launch.cancel() } }
+        job.join()
+        assertTrue(job.isCancelled); assertEquals(50, results.size)
+        assertTrue(results.all { it.outcome == CsvOutcome.CREATED })
+        val catalog = p.ready().catalog
+        assertEquals(50, catalog.medications.size); assertFalse(catalog.medications.any { it.genericEn == "Medicine 51" })
+    }
+    @Test fun failedStorageWriteRollsBackWholeChunkAndReportsNoSuccesses(): Unit = runBlocking {
+        val repo = importer()
+        val session = repo.selectValid(repo.load(document("genericEn,strength\n" + (1..50).joinToString("\n") { "Medicine $it,10 mg" })))
+        val before = p.admin.transaction { Triple(it.catalog(), it.pending(), it.historyCount()) }
+        val lease = p.factory.acquire()
+        try {
+            lease.database.openHelper.writableDatabase.execSQL("""CREATE TRIGGER csv_injected_failure BEFORE INSERT ON medications
+                WHEN NEW.genericEn = 'Medicine 26' BEGIN SELECT RAISE(ABORT, 'injected chunk failure'); END""")
+            val results = mutableListOf<CsvRowResult>()
+            repo.commit(session) { results += it }
+            assertEquals(50, results.size); assertTrue(results.all { it.outcome == CsvOutcome.FAILED && it.error.isNotBlank() })
+            assertEquals(before, p.admin.transaction { Triple(it.catalog(), it.pending(), it.historyCount()) })
+        } finally {
+            try { lease.database.openHelper.writableDatabase.execSQL("DROP TRIGGER IF EXISTS csv_injected_failure") }
+            finally { lease.close() }
+        }
+    }
+    @Test fun semicolonSectionAliasImportPersistsExplicitAndDefaultStatuses(): Unit = runBlocking {
+        p.admin.saveTaxonomy("section", null, "ثان", "Second")
+        val repo = importer(); val session = repo.selectValid(repo.load(document("genericEn;strength;section:Second\nNew;٥٠٠mg;OUT")))
+        val results = mutableListOf<CsvRowResult>(); repo.commit(session) { results += it }
+        assertEquals(CsvOutcome.CREATED, results.single().outcome)
+        val catalog = p.ready().catalog; val med = catalog.medications.single()
+        assertEquals("500mg", med.strength)
+        assertEquals(AvailabilityStatus.OUT, catalog.status(med.id, catalog.sections.single { it.nameEn == "Second" }.id))
+        assertEquals(AvailabilityStatus.AVAILABLE, catalog.status(med.id, catalog.sections.single { it.nameEn != "Second" }.id))
+    }
+    @Test fun duplicateChoiceUpdatesExactlyOneExistingMedication(): Unit = runBlocking {
+        val med = p.medication("Existing"); val repo = importer()
+        val loaded = repo.load(document("genericEn,strength,formAr,note\nExisting,10mg,أخرى,Updated"))
+        assertNotNull(loaded.rows.single().error)
+        val chosen = repo.selectValid(repo.chooseDuplicates(loaded, update = true))
+        val results = mutableListOf<CsvRowResult>(); repo.commit(chosen) { results += it }
+        assertEquals(CsvOutcome.UPDATED, results.single().outcome)
+        val actual = p.ready().catalog.medications.single()
+        assertEquals(med.id, actual.id); assertEquals("Updated", actual.note)
+    }
+    @Test fun staleAvailabilityFailsImportWithoutChangingMedicationFields(): Unit = runBlocking {
+        val med = p.medication(); val section = p.ready().catalog.sections.single().id; val repo = importer()
+        val loaded = repo.load(document("note,section:$section\nCSV,OUT"))
+        val chosen = repo.revise(loaded, 2, CsvDecision(CsvAction.UPDATE, med.id, selected = true))
+        p.admin.availability(med.id, section, AvailabilityStatus.LOW)
+        val before = p.admin.transaction { Triple(it.catalog(), it.pending(), it.historyCount()) }
+        val results = mutableListOf<CsvRowResult>(); repo.commit(chosen) { results += it }
+        assertEquals(CsvOutcome.FAILED, results.single().outcome)
+        assertEquals(before, p.admin.transaction { Triple(it.catalog(), it.pending(), it.historyCount()) })
+    }
+    @Test fun allSectionShortagesExcludeInactiveOnlyAndUnknownMedication(): Unit = runBlocking {
+        val active = p.ready().catalog.sections.single().id
+        p.admin.saveTaxonomy("section", null, "مغلق", "Closed", active = false)
+        val closed = p.ready().catalog.sections.single { !it.isActive }.id
+        val a = p.medication("Active shortage"); val b = p.medication("Inactive shortage"); val c = p.medication("Unknown")
+        p.admin.availability(a.id, active, AvailabilityStatus.OUT)
+        p.admin.availability(b.id, closed, AvailabilityStatus.OUT)
+        p.admin.transaction { dao -> dao.deleteAvailability(dao.availability().filter { it.medicationId == c.id }) }
+        val report = reports().capture(ReportRequest(ReportPreset.OUT, includeUnpublished = true, allSections = true))
+        assertEquals(listOf(a.id), report.medications.map { it.id })
+        assertEquals(listOf(active), report.sections.map { it.id })
+    }
+    @Test fun emptyA5ReportStillProducesRenderablePage(): Unit = runBlocking {
+        val repo = reports(); val report = repo.capture(ReportRequest(ReportPreset.FULL, includeUnpublished = true))
+        assertTrue(report.medications.isEmpty())
+        val uri = document(); repo.pdf(uri, report)
+        val file = File(p.root, "empty-a5.pdf")
+        p.context.contentResolver.openInputStream(uri)!!.use { input -> file.outputStream().use { input.copyTo(it) } }
+        PdfRenderer(ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY)).use { renderer ->
+            assertTrue(renderer.pageCount >= 1)
+            renderer.openPage(0).use { page -> assertEquals(420, page.width); assertEquals(595, page.height) }
+        }
+    }
 }
