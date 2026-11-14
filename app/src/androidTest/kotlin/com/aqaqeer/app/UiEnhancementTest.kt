@@ -14,6 +14,7 @@ import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import com.aqaqeer.app.data.*
 import com.aqaqeer.app.fixtures.M3Fixtures as F
+import com.aqaqeer.app.fixtures.homeProjection
 import com.aqaqeer.app.ui.*
 import org.junit.Assert.*
 import org.junit.Rule
@@ -60,7 +61,7 @@ class UiEnhancementTest {
     private fun many(): CatalogSnapshot {
         val c = F.catalog(); val med = c.medications.single()
         return c.copy(sections = c.sections + c.sections.first().copy(id = "second", nameAr = "القسم الثاني"),
-            medications = (0..29).map { med.copy(id = "item$it", nameEn = "Item %02d".format(it)) }, availability = emptyList())
+            medications = (0..29).map { med.copy(id = "item$it", nameEn = "Item %02d".format(it), genericEn = "Substance %02d".format(it)) }, availability = emptyList())
     }
 
     @Test fun selectionStaysPinnedAndPreviewIncludesHiddenSelection() {
@@ -68,20 +69,20 @@ class UiEnhancementTest {
         compose.setContent { AqaqeerTheme(ThemeChoice.LIGHT) {
             HomeScreen(CatalogState.Ready(c,false,admin=true),state,F.time,
                 { state = state.copy(sectionId=it) }, {}, {}, {}, {}, {}, {},
-                saveAvailability = { _,_,_ -> })
+                saveAvailability = { _,_,_ -> }, saveBulk = { _,_,_ -> }, projection = homeProjection(c, state))
         } }
-        compose.onNodeWithTag("home").performScrollToNode(hasText("تحديد أدوية لتعديل التوافر"))
-        compose.onNodeWithText("تحديد أدوية لتعديل التوافر").performClick()
+        compose.onNodeWithContentDescription("تحديد أدوية للتعديل الجماعي", substring = true).performScrollTo()
+        compose.onNodeWithContentDescription("تحديد أدوية للتعديل الجماعي", substring = true).performClick()
         compose.onNodeWithTag("home").performScrollToNode(hasTestTag("select_item0"))
         compose.onNodeWithTag("select_item0").performScrollTo().performClick()
         compose.onNodeWithTag("home").performScrollToNode(hasTestTag("med_Item 29"))
         compose.onNodeWithTag("bulk_selection_bar").assertIsDisplayed()
-        compose.onNodeWithText("اختيار الحالة والمعاينة").assertIsEnabled()
+        compose.onNodeWithText("تعديل المحدد").assertIsEnabled()
         compose.runOnIdle { state = state.copy(appliedQuery = "no match") }
-        compose.onNodeWithTag("home").performScrollToNode(hasTestTag("bulk_selection_bar"))
-        compose.onNodeWithText("اختيار الحالة والمعاينة").performClick()
-        compose.onNode(hasText("غير متوفر") and hasAnyAncestor(isDialog())).performScrollTo().performClick()
-        compose.onNodeWithText("معاينة جميع الأدوية المحددة").performClick()
+        compose.onNodeWithText("تعديل المحدد").performClick()
+        compose.onNodeWithText("حالة التوفر", substring = true).performClick()
+        compose.onNodeWithText("غير متوفر", useUnmergedTree = true).performScrollTo().performClick()
+        compose.onNodeWithText("معاينة").performClick()
         compose.onNodeWithText("Item 00", substring = true).assertExists()
     }
 
@@ -89,14 +90,14 @@ class UiEnhancementTest {
         val c = many(); var state by mutableStateOf(AppUiState()); var admin by mutableStateOf(true)
         compose.setContent { AqaqeerTheme(ThemeChoice.LIGHT) {
             HomeScreen(CatalogState.Ready(c,false,admin=admin),state,F.time,
-                { state = state.copy(sectionId=it) }, {}, {}, {}, {}, {}, {}, saveAvailability = { _,_,_ -> })
+                { state = state.copy(sectionId=it) }, {}, {}, {}, {}, {}, {}, saveAvailability = { _,_,_ -> }, saveBulk = { _,_,_ -> }, projection = homeProjection(c, state))
         } }
-        compose.onNodeWithTag("home").performScrollToNode(hasText("تحديد أدوية لتعديل التوافر"))
-        compose.onNodeWithText("تحديد أدوية لتعديل التوافر").performClick()
+        compose.onNodeWithContentDescription("تحديد أدوية للتعديل الجماعي", substring = true).performScrollTo()
+        compose.onNodeWithContentDescription("تحديد أدوية للتعديل الجماعي", substring = true).performClick()
         compose.runOnIdle { state = state.copy(sectionId="second") }
         compose.onNodeWithTag("bulk_selection_bar").assertDoesNotExist()
         compose.runOnIdle { admin = false }
-        compose.onNodeWithText("تحديد أدوية لتعديل التوافر").assertDoesNotExist()
+        compose.onNodeWithContentDescription("تحديد أدوية للتعديل الجماعي", substring = true).assertDoesNotExist()
     }
 
     @Test fun filterSummaryCountsSelectionsAndResetClearsBothGroups() {
@@ -122,7 +123,7 @@ class UiEnhancementTest {
                         MedicationNameLines(longName,longName,NameDisplay.BOTH)
                         LabeledValue("المعرّف", "1234567890abcdefghijklmnopqrstuvwxyz1234567890abcdefghijklmnopqrstuvwxyz")
                         FormField("الاسم", "", {}, required=true)
-                        BulkSelectionBar("القسم الرئيسي",1,true,false,{},{})
+                        BulkSelectionBar("القسم الرئيسي",1,true,false,cancel={},visibleCount=1,selectVisible={})
                         ActionGroup {
                             Button(onClick={}) { Text("حفظ التغييرات") }
                             TextButton(onClick={}) { Text("إلغاء") }
@@ -136,7 +137,7 @@ class UiEnhancementTest {
                 compose.runOnIdle { theme=t;scale=f;width=w;height=h }
                 compose.onNodeWithText("حفظ التغييرات").performScrollTo().assertIsDisplayed()
                 compose.onNodeWithText("إلغاء").performScrollTo().assertIsDisplayed()
-                compose.onNodeWithText("اختيار الحالة والمعاينة").performScrollTo().assertIsDisplayed()
+                compose.onNodeWithText("تحديد الظاهر").performScrollTo().assertIsDisplayed()
                 compose.onNodeWithTag("الاسم").performScrollTo().assertIsDisplayed()
                 compose.onAllNodesWithText(longName,substring=true).assertCountEquals(2)
             }
@@ -162,9 +163,9 @@ class UiEnhancementTest {
 
     @Test fun busySelectionBarPreventsPreviewAndCancellation() {
         var count=0
-        compose.setContent { AqaqeerTheme(ThemeChoice.DARK) { BulkSelectionBar("قسم",1,true,true,{count++},{count++}) } }
-        compose.onNodeWithText("اختيار الحالة والمعاينة").assertIsNotEnabled()
-        compose.onNodeWithText("إلغاء التحديد").assertIsNotEnabled()
+        compose.setContent { AqaqeerTheme(ThemeChoice.DARK) { BulkSelectionBar("قسم",1,true,true,cancel={count++},visibleCount=1,selectVisible={count++}) } }
+        compose.onNodeWithText("تحديد الظاهر").assertIsNotEnabled()
+        compose.onNodeWithContentDescription("إنهاء التحديد").assertIsNotEnabled()
         compose.runOnIdle { assertEquals(0,count) }
     }
 }

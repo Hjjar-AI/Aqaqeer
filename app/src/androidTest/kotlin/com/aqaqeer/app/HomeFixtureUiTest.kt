@@ -10,6 +10,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
 import com.aqaqeer.app.data.*
+import com.aqaqeer.app.fixtures.homeProjection
 import com.aqaqeer.app.ui.*
 import org.junit.Rule
 import org.junit.Test
@@ -51,14 +52,19 @@ class HomeFixtureUiTest {
                 } }
             }
         }
-        homeNode("category_long").performScrollTo().performClick()
+        compose.onNodeWithContentDescription("الفلاتر").performClick()
+        compose.onNodeWithTag("category_long").performScrollTo().performClick()
+        compose.onNodeWithText("عرض النتائج").performClick()
         compose.onNodeWithTag("home").performScrollToNode(hasTestTag("med_English only"))
         compose.onNodeWithTag("tip_m", useUnmergedTree = true).performScrollTo().assertIsDisplayed()
         compose.onNodeWithText("English only", substring = true).assertExists()
-        homeNode("search").assertIsDisplayed()
-        homeNode("status_filters").assertIsDisplayed()
-        homeNode("category_filters").assertIsDisplayed()
-        homeNode("section_second").performClick()
+        compose.onNodeWithTag("search").assertIsDisplayed()
+        compose.onNodeWithContentDescription("الفلاتر", substring = true).performClick()
+        compose.onNodeWithTag("status_filters").assertIsDisplayed()
+        compose.onNodeWithTag("category_filters").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithTag("filter_UNKNOWN").assertDoesNotExist()
+        compose.onNodeWithText("عرض النتائج").performClick()
+        compose.onNodeWithTag("section_second").performClick()
         compose.onNodeWithTag("tip_m", useUnmergedTree = true).assertDoesNotExist()
     }
 
@@ -67,7 +73,7 @@ class HomeFixtureUiTest {
         var now by mutableStateOf(Instant.parse("2026-11-09T20:59:59Z"))
         compose.setContent {
             AqaqeerTheme(ThemeChoice.DARK) {
-                HomeScreen(CatalogState.Ready(catalog, false), AppUiState(), now, {}, {}, {}, {}, {}, {}, {})
+                HomeScreen(CatalogState.Ready(catalog, false), AppUiState(), now, {}, {}, {}, {}, {}, {}, {}, projection = homeProjection(catalog, state))
             }
         }
         compose.onNodeWithTag("home").performScrollToNode(hasTestTag("med_English only"))
@@ -80,7 +86,7 @@ class HomeFixtureUiTest {
         compose.setContent {
             AqaqeerTheme(ThemeChoice.SYSTEM) {
                 HomeScreen(CatalogState.Ready(catalog(),false,requiresUpdate=true),AppUiState(),
-                    Instant.parse("2026-11-09T10:00:00Z"),{}, {}, {}, {}, {}, {}, {})
+                    Instant.parse("2026-11-09T10:00:00Z"),{}, {}, {}, {}, {}, {}, {}, projection = homeProjection(catalog()))
             }
         }
         compose.waitUntil(15_000) {
@@ -90,8 +96,10 @@ class HomeFixtureUiTest {
         compose.onNodeWithText("يلزم إصدار متوافق من التطبيق").assertIsDisplayed()
         compose.onNodeWithTag("home").performScrollToNode(hasTestTag("med_English only"))
         compose.onNodeWithTag("med_English only").assertIsDisplayed()
-        homeNode("search").assertIsDisplayed()
-        homeNode("status_filters").assertIsDisplayed()
+        compose.onNodeWithTag("search").assertIsDisplayed()
+        compose.onNodeWithContentDescription("الفلاتر").performClick()
+        compose.onNodeWithTag("status_filters").assertIsDisplayed()
+        compose.onNodeWithTag("filter_UNKNOWN").assertDoesNotExist()
     }
 
 }
