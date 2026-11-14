@@ -2,12 +2,16 @@
 import json
 import os
 from pathlib import Path
+
+import sys as _build_path_sys
+_build_path_sys.path.insert(0, str(Path(__file__).resolve().parents[2] / 'gradle'))
+from build_paths import app_build
 import subprocess
 import sys
 
 
 def main():
-    source = Path('app/build/outputs/apk/standard/release').resolve()
+    source = (app_build(Path('.')) / 'outputs/apk/standard/release').resolve()
     metadata = json.loads((source / 'output-metadata.json').read_text())
     if metadata.get('applicationId') != 'com.aqaqeer.app':
         raise ValueError('Expected production metadata')

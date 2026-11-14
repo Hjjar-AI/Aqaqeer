@@ -4,6 +4,10 @@ import argparse
 import hashlib
 import os
 from pathlib import Path
+
+import sys as _build_path_sys
+_build_path_sys.path.insert(0, str(Path(__file__).resolve().parents[2] / 'gradle'))
+from build_paths import app_build
 import subprocess
 import xml.etree.ElementTree as ET
 
@@ -49,7 +53,7 @@ def main():
             '', 'No device tests are executed. Compilation alone is not runtime acceptance.',
         ])
         if os.environ.get('CI_CHECK_KIND') == 'unit':
-            reports = sorted(Path('app/build/test-results').glob('test*UnitTest/TEST-*.xml'))
+            reports = sorted((app_build(Path('.')) / 'test-results').glob('test*UnitTest/TEST-*.xml'))
             totals = dict(tests=0, failures=0, errors=0, skipped=0)
             lines.extend(['', '### JVM test results', ''])
             for path in reports:
@@ -78,7 +82,7 @@ def main():
         if flavor not in ('standard', 'demo'):
             raise ValueError('Build summary requires an explicit standard/demo flavor')
         lines.extend(['', f'Selected flavor: `{flavor}`'])
-        files = sorted((Path('app/build/outputs/apk') / flavor / 'debug').glob('*.apk'))
+        files = sorted(((app_build(Path('.')) / 'outputs/apk') / flavor / 'debug').glob('*.apk'))
         checksums = []
         lines.extend(['', '### APK SHA-256 checksums', ''])
         for path in files:
@@ -91,7 +95,7 @@ def main():
         else:
             lines.append('No debug APKs were produced in this job.')
     if args.kind == 'lint':
-        reports = sorted(Path('app/build/reports').glob('lint-results-*.xml'))
+        reports = sorted((app_build(Path('.')) / 'reports').glob('lint-results-*.xml'))
         lines.extend(['', '### Android lint findings', ''])
         for path in reports:
             try:

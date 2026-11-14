@@ -8,6 +8,10 @@ import hashlib
 import json
 import os
 from pathlib import Path
+
+import sys as _build_path_sys
+_build_path_sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'gradle'))
+from build_paths import app_build
 import re
 import shutil
 import subprocess
@@ -41,7 +45,7 @@ def main():
     expected = os.environ['AQAQEER_RELEASE_CERT_SHA256'].replace(':', '').strip().lower()
     if not re.fullmatch(r'[a-f0-9]{64}', expected):
         raise ValueError('Expected certificate must be a public SHA-256 certificate fingerprint.')
-    source = ROOT / 'app/build/outputs/apk/standard/release'
+    source = (app_build(ROOT) / 'outputs/apk/standard/release')
     metadata = json.loads((source / 'output-metadata.json').read_text())
     elements = metadata['elements']
     if metadata['applicationId'] != 'com.aqaqeer.app':
@@ -119,7 +123,7 @@ def main():
         for report in reports:
             shutil.copyfile(workspace / report['apk'], destination / report['apk'])
             (destination / (report['architecture'] + '-inspection.json')).write_text(json.dumps(report, indent=2) + '\n')
-        mapping = ROOT / 'app/build/outputs/mapping/standardRelease/mapping.txt'
+        mapping = (app_build(ROOT) / 'outputs/mapping/standardRelease/mapping.txt')
         with mapping.open('rb') as source_mapping, gzip.open(destination / 'mapping.txt.gz', 'wb') as compressed:
             shutil.copyfileobj(source_mapping, compressed)
         receipt = dict(versionCode=code, versionName=f'0.0.{code}', certificateSha256=expected,

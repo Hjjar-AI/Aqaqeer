@@ -72,3 +72,5 @@ Source changes implement shared debug/production reservation, wrapper/cache inte
 Portable campaign tools require the existing campaign-specific init script via `--verification-init`, plus an existing SDK and accessible Gradle cache. A fresh checkout does not contain that private harness setup; it now fails before device/build work if missing. Its reproducible harness export and runtime portability remain part of the later authorized test batch, not an executed pass.
 
 Keep screenshot protection, automatic PR checks, scheduled scans, attestations, extra style tools, commit-signature enforcement, a CLI workflow launcher and speculative source splitting excluded. Generated release notes, blame-ignore revisions and reproducibility comparisons remain deferred.
+
+Shared-workstation source/configuration changes are source-only. Future authorized builds must verify managed output lookup, IDE cache/JDK selection, wrappers and preserved export/version behavior; no build or test execution is granted by these records. Existing generated data remains unmoved.

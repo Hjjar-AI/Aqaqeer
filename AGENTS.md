@@ -23,3 +23,7 @@
 - Credentials belong in ignored protected storage: `local/verification/credentials/telegram-test-config.local.json`, mode 0600. Never print secrets, token URLs or credential hashes; never embed them in source/APKs/logs. Public crypto fixtures are not production credentials.
 - Keep remaining work in the plan and completed evidence/limits in validation. Distinguish source, compilation, runtime and human acceptance; count scenarios separately from phase invocations. Missing instrumentation, interrupted hosts and missing prerequisites are not app passes or automatically app bugs.
 - `local/verification/manifest.json` inventories essential public evidence. Before cleanup, follow manifest/document/result references and verify retained hashes. Keep a useful preview, source/artifact/device provenance, fresh results and original per-case evidence for failures/interruption. Prune only confirmed-unused generated or redundant files; preserve unique downloads, credentials, keys, counters and reusable tooling. Never hash protected credentials.
+
+## Shared Android workstation
+
+For Android toolchain/build-path work, read [the shared workstation guide](/opt/android-shared/AGENTS.md) and its README before changing configuration. Project rules and explicit session authorization still apply; the guide does not authorize execution. Existing generated data must remain unmoved; only future working outputs use the registered /opt layout.

@@ -5,6 +5,10 @@ import hashlib
 import json
 import os
 from pathlib import Path
+
+import sys as _build_path_sys
+_build_path_sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'gradle'))
+from build_paths import app_build
 import stat
 import shutil
 import time
@@ -94,7 +98,7 @@ def main():
             result = subprocess.run(command, cwd=ROOT, env=env, stdout=log, stderr=subprocess.STDOUT)
         exit_code = result.returncode
         for folder in ('test-results', 'outputs/androidTest-results/connected'):
-            source = ROOT / 'app/build' / folder
+            source = (app_build(ROOT)) / folder
             if source.exists():
                 for report in source.rglob('TEST-*.xml'):
                     if report.stat().st_mtime_ns >= started_ns:
@@ -110,7 +114,7 @@ def main():
         print(json.dumps(totals), flush=True)
     finally:
         # Preserve fresh per-case logs even when instrumentation never emits XML.
-        source = ROOT / 'app/build/outputs/androidTest-results/connected'
+        source = (app_build(ROOT) / 'outputs/androidTest-results/connected')
         if source.exists():
             for report in source.rglob('logcat-*'):
                 if report.stat().st_mtime_ns >= started_ns:

@@ -4,6 +4,10 @@ import hashlib
 import json
 import os
 from pathlib import Path
+
+import sys as _build_path_sys
+_build_path_sys.path.insert(0, str(Path(__file__).resolve().parents[2] / 'gradle'))
+from build_paths import app_build
 import re
 import struct
 import subprocess
@@ -82,7 +86,7 @@ def main():
     result = {}
     try:
         selected = os.environ.get('CI_RELEASE_APK_PATH')
-        paths = [Path(selected)] if selected else list(Path('app/build/outputs/apk/standard/release').glob('*.apk'))
+        paths = [Path(selected)] if selected else list((app_build(Path('.')) / 'outputs/apk/standard/release').glob('*.apk'))
         if len(paths) != 1:
             raise ValueError('Expected exactly one fresh standard release APK')
         path = paths[0]
@@ -111,7 +115,7 @@ def main():
         (directory / 'packaged-manifest.xml').write_text(manifest)
         result['permissions'] = inspect_manifest(manifest)
         subprocess.run([str(tools / 'zipalign'), '-c', '-P', '16', '4', str(path)], check=True, timeout=30)
-        mapping = Path('app/build/outputs/mapping/standardRelease')
+        mapping = (app_build(Path('.')) / 'outputs/mapping/standardRelease')
         for filename in ('mapping.txt', 'resources.txt'):
             if not (mapping / filename).is_file() or (mapping / filename).stat().st_size == 0:
                 raise ValueError(f'Missing fresh R8/resource-shrinker evidence: {filename}')

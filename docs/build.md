@@ -47,7 +47,7 @@ Use the pinned [catalog](../gradle/libs.versions.toml) and AGP built-in Kotlin; 
 
 ## Setup and commands
 
-Local SDK: `/opt/android-shared/Sdk`; canonical Gradle home: `/opt/android-shared/aqaqeer/gradle-home`. The POSIX wrapper defaults to that existing cache unless an environment/CLI/system-property override is supplied; Windows uses normal Gradle defaults. Other machines set ignored `local.properties` to their SDK. Python 3.8+ is required by the wrapper version helper (`python3` on POSIX, `python` on Windows).
+Local SDK: `/opt/android-shared/Sdk`; canonical Gradle home: `/opt/android-shared/gradle/user-homes/mhmmd`. The POSIX wrapper defaults to that existing cache unless an environment/CLI/system-property override is supplied; Windows uses normal Gradle defaults. Other machines set ignored `local.properties` to their SDK. Python 3.8+ is required by the wrapper version helper (`python3` on POSIX, `python` on Windows).
 
 Diagnose cache ownership/group/ACL/chmod failures before repair; never create a replacement cache to bypass access. Preserve shared SDK/tools and unique downloads; do not merge active binary caches, change global PATH or add experimental AAPT2 overrides. Wrappers use HTTPS/checksums. Online resolution is normal; `--offline` fails on missing artifacts.
 
@@ -90,7 +90,7 @@ The POSIX wrapper optionally selects readable `/opt/android-shared/dependency-se
 Prefer targeted compilation when requested:
 
 ```sh
-./gradlew --gradle-user-home /opt/android-shared/aqaqeer/gradle-home \
+./gradlew --gradle-user-home /opt/android-shared/gradle/user-homes/mhmmd \
   :app:compileStandardDebugKotlin :app:compileDemoDebugKotlin
 ```
 
@@ -484,7 +484,7 @@ Updates require the original package and signer. No release key is supplied. Nev
 Ignored verification init (local-only: `../local/verification/tools/verification.init.gradle`) supplies `.verification.creation.debug`; preview init (local-only: `../local/verification/tools/preview.init.gradle`) supplies `.preview.debug` and resolves its labels (local-only: `../local/verification/tools/preview-res/values/strings.xml`) relative to itself. Supply exactly one, from repository root. An authorized standard preview uses:
 
 ```sh
-./gradlew --gradle-user-home /opt/android-shared/aqaqeer/gradle-home \
+./gradlew --gradle-user-home /opt/android-shared/gradle/user-homes/mhmmd \
   -I local/verification/tools/preview.init.gradle --offline --no-configuration-cache \
   -Paqaqeer.exportApks=false :app:assembleStandardDebug
 ```
@@ -496,7 +496,7 @@ This reserves a normal code. Verify artifact/signer and the physical serial befo
 When lint is authorized while tests remain stopped:
 
 ```sh
-./gradlew --gradle-user-home /opt/android-shared/aqaqeer/gradle-home \
+./gradlew --gradle-user-home /opt/android-shared/gradle/user-homes/mhmmd \
   -I .github/production-lint.init.gradle --offline --no-configuration-cache \
   --console=plain --warning-mode fail :app:lintStandardDebug :app:lintDemoDebug
 ```
@@ -555,3 +555,7 @@ The [settings review](evidence/repository-review-20261114.md) records observed c
 Use short-lived branches when useful and `type(scope): summary` commit titles. Production tags are workflow-managed. The optional `.githooks/pre-push` runs repository integrity checks; activation is a deliberate local choice (`git config core.hooksPath .githooks`), not performed by this change. CODEOWNERS does not imply required approval. Dependency updates retain explicit review; nothing auto-merges.
 
 The third-party notice inventory preserves original notice texts from cached runtime-library families. Authorized release builds also generate `assets/runtime-components.txt` from the exact production runtime graph; this is required by release inspection. It is not a newly resolved shipping graph: reconcile exact transitive runtime coordinates and any additional required notices before first production distribution. No license-report plugin or dependency resolution was run for this source batch.
+
+## Shared workstation paths — 2026-11-14
+
+On the mhmmd workstation, [the shared Android guide](/opt/android-shared/AGENTS.md) and [layout](/opt/android-shared/README.md) own machine paths. All five wrappers use the common Gradle home and registered future build/project/Kotlin output directories under /opt. Existing generated caches/output directories were left untouched; Desktop exports, evidence, signing and counters remain in place. Output-consuming helpers resolve the registered layout locally and retain portable CI defaults. No Gradle/build/test/lint/device run or download was performed; compilation, IDE synchronization and runtime behavior remain unverified. Aqaqeer's pinned Gradle 9.8.2 is not cached.
