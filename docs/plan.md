@@ -14,6 +14,12 @@ On an explicitly authorized physical resume, verify serial/package/signer/instal
 <a id="ui-review-follow-up--p1"></a>
 <a id="ordered-packages"></a>
 
+## Review fixes and Home placement — source implemented / 2026-11-15
+
+The approved source batch implements clean forward-gap refresh, scoped deletion review/recomputed effects, restored-entity tombstone cleanup, multiple-attempt rejection, manual refresh on an unvalidated available network, taxonomy state/target checks, blank CSV skipping, explicit missing/unrelated-pin republication, maintenance coordination guidance, independent bottom bars/defaults/keyboard behavior and the 60 ms splash exit. Focused Home bar/recovery composables retain screen-owned workflow state. Existing PIN/password, upward-only requirements, refresh triggers, history retention and recovery safeguards remain.
+
+**RV1 / P1 — remaining verification:** after separate authorization, inspect/author and execute acceptance coverage for clean gap versus branch/reused-ID/local-work rejection; deletion targets/new dependents/unrelated changes/remote reassignments/restoration tombstones; multiple attempts; manual unvalidated-network refresh versus automatic guards; taxonomy selection/type/New/save/delete resets and disappeared targets; blank/delimiter/whitespace CSV records, original numbering and caps; missing/unrelated pins with zero/pending work, changed-pin reapproval, interrupted upload/write/reconciliation, authentication/network failure refusal and verified acknowledgment; all four Home placements, compact heights/large text, keyboard/recreation/search/filter/section preservation, Add clearance and 60 ms splash/disabled animations. Source checks are recorded in [validation](validation.md#review-fixes-and-home-placement--2026-11-15); earlier builds/results do not validate this batch. No test inspection/authoring/execution, migrations, compilation/packaging, lint or device/live operations are authorized for this batch. Existing stops remain.
+
 ## Remaining verification
 
 Current implementation and verified selections are recorded in [validation](validation.md#current-hosted-evidence--2026-11-14): workflow 03 passed 520 JVM cases per flavor plus compilation/JDK vectors, and workflow 07 passed 42 selected Android invocations. The expanded source batch and selected bulk/PIN/CSV/report coverage are complete. Keep those passes; remaining work below extends beyond that selection. Test authoring was authorized with execution reserved for the user's workflows; physical/live campaigns and local lint remain stopped.

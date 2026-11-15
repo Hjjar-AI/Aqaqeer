@@ -2,6 +2,12 @@
 
 [Requirements](requirements.md) define acceptance; [plan](plan.md) owns remaining work. The evidence manifest (local-only: `../local/verification/manifest.json`) retains original results, public hashes and provenance. Ignored evidence may be absent in fresh checkouts. Source checks, compilation, runtime results and human acceptance remain distinct.
 
+## Review fixes and Home placement — 2026-11-15
+
+Implemented source changes cover clean forward-gap refresh under transactional guards; deletion scope/cascade/reassignment review and restored tombstones; multiple-attempt rejection; manual refresh with an available unvalidated network; taxonomy confirmation/active defaults/missing-target errors; blank CSV records with numbering/caps retained; explicit admin missing/unrelated-pin republication using durable attempts/reapproval/read-back; coordination guidance; local bottom-bar preferences with keyboard/Add-button handling; focused UI components; and the 60 ms splash exit. Requirements, mechanisms and both operating guides were updated. Retained security/history/automatic-trigger policies were not redesigned.
+
+Verification is limited to production call-site/state/semantics review and local source/document integrity checks. Compilation, runtime, visual/accessibility acceptance and the acceptance scenarios in [RV1](plan.md#review-fixes-and-home-placement--source-implemented--2026-11-15) remain unverified. No tests were inspected/authored/executed, migrations inspected/changed, builds/packaging/lint run or device/live Telegram actions performed. Historical hosted results below predate this batch.
+
 ## Current hosted evidence — 2026-11-14
 
 | Check | Source / run | Confirmed result |
