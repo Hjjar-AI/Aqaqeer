@@ -134,11 +134,11 @@ class SnapshotRefreshInstrumentedTest {
         assertTrue(recovery.newValue!!.contains("Reused publication ID"))
         rejects<RefreshException> { repository.refresh() }; assertEquals(1,history().size)
     }
-    @Test fun branchesGapsAndRegressionAreDurablyRetainedWithoutReplacingTheBase(): Unit = runBlocking {
+    @Test fun branchesWrongParentsAndRegressionAreRetainedWithoutReplacingTheBase(): Unit = runBlocking {
         assumeFalse(BuildConfig.IS_DEMO); activate()
         val original=state()
         for (payload in listOf(next(revision=1,parent=F.editor.id).let { JsonObject(it+("parentPublishId" to JsonNull)) },
-            next(revision=3,parent=F.editor.id))) {
+            next(revision=2,parent=F.editor.id))) {
             assertEquals(RefreshError.PUBLICATION_RECOVERY,rejects<RefreshException> { refresh(remote(payload)).refresh() }.error)
             assertEquals(original.confirmedPayloadJson,state().confirmedPayloadJson)
         }
@@ -146,6 +146,75 @@ class SnapshotRefreshInstrumentedTest {
         refresh(remote(next())).refresh()
         assertEquals(RefreshError.PUBLICATION_RECOVERY,rejects<RefreshException> { refresh(transport()).refresh() }.error)
         assertEquals(2L,state().revision); assertEquals(F.otherPharmacyId,state().publishId)
+    }
+    @Test fun cleanReaderCatchesUpAcrossGapAndContinuesWithNextPublication(): Unit = runBlocking {
+        assumeFalse(BuildConfig.IS_DEMO); activate()
+        val changed = F.catalog().copy(medications = F.catalog().medications.map { it.copy(note = "missed publications") })
+        assertEquals(RefreshOutcome.APPLIED, refresh(remote(next(changed, 4, F.otherPharmacyId, F.editor.id))).refresh())
+        assertEquals(changed, ready().catalog); assertEquals(4L, state().revision)
+        assertTrue(history().none { it.field == "recoveryCandidate" })
+        assertEquals(setOf("note"), history().filter { it.entityType == "medication" }.map { it.field }.toSet())
+        assertEquals(RefreshOutcome.APPLIED, refresh(remote(next(changed, 5, F.editor.id, F.otherPharmacyId))).refresh())
+        assertEquals(5L, state().revision); assertEquals(2, history().count { it.field == "publication" })
+    }
+    @Test fun gapWithReusedPublicationIdNeverFastForwards(): Unit = runBlocking {
+        assumeFalse(BuildConfig.IS_DEMO); activate(); val original = state()
+        assertEquals(RefreshError.PUBLICATION_RECOVERY, rejects<RefreshException> {
+            refresh(remote(next(revision = 4, id = F.publishId, parent = F.editor.id))).refresh()
+        }.error)
+        assertEquals(original.confirmedPayloadJson, state().confirmedPayloadJson)
+        assertEquals(F.catalog(), ready().catalog)
+    }
+    @Test fun gapWithPendingEditsRetainsTheOriginalBaseAndLocalWork(): Unit = runBlocking {
+        assumeFalse(BuildConfig.IS_DEMO); activate(); val original = state()
+        val local = F.catalog().copy(medications = F.catalog().medications.map { it.copy(note = "local") })
+        val ops = com.aqaqeer.app.admin.CatalogEdits.diff(F.catalog(), local, F.editor, F.time, F.publishId)
+        val db = factory.open()
+        try {
+            db.catalogDao().putPending(ops)
+            db.catalogDao().updateMedications(local.medications)
+            assertEquals(RefreshError.PUBLICATION_RECOVERY, rejects<RefreshException> {
+                refresh(remote(next(revision = 4, parent = F.editor.id))).refresh()
+            }.error)
+            assertEquals(ops, db.catalogDao().pending())
+            assertEquals(local.medications, db.catalogDao().medications())
+            assertEquals(original.confirmedPayloadJson, state().confirmedPayloadJson)
+            assertEquals(1, history().count { it.field == "recoveryCandidate" })
+        } finally { db.close() }
+    }
+    @Test fun attemptCreatedDuringDownloadBlocksGapCatchUpTransactionally(): Unit = runBlocking {
+        assumeFalse(BuildConfig.IS_DEMO); activate(); val original = state()
+        val entered = CompletableDeferred<Unit>(); val release = CompletableDeferred<Unit>(); var pins = 0
+        val request = async {
+            rejects<RefreshException> { refresh(remote(next(revision = 4, parent = F.editor.id), pin = {
+                if (++pins == 1) { entered.complete(Unit); release.await() }
+            })).refresh() }.error
+        }
+        withTimeout(10000) { entered.await() }
+        val attempt = PublishAttempt(UUID.randomUUID().toString(), original.confirmedPayloadJson,
+            next().toString(), "[]", "PREPARED")
+        val db = factory.open()
+        try {
+            db.catalogDao().attempt(attempt); release.complete(Unit)
+            assertEquals(RefreshError.PUBLICATION_RECOVERY, request.await())
+            assertEquals(listOf(attempt), db.catalogDao().attempts())
+            assertEquals(original.confirmedPayloadJson, state().confirmedPayloadJson)
+            assertEquals(F.catalog(), ready().catalog)
+        } finally { release.complete(Unit); db.close() }
+    }
+    @Test fun divergentVisibleCatalogWithoutPendingWorkCannotUseGapCatchUp(): Unit = runBlocking {
+        assumeFalse(BuildConfig.IS_DEMO); activate(); val original = state()
+        val local = F.catalog().medications.map { it.copy(note = "unrepresented local state") }
+        val db = factory.open()
+        try {
+            db.catalogDao().updateMedications(local)
+            assertEquals(0, db.catalogDao().pendingCount())
+            assertEquals(RefreshError.PUBLICATION_RECOVERY, rejects<RefreshException> {
+                refresh(remote(next(revision = 4, parent = F.editor.id))).refresh()
+            }.error)
+            assertEquals(local, db.catalogDao().medications())
+            assertEquals(original.confirmedPayloadJson, state().confirmedPayloadJson)
+        } finally { db.close() }
     }
     @Test fun failedNetworkAuthenticationAndReadbackLeaveCatalogHistoryAndRefreshTimeUntouched(): Unit = runBlocking {
         assumeFalse(BuildConfig.IS_DEMO); activate(); val original=state()

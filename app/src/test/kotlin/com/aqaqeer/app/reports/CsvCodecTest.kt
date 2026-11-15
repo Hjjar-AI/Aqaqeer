@@ -43,6 +43,22 @@ class CsvCodecTest {
         assertEquals(10000, read("nameEn\n" + "A\n".repeat(10000)).records.size)
         assertThrows(CsvProblem::class.java) { read("nameEn\n" + "A\n".repeat(10001)) }
     }
+    @Test fun blankRecordsAreSkippedWithoutRenumberingNonblankAndMalformedRecords() {
+        val table = read("nameEn,note\r\nA,first\r\n\r\n,\r\n\" \",\"\t\"\r\nB,last\r\nC\r\n")
+        assertEquals(listOf(2, 6, 7), table.records.map { it.number })
+        assertEquals(listOf("A", "B", "C"), table.records.map { it.cells.first() })
+        assertEquals(listOf(false, false, true), table.records.map { it.malformed })
+    }
+    @Test fun skippedBlankRecordsStillCountTowardTheRecordLimit() {
+        assertTrue(read("nameEn\n" + "\n".repeat(10000)).records.isEmpty())
+        assertThrows(CsvProblem::class.java) { read("nameEn\n" + "\n".repeat(10000) + "A\n") }
+    }
+    @Test fun blankSkippingDoesNotRelaxHeaderQuotingOrColumnLimits() {
+        for (text in listOf("\nnameEn\nA", "nameEn\n\" ", "nameEn\n" + ",".repeat(21))) {
+            assertThrows(text, CsvProblem::class.java) { read(text) }
+        }
+        assertTrue(read("nameEn,note\n,\n \n").records.isEmpty())
+    }
     @Test fun spreadsheetExportGuardsHiddenFormulaPrefixesButRetryPreservesRawData() {
         val cells = listOf("=SUM(A1)", " +1", "\u200f@cmd", "\ttext", "-1", "normal")
         fun encoded(safe: Boolean) = ByteArrayOutputStream().also {

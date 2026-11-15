@@ -43,6 +43,16 @@ class AdminHistoryInstrumentedTest {
         val section = p.ready().catalog.sections.single()
         assertThrows(AdminProblem::class.java) { runBlocking { p.admin.delete("section", section.id, section.nameAr) } }
     }
+    @Test fun missingDeletionTargetsReturnSpecificErrorsWithoutCreatingAnyWork(): Unit = runBlocking {
+        p.medication()
+        for ((type, expected) in listOf("medication" to "لم يعد الدواء موجوداً", "category" to "لم يعد التصنيف موجوداً",
+                "form" to "لم يعد الشكل موجوداً", "section" to "لم يعد القسم موجوداً")) {
+            val before = p.admin.transaction { Triple(it.catalog(), it.pending(), it.history()) }
+            val failure = assertThrows(AdminProblem::class.java) { runBlocking { p.admin.delete(type, newId()) } }
+            assertEquals(expected, failure.reason)
+            assertEquals(before, p.admin.transaction { Triple(it.catalog(), it.pending(), it.history()) })
+        }
+    }
     @Test fun historyCombinesTimezoneEditorAndMedicationFiltersAndRedactsVerifiers(): Unit = runBlocking {
         val med = p.medication(); val id = p.ready().catalog.pharmacy!!.pharmacyId
         val editor = p.admin.transaction { it.deviceIdentity()!!.id }

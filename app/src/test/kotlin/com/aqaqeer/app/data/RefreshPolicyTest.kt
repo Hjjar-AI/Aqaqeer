@@ -20,7 +20,7 @@ class RefreshPolicyTest {
         val base=snapshot()
         assertEquals(RefreshOutcome.UNCHANGED,publicationDecision(base,snapshot(catalog=F.catalog().copy(forms=F.catalog().forms.reversed()))))
     }
-    @Test fun onlyDirectDescendantAutomaticallyAdvancesConfirmedState(): Unit = runBlocking {
+    @Test fun publicationAndLocalWorkPolicyStillRequiresDirectAncestry(): Unit = runBlocking {
         val base=snapshot()
         assertEquals(RefreshOutcome.APPLIED,publicationDecision(base,snapshot(2,F.otherPharmacyId,F.publishId)))
         for (incoming in listOf(snapshot(1,F.otherPharmacyId),snapshot(3,F.otherPharmacyId,F.editor.id),
