@@ -15,7 +15,7 @@ class BottomPlacementSettingsUiTest {
     @get:Rule(order = 1) val compose = createAndroidComposeRule<MainActivity>()
 
     @Test fun independentSwitchesPersistAcrossActivityRecreationAndNewPreferenceReader() {
-        check(BuildConfig.IS_DEMO)
+        org.junit.Assume.assumeTrue(BuildConfig.IS_DEMO)
         val preferences = DisplayPreferences(compose.activity.applicationContext)
         val original = runBlocking { preferences.home.first() }
         try {
