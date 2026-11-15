@@ -59,6 +59,26 @@ class HomeBarPlacementUiTest {
     @Test fun searchCanBeBottomWhileSectionsStayAtTop() { layout(false, true) }
     @Test fun bothBarsCanReturnToTheirOriginalTopOrder() { layout(false, false) }
 
+    @Test fun changingPlacementPreservesQueryFiltersAndSelectedSection() {
+        var state by mutableStateOf(AppUiState(sectionId = second.id, query = "Fixture", appliedQuery = "Fixture",
+            filters = HomeFilters(statuses = setOf(AvailabilityStatus.AVAILABLE))))
+        compose.setContent { AqaqeerTheme(ThemeChoice.LIGHT) { Box(Modifier.width(320.dp).height(560.dp)) {
+            HomeScreen(CatalogState.Ready(catalog, false), state, F.time, {}, {}, {}, {}, {}, {}, {},
+                projection = homeProjection(catalog, state))
+        } } }
+        for ((sections, search) in listOf(true to true, false to true, true to false, false to false)) {
+            compose.runOnIdle { state = state.copy(homePreferences = state.homePreferences.copy(
+                sectionsAtBottom = sections, searchAtBottom = search)) }
+            compose.onNodeWithTag("search").assertIsDisplayed().assertTextContains("Fixture", substring = true)
+            compose.onNodeWithTag("section_${second.id}").assertIsSelected()
+            compose.onNodeWithTag("med_Fixture medication").assertIsDisplayed()
+            compose.runOnIdle {
+                assertEquals("Fixture", state.query); assertEquals(second.id, state.sectionId)
+                assertEquals(setOf(AvailabilityStatus.AVAILABLE), state.filters.statuses)
+            }
+        }
+    }
+
     @Test fun keyboardHidesBottomSectionsAndDismissalRestoresSelectionAndQuery() {
         var state by mutableStateOf(AppUiState(sectionId = second.id))
         val keyboardVisible = java.util.concurrent.atomic.AtomicBoolean(false)
@@ -85,7 +105,7 @@ class HomeBarPlacementUiTest {
 
     @Test fun compactBottomSectionsRemainReachableAfterScrollingTheCatalog() {
         val large = catalog.copy(medications = (1..30).map { i -> catalog.medications.single().copy(
-            id = "00000000-0000-4000-8000-%012d".format(i), nameEn = "Medication $i", genericEn = "Medication $i") },
+            id = "00000000-0000-4000-8000-%012d".format(java.util.Locale.ROOT, i), nameEn = "Medication $i", genericEn = "Medication $i") },
             availability = emptyList())
         val state = AppUiState(sectionId = second.id, homePreferences = HomePreferences(groupingEnabled = false))
         compose.setContent { AqaqeerTheme(ThemeChoice.LIGHT) { Box(Modifier.width(320.dp).height(300.dp)) {
@@ -98,4 +118,20 @@ class HomeBarPlacementUiTest {
         val list = compose.onNodeWithTag("home").fetchSemanticsNode().boundsInRoot
         assertTrue(compose.onNodeWithTag("section_${second.id}").fetchSemanticsNode().boundsInRoot.top >= list.bottom)
     }
+    @Test fun compactTopSectionsScrollWithTheGridWhileSearchStaysFixed() {
+        val large = catalog.copy(medications = (1..30).map { i -> catalog.medications.single().copy(
+            id = "00000000-0000-4000-8000-%012d".format(java.util.Locale.ROOT, i), nameEn = "Medication $i", genericEn = "Medication $i") },
+            availability = emptyList())
+        val state = AppUiState(sectionId = second.id, homePreferences = HomePreferences(groupingEnabled = false,
+            sectionsAtBottom = false, searchAtBottom = false))
+        compose.setContent { AqaqeerTheme(ThemeChoice.LIGHT) { Box(Modifier.width(320.dp).height(300.dp)) {
+            HomeScreen(CatalogState.Ready(large, false), state, F.time, {}, {}, {}, {}, {}, {}, {},
+                projection = homeProjection(large, state))
+        } } }
+        compose.onNodeWithTag("section_${second.id}").assertIsDisplayed()
+        compose.onNodeWithTag("home").performScrollToNode(hasTestTag("med_Medication 9"))
+        compose.onNodeWithTag("section_${second.id}").assertDoesNotExist()
+        compose.onNodeWithTag("search").assertIsDisplayed()
+    }
+
 }

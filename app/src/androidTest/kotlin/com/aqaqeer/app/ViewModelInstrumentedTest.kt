@@ -96,6 +96,7 @@ class ViewModelInstrumentedTest {
 
     private fun taxonomy() {
         main { vm.navigate("taxonomy") }
+        runBlocking { withTimeout(10000) { vm.state.first { it.route == "taxonomy" } } }
         compose.setContent {
             val state by vm.state.collectAsState()
             AqaqeerTheme(ThemeChoice.LIGHT) { PharmacyAdminScreen(state, vm) }

@@ -22,6 +22,7 @@ DEMO_CASES = (
     ('amoled-large-arabic', 'CiPresentationUiTest#arabicLargeTextThemeAndRecreationRemainUsable', True),
     ('public-vectors', 'EnvelopeInstrumentedTest#androidProviderReadsAllPublicVectorsIncludingExactUnicodePassphrase', False),
     ('authentication-rejection', 'EnvelopeInstrumentedTest#androidAuthenticationFailureLeavesNoStagingFileOrPayload', False),
+    ('bottom-layout-settings', 'BottomPlacementSettingsUiTest#independentSwitchesPersistAcrossActivityRecreationAndNewPreferenceReader', True),
 )
 
 STANDARD_CASES = (
@@ -55,6 +56,34 @@ STANDARD_CASES = (
     ('BulkMedicationRegression-fourDigitPinChangeCreatesBoundOperationAndWipesInputs', 'BulkMedicationRegressionInstrumentedTest#fourDigitPinChangeCreatesBoundOperationAndWipesInputs', False),
     ('BulkMedicationRegression-historyTypeFilterSeparatesAvailabilityFromMedication', 'BulkMedicationRegressionInstrumentedTest#historyTypeFilterSeparatesAvailabilityFromMedication', False),
     ('BulkMedicationRegression-taxonomyReassignmentPreservesUntouchedAvailabilityAndMedication', 'BulkMedicationRegressionInstrumentedTest#taxonomyReassignmentPreservesUntouchedAvailabilityAndMedication', False),
+    ('Review-SnapshotRefresh-branchesWrongParentsAndRegressionAreRetainedWithoutReplacingTheBase', 'SnapshotRefreshInstrumentedTest#branchesWrongParentsAndRegressionAreRetainedWithoutReplacingTheBase', False),
+    ('Review-SnapshotRefresh-cleanReaderCatchesUpAcrossGapAndContinuesWithNextPublication', 'SnapshotRefreshInstrumentedTest#cleanReaderCatchesUpAcrossGapAndContinuesWithNextPublication', False),
+    ('Review-SnapshotRefresh-gapWithReusedPublicationIdNeverFastForwards', 'SnapshotRefreshInstrumentedTest#gapWithReusedPublicationIdNeverFastForwards', False),
+    ('Review-SnapshotRefresh-gapWithPendingEditsRetainsTheOriginalBaseAndLocalWork', 'SnapshotRefreshInstrumentedTest#gapWithPendingEditsRetainsTheOriginalBaseAndLocalWork', False),
+    ('Review-SnapshotRefresh-attemptCreatedDuringDownloadBlocksGapCatchUpTransactionally', 'SnapshotRefreshInstrumentedTest#attemptCreatedDuringDownloadBlocksGapCatchUpTransactionally', False),
+    ('Review-SnapshotRefresh-divergentVisibleCatalogWithoutPendingWorkCannotUseGapCatchUp', 'SnapshotRefreshInstrumentedTest#divergentVisibleCatalogWithoutPendingWorkCannotUseGapCatchUp', False),
+    ('Review-AdminHistory-missingDeletionTargetsReturnSpecificErrorsWithoutCreatingAnyWork', 'AdminHistoryInstrumentedTest#missingDeletionTargetsReturnSpecificErrorsWithoutCreatingAnyWork', False),
+    ('Review-PinRecovery-missingPinWithNoPendingEditsRequiresReviewThenPublishesAndPinsNextRevision', 'PinRecoveryInstrumentedTest#missingPinWithNoPendingEditsRequiresReviewThenPublishesAndPinsNextRevision', False),
+    ('Review-PinRecovery-unrelatedPinRecoveryPublishesReviewedPendingEditsAndAcknowledgesOnlyAfterReadback', 'PinRecoveryInstrumentedTest#unrelatedPinRecoveryPublishesReviewedPendingEditsAndAcknowledgesOnlyAfterReadback', False),
+    ('Review-PinRecovery-changedPinInvalidatesEarlierRecoveryConfirmationWithoutUploading', 'PinRecoveryInstrumentedTest#changedPinInvalidatesEarlierRecoveryConfirmationWithoutUploading', False),
+    ('Review-PinRecovery-pinChangedDuringUploadBlocksMutationAndRetainsDurableAttempt', 'PinRecoveryInstrumentedTest#pinChangedDuringUploadBlocksMutationAndRetainsDurableAttempt', False),
+    ('Review-PinRecovery-networkCredentialsAndDamagedPayloadNeverEnableForcedRecovery', 'PinRecoveryInstrumentedTest#networkCredentialsAndDamagedPayloadNeverEnableForcedRecovery', False),
+    ('Review-PinRecovery-lostPinResponseIsAcknowledgedAfterRecreationWithoutAnotherUpload', 'PinRecoveryInstrumentedTest#lostPinResponseIsAcknowledgedAfterRecreationWithoutAnotherUpload', False),
+    ('Review-PinRecovery-hiddenWriteStartedAttemptNeedsSeparateReconciliationBeforeReplacement', 'PinRecoveryInstrumentedTest#hiddenWriteStartedAttemptNeedsSeparateReconciliationBeforeReplacement', False),
+    ('Review-PinRecovery-validLiveSnapshotRefusesForcedRepublication', 'PinRecoveryInstrumentedTest#validLiveSnapshotRefusesForcedRepublication', False),
+    ('Review-PinRecovery-multipleStoredAttemptsBlockBeforeNetworkAndPreserveBothCandidates', 'PinRecoveryInstrumentedTest#multipleStoredAttemptsBlockBeforeNetworkAndPreserveBothCandidates', False),
+    ('Review-HomeBarPlacement-bothBarsDefaultToBottomWithSectionsBottommost', 'HomeBarPlacementUiTest#bothBarsDefaultToBottomWithSectionsBottommost', False),
+    ('Review-HomeBarPlacement-sectionsCanBeBottomWhileSearchStaysAtTop', 'HomeBarPlacementUiTest#sectionsCanBeBottomWhileSearchStaysAtTop', False),
+    ('Review-HomeBarPlacement-searchCanBeBottomWhileSectionsStayAtTop', 'HomeBarPlacementUiTest#searchCanBeBottomWhileSectionsStayAtTop', False),
+    ('Review-HomeBarPlacement-bothBarsCanReturnToTheirOriginalTopOrder', 'HomeBarPlacementUiTest#bothBarsCanReturnToTheirOriginalTopOrder', False),
+    ('Review-HomeBarPlacement-changingPlacementPreservesQueryFiltersAndSelectedSection', 'HomeBarPlacementUiTest#changingPlacementPreservesQueryFiltersAndSelectedSection', False),
+    ('Review-HomeBarPlacement-keyboardHidesBottomSectionsAndDismissalRestoresSelectionAndQuery', 'HomeBarPlacementUiTest#keyboardHidesBottomSectionsAndDismissalRestoresSelectionAndQuery', False),
+    ('Review-HomeBarPlacement-compactBottomSectionsRemainReachableAfterScrollingTheCatalog', 'HomeBarPlacementUiTest#compactBottomSectionsRemainReachableAfterScrollingTheCatalog', False),
+    ('Review-HomeBarPlacement-compactTopSectionsScrollWithTheGridWhileSearchStaysFixed', 'HomeBarPlacementUiTest#compactTopSectionsScrollWithTheGridWhileSearchStaysFixed', False),
+    ('Review-ViewModel-bottomPlacementPreferencesPersistIndependentlyWithoutCatalogOrPendingChanges', 'ViewModelInstrumentedTest#bottomPlacementPreferencesPersistIndependentlyWithoutCatalogOrPendingChanges', False),
+    ('Review-ViewModel-taxonomyDeleteConfirmationDoesNotCarryAcrossRowsTypesOrNew', 'ViewModelInstrumentedTest#taxonomyDeleteConfirmationDoesNotCarryAcrossRowsTypesOrNew', False),
+    ('Review-ViewModel-blankSectionsDefaultActiveAfterTypeChangeNewAndSuccessfulSave', 'ViewModelInstrumentedTest#blankSectionsDefaultActiveAfterTypeChangeNewAndSuccessfulSave', False),
+    ('Review-ViewModel-sectionTypedNameClearsOnSelectionAndSuccessfulDeleteResetsForm', 'ViewModelInstrumentedTest#sectionTypedNameClearsOnSelectionAndSuccessfulDeleteResetsForm', False),
 )
 
 
@@ -163,6 +192,13 @@ def main():
             try:
                 large_text = method.startswith('CiPresentationUiTest#')
                 adb('shell', 'settings', 'put', 'system', 'font_scale', '1.3' if large_text else '1.0')
+                if method == 'HomeBarPlacementUiTest#keyboardHidesBottomSectionsAndDismissalRestoresSelectionAndQuery':
+                    # This helper already verified its fresh, owned emulator and user above.
+                    adb('shell', 'settings', 'put', 'secure', 'show_ime_with_hard_keyboard', '1')
+                    if adb('shell', 'settings', 'get', 'secure', 'show_ime_with_hard_keyboard').stdout.strip() != b'1':
+                        raise RuntimeError('Soft-keyboard prerequisite could not be enabled on the owned AVD.')
+                    provenance['showImeWithHardKeyboard'] = '1 (read back)'
+                    (OUTPUT / 'provenance.json').write_text(json.dumps(provenance, indent=2) + '\n')
                 if record:
                     recorder_log = (OUTPUT / f'{name}-recorder.log').open('wb')
                     recorder = subprocess.Popen(

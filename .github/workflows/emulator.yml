@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       standard_functional:
-        description: "Options: false = demo checks only; true = also run 30 offline standard CSV/report and bulk/PIN cases on API 35 after demo checks. Default: false."
+        description: "Options: false = demo checks only; true = also run 58 offline standard CSV/report, bulk/PIN and review/UI regression cases on API 35 after demo checks. Default: false."
         type: boolean
         default: false
 
@@ -123,7 +123,7 @@ jobs:
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
 
-      - name: Run offline standard CSV/report and bulk/PIN cases
+      - name: Run offline standard functional and review/UI regressions
         id: emulator
         uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2.38.0
         with:

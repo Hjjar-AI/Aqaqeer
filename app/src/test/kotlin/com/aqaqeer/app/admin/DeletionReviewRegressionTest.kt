@@ -70,6 +70,37 @@ class DeletionReviewRegressionTest {
         assertTrue(merge(remote).conflicts.isEmpty())
     }
 
+    @Test fun sectionDeletionReviewsNewAvailabilityAndRecomputesItsCascade() {
+        val original = F.catalog().copy(sections = F.catalog().sections + Section(newId(), "قسم باقٍ"))
+        val target = original.sections.first()
+        val local = original.copy(sections = original.sections - target, availability = emptyList())
+        val added = original.medications.single().copy(id = newId(), genericEn = "New medication")
+        val remote = original.copy(medications = original.medications + added,
+            availability = original.availability + Availability(added.id, target.id, AvailabilityStatus.OUT, F.time, F.editor))
+        val ops = CatalogEdits.diff(original, local, F.editor, F.time, F.publishId)
+        val review = CatalogEdits.merge(original, local, remote, ops).conflicts.single()
+        val confirmed = CatalogEdits.merge(original, local, remote, ops, mapOf(review.key to true))
+        assertTrue(confirmed.conflicts.isEmpty())
+        assertEquals(listOf(original.sections.last()), confirmed.catalog.sections)
+        assertTrue(confirmed.catalog.availability.isEmpty())
+        assertEquals(2, confirmed.catalog.medications.size)
+    }
+
+    @Test fun formDeletionDoesNotReplayOldFallbackOverRemoteReassignment() {
+        val form = MedicationForm(newId(), "شكل محذوف")
+        val original = F.catalog().let { it.copy(forms = it.forms + form,
+            medications = it.medications.map { med -> med.copy(formId = form.id) }) }
+        val local = original.copy(forms = original.forms - form,
+            medications = original.medications.map { it.copy(formId = CatalogSeeds.OTHER_FORM_ID) })
+        val remote = original.copy(medications = original.medications.map { it.copy(formId = CatalogSeeds.TABLET_FORM_ID) })
+        val ops = CatalogEdits.diff(original, local, F.editor, F.time, F.publishId)
+        val review = CatalogEdits.merge(original, local, remote, ops).conflicts.single()
+        val confirmed = CatalogEdits.merge(original, local, remote, ops, mapOf(review.key to true))
+        assertTrue(confirmed.conflicts.isEmpty())
+        assertEquals(CatalogSeeds.TABLET_FORM_ID, confirmed.catalog.medications.single().formId)
+        assertFalse(confirmed.catalog.forms.any { it.id == form.id })
+    }
+
     @Test fun restoredMedicationLosesRemoteTombstoneWhileUnrelatedTombstonesSurvive() {
         val original = F.catalog().copy(availability = emptyList())
         val med = original.medications.single()
@@ -79,7 +110,8 @@ class DeletionReviewRegressionTest {
         val remote = original.copy(medications = emptyList(), tombstones = listOf(marker, unrelated))
         val ops = CatalogEdits.diff(original, local, F.editor, F.time, F.publishId)
         val choice = CatalogEdits.merge(original, local, remote, ops).conflicts.single()
-        val restored = CatalogEdits.merge(original, local, remote, ops, mapOf(choice.key to true))
+        val restored = CatalogEdits.merge(original, local.copy(tombstones = listOf(marker.copy(operationId = newId()))),
+            remote, ops, mapOf(choice.key to true))
         assertTrue(restored.conflicts.isEmpty())
         assertEquals("restore", restored.catalog.medications.single().note)
         assertEquals(listOf(unrelated), restored.catalog.tombstones)
