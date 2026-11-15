@@ -191,8 +191,9 @@ class SnapshotRefreshInstrumentedTest {
             })).refresh() }.error
         }
         withTimeout(10000) { entered.await() }
-        val attempt = PublishAttempt(UUID.randomUUID().toString(), original.confirmedPayloadJson,
-            next().toString(), "[]", "PREPARED")
+        val attemptId = UUID.randomUUID().toString()
+        val attempt = PublishAttempt(attemptId, original.confirmedPayloadJson,
+            next(id = attemptId).toString(), "[]", "PREPARED")
         val db = factory.open()
         try {
             db.catalogDao().attempt(attempt); release.complete(Unit)

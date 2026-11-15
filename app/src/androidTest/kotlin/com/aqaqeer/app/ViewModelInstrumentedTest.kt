@@ -1,6 +1,10 @@
 package com.aqaqeer.app
 
 import androidx.lifecycle.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.test.*
+import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.test.platform.app.InstrumentationRegistry
 import app.cash.turbine.test
 import com.aqaqeer.app.admin.*
@@ -17,6 +21,7 @@ import org.junit.*
 import org.junit.Assert.*
 
 class ViewModelInstrumentedTest {
+    @get:Rule val compose = createComposeRule()
     private lateinit var p: SuiteProfile
     private lateinit var vm: CatalogViewModel
     private lateinit var remote: SuiteRemote
@@ -71,6 +76,91 @@ class ViewModelInstrumentedTest {
         withTimeout(10000) { entered.await() }; main { vm.cancelAdminOperation() }
         withTimeout(10000) { vm.adminBusy.first { !it } }
         assertTrue(cancelled.all { it == '\u0000' })
+    }
+    @Test fun bottomPlacementPreferencesPersistIndependentlyWithoutCatalogOrPendingChanges(): Unit = runBlocking {
+        val preferences = DisplayPreferences(p.context); val original = preferences.home.first()
+        val before = p.admin.transaction { Triple(it.catalog(), it.pending(), it.history()) }
+        try {
+            for ((sections, search) in listOf(true to true, true to false, false to true, false to false)) {
+                main { vm.setSectionsAtBottom(sections); vm.setSearchAtBottom(search) }
+                val changed = withTimeout(10000) { preferences.home.first { it.sectionsAtBottom == sections && it.searchAtBottom == search } }
+                assertEquals(original.copy(sectionsAtBottom = sections, searchAtBottom = search), changed)
+                assertEquals(changed, DisplayPreferences(p.context).home.first())
+                withTimeout(10000) { vm.state.first { it.homePreferences == changed } }
+            }
+            assertEquals(before, p.admin.transaction { Triple(it.catalog(), it.pending(), it.history()) })
+        } finally {
+            preferences.setSectionsAtBottom(original.sectionsAtBottom); preferences.setSearchAtBottom(original.searchAtBottom)
+        }
+    }
+
+    private fun taxonomy() {
+        main { vm.navigate("taxonomy") }
+        compose.setContent {
+            val state by vm.state.collectAsState()
+            AqaqeerTheme(ThemeChoice.LIGHT) { PharmacyAdminScreen(state, vm) }
+        }
+    }
+    private fun chooseType(label: Int) {
+        compose.onNodeWithText(uiText(R.string.ui_pharmacy_admin_screen_124)).performScrollTo().performClick()
+        compose.onNodeWithText(uiText(label)).performClick()
+    }
+    private fun row(name: String) = compose.onNodeWithText(name, substring = true).performScrollTo()
+    private fun confirmDeletion() = compose.onNodeWithText(uiText(R.string.ui_pharmacy_admin_screen_136)).performScrollTo()
+    private fun deleteButton() = compose.onNodeWithText(uiText(R.string.ui_pharmacy_admin_screen_137)).performScrollTo()
+
+    @Test fun taxonomyDeleteConfirmationDoesNotCarryAcrossRowsTypesOrNew(): Unit = runBlocking {
+        p.admin.saveTaxonomy("category", null, "تصنيف ألف", null)
+        p.admin.saveTaxonomy("category", null, "تصنيف باء", null)
+        p.admin.saveTaxonomy("form", null, "شكل خاص", null)
+        withTimeout(10000) { vm.state.first { (it.catalog as? CatalogState.Ready)?.catalog?.categories?.size == 3 } }
+        val before = p.admin.transaction { Triple(it.catalog(), it.pending(), it.history()) }
+        taxonomy(); chooseType(R.string.ui_pharmacy_admin_screen_051)
+        row("تصنيف ألف").performClick(); confirmDeletion().performClick(); deleteButton().assertIsEnabled()
+        row("تصنيف باء").performClick(); confirmDeletion().assertIsOff(); deleteButton().assertIsNotEnabled()
+        confirmDeletion().performClick()
+        compose.onNodeWithText(uiText(R.string.ui_pharmacy_admin_screen_128)).performScrollTo().performClick()
+        compose.onNodeWithText(uiText(R.string.ui_pharmacy_admin_screen_136)).assertDoesNotExist()
+        row("تصنيف ألف").performClick(); deleteButton().assertIsNotEnabled(); confirmDeletion().performClick()
+        chooseType(R.string.ui_pharmacy_admin_screen_052)
+        row("شكل خاص").performClick(); confirmDeletion().assertIsOff(); deleteButton().assertIsNotEnabled()
+        assertEquals(before, p.admin.transaction { Triple(it.catalog(), it.pending(), it.history()) })
+    }
+
+    @Test fun blankSectionsDefaultActiveAfterTypeChangeNewAndSuccessfulSave(): Unit = runBlocking {
+        p.admin.saveTaxonomy("section", null, "قسم متوقف", null, active = false)
+        withTimeout(10000) { vm.state.first { (it.catalog as? CatalogState.Ready)?.catalog?.sections?.size == 2 } }
+        taxonomy(); row("قسم متوقف").performClick()
+        compose.onNodeWithText(uiText(R.string.ui_pharmacy_admin_screen_131)).performScrollTo().assertIsOff()
+        chooseType(R.string.ui_pharmacy_admin_screen_051); chooseType(R.string.ui_pharmacy_admin_screen_053)
+        compose.onNodeWithText(uiText(R.string.ui_pharmacy_admin_screen_131)).performScrollTo().assertIsOn()
+        row("قسم متوقف").performClick()
+        compose.onNodeWithText(uiText(R.string.ui_pharmacy_admin_screen_128)).performScrollTo().performClick()
+        compose.onNodeWithText(uiText(R.string.ui_pharmacy_admin_screen_131)).performScrollTo().assertIsOn()
+        compose.onAllNodes(hasSetTextAction())[0].performScrollTo().performTextInput("قسم جديد")
+        androidx.test.espresso.Espresso.closeSoftKeyboard()
+        compose.onNodeWithText(uiText(R.string.ui_pharmacy_admin_screen_132)).performScrollTo().performClick()
+        val saved = withTimeout(10000) { vm.state.first { (it.catalog as? CatalogState.Ready)?.catalog?.sections?.any { section -> section.nameAr == "قسم جديد" } == true } }
+        assertTrue((saved.catalog as CatalogState.Ready).catalog.sections.single { it.nameAr == "قسم جديد" }.isActive)
+        compose.onNodeWithText(uiText(R.string.ui_pharmacy_admin_screen_131)).performScrollTo().assertIsOn()
+        compose.onNodeWithText(uiText(R.string.ui_pharmacy_admin_screen_136)).assertDoesNotExist()
+    }
+
+    @Test fun sectionTypedNameClearsOnSelectionAndSuccessfulDeleteResetsForm(): Unit = runBlocking {
+        p.admin.saveTaxonomy("section", null, "قسم متوقف", null, active = false)
+        withTimeout(10000) { vm.state.first { (it.catalog as? CatalogState.Ready)?.catalog?.sections?.size == 2 } }
+        val original = p.ready().catalog.sections.first { it.isActive }.nameAr
+        taxonomy(); row("قسم متوقف").performClick()
+        compose.onAllNodes(hasSetTextAction())[2].performScrollTo().performTextInput("قسم متوقف")
+        androidx.test.espresso.Espresso.closeSoftKeyboard(); confirmDeletion().performClick()
+        row(original).performClick(); confirmDeletion().assertIsOff()
+        assertEquals("", compose.onAllNodes(hasSetTextAction())[2].fetchSemanticsNode().config[SemanticsProperties.EditableText].text)
+        row("قسم متوقف").performClick()
+        compose.onAllNodes(hasSetTextAction())[2].performScrollTo().performTextInput("قسم متوقف")
+        androidx.test.espresso.Espresso.closeSoftKeyboard(); confirmDeletion().performClick(); deleteButton().performClick()
+        withTimeout(10000) { vm.state.first { (it.catalog as? CatalogState.Ready)?.catalog?.sections?.none { section -> section.nameAr == "قسم متوقف" } == true } }
+        compose.onNodeWithText(uiText(R.string.ui_pharmacy_admin_screen_131)).performScrollTo().assertIsOn()
+        compose.onNodeWithText(uiText(R.string.ui_pharmacy_admin_screen_136)).assertDoesNotExist()
     }
     @Test fun presentationPreferenceEmitsAndPersistsWithoutChangingCatalog(): Unit = runBlocking {
         val preferences = DisplayPreferences(p.context); val before = preferences.home.first(); val catalog = p.ready().catalog

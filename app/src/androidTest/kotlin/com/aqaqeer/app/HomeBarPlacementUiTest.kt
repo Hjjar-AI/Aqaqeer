@@ -61,10 +61,10 @@ class HomeBarPlacementUiTest {
 
     @Test fun keyboardHidesBottomSectionsAndDismissalRestoresSelectionAndQuery() {
         var state by mutableStateOf(AppUiState(sectionId = second.id))
-        var keyboardVisible = false
+        val keyboardVisible = java.util.concurrent.atomic.AtomicBoolean(false)
         compose.setContent {
             val ime = WindowInsets.ime.getBottom(LocalDensity.current) > 0
-            SideEffect { keyboardVisible = ime }
+            SideEffect { keyboardVisible.set(ime) }
             AqaqeerTheme(ThemeChoice.LIGHT) { Box(Modifier.fillMaxSize().imePadding()) {
                 HomeScreen(CatalogState.Ready(catalog, false), state, F.time,
                     { state = state.copy(sectionId = it) }, { state = state.copy(query = it, appliedQuery = it) },
@@ -73,11 +73,11 @@ class HomeBarPlacementUiTest {
         }
         compose.onNodeWithTag("section_${second.id}").assertIsSelected()
         compose.onNodeWithTag("search").performClick().performTextInput("Fixture")
-        compose.waitUntil(10000) { keyboardVisible }
+        compose.waitUntil(10000) { keyboardVisible.get() }
         compose.onNodeWithTag("section_${second.id}").assertDoesNotExist()
         compose.onNodeWithTag("search").assertIsDisplayed().assertTextContains("Fixture", substring = true)
         androidx.test.espresso.Espresso.closeSoftKeyboard()
-        compose.waitUntil(10000) { !keyboardVisible }
+        compose.waitUntil(10000) { !keyboardVisible.get() }
         compose.onNodeWithTag("section_${second.id}").assertIsDisplayed().assertIsSelected()
         compose.onNodeWithTag("search").assertTextContains("Fixture", substring = true)
         compose.runOnIdle { assertEquals(second.id, state.sectionId); assertEquals("Fixture", state.query) }
