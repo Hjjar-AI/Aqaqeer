@@ -14,6 +14,28 @@ internal data class MergeResult(val catalog: CatalogSnapshot, val conflicts: Lis
 
 /** Field comparison deliberately excludes derived attribution. Entity additions/deletions are indivisible. */
 internal object CatalogEdits {
+    private fun deletionRows(c: CatalogSnapshot, targets: Set<String>): Map<String, JsonObject> =
+        rows(c, targets = targets).mapValues { (_, row) ->
+            JsonObject(row - setOf("updatedAt", "updatedBy"))
+        }
+
+    /** Include links from both branches: a remote addition or reassignment can change deletion effects. */
+    private fun deletionTargets(base: CatalogSnapshot, remote: CatalogSnapshot,
+        operations: List<PendingOperation>): Set<String> = buildSet {
+        operations.forEach { add("${it.entityType}:${it.targetId}") }
+        val deleted = operations.filter { it.field == "@entity" && it.intendedValueJson == "null" }
+        for (c in listOf(base, remote)) for (op in deleted) {
+            when (op.entityType) {
+                "category", "form" -> c.medications.filter {
+                    if (op.entityType == "category") it.categoryId == op.targetId else it.formId == op.targetId
+                }.forEach { add("medication:${it.id}") }
+                "medication", "section" -> c.availability.filter {
+                    if (op.entityType == "medication") it.medicationId == op.targetId else it.sectionId == op.targetId
+                }.forEach { add("availability:${it.medicationId}/${it.sectionId}") }
+            }
+        }
+    }
+
     fun rows(c: CatalogSnapshot, unchangedFrom: CatalogSnapshot? = null, targets: Set<String>? = null): Map<String, JsonObject> = buildMap {
         fun <T, K> different(values: List<T>, old: List<T>?, key: (T) -> K): List<T> {
             if (old == null) return values
@@ -62,12 +84,17 @@ internal object CatalogEdits {
             .digest(editJson.encodeToString(remote).toByteArray()).joinToString("") { "%02x".format(it) }
         val accepted = mutableListOf<PendingOperation>()
         for ((tx, ops) in operations.groupBy { it.transactionId }) {
-            // Deletion affects linked records too: any changed remote state requires a fresh transaction review.
+            // Review only the deletion's scope; unrelated remote work must survive without another prompt.
             val deletes = ops.any { it.field == "@entity" && it.intendedValueJson == "null" }
-            if (deletes && rows(base) != rows(remote)) {
-                val key = "delete:$tx:$remoteFingerprint"
+            val targets = if (deletes) deletionTargets(base, remote, ops) else emptySet()
+            val before = if (deletes) deletionRows(base, targets) else emptyMap()
+            val after = if (deletes) deletionRows(remote, targets) else emptyMap()
+            if (deletes && before != after) {
+                val fingerprint = java.security.MessageDigest.getInstance("SHA-256")
+                    .digest(editJson.encodeToString(after.toSortedMap()).toByteArray())
+                    .joinToString("") { "%02x".format(it) }
+                val key = "delete:$tx:$fingerprint"
                 if (choices[key] == null) {
-                    val before = rows(base); val after = rows(remote)
                     fun display(value: JsonElement?): String = when (value) {
                         null, JsonNull -> "غير موجود"
                         is JsonObject -> MedicationPresentation.recordIdentity(value, local.forms + remote.forms) ?: "عنصر مرتبط"
@@ -91,6 +118,17 @@ internal object CatalogEdits {
                 if (choices[key] == false) continue
             }
             for (op in ops) {
+                // Recompute derived cascades/reassignments from the reviewed remote records below,
+                // rather than replaying an old reassignment over a remote move to a different taxonomy.
+                val derived = deletes && ops.any { deletion ->
+                    deletion.field == "@entity" && deletion.intendedValueJson == "null" && when (deletion.entityType) {
+                        "category" -> op.entityType == "medication" && op.field == "categoryId"
+                        "form" -> op.entityType == "medication" && op.field == "formId"
+                        "medication", "section" -> op.entityType == "availability"
+                        else -> false
+                    }
+                }
+                if (derived) continue
                 val rowKey = "${op.entityType}:${op.targetId}"
                 val current = r[rowKey]
                 val old = editJson.parseToJsonElement(op.baseValueJson)
@@ -216,9 +254,9 @@ internal object CatalogEdits {
         }
         val availability = decode("availability") { editJson.decodeFromJsonElement<Availability>(it) }
             .filter { a -> medications.any { it.id == a.medicationId } && sections.any { it.id == a.sectionId } }
-        val tombstones = (remote.tombstones + local.tombstones.filter { t ->
+        val tombstones = (remote.tombstones + local.tombstones).filter { t ->
             "${t.entityType}:${t.entityId}" !in r
-        }).distinctBy { Triple(it.entityType, it.entityId, it.operationId) }
+        }.distinctBy { Triple(it.entityType, it.entityId, it.operationId) }
         val result = CatalogSnapshot(decode("pharmacy") { editJson.decodeFromJsonElement<Pharmacy>(it) }.single(),
             categories, forms, sections, medications, availability, tombstones)
         if (conflicts.isEmpty()) CatalogRules.validate(result)

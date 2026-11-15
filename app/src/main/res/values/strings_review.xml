@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="publish_multiple_attempts">توجد أكثر من محاولة نشر محفوظة. أُوقف النشر لحماية العمل؛ يلزم فحص المحاولات واستردادها.</string>
+    <string name="pin_changed_review">تغيرت الرسالة المثبتة؛ أعد المراجعة.</string>
+    <string name="pin_recovery_live_snapshot">توجد نسخة مشتركة سليمة؛ استخدم التحديث أو النشر المعتاد بدلاً من استرداد التثبيت.</string>
+    <string name="pin_recovery_title">نشر نسخة جديدة وتثبيتها</string>
+    <string name="pin_recovery_explicit">استرداد بتأكيد صريح</string>
+    <string name="pin_recovery_retained">هوية ووقت النسخة المحتفظ بها</string>
+    <string name="pin_recovery_confirm">راجعت البيانات والتحذير وأؤكد نشرها وتثبيت نسخة جديدة</string>
+    <string name="pin_recovery_warning">ستُنشر البيانات المحتفظ بها على هذا الهاتف (%1$d دواء) مع التعديلات المراجعة وتُثبّت نسخة جديدة. قد تكون هناك تغييرات بعيدة غير مرئية لا يمكن استعادتها. راجع البيانات قبل التأكيد.</string>
+    <string name="pin_recovery_unavailable">النسخة المشتركة مفقودة أو الرسالة المثبتة لا تخص عقاقير.</string>
+    <string name="pin_recovery_help">إذا فُقد تثبيت عقاقير أو ثُبّتت رسالة أخرى، افحص الحالة ثم راجع التحذير والبيانات المحتفظ بها قبل تأكيد نشر نسخة جديدة. لا تستخدم هذا الإجراء لتجاوز فشل الاتصال أو فك التشفير.</string>
+    <string name="pin_group_guidance">خصّص المجموعة لعقاقير، واترك تثبيت الرسائل لنسخة البوت فقط. قيّد صلاحية التثبيت لدى الأعضاء والمشرفين البشريين حيثما أمكن. تثبيت رسالة أخرى قد يوقف تحديث البيانات لدى الجميع.</string>
+    <string name="maintenance_coordination">اتفقوا على مشرف واحد لإتمام الصيانة، وأوقفوا النشر من الهواتف الأخرى حتى تنتهي. أي تغيير في المصدر يستلزم مراجعته وحفظ نسخة احتياطية جديدة داخل العملية.</string>
+    <string name="home_sections_bottom">شريط الأقسام في الأسفل</string>
+    <string name="home_sections_bottom_help">يبقى أسفل البحث والتصفية عند نقلهما للأسفل، ويختفي مؤقتاً أثناء ظهور لوحة المفاتيح.</string>
+    <string name="home_search_bottom">البحث والتصفية في الأسفل</string>
+    <string name="home_search_bottom_help">يبقي البحث وزر التصفية أسفل قائمة الأدوية وفوق الأقسام السفلية.</string>
+    <string name="delete_missing_medication">لم يعد الدواء موجوداً</string>
+    <string name="delete_missing_category">لم يعد التصنيف موجوداً</string>
+    <string name="delete_missing_form">لم يعد الشكل موجوداً</string>
+    <string name="delete_missing_section">لم يعد القسم موجوداً</string>
+    <string name="delete_invalid_type">نوع غير صالح</string>
+</resources>

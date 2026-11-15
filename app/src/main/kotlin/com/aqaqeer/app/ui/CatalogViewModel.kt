@@ -224,8 +224,9 @@ class CatalogViewModel @Inject constructor(
         feedback.value = UiFeedback(if (added) uiText(R.string.ui_catalog_view_model_014) else uiText(R.string.ui_catalog_view_model_015), "home", medicationId = id)
     }
     internal fun review() = command("review") { pendingEdits.value = admin.pending() }
-    internal fun publish(choices: Map<String, Boolean> = emptyMap(), reviewOnFailure: Boolean = false) = command {
-        sharing.publish(choices); pendingEdits.value = admin.pending(); admin.clearReconnectIfDone(sharing.status.value.verified)
+    internal fun publish(choices: Map<String, Boolean> = emptyMap(), reviewOnFailure: Boolean = false,
+        recoverPin: Boolean = false) = command {
+        sharing.publish(choices, recoverPin); pendingEdits.value = admin.pending(); admin.clearReconnectIfDone(sharing.status.value.verified)
         if (reviewOnFailure && !sharing.status.value.verified) navigate("review")
     }
     internal fun onForeground(active: Boolean) {
@@ -374,8 +375,9 @@ class CatalogViewModel @Inject constructor(
     fun refreshCatalog(automatic: Boolean = false) {
         val ready = state.value.catalog as? CatalogState.Ready ?: return
         if (ready.isDemo || ready.restorePaused || ready.maintenancePaused || ready.lifecycle != "SHARED" || ready.catalog.pharmacy == null || refreshState.value.busy) return
-        if (adminBusy.value || sharing.status.value.busy || !online) {
-            if (!automatic) feedback.value = UiFeedback(if (!online) uiText(R.string.logic_offline) else uiText(R.string.logic_busy), route.value)
+        val offline = if (automatic) !online else connectivity.activeNetwork == null
+        if (adminBusy.value || sharing.status.value.busy || offline) {
+            if (!automatic) feedback.value = UiFeedback(if (offline) uiText(R.string.logic_offline) else uiText(R.string.logic_busy), route.value)
             return
         }
         val age = ready.lastSuccessfulRefreshAt?.let { java.time.Duration.between(it, Instant.now()).toMillis() }
@@ -591,6 +593,8 @@ class CatalogViewModel @Inject constructor(
     fun setGroupingEnabled(value: Boolean) { viewModelScope.launch { preferences.setGroupingEnabled(value) } }
     fun setGrouping(value: HomeGrouping) { viewModelScope.launch { preferences.setGrouping(value) } }
     fun setTwoColumns(value: Boolean) { viewModelScope.launch { preferences.setTwoColumns(value) } }
+    fun setSectionsAtBottom(value: Boolean) { viewModelScope.launch { preferences.setSectionsAtBottom(value) } }
+    fun setSearchAtBottom(value: Boolean) { viewModelScope.launch { preferences.setSearchAtBottom(value) } }
     fun setLayout(value: CardLayout) { viewModelScope.launch { preferences.setLayout(value) } }
     fun setSecondaryHijri(value: Boolean) { viewModelScope.launch { preferences.setSecondaryHijri(value) } }
     fun setNames(value: NameDisplay) { viewModelScope.launch { preferences.setNames(value) } }

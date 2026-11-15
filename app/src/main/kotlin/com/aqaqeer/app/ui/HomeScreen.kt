@@ -5,9 +5,6 @@ import com.aqaqeer.app.R
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.tween
@@ -27,6 +24,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.platform.LocalDensity
@@ -93,7 +91,8 @@ import java.time.ZoneId
     setGroupingEnabled: (Boolean) -> Unit = {}, setGrouping: (HomeGrouping) -> Unit = {},
     saveBulk: ((AvailabilitySelection, BulkMedicationChanges, () -> Unit) -> Unit)? = null,
     projection: HomeBrowseResult = HomeBrowseResult(), highlightedMedication: String? = null,
-    prefillMedication: (String) -> Unit = {}, onBulkModeChanged: (Boolean) -> Unit = {}) {
+    prefillMedication: (String) -> Unit = {}, onBulkModeChanged: (Boolean) -> Unit = {},
+    onBottomBarsHeightChanged: (Int) -> Unit = {}) {
     val catalog = ready.catalog
     val focus = LocalFocusManager.current
     if (catalog.pharmacy == null) {
@@ -178,46 +177,30 @@ import java.time.ZoneId
     var searchText by rememberSaveable(catalog.pharmacy.pharmacyId, stateSaver = TextFieldValue.Saver) { mutableStateOf(TextFieldValue(state.query)) }
     fun changeSearch(value: TextFieldValue) { searchText = value; setQuery(value.text) }
     val browseHeading: @Composable () -> Unit = {
-        if (active.isNotEmpty()) BoxWithConstraints(Modifier.fillMaxWidth()) {
-            val measurer = androidx.compose.ui.text.rememberTextMeasurer()
-            val style = MaterialTheme.typography.titleSmall
-            val density = LocalDensity.current
-            val required = remember(active, catalog.outCounts, style, density) {
-                active.maxOf { section ->
-                    val count = catalog.outCounts[section.id] ?: 0
-                    val label = section.nameAr + if (count > 0) " ${MedicationPresentation.easternDigits(count.toString())}" else ""
-                    with(density) { measurer.measure(androidx.compose.ui.text.AnnotatedString(label), style).size.width.toDp() } + UiSpacing.tabMeasurementAllowance
-                } * active.size
-            }
-            val tabs: @Composable () -> Unit = {
-                active.forEach { section ->
-                    val out = catalog.outCounts[section.id] ?: 0
-                    Tab(selected = selected?.id == section.id, onClick = { selectSection(section.id) },
-                        modifier = Modifier.testTag("section_${section.id}").semantics {
-                            contentDescription = section.nameAr + if (out > 0) uiText(R.string.ui_home_screen_001, MedicationPresentation.easternDigits(out.toString())) else ""
-                        }) {
-                        Row(Modifier.heightIn(min = UiSpacing.touch).padding(horizontal = UiSpacing.related),
-                            verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(UiSpacing.hair)) {
-                            Text(section.nameAr, style = style)
-                            if (out > 0) Badge { Text(MedicationPresentation.easternDigits(out.toString())) }
-                        }
-                    }
+        HomeSectionsBar(active, selected?.id, catalog.outCounts, selectSection)
+    }
+    val searchControls: @Composable () -> Unit = {
+        HomeSearchControls(searchText, ::changeSearch, searching, state.filters, visible.size,
+            catalog.medications.size, openFilters = {
+                if (editor == null && canOpenHomeModal()) {
+                    focus.clearFocus(); notifyModal(true); filtersOpen = true
                 }
-            }
-            if (required <= maxWidth) PrimaryTabRow(selectedTabIndex = active.indexOf(selected).coerceAtLeast(0),
-                containerColor = MaterialTheme.colorScheme.background, tabs = tabs)
-            else PrimaryScrollableTabRow(selectedTabIndex = active.indexOf(selected).coerceAtLeast(0), edgePadding = 0.dp,
-                containerColor = MaterialTheme.colorScheme.background, tabs = tabs)
-        }
+            }, clearFilters = clearFilters)
     }
     BoxWithConstraints(Modifier.fillMaxSize()) {
         val compactHeight = maxHeight < 480.dp || LocalDensity.current.fontScale > 1.4f
+        val scrollingSections = compactHeight && !state.homePreferences.sectionsAtBottom
+        val keyboardOpen = WindowInsets.ime.getBottom(LocalDensity.current) > 0
+        val showBottomBars = state.homePreferences.searchAtBottom || state.homePreferences.sectionsAtBottom && !keyboardOpen
+        val reportBottomHeight by rememberUpdatedState(onBottomBarsHeightChanged)
+        SideEffect { if (!showBottomBars) reportBottomHeight(0) }
+        DisposableEffect(Unit) { onDispose { reportBottomHeight(0) } }
         val gridState = rememberLazyGridState()
-        LaunchedEffect(highlightedMedication, projectionReady) {
+        LaunchedEffect(highlightedMedication, projectionReady, scrollingSections) {
             if (highlightedMedication != null && projectionReady) {
                 val medicationIndex = visible.indexOfFirst { it.id == highlightedMedication }
                 if (medicationIndex >= 0) {
-                    val leading = (if (compactHeight) 1 else 0) + (if (bulkMode && canEdit && selected != null) 1 else 0) +
+                    val leading = (if (scrollingSections) 1 else 0) + (if (bulkMode && canEdit && selected != null) 1 else 0) +
                         (if (editor == null && (availabilityBusy || availabilityMessage != null)) 1 else 0) + (if (selected == null) 1 else 0)
                     val groupedIndex = if (!state.homePreferences.groupingEnabled) medicationIndex else {
                         var offset = 0
@@ -253,42 +236,11 @@ import java.time.ZoneId
         val showAdd = openAddMedication != null && canEdit && !bulkMode && contextValid
         val noticeMaxHeight = maxHeight * if (bulkMode) 0.25f else 0.4f
         Column(Modifier.fillMaxSize()) {
-            Surface(color = MaterialTheme.colorScheme.background) {
-                ContentSection(modifier = Modifier.padding(horizontal = UiSpacing.page).padding(bottom = UiSpacing.related)) {
-                    if (!compactHeight) browseHeading()
-                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(UiSpacing.related)) {
-                        OutlinedTextField(value = searchText, onValueChange = ::changeSearch, singleLine = true,
-                            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                            keyboardActions = KeyboardActions(onSearch = { focus.clearFocus() }),
-                            placeholder = { Text(uiText(R.string.ui_home_screen_004)) },
-                            modifier = Modifier.weight(1f).testTag("search"),
-                            leadingIcon = { AppIcon(UiIcon.SEARCH) },
-                            trailingIcon = if (searchText.text.isNotEmpty()) ({
-                                IconButton(onClick = { changeSearch(TextFieldValue("")); focus.clearFocus() },
-                                    modifier = Modifier.testTag("clear_search")) { AppIcon(UiIcon.CLOSE, description = uiText(R.string.ui_home_screen_005)) }
-                            }) else null)
-                        val filterCount = state.filters.statuses.size + state.filters.categoryIds.size
-                        OutlinedIconButton(onClick = {
-                            if (editor == null && canOpenHomeModal()) {
-                                focus.clearFocus(); notifyModal(true); filtersOpen = true
-                            }
-                        },
-                            modifier = Modifier.size(UiSpacing.filterButton).semantics {
-                                contentDescription = uiText(R.string.ui_home_screen_002) + if (filterCount > 0) uiText(R.string.ui_home_screen_003, MedicationPresentation.easternDigits(filterCount.toString())) else ""
-                            }) {
-                            BadgedBox(badge = {
-                                if (filterCount > 0) Badge(Modifier.clearAndSetSemantics { }) { Text(MedicationPresentation.easternDigits(filterCount.toString())) }
-                            }) { AppIcon(UiIcon.FILTER) }
-                        }
-                    }
-                    if (searching || state.filters.statuses.isNotEmpty() || state.filters.categoryIds.isNotEmpty()) {
-                        WrappingContent {
-                            Text(uiText(R.string.ui_home_screen_006, MedicationPresentation.easternDigits(visible.size.toString()), MedicationPresentation.easternDigits(catalog.medications.size.toString())),
-                                style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                            if (state.filters.statuses.isNotEmpty() || state.filters.categoryIds.isNotEmpty())
-                                TextButton(onClick = clearFilters) { Text(uiText(R.string.ui_history_screen_017)) }
-                        }
+            if (!state.homePreferences.searchAtBottom || !state.homePreferences.sectionsAtBottom && !compactHeight) {
+                Surface(color = MaterialTheme.colorScheme.background) {
+                    ContentSection(modifier = Modifier.padding(horizontal = UiSpacing.page).padding(bottom = UiSpacing.related)) {
+                        if (!state.homePreferences.sectionsAtBottom && !compactHeight) browseHeading()
+                        if (!state.homePreferences.searchAtBottom) searchControls()
                     }
                 }
             }
@@ -314,7 +266,7 @@ import java.time.ZoneId
                             bottom = if (showAdd) UiSpacing.fabClearance else UiSpacing.page),
                         horizontalArrangement = Arrangement.spacedBy(UiSpacing.related),
                         verticalArrangement = Arrangement.spacedBy(UiSpacing.related)) {
-                        if (compactHeight) item(key = "browse_context", span = { GridItemSpan(maxLineSpan) }) { browseHeading() }
+                        if (scrollingSections) item(key = "browse_context", span = { GridItemSpan(maxLineSpan) }) { browseHeading() }
                         if (canEdit && selected != null && bulkMode && contextValid) item(span = { GridItemSpan(maxLineSpan) }) {
                             SupportingText(uiText(R.string.ui_home_screen_009))
                         }
@@ -366,6 +318,15 @@ import java.time.ZoneId
                                 items(group.medications, key = { it.id }, itemContent = card)
                             }
                         } else items(visible, key = { it.id }, itemContent = card)
+                    }
+                }
+            }
+            if (showBottomBars) {
+                Surface(modifier = Modifier.onSizeChanged { reportBottomHeight(it.height) },
+                    color = MaterialTheme.colorScheme.background) {
+                    ContentSection(modifier = Modifier.padding(horizontal = UiSpacing.page).padding(bottom = UiSpacing.related)) {
+                        if (state.homePreferences.searchAtBottom) searchControls()
+                        if (state.homePreferences.sectionsAtBottom && !keyboardOpen) browseHeading()
                     }
                 }
             }

@@ -3,6 +3,8 @@ package com.aqaqeer.app.admin
 import androidx.room.withTransaction
 import com.aqaqeer.app.maintenance.*
 import com.aqaqeer.app.BuildConfig
+import com.aqaqeer.app.R
+import com.aqaqeer.app.uiText
 import com.aqaqeer.app.data.*
 import com.aqaqeer.app.security.SecureStore
 import com.aqaqeer.app.security.files.*
@@ -334,13 +336,27 @@ class AdminRepository @Inject constructor(private val factory: DatabaseFactory,
     }
 
     suspend fun delete(type: String, id: String, typedName: String = "") = edit { c, author, now, tx ->
+        val exists = when (type) {
+            "medication" -> c.medications.any { it.id == id }
+            "category" -> c.categories.any { it.id == id }
+            "form" -> c.forms.any { it.id == id }
+            "section" -> c.sections.any { it.id == id }
+            else -> false
+        }
+        adminRequire(exists) { when (type) {
+            "medication" -> uiText(R.string.delete_missing_medication)
+            "category" -> uiText(R.string.delete_missing_category)
+            "form" -> uiText(R.string.delete_missing_form)
+            "section" -> uiText(R.string.delete_missing_section)
+            else -> uiText(R.string.delete_invalid_type)
+        } }
         val next = when (type) {
             "medication" -> c.copy(medications = c.medications.filterNot { it.id == id }, availability = c.availability.filterNot { it.medicationId == id })
             "category" -> { adminRequire(c.categories.none { it.id == id && it.isSystem }); c.copy(categories = c.categories.filterNot { it.id == id }, medications = c.medications.map {
                 if (it.categoryId == id) it.copy(categoryId = CatalogSeeds.UNCATEGORIZED_ID, updatedAt = now, updatedBy = author) else it }) }
             "form" -> { adminRequire(c.forms.none { it.id == id && it.isSystem }); c.copy(forms = c.forms.filterNot { it.id == id }, medications = c.medications.map {
                 if (it.formId == id) it.copy(formId = CatalogSeeds.OTHER_FORM_ID, updatedAt = now, updatedBy = author) else it }) }
-            "section" -> { adminRequire(c.sections.single { it.id == id }.nameAr == typedName) { "اكتب اسم القسم لتأكيد الحذف" }; c.copy(sections = c.sections.filterNot { it.id == id }, availability = c.availability.filterNot { it.sectionId == id }) }
+            "section" -> { adminRequire(c.sections.find { it.id == id }?.nameAr == typedName) { "اكتب اسم القسم لتأكيد الحذف" }; c.copy(sections = c.sections.filterNot { it.id == id }, availability = c.availability.filterNot { it.sectionId == id }) }
             else -> error("نوع غير صالح")
         }
         next.copy(tombstones = next.tombstones + Tombstone(type, id, now, tx))

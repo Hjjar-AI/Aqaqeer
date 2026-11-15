@@ -125,6 +125,7 @@ internal fun statusLabel(status: AvailabilityStatus): String = uiText(when (stat
     val drawerEligible = state.route == "home" && configured && readyForTitle != null
     var homeModalOpen by remember { mutableStateOf(false) }
     var homeBulkActive by remember { mutableStateOf(false) }
+    var homeBottomBarsHeight by remember(pharmacyId, state.route) { mutableIntStateOf(0) }
     var dataTimesOpen by rememberSaveable(pharmacyId) { mutableStateOf(false) }
     val drawerState = remember(pharmacyId) {
         DrawerState(DrawerValue.Closed, confirmStateChange = { target ->
@@ -163,7 +164,9 @@ internal fun statusLabel(status: AvailabilityStatus): String = uiText(when (stat
         val canAdd = readyForTitle?.let { it.admin && !it.isDemo && !it.requiresUpdate && !it.maintenancePaused } == true
         Scaffold(
             floatingActionButton = {
-                androidx.compose.animation.AnimatedVisibility(visible = state.route == "home" && canAdd && !homeModalOpen && !homeBulkActive && !dataTimesOpen && !drawerState.isOpen,
+                val keyboardOpen = WindowInsets.ime.getBottom(LocalDensity.current) > 0
+                androidx.compose.animation.AnimatedVisibility(visible = state.route == "home" && canAdd && !homeModalOpen && !homeBulkActive && !dataTimesOpen && !drawerState.isOpen && !keyboardOpen,
+                    modifier = Modifier.padding(bottom = with(LocalDensity.current) { homeBottomBarsHeight.toDp() }),
                     enter = fadeIn(tween(180)), exit = fadeOut(tween(180))) {
                     FloatingActionButton(onClick = { if (!viewModel.adminBusy.value) { viewModel.newMedicationName = ""; navigate("edit-med:new") } }) {
                         AppIcon(UiIcon.ADD, description = uiText(R.string.ui_screen_titles_009))
@@ -261,6 +264,7 @@ internal fun statusLabel(status: AvailabilityStatus): String = uiText(when (stat
                     "settings" -> SettingsScreen(state.theme, viewModel::setTheme, state.homePreferences, viewModel::setSort,
                         viewModel::setLayout, viewModel::setNames, viewModel::setSecondaryHijri,
                         state.accent, viewModel::setAccent, viewModel::setTwoColumns,
+                        viewModel::setSectionsAtBottom, viewModel::setSearchAtBottom,
                         if (state.catalog is CatalogState.Ready && !state.catalog.isDemo && (state.catalog.admin || !configured)) ({ navigate("backup") }) else null,
                         if (state.catalog is CatalogState.Ready && !state.catalog.isDemo && configured) ({ navigate("maintenance") }) else null,
                         if (state.catalog is CatalogState.Ready && !state.catalog.isDemo && configured) ({ navigate("leave") }) else null) { navigate("about") }
@@ -327,7 +331,8 @@ internal fun statusLabel(status: AvailabilityStatus): String = uiText(when (stat
                                 setGroupingEnabled = viewModel::setGroupingEnabled, setGrouping = viewModel::setGrouping,
                                 saveBulk = viewModel::saveAvailability, projection = browse, highlightedMedication = highlighted,
                                 prefillMedication = { query -> viewModel.newMedicationName = query; navigate("edit-med:new") },
-                                onBulkModeChanged = { homeBulkActive = it }) }
+                                onBulkModeChanged = { homeBulkActive = it },
+                                onBottomBarsHeightChanged = { homeBottomBarsHeight = it }) }
                             }
                             val detailContent: @Composable () -> Unit = {
                                 if (medication != null) MedicationScreen(catalogState, medication, now,
@@ -429,6 +434,7 @@ internal fun statusLabel(status: AvailabilityStatus): String = uiText(when (stat
     preferences: HomePreferences, setSort: (HomeSort) -> Unit, setLayout: (CardLayout) -> Unit,
     setNames: (NameDisplay) -> Unit, setSecondaryHijri: (Boolean) -> Unit,
     accent: ThemeAccent, setAccent: (ThemeAccent) -> Unit, setTwoColumns: (Boolean) -> Unit,
+    setSectionsAtBottom: (Boolean) -> Unit, setSearchAtBottom: (Boolean) -> Unit,
     openBackup: (() -> Unit)? = null, openMaintenance: (() -> Unit)? = null, openLeave: (() -> Unit)? = null, openAbout: () -> Unit) {
     val systemDark = androidx.compose.foundation.isSystemInDarkTheme()
     LazyColumn(Modifier.fillMaxSize().testTag("settings"), contentPadding = PaddingValues(UiSpacing.page),
@@ -464,6 +470,10 @@ internal fun statusLabel(status: AvailabilityStatus): String = uiText(when (stat
                 }
                 SwitchChoiceRow(preferences.twoColumns, uiText(R.string.home_two_columns),
                     uiText(R.string.home_two_columns_help), Modifier.testTag("two_columns"), setTwoColumns)
+                SwitchChoiceRow(preferences.sectionsAtBottom, uiText(R.string.home_sections_bottom),
+                    uiText(R.string.home_sections_bottom_help), Modifier.testTag("sections_at_bottom"), setSectionsAtBottom)
+                SwitchChoiceRow(preferences.searchAtBottom, uiText(R.string.home_search_bottom),
+                    uiText(R.string.home_search_bottom_help), Modifier.testTag("search_at_bottom"), setSearchAtBottom)
                 GroupedCard(title = uiText(R.string.ui_aqaqeer_app_053)) {
                     Text(uiText(R.string.ui_aqaqeer_app_054), style = if (preferences.layout == CardLayout.COMPACT)
                         MaterialTheme.typography.titleSmall else MaterialTheme.typography.titleLarge)

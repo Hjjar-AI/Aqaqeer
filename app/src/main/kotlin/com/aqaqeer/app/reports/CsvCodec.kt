@@ -75,6 +75,7 @@ internal object CsvCodec {
             var skipLf = false
             var first = true
             var number = 1
+            var dataRecords = 0
             fun endCell() {
                 val value = cell.toString()
                 if (value.toByteArray(Charsets.UTF_8).size > MAX_CELL_BYTES) throw CsvProblem("خلية CSV تتجاوز ٦٤ كيبيبايت")
@@ -90,8 +91,8 @@ internal object CsvCodec {
                         throw CsvProblem("يحتوي CSV أعمدة غير معروفة")
                     header = cells.toList()
                 } else {
-                    if (records.size >= MAX_ROWS) throw CsvProblem("عدد صفوف CSV يتجاوز ١٠٠٠٠")
-                    records += CsvRecord(number, cells.toList())
+                    if (++dataRecords > MAX_ROWS) throw CsvProblem("عدد صفوف CSV يتجاوز ١٠٠٠٠")
+                    if (cells.any { it.isNotBlank() }) records += CsvRecord(number, cells.toList())
                 }
                 number++; cells.clear(); started = false
             }

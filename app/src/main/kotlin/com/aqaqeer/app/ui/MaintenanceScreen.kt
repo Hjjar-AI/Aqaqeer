@@ -34,6 +34,8 @@ import com.aqaqeer.app.maintenance.*
     FormPage {
         Text(ready.catalog.pharmacy.name, style = MaterialTheme.typography.titleLarge)
         OperationStatus(busy, message, cancel = vm::cancelAdminOperation)
+        if (ready.admin && (j == null || j.kind != MaintenanceKind.REPLACEMENT))
+            InformationCard(uiText(R.string.ui_maintenance_screen_009), uiText(R.string.maintenance_coordination))
         if (ready.restorePaused) {
             InformationCard(uiText(R.string.ui_maintenance_screen_005), uiText(R.string.ui_maintenance_screen_006))
             NavigationCard(uiText(R.string.ui_aqaqeer_app_022), { vm.navigate("backup") })

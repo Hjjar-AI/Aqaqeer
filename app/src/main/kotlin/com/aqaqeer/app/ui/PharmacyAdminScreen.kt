@@ -142,6 +142,9 @@ import kotlinx.serialization.json.*
                 var choices by remember { mutableStateOf<Map<String, Boolean>>(emptyMap()) }
                 ConflictChoices(sharing.conflicts, choices, catalog) { choices = it }
                 Button(enabled = (ready.pendingCount > 0 || ready.uncertain || ready.lifecycle == "LOCAL_DRAFT") && !busy && !sharing.busy && !ready.requiresUpdate && !ready.restorePaused && !ready.maintenancePaused, onClick = { vm.publish(choices) }) { Text(uiText(R.string.ui_pharmacy_admin_screen_037)) }
+                if (ready.lifecycle == "SHARED") PinRecoveryAction(
+                    enabled = !busy && !sharing.busy && !ready.requiresUpdate && !ready.restorePaused && !ready.maintenancePaused,
+                    recover = { vm.publish(choices, recoverPin = true) })
             }
             state.route == "taxonomy" -> TaxonomyEditor(catalog, vm, busy)
             else -> {
@@ -244,7 +247,15 @@ internal fun reviewValue(field: String, raw: String, catalog: CatalogSnapshot, l
         text = { DialogBody { Text(uiText(R.string.ui_pharmacy_admin_screen_100)) } },
         confirmButton = { TextButton(onClick = { offerEmptyPublication = false; vm.navigate("admin") }) { Text(uiText(R.string.ui_pharmacy_admin_screen_101)) } },
         dismissButton = { TextButton(onClick = { offerEmptyPublication = false; vm.navigate("review"); vm.publish() }) { Text(uiText(R.string.ui_pharmacy_admin_screen_102)) } })
+    SupportingText(uiText(R.string.pin_group_guidance))
     ExpandableInformation(uiText(R.string.ui_screen_titles_003), uiText(R.string.ui_pharmacy_admin_screen_103))
+}
+
+@Composable private fun PinRecoveryAction(enabled: Boolean, recover: () -> Unit) {
+    GroupedCard(title = uiText(R.string.pin_recovery_title)) {
+        SupportingText(uiText(R.string.pin_recovery_help))
+        TextButton(enabled = enabled, onClick = recover) { Text(uiText(R.string.pin_recovery_title)) }
+    }
 }
 
 @Composable private fun ConnectionExport(vm: CatalogViewModel, shared: Boolean, busy: Boolean) {
@@ -388,7 +399,9 @@ internal fun reviewValue(field: String, raw: String, catalog: CatalogSnapshot, l
     var name by remember { mutableStateOf("") }; var english by remember { mutableStateOf("") }
     var active by remember { mutableStateOf(true) }; var deleteName by remember { mutableStateOf("") }
     var deleteConfirm by remember { mutableStateOf(false) }
-    ChoicePicker(uiText(R.string.ui_pharmacy_admin_screen_124), listOf("section", "category", "form"), type, ::entityLabel) { type = it; selected = null; name = ""; english = "" }
+    fun resetConfirmation() { deleteName = ""; deleteConfirm = false }
+    fun resetForm() { selected = null; name = ""; english = ""; active = true; resetConfirmation() }
+    ChoicePicker(uiText(R.string.ui_pharmacy_admin_screen_124), listOf("section", "category", "form"), type, ::entityLabel) { type = it; resetForm() }
     data class RowValue(val id: String, val ar: String, val en: String?, val protected: Boolean, val active: Boolean = true)
     val rows = when (type) {
         "section" -> c.sections.map { RowValue(it.id, it.nameAr, it.nameEn, false, it.isActive) }
@@ -397,22 +410,23 @@ internal fun reviewValue(field: String, raw: String, catalog: CatalogSnapshot, l
     }
     GroupedCard(title = uiText(R.string.ui_pharmacy_admin_screen_125)) {
         RadioChoiceRows(rows, rows.find { it.id == selected }, { row ->
+            resetConfirmation()
             selected = row.id; name = row.ar; english = row.en ?: ""; active = row.active
         }, { row -> row.ar + when { row.protected -> uiText(R.string.ui_pharmacy_admin_screen_126); !row.active -> uiText(R.string.ui_pharmacy_admin_screen_127); else -> "" } },
             choiceEnabled = { !it.protected })
     }
-    TextButton(onClick = { selected = null; name = ""; english = ""; active = true }) { Text(uiText(R.string.ui_pharmacy_admin_screen_128)) }
+    TextButton(onClick = ::resetForm) { Text(uiText(R.string.ui_pharmacy_admin_screen_128)) }
     GroupedCard(title = uiText(R.string.ui_pharmacy_admin_screen_129)) {
         FormField(uiText(R.string.ui_pharmacy_admin_screen_065), name, { name = it }, required = true); FormField(uiText(R.string.ui_pharmacy_admin_screen_130), english, { english = it }, required = false)
         if (type == "section") CheckChoiceRow(active, uiText(R.string.ui_pharmacy_admin_screen_131)) { active = it }
-        Button(enabled = !busy && name.isNotBlank(), onClick = { vm.command { vm.admin.saveTaxonomy(type, selected, name, english, active); selected = null; name = ""; english = "" } }) { Text(uiText(R.string.ui_pharmacy_admin_screen_132)) }
+        Button(enabled = !busy && name.isNotBlank(), onClick = { vm.command { vm.admin.saveTaxonomy(type, selected, name, english, active); resetForm() } }) { Text(uiText(R.string.ui_pharmacy_admin_screen_132)) }
     }
     selected?.let { id ->
         GroupedCard(title = uiText(R.string.ui_pharmacy_admin_screen_133)) {
             Text(uiText(R.string.ui_pharmacy_admin_screen_134))
             if (type == "section") FormField(uiText(R.string.ui_pharmacy_admin_screen_135), deleteName, { deleteName = it }, required = true)
             CheckChoiceRow(deleteConfirm, uiText(R.string.ui_pharmacy_admin_screen_136)) { deleteConfirm = it }
-            TextButton(colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error), enabled = !busy && deleteConfirm, onClick = { vm.command { vm.admin.delete(type, id, deleteName); selected = null; name = ""; english = ""; deleteConfirm = false } }) { Text(uiText(R.string.ui_pharmacy_admin_screen_137)) }
+            TextButton(colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error), enabled = !busy && deleteConfirm, onClick = { vm.command { vm.admin.delete(type, id, deleteName); resetForm() } }) { Text(uiText(R.string.ui_pharmacy_admin_screen_137)) }
         }
     }
 }

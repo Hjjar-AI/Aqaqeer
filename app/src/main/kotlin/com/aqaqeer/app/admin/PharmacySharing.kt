@@ -5,6 +5,8 @@ import com.aqaqeer.app.maintenance.*
 import android.content.Context
 import android.net.Uri
 import com.aqaqeer.app.BuildConfig
+import com.aqaqeer.app.R
+import com.aqaqeer.app.uiText
 import com.aqaqeer.app.data.*
 import com.aqaqeer.app.security.SecureStore
 import com.aqaqeer.app.security.files.*
@@ -70,7 +72,7 @@ class PharmacySharing @Inject internal constructor(private val admin: AdminRepos
             }
         }
     }
-    internal suspend fun publish(choices: Map<String, Boolean> = emptyMap()) = gate.withLock {
+    internal suspend fun publish(choices: Map<String, Boolean> = emptyMap(), recoverPin: Boolean = false) = gate.withLock {
         if (mutable.value.busy) return@withLock
         val remaining = retryAt - android.os.SystemClock.elapsedRealtime()
         if (remaining > 0) {
@@ -80,7 +82,7 @@ class PharmacySharing @Inject internal constructor(private val admin: AdminRepos
         }
         mutable.value = SharingStatus(busy = true)
         try {
-            val published = publishLocked(choices)
+            val published = publishLocked(choices, recoverPin)
             mutable.value = if (published) SharingStatus(message = "تم التحقق من النشر", verified = true)
                 else SharingStatus(message = "لا توجد تعديلات للنشر")
         } catch (e: CancellationException) { throw e }
@@ -99,13 +101,16 @@ class PharmacySharing @Inject internal constructor(private val admin: AdminRepos
         val attempt: PublishAttempt?, val lifecycle: String, val editor: EditorRef)
     private suspend fun local() = admin.transaction { dao ->
         val d = admin.guard(dao)
-        Local(dao.catalog(), requireNotNull(dao.snapshotState()), dao.pending(), dao.attempts().singleOrNull(),
+        val attempts = dao.attempts()
+        adminCheck(attempts.size <= 1) { uiText(R.string.publish_multiple_attempts) }
+        Local(dao.catalog(), requireNotNull(dao.snapshotState()), dao.pending(), attempts.singleOrNull(),
             requireNotNull(dao.control()).lifecycle, EditorRef(d.id, d.displayName!!))
     }
-    private suspend fun publishLocked(choices: Map<String, Boolean>): Boolean {
+    private suspend fun publishLocked(choices: Map<String, Boolean>, recoverPin: Boolean): Boolean {
         admin.transaction { adminCheck(it.control()?.restorePaused != true) { "راجع النسخة المستعادة أولاً" } }
         val initial = local()
-        if (initial.lifecycle == "SHARED" && initial.ops.isEmpty() && initial.attempt == null) {
+        adminCheck(!recoverPin || initial.lifecycle == "SHARED")
+        if (!recoverPin && initial.lifecycle == "SHARED" && initial.ops.isEmpty() && initial.attempt == null) {
             admin.clearReconnectIfDone()
             return false
         }
@@ -117,7 +122,18 @@ class PharmacySharing @Inject internal constructor(private val admin: AdminRepos
             try {
                 val group = setup.validate(secrets.botToken, secrets.groupId)
                 var incoming: VerifiedSnapshotRead? = null
-                if (group.pin != null) incoming = reads.read(connection, BuildConfig.VERSION_CODE)
+                if (group.pin != null) {
+                    try { incoming = reads.read(connection, BuildConfig.VERSION_CODE) }
+                    catch (failure: SnapshotReadException) {
+                        // Only a positively unrelated pin permits explicit retained-state recovery.
+                        // Authentication, payload, network and permission failures never take this path.
+                        if (!recoverPin || failure.error != SnapshotReadError.SNAPSHOT_UNAVAILABLE ||
+                            !group.hasUnrelatedPin(secrets.botToken.substringBefore(':').toLong())) throw failure
+                        adminCheck(writes.inspect(secrets.botToken, secrets.groupId).pin == group.pin) {
+                            uiText(R.string.pin_changed_review)
+                        }
+                    }
+                }
                 var remote = incoming?.let { read ->
                     val known = withContext(NonCancellable) { requirements.observe(connection.pharmacyId, read.snapshot.compatibility) }
                     adminCheck(!known.requiresUpdate(BuildConfig.VERSION_CODE)) { "يلزم تحديث التطبيق" }
@@ -138,13 +154,22 @@ class PharmacySharing @Inject internal constructor(private val admin: AdminRepos
                     guardPinOperations(MaintenanceStore(secure), admin.guard(dao), initial.ops, observedRemote.catalog.pharmacy!!.adminPinVerifier)
                 }
                 val base = initial.state.confirmedPayloadJson?.let { Json.decodeFromString<SnapshotWire>(it).supported() }
+                val retainedRecovery = initial.lifecycle == "SHARED" && remote == null
+                val reviewIdentity = java.security.MessageDigest.getInstance("SHA-256")
+                    .digest(Json.encodeToString(listOf(group.pin.orEmpty(), Json.encodeToString(initial.catalog),
+                        initial.attempt?.publishId.orEmpty())).toByteArray())
+                    .joinToString("") { "%02x".format(it) }
+                // The recovery action must never replace an authenticated live pharmacy snapshot.
+                adminCheck(!recoverPin || retainedRecovery || initial.attempt?.publishId == remote?.publishId) {
+                    uiText(R.string.pin_recovery_live_snapshot)
+                }
                 if (initial.lifecycle == "LOCAL_DRAFT") adminCheck(remote == null) { "المجموعة تحتوي صيدلية أخرى" }
                 else if (remote == null) {
                     val retained = requireNotNull(base)
-                    val key = "missing:${retained.publishId}"
-                    if (choices[key] != true) throw ReviewRequired(listOf(EditConflict(key, "النسخة المشتركة مفقودة", "استرداد صريح",
+                    val key = "missing:${retained.publishId}:$reviewIdentity"
+                    if (choices[key] != true) throw ReviewRequired(listOf(EditConflict(key, uiText(R.string.pin_recovery_title), uiText(R.string.pin_recovery_explicit),
                         "${retained.publishId} — ${retained.publishedAt}",
-                        "إعادة نشر البيانات المحتفظ بها. قد تكون هناك تغييرات بعيدة غير مرئية لا يمكن استعادتها.", "لا توجد رسالة مثبتة")))
+                        uiText(R.string.pin_recovery_warning, initial.catalog.medications.size), uiText(R.string.pin_recovery_unavailable))))
                     remote = retained
                 }
                 val live = remote
@@ -165,8 +190,8 @@ class PharmacySharing @Inject internal constructor(private val admin: AdminRepos
                     val candidate = Json.decodeFromString<SnapshotWire>(it.candidatePayloadJson)
                     candidate.parentPublishId == live?.publishId && candidate.basedOnRevision == (live?.revision ?: 0)
                 } == true
-                if (attempt != null && !parentMatches) {
-                    val key = "uncertain:${attempt.publishId}:${live?.publishId}"
+                if (attempt != null && (!parentMatches || retainedRecovery && attempt.transportPhase == "WRITE_STARTED")) {
+                    val key = "uncertain:${attempt.publishId}:${live?.publishId}:$reviewIdentity"
                     if (choices[key] != true) throw ReviewRequired(listOf(EditConflict(key, "نتيجة نشر غير مؤكدة", "مصالحة المحاولة",
                         attempt.publishId, "مراجعة المنشور وإعادة دمج العمل المحتفظ به", live?.publishId ?: "لا توجد نسخة")))
                     // Retain the uncertain candidate in local recovery history before preparing a replacement.

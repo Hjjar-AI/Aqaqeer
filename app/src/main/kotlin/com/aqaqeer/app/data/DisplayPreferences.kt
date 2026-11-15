@@ -47,12 +47,16 @@ class DisplayPreferences(private val context: Context) {
         prefs[GROUPING_ENABLED] ?: true,
         HomeGrouping.entries.firstOrNull { it.name == prefs[GROUPING] } ?: HomeGrouping.CATEGORY,
         prefs[TWO_COLUMNS] ?: true,
+        prefs[SECTIONS_AT_BOTTOM] ?: true,
+        prefs[SEARCH_AT_BOTTOM] ?: true,
     ) }
     suspend fun setTheme(value: ThemeChoice) { context.displayDataStore.edit { it[THEME] = value.name } }
     suspend fun setAccent(value: ThemeAccent) { context.displayDataStore.edit { it[ACCENT] = value.name } }
     suspend fun setSort(value: HomeSort) { context.displayDataStore.edit { it[SORT] = value.name } }
     suspend fun setLayout(value: CardLayout) { context.displayDataStore.edit { it[LAYOUT] = value.name } }
     suspend fun setTwoColumns(value: Boolean) { context.displayDataStore.edit { it[TWO_COLUMNS] = value } }
+    suspend fun setSectionsAtBottom(value: Boolean) { context.displayDataStore.edit { it[SECTIONS_AT_BOTTOM] = value } }
+    suspend fun setSearchAtBottom(value: Boolean) { context.displayDataStore.edit { it[SEARCH_AT_BOTTOM] = value } }
     suspend fun setNames(value: NameDisplay) { context.displayDataStore.edit { it[NAMES] = value.name } }
     suspend fun setSecondaryHijri(value: Boolean) { context.displayDataStore.edit { it[SECONDARY_HIJRI] = value } }
     suspend fun setGroupingEnabled(value: Boolean) { context.displayDataStore.edit { it[GROUPING_ENABLED] = value } }
@@ -66,6 +70,8 @@ class DisplayPreferences(private val context: Context) {
         }
 
         private val TWO_COLUMNS = booleanPreferencesKey("home_two_columns")
+        private val SECTIONS_AT_BOTTOM = booleanPreferencesKey("home_sections_at_bottom")
+        private val SEARCH_AT_BOTTOM = booleanPreferencesKey("home_search_at_bottom")
         private val GROUPING_ENABLED = booleanPreferencesKey("home_grouping_enabled")
         private val GROUPING = stringPreferencesKey("home_grouping")
         private val SECONDARY_HIJRI = booleanPreferencesKey("secondary_hijri")

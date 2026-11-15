@@ -80,7 +80,7 @@ class SnapshotRefreshRepository @Inject constructor(private val factory: Databas
         val baseline = baseWire.supported()
         if (baseline.publication.revision != base.state.revision || baseline.publishId != base.state.publishId ||
             baseline.catalog.pharmacy?.pharmacyId != base.catalog.pharmacy?.pharmacyId) throw StorageRecoveryRequired()
-        val decision = if (supported) try { publicationDecision(baseline, incoming) }
+        val strictDecision = if (supported) try { publicationDecision(baseline, incoming) }
             catch (_: RefreshException) { null } else null
         val payload = if (supported) incoming.confirmedJson() else null
         if (payload != null) {
@@ -112,6 +112,10 @@ class SnapshotRefreshRepository @Inject constructor(private val factory: Databas
                     return@withTransaction RefreshOutcome.UNCHANGED
                 }
                 val localWork = dao.pendingCount() != 0 || dao.attemptCount() != 0
+                // A clean device may have missed full snapshots. Do not infer ancestry for local work.
+                val decision = strictDecision ?: if (!localWork && base.catalog.sameContents(baseline.catalog) &&
+                    incoming.revision > baseline.revision && incoming.revision - baseline.revision > 1 &&
+                    incoming.publishId != baseline.publishId) RefreshOutcome.APPLIED else null
                 // Changed bases require the later rebase/uncertain-attempt command. Never discard local work.
                 val rebased = if (supported && decision == RefreshOutcome.APPLIED && dao.attemptCount() == 0 && dao.pendingCount() > 0)
                     runCatching { CatalogEdits.merge(baseline.catalog, base.catalog, incoming.catalog, dao.pending()) }.getOrNull() else null

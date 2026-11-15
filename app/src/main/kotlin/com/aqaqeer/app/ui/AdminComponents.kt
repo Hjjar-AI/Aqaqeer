@@ -147,6 +147,12 @@ import com.aqaqeer.app.data.CatalogSnapshot
 @Composable internal fun ConflictChoices(conflicts: List<EditConflict>, choices: Map<String, Boolean>,
     catalog: CatalogSnapshot, choose: (Map<String, Boolean>) -> Unit) {
     conflicts.forEach { conflict ->
+        if (conflict.key.startsWith("missing:")) {
+            RetainedPinRecoveryChoice(conflict, choices[conflict.key] == true) {
+                choose(choices + (conflict.key to it))
+            }
+            return@forEach
+        }
         GroupedCard(title = "${conflict.entity} · ${fieldLabel(conflict.field)}") {
             val deletion = conflict.key.startsWith("delete:") || conflict.field == uiText(R.string.ui_admin_components_007)
             val restoreParent = conflict.key.startsWith("parent:")
@@ -164,6 +170,16 @@ import com.aqaqeer.app.data.CatalogSnapshot
                     else -> if (mine) uiText(R.string.ui_admin_components_019) else uiText(R.string.ui_admin_components_020)
                 } })
         }
+    }
+}
+
+@Composable private fun RetainedPinRecoveryChoice(conflict: EditConflict, confirmed: Boolean,
+    confirm: (Boolean) -> Unit) {
+    GroupedCard(title = uiText(R.string.pin_recovery_title)) {
+        LabeledValue(uiText(R.string.pin_recovery_retained), bidi(conflict.base))
+        Text(conflict.theirs)
+        Text(conflict.mine, color = MaterialTheme.colorScheme.error)
+        CheckChoiceRow(confirmed, uiText(R.string.pin_recovery_confirm), change = confirm)
     }
 }
 

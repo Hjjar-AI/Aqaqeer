@@ -9,7 +9,7 @@ enum class RefreshError { DEMO, UNCONFIGURED, LOCAL_STATE_CHANGED, UPDATE_REQUIR
 class RefreshException(val error: RefreshError) : Exception(error.name)
 enum class RefreshOutcome { UNCHANGED, APPLIED }
 
-/** UUID/time ordering cannot establish publication ancestry. Gaps require explicit recovery. */
+/** Strict ancestry for publication/local work; clean refresh catch-up is decided transactionally. */
 internal fun publicationDecision(base: SnapshotCandidate.Supported, incoming: SnapshotCandidate.Supported): RefreshOutcome {
     if (base.publishId == incoming.publishId && base.revision == incoming.revision &&
         base.compatibility == incoming.compatibility && base.parentPublishId == incoming.parentPublishId &&

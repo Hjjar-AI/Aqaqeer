@@ -58,7 +58,7 @@ internal fun animateSplashExit(provider: SplashScreenViewProvider, decor: ViewGr
     provider.remove()
     return AnimatorSet().apply {
         val fade = ObjectAnimator.ofFloat(layer, View.ALPHA, 1f, 0f).apply {
-            duration = 180
+            duration = 60
             interpolator = PathInterpolator(0.22f, 0f, 0.2f, 1f)
         }
         val growth = AnimatorSet().apply {
@@ -66,7 +66,7 @@ internal fun animateSplashExit(provider: SplashScreenViewProvider, decor: ViewGr
                 ObjectAnimator.ofFloat(emblem, View.SCALE_X, initialScale, 1f),
                 ObjectAnimator.ofFloat(emblem, View.SCALE_Y, initialScale, 1f),
             )
-            duration = 180
+            duration = 60
             interpolator = PathInterpolator(0.22f, 0f, 0.2f, 1f)
         }
         playTogether(growth, fade)

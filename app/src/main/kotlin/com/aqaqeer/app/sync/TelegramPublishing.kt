@@ -11,6 +11,13 @@ import java.util.UUID
 import javax.net.ssl.HttpsURLConnection
 
 internal data class SetupGroup(val id: Long, val title: String, val pin: String?)
+/** Positive identification only; a damaged bot-owned snapshot is not an unrelated pin. */
+internal fun SetupGroup.hasUnrelatedPin(botId: Long): Boolean = runCatching {
+    val message = Json.parseToJsonElement(requireNotNull(pin)).jsonObject
+    val sender = message["from"]?.jsonObject ?: return@runCatching false
+    val senderId = sender["id"]?.jsonPrimitive?.longOrNull ?: return@runCatching false
+    senderId > 0 && (senderId != botId || message["document"] == null)
+}.getOrDefault(false)
 internal data class UploadedDocument(val messageId: Long, val fileId: String)
 internal class TelegramFailure(val retryAfter: Int = 0, val code: Int = 0) : Exception("تعذر الاتصال بتيليغرام أو لا تتوفر الصلاحيات المطلوبة")
 internal interface TelegramSetupTransport {
