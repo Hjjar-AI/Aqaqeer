@@ -195,7 +195,7 @@ def check(path):
                 dispatch = triggers.get('workflow_dispatch', {})
                 inputs = dispatch.get('inputs', {}) if isinstance(dispatch, dict) else {}
                 if inputs.get('standard_functional') != {
-                    'description': 'Options: false = demo checks only; true = also run 30 offline standard CSV/report and bulk/PIN cases on API 35 after demo checks. Default: false.',
+                    'description': 'Options: false = demo checks only; true = also run 58 offline standard CSV/report, bulk/PIN and review/UI regression cases on API 35 after demo checks. Default: false.',
                     'type': 'boolean', 'default': False,
                 } or job.get('needs') != 'emulator':
                     problem(name, 'standard functional checks must be opt-in and wait for the demo emulators')
