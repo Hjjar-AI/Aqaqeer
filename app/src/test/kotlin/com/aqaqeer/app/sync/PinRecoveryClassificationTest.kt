@@ -6,7 +6,7 @@ import org.junit.Test
 
 class PinRecoveryClassificationTest {
     private fun group(sender: Long, document: Boolean) = SetupGroup(-100, "Public fixture", buildJsonObject {
-        put("from", buildJsonObject { put("id", sender); put("is_bot", sender == 123L) })
+        put("from", buildJsonObject { put("id", sender); put("is_bot", sender != 456L) })
         if (document) put("document", buildJsonObject { put("file_id", "fixture") })
     }.toString())
 
