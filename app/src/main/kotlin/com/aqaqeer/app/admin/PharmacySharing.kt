@@ -155,12 +155,12 @@ class PharmacySharing @Inject internal constructor(private val admin: AdminRepos
                 }
                 val base = initial.state.confirmedPayloadJson?.let { Json.decodeFromString<SnapshotWire>(it).supported() }
                 val retainedRecovery = initial.lifecycle == "SHARED" && remote == null
-                val reviewIdentity = java.security.MessageDigest.getInstance("SHA-256")
+                val reviewIdentity = if (retainedRecovery) java.security.MessageDigest.getInstance("SHA-256")
                     .digest(Json.encodeToString(listOf(group.pin.orEmpty(), Json.encodeToString(initial.catalog),
                         initial.attempt?.publishId.orEmpty())).toByteArray())
-                    .joinToString("") { "%02x".format(it) }
+                    .joinToString("") { "%02x".format(it) } else ""
                 // The recovery action must never replace an authenticated live pharmacy snapshot.
-                adminCheck(!recoverPin || retainedRecovery || initial.attempt?.publishId == remote?.publishId) {
+                adminCheck(!recoverPin || retainedRecovery) {
                     uiText(R.string.pin_recovery_live_snapshot)
                 }
                 if (initial.lifecycle == "LOCAL_DRAFT") adminCheck(remote == null) { "المجموعة تحتوي صيدلية أخرى" }
@@ -191,7 +191,8 @@ class PharmacySharing @Inject internal constructor(private val admin: AdminRepos
                     candidate.parentPublishId == live?.publishId && candidate.basedOnRevision == (live?.revision ?: 0)
                 } == true
                 if (attempt != null && (!parentMatches || retainedRecovery && attempt.transportPhase == "WRITE_STARTED")) {
-                    val key = "uncertain:${attempt.publishId}:${live?.publishId}:$reviewIdentity"
+                    val key = "uncertain:${attempt.publishId}:${live?.publishId}" +
+                        if (retainedRecovery) ":$reviewIdentity" else ""
                     if (choices[key] != true) throw ReviewRequired(listOf(EditConflict(key, "نتيجة نشر غير مؤكدة", "مصالحة المحاولة",
                         attempt.publishId, "مراجعة المنشور وإعادة دمج العمل المحتفظ به", live?.publishId ?: "لا توجد نسخة")))
                     // Retain the uncertain candidate in local recovery history before preparing a replacement.
