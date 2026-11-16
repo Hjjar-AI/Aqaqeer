@@ -18,6 +18,25 @@ Test repair/creation is now authorized; 16 new Kotlin methods and 4 offline Pyth
 
 Remaining warning/cache follow-up: confirm the test-only `-Xshare:off` option on a future authorized JVM run and the signing-only Gradle opt-out on a future independently authorized signing run. Source checks and prior warning-free compilation belong in [validation](validation.md#warning-and-cache-follow-up--2026-11-16). No packaging dispatch is authorized by documentation maintenance.
 
+## Responsive UI follow-up — source implemented / 2026-11-17
+
+The user selected responsive search secondary controls; pinned controls with compact notices; persistent wide list/detail with pharmacy navigation and detail-local title/actions; subtle predictive-back feedback; drawer-edge swipe reservation; selective heading spacing; state-aware chevrons; disabled search autocorrect/capitalization; available-height/stable-key pickers; shared breakpoint/detail-width limit; focused card caching; bulk-entry-only haptics; appearance-preserving shape tokens; reserved tab icon slots; compact step headers/decorative art; replacement of the empty-state capsule; dead branch removal; and extraction of the list/detail host. Default Scaffold insets, static skeletons and the 180 ms fade are retained. The launcher artwork is unchanged. See [source evidence](validation.md#responsive-ui-follow-up--2026-11-17).
+
+Remaining acceptance: narrow/large-text field width and focus across secondary-control relocation; pinned controls and complete notice actions on short/IME windows; Home → medication A → B → back, drawer Home/category navigation, Add clearance, grouping/scroll retention and width changes around 840 dp; predictive completion/cancellation with busy/modals and disabled animations; RTL/LTR drawer-edge versus section drags; Arabic diacritics, headings, tab labels/icon slots and long detail titles; picker keyboard/empty/search/reordering/unchanged sentinel identities; single bulk-entry haptic; compact step semantics; empty-state art and theme/large-text contrast. Compilation and runtime work still require separate authorization. Previous passes do not validate these changes.
+
+## Baseline Profile proposal — separate future project
+
+**Proposal only, requested by the user; no profile generation, test work, builds, device use or execution is authorized.** A Baseline Profile supplies Android with frequently used code paths to optimize ahead of time. Potential benefits are faster startup and smoother initial interactions; this repository has no measurements establishing a benefit. [Android overview](https://developer.android.com/topic/performance/baselineprofiles/overview).
+
+Proposed scope and order:
+
+1. Review the pinned Android/Compose toolchain and current standard/demo variants; design an isolated profile-generator/measurement module without changing production signing, shared caches or APK numbering. Propose dependencies and flavor selectors before implementation.
+2. With separate source/test-authoring authorization, author deterministic startup, initial Home browsing, search, section switch and detail-opening journeys. Use public demo/local fixtures, not live Telegram or personal data; keep setup outside measured interactions. Review whether demo journeys exercise the production paths sufficiently before reusing a profile for standard.
+3. With separate build and owned-emulator/device authorization, compare equivalent optimized release/profileable artifacts with and without the profile on the same environment and dataset. Record cold/warm startup, initial display/readiness and scrolling frame timing across repeated runs, with artifact/variant/device provenance. Keep profile generation and measurement execution distinct from ordinary application builds.
+4. Adopt only if measurements justify maintenance: retain generated profile sources and the recipe, verify packaging in the intended variant, and document regeneration triggers. Preserve current startup/security behavior. If results are inconclusive, retain the evidence and defer adoption.
+
+Deliverables would be reviewed module/dependency design, authorized generator source, profile files, a repeatable comparison recipe, measured results and documented limits. Costs include an extra module, Android execution time, variant handling and ongoing regeneration. This proposal does not dispatch workflows, reserve version codes or relax existing activity stops.
+
 ## Baseline and current stop
 
 Core administration, sharing/recovery, search/grouping, demo and presentation sources are implemented. The [current checkpoint](validation.md#current-verification-checkpoint--2026-11-16) separates inspected hosted results from pending acceptance. The [2026-11-13 user report](validation.md#user-reported-completion--2026-11-13) is historical; retain valid evidence and repeat checks only when relevant changes or authorization justify it.

@@ -31,7 +31,8 @@ internal object UiSpacing {
     val fabClearance = 96.dp
     val tabMeasurementAllowance = 48.dp
     val touch = 48.dp
-    val contentWidth = 840.dp
+    val listDetailBreakpoint = 840.dp
+    val contentWidth = listDetailBreakpoint
     val formWidth = 640.dp
 }
 

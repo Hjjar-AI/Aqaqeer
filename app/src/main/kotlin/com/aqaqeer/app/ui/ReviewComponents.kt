@@ -92,7 +92,7 @@ internal data class Notice(val text: String, val severity: NoticeSeverity = Noti
     val compactHeight = viewportHeight(1f) < 480.dp || LocalDensity.current.fontScale > 1.4f
     Column(Modifier.fillMaxWidth().padding(if (compactHeight) UiSpacing.section else UiSpacing.group), horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(UiSpacing.section)) {
-        AppIcon(UiIcon.FORM_CAPSULE, Modifier.size(if (compactHeight) 64.dp else 96.dp))
+        EmptyCapsule(Modifier.size(if (compactHeight) 64.dp else 96.dp))
         Text(title, style = MaterialTheme.typography.titleMedium)
         body?.let { SupportingText(it) }
         actions?.invoke()

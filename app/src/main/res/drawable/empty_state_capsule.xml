@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Decorative capsule: native vector, transparent canvas, intrinsic brand colors. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="96dp" android:height="96dp"
+    android:viewportWidth="128" android:viewportHeight="128">
+    <group android:rotation="-35" android:pivotX="64" android:pivotY="64">
+        <path android:fillColor="#D6A93A"
+            android:pathData="M38,40H90A24,24 0,0 1,90 88H38A24,24 0,0 1,38 40Z" />
+        <path android:fillColor="#148C88"
+            android:pathData="M38,40H64V88H38A24,24 0,0 1,38 40Z" />
+        <path android:fillColor="@android:color/transparent" android:strokeColor="#102A43"
+            android:strokeWidth="3" android:strokeLineJoin="round"
+            android:pathData="M38,40H90A24,24 0,0 1,90 88H38A24,24 0,0 1,38 40Z M64,40V88" />
+        <path android:fillColor="@android:color/transparent" android:strokeColor="#FFFFFF"
+            android:strokeAlpha="0.55" android:strokeWidth="4" android:strokeLineCap="round"
+            android:pathData="M25,59Q29,48 41,48H53 M75,48H88Q96,48 101,54" />
+    </group>
+</vector>

@@ -212,18 +212,18 @@ import java.time.LocalDate
             EditableStatusPill(status, onQuickEdit, expanded, dismiss, choose, enabled, dense = true)
         }
         if (expiry != null)
-            Box(Modifier.align(Alignment.CenterVertically).testTag("expiry_${medication.id}")) { ExpiryBadge(expiry, dense = true) }
+            Box(Modifier.align(Alignment.CenterVertically)) { ExpiryBadge(expiry, dense = true, modifier = Modifier.testTag("expiry_${medication.id}")) }
     }
 }
 
 @Composable internal fun ExpiryBadge(medication: Medication, today: LocalDate, dense: Boolean = false) {
     val expiry = remember(medication, today) { MedicationPresentation.expiry(medication, today) }
-    expiry?.let { Box(Modifier.testTag("expiry_${medication.id}")) { ExpiryBadge(it, dense) } }
+    expiry?.let { ExpiryBadge(it, dense, Modifier.testTag("expiry_${medication.id}")) }
 }
 
-@Composable private fun ExpiryBadge(expiry: ExpiryState, dense: Boolean) {
-        val expired = expiry == ExpiryState.EXPIRED
-        val tone = if (expired) LocalStatusColors.current.out else LocalStatusColors.current.low
-        MedicationBadge(if (expired) uiText(R.string.ui_medication_components_010) else uiText(R.string.ui_medication_components_011), tone, dense = dense,
-            icon = UiIcon.WARNING)
+@Composable private fun ExpiryBadge(expiry: ExpiryState, dense: Boolean, modifier: Modifier) {
+    val expired = expiry == ExpiryState.EXPIRED
+    val tone = if (expired) LocalStatusColors.current.out else LocalStatusColors.current.low
+    MedicationBadge(if (expired) uiText(R.string.ui_medication_components_010) else uiText(R.string.ui_medication_components_011), tone, dense = dense,
+        icon = UiIcon.WARNING, modifier = modifier)
 }

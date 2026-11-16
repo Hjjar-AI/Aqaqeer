@@ -23,6 +23,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalDensity
@@ -71,7 +72,7 @@ internal fun statusLabel(status: AvailabilityStatus): String = uiText(when (stat
     val horizontalInsets = with(density) {
         (contentInsets.getLeft(this, direction) + contentInsets.getRight(this, direction)).toDp()
     }
-    val dualPane = maxWidth - horizontalInsets >= UiSpacing.contentWidth
+    val dualPane = maxWidth - horizontalInsets >= UiSpacing.listDetailBreakpoint
     fun destinationKey(route: String) = if (dualPane && route.startsWith("med:")) "home" else route
     val homeDestination = destinationKey(state.route) == "home"
     val connectionImport by viewModel.connectionImport.collectAsStateWithLifecycle()
@@ -118,9 +119,6 @@ internal fun statusLabel(status: AvailabilityStatus): String = uiText(when (stat
             message.medicationId?.let { navigate("med:${it}") }
         }
         viewModel.feedback.compareAndSet(message, null)
-    }
-    PredictiveBackHandler(enabled = state.route != "home") { progress ->
-        try { progress.collect { }; if (!viewModel.adminBusy.value) back() } catch (_: kotlinx.coroutines.CancellationException) { }
     }
     val readyForTitle = state.catalog as? CatalogState.Ready
     val titleMedication = state.route.takeIf { it.startsWith("med:") }?.removePrefix("med:")
@@ -172,6 +170,18 @@ internal fun statusLabel(status: AvailabilityStatus): String = uiText(when (stat
     LaunchedEffect(drawerEligible, homeModalOpen, dataTimesOpen) {
         if (!drawerEligible || homeModalOpen || dataTimesOpen) drawerState.close()
         if (!drawerEligible) { dataTimesOpen = false; homeModalOpen = false }
+    }
+    var backProgress by remember { mutableFloatStateOf(0f) }
+    val backAllowed by rememberUpdatedState(!adminBusy && !homeModalOpen && !dataTimesOpen && !drawerState.isOpen)
+    PredictiveBackHandler(enabled = state.route != "home" && backAllowed) { progress ->
+        val origin = viewModel.state.value.route
+        val animate = android.animation.ValueAnimator.areAnimatorsEnabled()
+        try {
+            progress.collect { backProgress = if (animate) it.progress else 0f }
+            if (backAllowed && viewModel.state.value.route == origin) back()
+        } catch (_: kotlinx.coroutines.CancellationException) {
+            // A cancelled gesture leaves the route and its browsing state intact.
+        } finally { backProgress = 0f }
     }
     BackHandler(drawerState.isOpen) { scope.launch { drawerState.close() } }
     if (dataTimesOpen && drawerEligible && !homeModalOpen)
@@ -262,7 +272,11 @@ internal fun statusLabel(status: AvailabilityStatus): String = uiText(when (stat
             ScreenFrame(wide = state.route == "home" || state.route.startsWith("med:"), form = state.route in setOf("create", "promote", "leave", "setup", "export-connection", "connection", "backup", "maintenance", "taxonomy")
                 || state.route.startsWith("edit-med:"),
                 modifier = Modifier.padding(insets).consumeWindowInsets(insets).imePadding()) {
-                AnimatedContent(targetState = state, contentKey = { destinationKey(it.route) }, label = "route",
+                AnimatedContent(targetState = state, modifier = Modifier.graphicsLayer {
+                    scaleX = 1f - 0.04f * backProgress
+                    scaleY = scaleX
+                    alpha = 1f - 0.12f * backProgress
+                }, contentKey = { destinationKey(it.route) }, label = "route",
                     transitionSpec = { fadeIn(tween(180)) togetherWith fadeOut(tween(180)) }) { displayed ->
                 val destinationContent: @Composable () -> Unit = {
                 val state = displayed
@@ -350,11 +364,9 @@ internal fun statusLabel(status: AvailabilityStatus): String = uiText(when (stat
                                     state.homePreferences.secondaryHijri, pageHeader, viewModel)
                                 else Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { EmptyState(uiText(R.string.ui_aqaqeer_app_023)) }
                             }
-                            if (dualPane) Row(Modifier.fillMaxSize(), horizontalArrangement = Arrangement.spacedBy(UiSpacing.section)) {
-                                Box(Modifier.weight(1f).fillMaxHeight()) { browseContent() }
-                                VerticalDivider()
-                                Column(Modifier.weight(1f).fillMaxHeight()) {
-                                    if (medication != null) {
+                            HomeDetailLayout(dualPane = dualPane, showDetail = medication != null,
+                                list = browseContent, detail = detailContent,
+                                detailHeader = if (medication != null) ({
                                         Row(Modifier.fillMaxWidth().padding(horizontal = UiSpacing.related),
                                             verticalAlignment = Alignment.CenterVertically,
                                             horizontalArrangement = Arrangement.spacedBy(UiSpacing.related)) {
@@ -370,11 +382,8 @@ internal fun statusLabel(status: AvailabilityStatus): String = uiText(when (stat
                                             }
                                             medicationActions(catalogState, medication)
                                         }
-                                        HorizontalDivider()
-                                    }
-                                    Box(Modifier.weight(1f)) { detailContent() }
-                                }
-                            } else if (medication != null) detailContent() else browseContent()
+                                }) else null)
+
                             }
 
                         }

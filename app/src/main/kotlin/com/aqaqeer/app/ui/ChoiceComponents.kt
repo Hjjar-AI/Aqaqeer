@@ -122,20 +122,20 @@ import androidx.compose.ui.unit.dp
             }
             AlertDialog(onDismissRequest = { expanded = false }, title = { Text(label) }, text = {
                 BoxWithConstraints(Modifier.fillMaxWidth()) {
-                // Dialog constraints already reflect IME resizing; do not subtract it twice.
-                Column(Modifier.heightIn(max = minOf(maxHeight, viewportHeight(0.65f))),
-                    verticalArrangement = Arrangement.spacedBy(UiSpacing.related)) {
-                    if (values.size > 8) FormField(uiText(R.string.ui_choice_components_002), query, { query = it })
-                    LazyColumn(Modifier.fillMaxWidth().weight(1f, fill = false)) {
-                        items(visible, key = { itemKey(it.first) }) { (value, text, _) ->
-                            TextButton(onClick = { choose(value); expanded = false }, modifier = Modifier.fillMaxWidth()) {
-                                Text(text, modifier = Modifier.weight(1f))
-                                if (value == selected) AppIcon(UiIcon.CHECK)
+                    // Dialog constraints already reflect IME resizing; do not subtract it twice.
+                    Column(Modifier.heightIn(max = minOf(maxHeight, viewportHeight(0.65f))),
+                        verticalArrangement = Arrangement.spacedBy(UiSpacing.related)) {
+                        if (values.size > 8) FormField(uiText(R.string.ui_choice_components_002), query, { query = it })
+                        LazyColumn(Modifier.fillMaxWidth().weight(1f, fill = false)) {
+                            items(visible, key = { itemKey(it.first) }) { (value, text, _) ->
+                                TextButton(onClick = { choose(value); expanded = false }, modifier = Modifier.fillMaxWidth()) {
+                                    Text(text, modifier = Modifier.weight(1f))
+                                    if (value == selected) AppIcon(UiIcon.CHECK)
+                                }
                             }
                         }
+                        if (visible.isEmpty()) Text(uiText(R.string.ui_choice_components_003))
                     }
-                    if (visible.isEmpty()) Text(uiText(R.string.ui_choice_components_003))
-                }
                 }
             }, confirmButton = { TextButton(onClick = { expanded = false }) { Text(uiText(R.string.ui_choice_components_004)) } })
         }
