@@ -172,4 +172,4 @@ Expiry uses pharmacy ZoneId and overflow-safe date differences, never availabili
 
 ## Source maintenance boundaries
 
-`AdminPinKdfV1` and `PasswordEnvelopeKdfV1` separately name the existing fixed 200,000-iteration contracts; no bytes, algorithm, iteration validation or compatibility fields change. `TelegramPublishing` defaults to ordinary HTTPS connections and accepts an internal connection factory for a later offline test batch. The launcher and app share the selected bitmap. These source changes do not establish compilation or runtime acceptance.
+`AdminPinKdfV1` and `PasswordEnvelopeKdfV1` separately name the existing fixed 200,000-iteration contracts; no bytes, algorithm, iteration validation or compatibility fields change. `TelegramPublishing` defaults to ordinary HTTPS connections and accepts an internal connection factory for a later offline test batch. The launcher uses a separate transparent gold/teal/navy bitmap with an embedded outline; in-app branding retains the gold/teal bitmap. These source changes do not establish compilation or runtime acceptance.

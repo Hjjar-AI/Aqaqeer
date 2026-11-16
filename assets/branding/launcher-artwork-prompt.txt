@@ -1,0 +1,7 @@
+Initial palette edit (built-in imagegen):
+
+Use case: precise-object-edit
+Asset type: transparent Android app launcher artwork, square PNG.
+Input image: edit target, the existing Aqaqeer gold/teal Arabic logo.
+Primary request: modify the artwork itself. Recolor its Arabic lettering to rich warm gold (#D6A93A with restrained highlights), its existing teal details to a clearer jewel teal (#148C88), and embed a thin clean deep navy (#102A43) outline along all visible letter, ring, dot and capsule contours. Improve edge cleanliness and small-size readability.
+Text (verbatim): "عقاقير". Preserve exactly the reference Arabic letter shapes, connected lettering, two hexagonal ring motifs, four upper circular dots, and the horizontal two-color capsule beneath the left lettering. Keep all components in their existing positions and proportions on the same square canvas. Keep the capsule in its original location. Preserve generous transparent top and bottom space and narrow transparent side margins. Transparent background with genuine alpha, including ring holes and gaps. No backing shape, no checkerboard rendered into the image, no new objects, no extra text, no drop shadow, no glow. Only recolor and refine contours; do not redesign or rearrange the logo. The navy outline must be part of the generated artwork.

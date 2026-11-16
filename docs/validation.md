@@ -2,6 +2,10 @@
 
 [Requirements](requirements.md) define acceptance; [plan](plan.md) owns remaining work. The evidence manifest (local-only: `../local/verification/manifest.json`) retains original results, public hashes and provenance. Ignored evidence may be absent in fresh checkouts. Source checks, compilation, runtime results and human acceptance remain distinct.
 
+## Launcher artwork revision — 2026-11-17
+
+Used built-in imagegen to edit the gold/teal reference into warm gold lettering, jewel-teal details and an embedded deep navy outline, then strengthened that outline following user approval of the palette. Visually reviewed the generated wordmark, rings, dots and capsule; the raster is a generated variant, not a pixel-preserving recolor. The normal/round manifest icons directly reference the revised RGBA PNG; the temporary layered outline wrapper is removed. Original in-app/splash/About/PDF artwork and empty-state capsule bytes are unchanged. The final artwork is 1254 × 1254 RGBA with alpha 0–255 and transparent corners. Source XML/resource references, equality of selected/packaged PNG bytes, preserved original bitmap bytes, changed-document local links and whitespace were checked. No tests, compilation, builds, lint or device actions were performed. Android launcher rendering, OEM normalization and human visual acceptance remain unverified. [Provenance and exact prompt](../assets/branding/launcher-revision.md).
+
 ## Current verification checkpoint — 2026-11-16
 
 Evidence applies to the recorded source revision and environment. A later source change or a selected check does not inherit an earlier pass automatically.
