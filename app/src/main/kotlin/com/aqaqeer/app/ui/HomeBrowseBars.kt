@@ -79,7 +79,7 @@ import com.aqaqeer.app.data.*
     openFilters: () -> Unit, clearFilters: () -> Unit, select: (() -> Unit)? = null, compact: Boolean = false,
     showFetchedChip: Boolean = false, toggleFetched: () -> Unit = {}) {
     val focus = LocalFocusManager.current
-    val searchShape = MaterialTheme.shapes.extraLarge
+    val searchShape = AppShapeTokens.search
     BoxWithConstraints(Modifier.fillMaxWidth()) {
         val narrow = maxWidth < 400.dp || LocalDensity.current.fontScale > 1.15f
         val hasFilters = filters.statuses.isNotEmpty() || filters.categoryIds.isNotEmpty() ||

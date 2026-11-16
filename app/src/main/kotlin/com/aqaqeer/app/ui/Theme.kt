@@ -35,11 +35,16 @@ private val ArabicFont = FontFamily(
     Font(R.font.noto_sans_arabic, FontWeight.Bold, variationSettings = FontVariation.Settings(FontVariation.weight(700))),
 )
 private val BaseTypography = Typography()
-internal val AppShapes = Shapes(
-    small = RoundedCornerShape(8.dp),
-    medium = RoundedCornerShape(12.dp),
-    large = RoundedCornerShape(16.dp),
-    extraLarge = RoundedCornerShape(24.dp),
+internal object AppShapeTokens {
+    val small = RoundedCornerShape(8.dp)
+    val medium = RoundedCornerShape(12.dp)
+    val large = RoundedCornerShape(16.dp)
+    val search = RoundedCornerShape(24.dp)
+}
+private val AppShapes = Shapes(
+    small = AppShapeTokens.small,
+    medium = AppShapeTokens.medium,
+    large = AppShapeTokens.large,
 )
 private val ArabicTypography = Typography(
     displayLarge = BaseTypography.displayLarge.copy(fontFamily = ArabicFont),
