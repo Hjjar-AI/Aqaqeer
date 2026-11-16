@@ -1,10 +1,14 @@
 package com.aqaqeer.app.ui
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
@@ -52,23 +56,45 @@ import com.aqaqeer.app.data.*
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable internal fun HomeSearchControls(query: TextFieldValue, changeQuery: (TextFieldValue) -> Unit,
     searching: Boolean, filters: HomeFilters, visibleCount: Int, totalCount: Int,
-    openFilters: () -> Unit, clearFilters: () -> Unit, select: (() -> Unit)? = null) {
+    openFilters: () -> Unit, clearFilters: () -> Unit, select: (() -> Unit)? = null, compact: Boolean = false) {
     val focus = LocalFocusManager.current
     ContentSection {
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(UiSpacing.related)) {
-            OutlinedTextField(value = query, onValueChange = changeQuery, singleLine = true,
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                keyboardActions = KeyboardActions(onSearch = { focus.clearFocus() }),
-                placeholder = { Text(uiText(R.string.ui_home_screen_004)) },
-                modifier = Modifier.weight(1f).testTag("search"),
-                leadingIcon = { AppIcon(UiIcon.SEARCH) },
-                trailingIcon = if (query.text.isNotEmpty()) ({
-                    IconButton(onClick = { changeQuery(TextFieldValue("")); focus.clearFocus() },
-                        modifier = Modifier.testTag("clear_search")) { AppIcon(UiIcon.CLOSE, description = uiText(R.string.ui_home_screen_005)) }
-                }) else null)
+            val clearSearch: (@Composable () -> Unit)? = if (query.text.isNotEmpty()) ({
+                IconButton(onClick = { changeQuery(TextFieldValue("")); focus.clearFocus() },
+                    modifier = Modifier.testTag("clear_search")) {
+                    AppIcon(UiIcon.CLOSE, description = uiText(R.string.ui_home_screen_005))
+                }
+            }) else null
+            if (compact) {
+                val interaction = remember { MutableInteractionSource() }
+                BasicTextField(value = query, onValueChange = changeQuery, singleLine = true,
+                    modifier = Modifier.weight(1f).heightIn(min = UiSpacing.touch).testTag("search"),
+                    textStyle = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onSurface),
+                    cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
+                    interactionSource = interaction,
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                    keyboardActions = KeyboardActions(onSearch = { focus.clearFocus() }),
+                    decorationBox = { innerTextField ->
+                        OutlinedTextFieldDefaults.DecorationBox(value = query.text, innerTextField = innerTextField,
+                            enabled = true, singleLine = true, visualTransformation = VisualTransformation.None,
+                            interactionSource = interaction,
+                            placeholder = { Text(uiText(R.string.ui_home_screen_004)) },
+                            leadingIcon = { AppIcon(UiIcon.SEARCH) }, trailingIcon = clearSearch,
+                            contentPadding = PaddingValues(horizontal = UiSpacing.section, vertical = UiSpacing.related))
+                    })
+            } else {
+                OutlinedTextField(value = query, onValueChange = changeQuery, singleLine = true,
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                    keyboardActions = KeyboardActions(onSearch = { focus.clearFocus() }),
+                    placeholder = { Text(uiText(R.string.ui_home_screen_004)) },
+                    modifier = Modifier.weight(1f).testTag("search"),
+                    leadingIcon = { AppIcon(UiIcon.SEARCH) }, trailingIcon = clearSearch)
+            }
             select?.let { TextButton(onClick = it) { Text(uiText(R.string.review_select)) } }
             val filterCount = filters.statuses.size + filters.categoryIds.size + listOf(filters.expiringSoon, filters.unpublishedOnly, filters.fetchedOnly).count { it }
             OutlinedIconButton(onClick = {

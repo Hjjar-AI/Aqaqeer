@@ -181,7 +181,7 @@ import java.time.ZoneId
                 if (contextValid && canOpenHomeModal() && !availabilityInProgress() && !filtersOpen && editor == null) {
                     focus.clearFocus(); bulkMode = true; changeBulkSelection(emptySet())
                 }
-            }) else null)
+            }) else null, compact = state.homePreferences.searchAtBottom)
         HomeQuickFilters(state.filters, canEdit, toggleStatus, toggleExtraFilter)
         if (projectionReady && projection.otherSections.isNotEmpty()) {
             SupportingText(uiText(R.string.review_elsewhere, projection.otherSections.values.flatten().toSet().size.toString()))

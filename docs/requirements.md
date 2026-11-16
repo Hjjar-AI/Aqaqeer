@@ -193,7 +193,7 @@ Highlight ranges cover the original matched letters and their attached marks, in
 
 ### Home controls and filters
 
-Home has an always-visible search field in its selected top or bottom position for readers and admins. Keep it visible while browsing; entering search does not require first opening an icon-only search mode. Use an Arabic hint and an explicit clear action. As a routine interaction default, opening Home does not autofocus the field or open the keyboard; tapping the field starts text input. Clearing the query follows the existing browsing-sort restoration rule.
+Home has an always-visible search field in its selected top or bottom position for readers and admins. Keep it visible while browsing; entering search does not require first opening an icon-only search mode. Use an Arabic hint and an explicit clear action. Keep the bottom search field compact (48 dp at normal text size), growing for larger text rather than clipping; use a 48 dp filter control with an accessible touch target. As a routine interaction default, opening Home does not autofocus the field or open the keyboard; tapping the field starts text input. Clearing the query follows the existing browsing-sort restoration rule.
 
 Home uses one current section tab. A 56 dp Filters button follows the search field at logical end (left in Arabic) of the same fixed row, with a count badge when filters are active. It opens one sheet with separate wrapping multi-select status/category groups; choices apply immediately and reset clears status/category and extra filters without changing search.
 
@@ -261,7 +261,7 @@ Commercial names are hidden in compact mode. The first displayed scientific name
 
 Expanded cards retain the complete name-and-dose title separated by a hyphen (for example, Paracetamol - 500 mg). The alternate scientific-name line has no repeated dose. English remains explicitly LTR, with normalization-aware highlight offsets.
 
-A small «غير منشور» tag marks unpublished edits. A fixed checkbox slot beside the name prevents bulk-selection shifts. A leading dosage-form icon is not repeated elsewhere.
+A small «غير منشور» tag marks unpublished edits. A fixed checkbox slot beside the name prevents bulk-selection shifts. A leading dosage-form vector illustration uses modest surface shading, recognizable form silhouettes and no ground shadow; it is not repeated elsewhere. Written labels remain authoritative for representative container shapes, and custom forms retain a neutral illustration.
 
 Trade-name labels/values share a wrapping line; category-grouped cards omit the repeated category line. Expanded/detail/editor/report text remains complete. Availability and expiry badges share a vertically centered wrapping row in both card modes, using text-only card availability badges, 4 dp horizontal padding and 4 dp inter-badge gaps to allow short labels on one line.
 

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="form_icon_outline">#38545C</color>
+    <color name="form_icon_body">#E4EFF0</color>
+    <color name="form_icon_light">#FFFFFF</color>
+    <color name="form_icon_shade">#A7BFC4</color>
+    <color name="form_icon_accent">#438B87</color>
+    <color name="form_icon_accent_light">#94D1C9</color>
+    <color name="form_icon_accent_shade">#28615F</color>
+    <color name="form_icon_highlight">#FFFFFF</color>
+</resources>

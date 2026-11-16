@@ -64,6 +64,16 @@ No signing/packaging run, local build/test/lint or device action was executed fo
 The user subsequently approved disabling CDS in JVM test workers. `app/build.gradle.kts` adds `jvmArgs("-Xshare:off")` only to the existing `Test` task configuration; 1536 MiB heap and one fork remain. Production code, packaging, daemon arguments and Android device tests receive no new flag. Source scope/whitespace/document links were checked; no Gradle/test execution or workflow dispatch was performed for this setting. The earlier passes above predate it, so absence of the notice remains pending runtime confirmation.
 
 
+### Compact bottom search — 2026-11-16
+
+Bottom Home search now uses the Material outlined decoration with reduced vertical padding and a 48 dp minimum, growing for large text. The filter control is reduced from 56 to 48 dp in either placement. Top field sizing, query/clear/IME callbacks, visible selection, active-filter badges and measured bottom-bar clearance are retained. Production call-site/delimiter/string-resource, document-link and whitespace checks passed. No tests, builds, compilation, lint, device checks, commit or push; normal/large Arabic text and keyboard appearance remain unverified.
+
+### Dosage-form vector refresh — 2026-11-16
+
+Replaced the outline dosage glyphs with original shaded native vectors and day/night colors. Corrected capsule geometry/seam; rounded the suppository tip; clarified spray mist/nozzle, reshaped the inhaler into an upright L with an extended horizontal mouthpiece, and distinguished gel-dispenser versus ointment-tube silhouettes; removed ground shadows at the user's request. Syrup/suspension and cream/ointment/gel receive separate seeded mappings, while custom IDs retain the neutral fallback and written labels. Intrinsic colors apply only to these illustrations; action/navigation tint, card slots and data identities are unchanged.
+
+Parsed 15 VectorDrawables, 98 SVG-compatible paths, 46 gradients and matching day/night roles; reviewed all seeded mappings/custom fallback and resource call sites. Production delimiter/constructor/string-reference and whitespace checks passed. Rendered and visually reviewed derived SVG galleries at 72px/24px on light/dark/AMOLED; preserved [final PNG/SVG references](../assets/reference/dosage-forms/README.md). The final picture now includes the flat translucent gel blob in light/dark/AMOLED; the standalone material example is retained. This picture-only update does not replace the application's gel dispenser. SVG renderings establish artwork appearance only, not Compose/Android runtime acceptance. No tests, Gradle/build/compilation/lint, workflow dispatch, commit or push was performed for this batch; changes remain local as requested.
+
 ### README refresh — 2026-11-16
 
 Reworked the root README with the English-first title `Aqaqeer · عقاقير`, existing artwork, feature overview, joining/creation/restore/demo entry routes, APK verification, build/package distinctions, key workflows and a documentation index. Preserved trusted-user/publication limits, device-local History, initial-format compatibility, licensing and contact. Checked the described settings and commands against current production/configuration sources; local links/assets/anchors and whitespace passed.

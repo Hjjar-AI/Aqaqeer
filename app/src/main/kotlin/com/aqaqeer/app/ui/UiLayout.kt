@@ -27,7 +27,7 @@ internal object UiSpacing {
     val related = 8.dp
     val group = 24.dp
     val pendingMarker = 8.dp
-    val filterButton = 56.dp
+    val filterButton = 48.dp
     val fabClearance = 96.dp
     val tabMeasurementAllowance = 48.dp
     val touch = 48.dp
