@@ -42,6 +42,10 @@ Source corrections remove the redundant conditions and use LocalClipboard/ClipEn
 The user subsequently approved disabling CDS in JVM test workers. `app/build.gradle.kts` adds `jvmArgs("-Xshare:off")` only to the existing `Test` task configuration; 1536 MiB heap and one fork remain. Production code, packaging, daemon arguments and Android device tests receive no new flag. Source scope/whitespace/document links were checked; no Gradle/test execution or workflow dispatch was performed for this setting. The earlier passes above predate it, so absence of the notice remains pending runtime confirmation.
 
 
+### README refresh — 2026-11-16
+
+Reworked the root README with the English-first title `Aqaqeer · عقاقير`, existing artwork, feature overview, joining/creation/restore/demo entry routes, APK verification, build/package distinctions, key workflows and a documentation index. Preserved trusted-user/publication limits, device-local History, initial-format compatibility, licensing and contact. Checked the described settings and commands against current production/configuration sources; local links/assets/anchors and whitespace passed. Documentation-only change; no builds, tests, lint, workflow dispatch or remote service checks.
+
 <a id="review-fixes-home-placement"></a>
 
 ## Review fixes and Home placement — 2026-11-15
