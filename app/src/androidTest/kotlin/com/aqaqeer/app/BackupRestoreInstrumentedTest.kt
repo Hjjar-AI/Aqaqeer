@@ -101,7 +101,7 @@ class BackupRestoreInstrumentedTest {
         val p = profile(); val med = p.medication()
         p.admin.transaction { dao ->
             dao.insertHistory((0 until 180).map { HistoryEntry(newId(),null,"medication",med.id,MedicationPresentation.identity(med),"note",null,
-                "x".repeat(65536),null,null,null,p.clock.instant(),null) })
+                "x".repeat(65536),null,p.clock.instant(),null) })
         }
         val before = p.admin.transaction { it.historyCount() }
         val file = export(p); assertTrue(file.length() > 10L * 1024 * 1024)

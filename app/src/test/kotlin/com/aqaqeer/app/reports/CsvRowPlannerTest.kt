@@ -18,7 +18,7 @@ class CsvRowPlannerTest {
         assertEquals(CatalogSeeds.TABLET_FORM_ID, row.plan.medication.formId)
         assertEquals(60, row.plan.medication.expirySoonThresholdDays)
         assertEquals(catalog.sections.associate { it.id to AvailabilityStatus.AVAILABLE }, row.plan.statuses)
-        CatalogRules.validate(row.plan.apply(catalog, F.editor, F.time))
+        CatalogRules.validate(row.plan.apply(catalog, F.time))
     }
     @Test fun duplicatesUseStrengthAndFormAndRepeatedUpdateTargetsAreRejected() {
         val text = "genericEn,strength,formAr\n${med.genericEn},10 mg,أخرى\n${med.genericEn},10mg,أخرى"

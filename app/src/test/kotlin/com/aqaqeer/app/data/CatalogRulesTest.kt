@@ -12,10 +12,10 @@ import java.time.Instant
 
 class CatalogRulesTest {
     private val seed = CatalogSeeds.unconfigured()
-    private val editor = EditorRef("00000000-0000-4000-8000-000000000900", "اختبار")
+
     private fun medication() = Medication("00000000-0000-4000-8000-000000000999",
         "Example", "10 mg", CatalogSeeds.OTHER_FORM_ID, CatalogSeeds.UNCATEGORIZED_ID,
-        Instant.EPOCH, Instant.EPOCH, editor, genericEn = "Example")
+        Instant.EPOCH, Instant.EPOCH, genericEn = "Example")
 
     @Test fun seedsContainOnlyOneProtectedCategoryAndAllFifteenForms() {
         CatalogRules.validate(seed)
@@ -49,12 +49,12 @@ class CatalogRulesTest {
         }
         assertThrows(IllegalArgumentException::class.java) {
             CatalogRules.validate(seed.copy(availability = listOf(Availability(medication().id,
-                seed.sections.single().id, updatedAt = Instant.EPOCH, updatedBy = editor))))
+                seed.sections.single().id, updatedAt = Instant.EPOCH))))
         }
     }
     @Test fun duplicateAvailabilityPairIsRejected() {
         val pair = Availability(medication().id, seed.sections.single().id,
-            updatedAt = Instant.EPOCH, updatedBy = editor)
+            updatedAt = Instant.EPOCH)
         assertThrows(IllegalArgumentException::class.java) {
             CatalogRules.validate(seed.copy(medications = listOf(medication()), availability = listOf(pair, pair)))
         }

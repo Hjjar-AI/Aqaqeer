@@ -7,10 +7,10 @@ import java.time.LocalDate
 
 class MedicationPresentationTest {
     private val seed = CatalogSeeds.unconfigured()
-    private val editor = EditorRef("device", "Test")
+
     private val today = LocalDate.of(2026, 11, 9)
     private fun med(id: String, ar: String? = null, en: String = id) = Medication(id, en, "10 mg",
-        CatalogSeeds.OTHER_FORM_ID, CatalogSeeds.UNCATEGORIZED_ID, Instant.EPOCH, Instant.EPOCH, editor, nameAr = ar)
+        CatalogSeeds.OTHER_FORM_ID, CatalogSeeds.UNCATEGORIZED_ID, Instant.EPOCH, Instant.EPOCH, nameAr = ar)
     private fun browse(meds: List<Medication>, query: String = "", sort: HomeSort = HomeSort.ARABIC_NAME) =
         MedicationPresentation.browse(seed.copy(medications = meds), seed.sections.single().id, query, HomeFilters(), sort).map { it.id }
 
@@ -55,9 +55,9 @@ class MedicationPresentationTest {
     @Test fun filtersUseOrWithinAndAcrossTypesAndMissingStatusIsUnknown() {
         val section = seed.sections.single().id
         val meds = listOf(med("1"), med("2").copy(categoryId = "other"), med("3"), med("4"))
-        val availability = listOf(Availability("1", section, AvailabilityStatus.OUT, Instant.EPOCH, editor),
-            Availability("2", section, AvailabilityStatus.LOW, Instant.EPOCH, editor),
-            Availability("3", section, AvailabilityStatus.AVAILABLE, Instant.EPOCH, editor))
+        val availability = listOf(Availability("1", section, AvailabilityStatus.OUT, Instant.EPOCH),
+            Availability("2", section, AvailabilityStatus.LOW, Instant.EPOCH),
+            Availability("3", section, AvailabilityStatus.AVAILABLE, Instant.EPOCH))
         val catalog = seed.copy(medications = meds, availability = availability)
         fun filtered(statuses: Set<AvailabilityStatus>, categories: Set<String>) = MedicationPresentation.browse(
             catalog, section, "", HomeFilters(statuses, categories), HomeSort.ENGLISH_NAME).map { it.id }
@@ -70,8 +70,8 @@ class MedicationPresentationTest {
         val section = seed.sections.single().id
         val meds = listOf(med("available"), med("unknown"), med("low"), med("out"))
         val statuses = listOf(AvailabilityStatus.AVAILABLE, AvailabilityStatus.UNKNOWN, AvailabilityStatus.LOW, AvailabilityStatus.OUT)
-        val availability = meds.zip(statuses).map { (m, status) -> Availability(m.id, section, status, Instant.EPOCH, editor) } +
-            meds.zip(statuses.reversed()).map { (m, status) -> Availability(m.id, "second", status, Instant.EPOCH, editor) }
+        val availability = meds.zip(statuses).map { (m, status) -> Availability(m.id, section, status, Instant.EPOCH) } +
+            meds.zip(statuses.reversed()).map { (m, status) -> Availability(m.id, "second", status, Instant.EPOCH) }
         val catalog = seed.copy(medications = meds, availability = availability)
         assertEquals(listOf("out", "low", "unknown", "available"), MedicationPresentation.browse(catalog, section, "", HomeFilters(), HomeSort.AVAILABILITY).map { it.id })
         assertEquals(listOf("available", "unknown", "low", "out"), MedicationPresentation.browse(catalog, "second", "", HomeFilters(), HomeSort.AVAILABILITY).map { it.id })
@@ -104,7 +104,7 @@ class MedicationPresentationTest {
         val sections = listOf(current, current.copy(id = "available"), current.copy(id = "closed", isActive = false),
             current.copy(id = "low"), current.copy(id = "unknown"))
         val values = listOf(AvailabilityStatus.OUT, AvailabilityStatus.AVAILABLE, AvailabilityStatus.AVAILABLE, AvailabilityStatus.LOW, AvailabilityStatus.UNKNOWN)
-        val catalog = seed.copy(sections = sections, availability = sections.zip(values).map { (s, status) -> Availability("med", s.id, status, Instant.EPOCH, editor) })
+        val catalog = seed.copy(sections = sections, availability = sections.zip(values).map { (s, status) -> Availability("med", s.id, status, Instant.EPOCH) })
         assertEquals(listOf("available"), MedicationPresentation.availableElsewhere(catalog, "med", current.id).map { it.id })
         for (status in listOf(AvailabilityStatus.LOW, AvailabilityStatus.UNKNOWN, AvailabilityStatus.AVAILABLE)) {
             assertTrue(MedicationPresentation.availableElsewhere(catalog.copy(availability = catalog.availability.map { if (it.sectionId == current.id) it.copy(status = status) else it }), "med", current.id).isEmpty())

@@ -7,7 +7,7 @@ import org.junit.Test
 
 class CatalogDiffRegressionTest {
     private val base = F.catalog()
-    private fun diff(next: CatalogSnapshot) = CatalogEdits.diff(base, next, F.editor, F.time, F.publishId)
+    private fun diff(next: CatalogSnapshot) = CatalogEdits.diff(base, next, F.time, F.publishId)
     @Test fun rowProjectionIncludesOnlyChangedTypedRows() {
         val med = base.medications.single(); val next = base.copy(medications = listOf(med.copy(note = "new")))
         assertEquals(setOf("medication:${med.id}"), CatalogEdits.rows(next, base).keys)
@@ -25,7 +25,7 @@ class CatalogDiffRegressionTest {
         val operation = diff(base.copy(medications = base.medications + extra)).single()
         assertEquals("@entity", operation.field); assertEquals(extra.id, operation.targetId)
         assertEquals("null", operation.baseValueJson); assertTrue(operation.intendedValueJson.contains("Other"))
-        assertEquals(F.publishId, operation.basePublishId); assertEquals(F.editor.id, operation.authorId)
+        assertEquals(F.publishId, operation.basePublishId); assertEquals(F.time, operation.authoredAt)
     }
     @Test fun deletionIncludesLinkedPairAndKeepsSingleTransaction() {
         val operations = diff(base.copy(medications = emptyList(), availability = emptyList()))
@@ -40,7 +40,7 @@ class CatalogDiffRegressionTest {
         assertTrue(base.sameContents(next))
     }
     @Test fun metadataOnlyChangesAreExcludedFromPendingBusinessFields() {
-        val next = base.copy(medications = base.medications.map { it.copy(updatedAt = F.time.plusSeconds(9), updatedBy = F.editor.copy(name = "Other editor")) })
+        val next = base.copy(medications = base.medications.map { it.copy(updatedAt = F.time.plusSeconds(9)) })
         assertTrue(diff(next).isEmpty()); assertTrue(RemoteObservationHistory.changes(base, next, F.time, 2).isEmpty())
     }
     @Test fun availabilityProjectionUsesCompleteCompositeTarget() {
@@ -51,7 +51,7 @@ class CatalogDiffRegressionTest {
     }
     @Test fun tombstonesWithSameEntityRetainDistinctOperationIdentity() {
         val a = Tombstone("medication", F.otherPharmacyId, F.time, F.publishId)
-        val b = a.copy(operationId = F.editor.id)
+        val b = a.copy(operationId = F.installationId)
         val catalog = base.copy(tombstones = listOf(a, b))
         val history = RemoteObservationHistory.changes(base, catalog, F.time, 2)
         assertEquals(2, history.size); assertEquals(2, history.map { it.entityId }.distinct().size)

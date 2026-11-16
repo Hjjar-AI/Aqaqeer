@@ -58,8 +58,8 @@ class AdminHistoryInstrumentedTest {
         val editor = p.admin.transaction { it.deviceIdentity()!!.id }
         val at = Instant.parse("2026-11-10T21:00:00Z") // Damascus next civil day.
         val entries = listOf(
-            HistoryEntry(newId(), null, "medication", med.id, MedicationPresentation.identity(med), "note", null, "\"new\"", editor, "محرر", at, null, null),
-            HistoryEntry(newId(), null, "pharmacy", id, "صيدلية", "adminPinVerifier", "SECRET", "SECRET", null, null, at, null, null))
+            HistoryEntry(newId(), null, "medication", med.id, MedicationPresentation.identity(med), "note", null, "\"new\"", at, null, null),
+            HistoryEntry(newId(), null, "pharmacy", id, "صيدلية", "adminPinVerifier", "SECRET", "SECRET", at, null, null))
         p.admin.transaction { it.clearHistory(); it.insertHistory(entries) }
         val repo = HistoryRepository(p.factory)
         val filter = HistoryFilter(LocalDate.of(2026,11,11), LocalDate.of(2026,11,11), editor, med.id)
@@ -74,7 +74,7 @@ class AdminHistoryInstrumentedTest {
         p.admin.transaction { dao ->
             dao.clearHistory()
             dao.insertHistory((0..50).map { i -> HistoryEntry(newId(), null, "medication", med.id, "Deleted name", "note", null,
-                "😀".repeat(600), null, null, Instant.ofEpochMilli(i.toLong()), null, null) })
+                "😀".repeat(600), Instant.ofEpochMilli(i.toLong()), null, null) })
         }
         val repo = HistoryRepository(p.factory)
         val a = repo.observe(pharmacy, HistoryFilter(), 0).first(); val b = repo.observe(pharmacy, HistoryFilter(), 1).first()

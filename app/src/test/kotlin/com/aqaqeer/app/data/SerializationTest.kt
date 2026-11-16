@@ -21,7 +21,6 @@ class SerializationTest {
         assertNull(converter.dateToString(null)); assertNull(converter.stringToDate(null))
         assertEquals(F.time, converter.longToInstant(converter.instantToLong(F.time)))
         assertEquals(LocalDate.of(2024,2,29),converter.stringToDate("2024-02-29"))
-        assertEquals(F.editor,converter.stringToEditor(converter.editorToString(F.editor)))
         val pin = F.catalog().pharmacy!!.adminPinVerifier
         assertEquals(pin,converter.stringToVerifier(converter.verifierToString(pin)))
         assertThrows(Exception::class.java) { converter.stringToDate("2026-02-30") }

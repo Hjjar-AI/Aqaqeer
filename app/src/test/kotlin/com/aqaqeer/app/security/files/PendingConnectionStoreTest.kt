@@ -53,7 +53,7 @@ class PendingConnectionStoreTest {
     }
     @Test fun oversizedLocalFieldsFailBeforeAnyWriteAndLeaveCandidateCallerOwned() {
         val secure = MemorySecureStore(); val store = PendingConnectionStore(secure)
-        val candidate = ConnectionCandidate(F.pharmacyId, "x".repeat(8193), F.time, F.editor, F.token, F.groupId, F.key, 1)
+        val candidate = ConnectionCandidate(F.pharmacyId, "x".repeat(8193), F.time, F.token, F.groupId, F.key, 1)
         try { store.stage(candidate); fail("Oversized record accepted") }
         catch (e: EnvelopeException) { assertEquals(EnvelopeError.RESOURCE_LIMIT, e.error) }
         val copy = candidate.copySecrets(); assertArrayEquals(F.key, copy.snapshotKey)

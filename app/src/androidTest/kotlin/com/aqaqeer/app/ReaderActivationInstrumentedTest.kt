@@ -281,7 +281,7 @@ class ReaderActivationInstrumentedTest {
         try {
             val sql=db.openHelper.writableDatabase
             val fixtures=listOf(
-                "pending_operations" to "INSERT INTO pending_operations (id,transactionId,entityType,targetId,field,baseValueJson,intendedValueJson,authorId,authorName,authoredAt) VALUES ('op','tx','medication','target','nameEn','null','null','author','name',1)",
+                "pending_operations" to "INSERT INTO pending_operations (id,transactionId,entityType,targetId,field,baseValueJson,intendedValueJson,authoredAt) VALUES ('op','tx','medication','target','nameEn','null','null',1)",
                 "publish_attempts" to "INSERT INTO publish_attempts (publishId,candidatePayloadJson,includedOperationIdsJson,transportPhase) VALUES ('attempt','{}','[]','UNCERTAIN')",
                 "history" to "INSERT INTO history (id,entityType,entityId,entityName,field) VALUES ('history','medication','target','name','nameEn')",
                 "tombstones" to "INSERT INTO tombstones (entityType,entityId,operationId,deletedAt) VALUES ('medication','00000000-0000-4000-8000-000000000def','00000000-0000-4000-8000-000000000456',1)"

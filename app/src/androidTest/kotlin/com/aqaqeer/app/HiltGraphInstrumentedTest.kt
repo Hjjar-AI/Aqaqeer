@@ -47,7 +47,7 @@ class HiltGraphInstrumentedTest {
         assertNotNull(backups); assertNotNull(history); assertNotNull(reports); assertNotNull(imports); assertNotNull(maintenance); assertNotNull(pins)
         profile.ready()
         if (!BuildConfig.IS_DEMO) {
-            admin.create("حقن", "Asia/Damascus", "محرر", "قسم", "123456".toCharArray(), "123456".toCharArray())
+            admin.create("حقن", "Asia/Damascus", "قسم", "123456".toCharArray(), "123456".toCharArray())
             val db = factory.open()
             try { assertEquals(clock.millis(), db.catalogDao().control()!!.firstAdminAt) } finally { db.close() }
         }

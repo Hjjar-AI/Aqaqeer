@@ -36,7 +36,7 @@ class AcceptanceResourceInstrumentedTest {
             dao.insertHistory((0 until rows).map { index ->
                 val value = "x".repeat(65_500) + " | سجل 😀 $index"
                 HistoryEntry(newId(),null,"medication",med.id,MedicationPresentation.identity(med),"note",null,
-                    JsonPrimitive(value).toString(),null,null,null,p.clock.instant(),null)
+                    JsonPrimitive(value).toString(),null,p.clock.instant(),null)
             })
         }
     }

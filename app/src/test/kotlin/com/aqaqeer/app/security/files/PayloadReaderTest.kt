@@ -31,7 +31,7 @@ class PayloadReaderTest {
     }
     @Test fun connectionRejectsUnknownMissingWrongTypedAndForbiddenAuthorizationFields(): Unit = runBlocking {
         val valid = F.connection()
-        val invalid = listOf(JsonObject(valid - "createdBy"), JsonObject(valid + ("adminMode" to JsonPrimitive(true))),
+        val invalid = listOf(JsonObject(valid - "createdAt"), JsonObject(valid + ("adminMode" to JsonPrimitive(true))),
             JsonObject(valid + ("groupId" to JsonPrimitive("-123"))), JsonObject(valid + ("schemaVersion" to JsonPrimitive(1.0))),
             JsonObject(valid + ("snapshotKey" to JsonPrimitive(F.b64(ByteArray(31))))),
             JsonObject(valid + ("pharmacyName" to JsonPrimitive(" padded "))))
@@ -91,11 +91,10 @@ class PayloadReaderTest {
             rejects(PayloadError.INVALID_PAYLOAD) { snapshot(bad) }
         }
     }
-    @Test fun invalidReferencesScientificNamesEditorsAndPinVerifierCannotReturnSupportedCatalog(): Unit = runBlocking {
+    @Test fun invalidReferencesScientificNamesAndPinVerifierCannotReturnSupportedCatalog(): Unit = runBlocking {
         val catalog = F.catalog(); val med = catalog.medications.single(); val pharmacy = catalog.pharmacy!!
         val invalid = listOf(catalog.copy(medications = listOf(med.copy(categoryId = F.otherPharmacyId))),
             catalog.copy(medications = listOf(med.copy(genericAr = null, genericEn = null))),
-            catalog.copy(medications = listOf(med.copy(updatedBy = F.editor.copy(name = " ")))),
             catalog.copy(pharmacy = pharmacy.copy(adminPinVerifier = pharmacy.adminPinVerifier.copy(hash = "AA=="))),
             catalog.copy(availability = catalog.availability + catalog.availability))
         for (value in invalid) rejects(PayloadError.INVALID_PAYLOAD) { snapshot(F.snapshot(value)) }
@@ -109,7 +108,7 @@ class PayloadReaderTest {
     }
     @Test fun candidateCloseWipesOwnedKeyWithoutWipingCopiedSecrets() {
         val owned = F.key
-        val candidate = ConnectionCandidate(F.pharmacyId, "fixture", F.time, F.editor, F.token, F.groupId, owned, 1)
+        val candidate = ConnectionCandidate(F.pharmacyId, "fixture", F.time, F.token, F.groupId, owned, 1)
         val secrets = candidate.copySecrets(); candidate.close()
         assertTrue(owned.all { it == 0.toByte() }); assertArrayEquals(F.key, secrets.snapshotKey)
         assertThrows(IllegalStateException::class.java) { candidate.copySecrets() }; secrets.snapshotKey.fill(0)

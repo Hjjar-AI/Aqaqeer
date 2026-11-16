@@ -31,7 +31,7 @@ class CatalogMergeFieldMatrixTest(private val field: String, private val remoteK
             else -> med
         }
         val remote = base.copy(medications = listOf(theirs.copy(updatedAt = F.time.plusSeconds(99))))
-        val operations = CatalogEdits.diff(base, local, F.editor, F.time, F.publishId)
+        val operations = CatalogEdits.diff(base, local, F.time, F.publishId)
         assertEquals(listOf(field), operations.map { it.field })
         val merged = CatalogEdits.merge(base, local, remote, operations)
         if (remoteKind == "conflict") {
@@ -39,14 +39,14 @@ class CatalogMergeFieldMatrixTest(private val field: String, private val remoteK
             val mine = CatalogEdits.merge(base, local, remote, operations, mapOf(conflict.key to true))
             val other = CatalogEdits.merge(base, local, remote, operations, mapOf(conflict.key to false))
             assertTrue(mine.conflicts.isEmpty()); assertTrue(other.conflicts.isEmpty())
-            assertTrue(CatalogEdits.diff(local, mine.catalog, F.editor, F.time, F.publishId).isEmpty())
+            assertTrue(CatalogEdits.diff(local, mine.catalog, F.time, F.publishId).isEmpty())
             assertEquals(remote, other.catalog)
             val newer = remote.copy(medications = listOf(changed(med, "third").copy(note = "remote context")))
             assertTrue(CatalogEdits.merge(base, local, newer, operations, mapOf(conflict.key to true)).conflicts.isNotEmpty())
         } else {
             assertTrue(merged.conflicts.isEmpty())
             val expected = changed(theirs, "mine")
-            assertEquals(expected.copy(updatedAt = merged.catalog.medications.single().updatedAt, updatedBy = merged.catalog.medications.single().updatedBy), merged.catalog.medications.single())
+            assertEquals(expected.copy(updatedAt = merged.catalog.medications.single().updatedAt), merged.catalog.medications.single())
             if (remoteKind == "same") assertEquals(remote, merged.catalog)
             CatalogRules.validate(merged.catalog)
         }

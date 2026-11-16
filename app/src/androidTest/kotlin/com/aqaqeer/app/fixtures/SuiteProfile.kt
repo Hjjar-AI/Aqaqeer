@@ -40,7 +40,7 @@ internal class SuiteProfile : AutoCloseable {
     suspend fun ready(): CatalogState.Ready = withTimeout(20000) { repository.observe().first { it !is CatalogState.Loading } as CatalogState.Ready }
     suspend fun create() {
         check(!BuildConfig.IS_DEMO)
-        ready(); admin.create("صيدلية الاختبار", "Asia/Damascus", "محرر الاختبار", "الرئيسي", "123456".toCharArray(), "123456".toCharArray())
+        ready(); admin.create("صيدلية الاختبار", "Asia/Damascus", "الرئيسي", "123456".toCharArray(), "123456".toCharArray())
     }
     suspend fun medication(name: String = "Suite medicine"): Medication {
         val value = M3Fixtures.catalog().medications.single().copy(id = newId(), nameEn = name, genericEn = name)

@@ -66,7 +66,7 @@ class SnapshotReadClientTest {
             try { client(transport).read(it,3); fail("Wrong pharmacy accepted") }
             catch (e: PayloadException) { assertEquals(PayloadError.WRONG_PHARMACY,e.error) }
         }
-        val candidate = ConnectionCandidate(F.pharmacyId,"fixture",F.time,F.editor,F.token,F.groupId,ByteArray(32){99},1)
+        val candidate = ConnectionCandidate(F.pharmacyId,"fixture",F.time,F.token,F.groupId,ByteArray(32){99},1)
         val valid = FakeSnapshotReadTransport(BotIdentity(1),{ document },{ F.snapshotEnvelope().inputStream() })
         candidate.use {
             try { client(valid).read(it,3); fail("Wrong key accepted") }

@@ -65,7 +65,7 @@ class AcceptanceProcessDeathInstrumentedTest {
         if(argument("Target")=="export") p.admin.transaction { dao ->
             val medication=dao.medications().single()
             dao.insertHistory(listOf(HistoryEntry(newId(),null,"medication",medication.id,MedicationPresentation.identity(medication),"note",null,
-                JsonPrimitive("Synthetic export interruption ".repeat(6000)).toString(),null,null,null,p.clock.instant(),null)))
+                JsonPrimitive("Synthetic export interruption ".repeat(6000)).toString(),null,p.clock.instant(),null)))
         }
         val remote=PersistentRecoveryRemote(p)
         val sharing=PharmacySharing(p.admin,p.secure,p.requirements,SnapshotReadClient(remote,EnvelopeReader(p.root)),remote,remote,p.context)

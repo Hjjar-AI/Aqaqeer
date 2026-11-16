@@ -23,7 +23,7 @@ class RefreshPolicyTest {
     @Test fun publicationAndLocalWorkPolicyStillRequiresDirectAncestry(): Unit = runBlocking {
         val base=snapshot()
         assertEquals(RefreshOutcome.APPLIED,publicationDecision(base,snapshot(2,F.otherPharmacyId,F.publishId)))
-        for (incoming in listOf(snapshot(1,F.otherPharmacyId),snapshot(3,F.otherPharmacyId,F.editor.id),
+        for (incoming in listOf(snapshot(1,F.otherPharmacyId),snapshot(3,F.otherPharmacyId,F.installationId),
             snapshot(catalog=F.catalog().copy(medications=F.catalog().medications.map { it.copy(note="same UUID different content") })))) {
             val error=assertThrows(RefreshException::class.java) { publicationDecision(base,incoming) }
             assertEquals(RefreshError.PUBLICATION_RECOVERY,error.error)

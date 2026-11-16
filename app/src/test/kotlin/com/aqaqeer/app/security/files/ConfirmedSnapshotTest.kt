@@ -18,13 +18,13 @@ class ConfirmedSnapshotTest {
         assertEquals(first.catalog,restored.catalog)
         assertEquals(first.compatibility,restored.compatibility)
         assertEquals(first.publication,restored.publication)
-        assertEquals(first.publishedBy,restored.publishedBy)
+        assertEquals(first.publishedAt,restored.publishedAt)
         assertNull(restored.parentPublishId); assertEquals(0L,restored.basedOnRevision)
         assertFalse(encoded.contains(F.token)); assertFalse(encoded.contains("snapshotKey"))
         assertFalse(encoded.contains("adminMode")); assertFalse(encoded.contains("history"))
     }
     @Test fun confirmedBasePreservesLineageTombstonesAndPublicationTimeExactly(): Unit = runBlocking {
-        val catalog=F.catalog().copy(tombstones=listOf(Tombstone("medication",F.otherPharmacyId,F.time,F.editor.id)))
+        val catalog=F.catalog().copy(tombstones=listOf(Tombstone("medication",F.otherPharmacyId,F.time,F.installationId)))
         val source=JsonObject(F.snapshot(catalog)+mapOf(
             "revision" to JsonPrimitive(2),"parentPublishId" to JsonPrimitive(F.otherPharmacyId),
             "basedOnRevision" to JsonPrimitive(1)))

@@ -23,7 +23,7 @@ object M3Fixtures {
     const val groupId = -1001234567890L
     val key get() = ByteArray(32) { it.toByte() }
     val time: Instant = Instant.parse("2026-11-09T12:00:00Z")
-    val editor = EditorRef("00000000-0000-4000-8000-000000000456", "محرر الاختبار")
+    const val installationId = "00000000-0000-4000-8000-000000000456"
     val json = Json { encodeDefaults = true }
     fun b64(bytes: ByteArray): String = Base64.getEncoder().encodeToString(bytes)
     fun catalog(): CatalogSnapshot {
@@ -31,22 +31,22 @@ object M3Fixtures {
         val pharmacy = Pharmacy(pharmacyId, "صيدلية الاختبار", "Asia/Damascus",
             PinVerifier(b64(ByteArray(16)), 200_000, b64(ByteArray(32))))
         val med = Medication("00000000-0000-4000-8000-000000000789", "Fixture medication", "10 mg",
-            CatalogSeeds.OTHER_FORM_ID, CatalogSeeds.UNCATEGORIZED_ID, time, time, editor, genericEn = "Fixture medication")
+            CatalogSeeds.OTHER_FORM_ID, CatalogSeeds.UNCATEGORIZED_ID, time, time, genericEn = "Fixture medication")
         return seed.copy(pharmacy = pharmacy, medications = listOf(med), availability = listOf(
-            Availability(med.id, seed.sections.single().id, AvailabilityStatus.AVAILABLE, time, editor)))
+            Availability(med.id, seed.sections.single().id, AvailabilityStatus.AVAILABLE, time)))
     }
     fun snapshot(catalog: CatalogSnapshot = catalog(), schema: Int = 1, minimum: Int = 1): JsonObject =
         JsonObject(json.parseToJsonElement(json.encodeToString(catalog)).jsonObject + mapOf(
             "compatibility" to buildJsonObject { put("schemaVersion", schema); put("minVersionCode", minimum); put("keyVersion", 1) },
             "revision" to JsonPrimitive(1), "publishId" to JsonPrimitive(publishId),
             "parentPublishId" to JsonNull, "basedOnRevision" to JsonPrimitive(0),
-            "publishedAt" to JsonPrimitive(time.toString()), "publishedBy" to json.parseToJsonElement(json.encodeToString(editor))))
+            "publishedAt" to JsonPrimitive(time.toString())))
     fun connection(): JsonObject = buildJsonObject {
         put("schemaVersion", 1); put("pharmacyId", pharmacyId); put("pharmacyName", "صيدلية الاختبار")
         put("botToken", token); put("groupId", groupId); put("snapshotKey", b64(key)); put("keyVersion", 1)
-        put("createdAt", time.toString()); put("createdBy", json.parseToJsonElement(json.encodeToString(editor)))
+        put("createdAt", time.toString())
     }
-    fun candidate(): ConnectionCandidate = ConnectionCandidate(pharmacyId, "صيدلية الاختبار", time, editor, token, groupId, key, 1)
+    fun candidate(): ConnectionCandidate = ConnectionCandidate(pharmacyId, "صيدلية الاختبار", time, token, groupId, key, 1)
     fun snapshotEnvelope(payload: JsonObject = snapshot()): ByteArray = encrypt(payload.toString(), EnvelopeDomain.SNAPSHOT)
     fun connectionEnvelope(payload: JsonObject = connection()): ByteArray = encrypt(payload.toString(), EnvelopeDomain.CONNECTION)
     private fun encrypt(payload: String, domain: EnvelopeDomain): ByteArray {

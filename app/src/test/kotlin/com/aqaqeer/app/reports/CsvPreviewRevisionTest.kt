@@ -72,7 +72,7 @@ class CsvPreviewRevisionTest {
         val med = catalog.medications.single(); val first = initial("note,section:Main section\nNew note,")
         val updated = revise(first, 2, CsvDecision(CsvAction.UPDATE, med.id))
         assertTrue(updated.rows.single().plan!!.statuses.isEmpty())
-        assertEquals(catalog.availability, updated.rows.single().plan!!.apply(catalog, F.editor, F.time).availability)
+        assertEquals(catalog.availability, updated.rows.single().plan!!.apply(catalog, F.time).availability)
     }
     @Test fun skipMakesMalformedRecordInertWithoutInventingPlan() {
         val first = initial("genericEn,strength\nAlpha")
@@ -83,8 +83,8 @@ class CsvPreviewRevisionTest {
     @Test fun revisionPreservesExistingCreationTimeAndUpdatesAttribution() {
         val med = catalog.medications.single(); val first = initial("note\nChanged")
         val updated = revise(first, 2, CsvDecision(CsvAction.UPDATE, med.id))
-        val now = F.time.plusSeconds(10); val next = updated.rows.single().plan!!.apply(catalog, F.editor, now).medications.single()
-        assertEquals(med.createdAt, next.createdAt); assertEquals(now, next.updatedAt); assertEquals(F.editor, next.updatedBy)
+        val now = F.time.plusSeconds(10); val next = updated.rows.single().plan!!.apply(catalog, now).medications.single()
+        assertEquals(med.createdAt, next.createdAt); assertEquals(now, next.updatedAt)
     }
     @Test fun previewCancellationPropagatesWithoutChangingBaseline() {
         val table = CsvCodec.read("genericEn,strength\nAlpha,10 mg".byteInputStream()) {}

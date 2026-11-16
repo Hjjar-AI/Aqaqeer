@@ -184,7 +184,7 @@ internal class RestoreCrashProfile(val base: Context, val root: File, val namesp
     }
     suspend fun create(name: String) {
         ready()
-        admin.create(name, "Asia/Damascus", "محرر الاختبار", "الرئيسي", "123456".toCharArray(), "123456".toCharArray())
+        admin.create(name, "Asia/Damascus", "الرئيسي", "123456".toCharArray(), "123456".toCharArray())
     }
     suspend fun medication(name: String): Medication {
         val med = M3Fixtures.catalog().medications.single().copy(id = newId(), nameEn = name, genericEn = name)
@@ -233,7 +233,6 @@ internal class RestoreCrashProfile(val base: Context, val root: File, val namesp
             try { buildJsonObject {
                 put("pharmacy", candidate.pharmacyId); put("name", candidate.pharmacyName)
                 put("keyVersion", candidate.keyVersion); put("createdAt", candidate.createdAt.toString())
-                put("editor", Json.encodeToJsonElement(candidate.createdBy))
                 put("group", secrets.groupId); put("token", secrets.botToken)
                 put("key", Base64.getEncoder().encodeToString(secrets.snapshotKey))
             } } finally { secrets.snapshotKey.fill(0) }

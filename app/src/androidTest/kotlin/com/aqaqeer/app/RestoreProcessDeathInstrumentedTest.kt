@@ -83,7 +83,7 @@ class RestoreProcessDeathInstrumentedTest {
             assertTrue("Fixture must contain an uncertain attempt", dao.attemptCount() > 0)
             dao.insertHistory((0 until 60).map { i ->
                 HistoryEntry(newId(), null, "medication", med.id, "Retained medicine", "note", null,
-                    "synthetic recovery history ".repeat(80) + i, null, null, donor.clock.instant(), null, null)
+                    "synthetic recovery history ".repeat(80) + i, donor.clock.instant(), null, null)
             })
         }
         donor.backups.export(Uri.fromFile(archive), password(), password())

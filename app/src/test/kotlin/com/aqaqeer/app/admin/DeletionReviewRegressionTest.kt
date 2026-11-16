@@ -13,7 +13,7 @@ class DeletionReviewRegressionTest {
     private val deleted = base.copy(categories = base.categories - category,
         medications = base.medications.map { it.copy(categoryId = CatalogSeeds.UNCATEGORIZED_ID) },
         tombstones = listOf(Tombstone("category", category.id, F.time, newId())))
-    private val operations = CatalogEdits.diff(base, deleted, F.editor, F.time, F.publishId)
+    private val operations = CatalogEdits.diff(base, deleted, F.time, F.publishId)
     private fun merge(remote: CatalogSnapshot, choices: Map<String, Boolean> = emptyMap()) =
         CatalogEdits.merge(base, deleted, remote, operations, choices)
 
@@ -76,8 +76,8 @@ class DeletionReviewRegressionTest {
         val local = original.copy(sections = original.sections - target, availability = emptyList())
         val added = original.medications.single().copy(id = newId(), genericEn = "New medication")
         val remote = original.copy(medications = original.medications + added,
-            availability = original.availability + Availability(added.id, target.id, AvailabilityStatus.OUT, F.time, F.editor))
-        val ops = CatalogEdits.diff(original, local, F.editor, F.time, F.publishId)
+            availability = original.availability + Availability(added.id, target.id, AvailabilityStatus.OUT, F.time))
+        val ops = CatalogEdits.diff(original, local, F.time, F.publishId)
         val review = CatalogEdits.merge(original, local, remote, ops).conflicts.single()
         val confirmed = CatalogEdits.merge(original, local, remote, ops, mapOf(review.key to true))
         assertTrue(confirmed.conflicts.isEmpty())
@@ -93,7 +93,7 @@ class DeletionReviewRegressionTest {
         val local = original.copy(forms = original.forms - form,
             medications = original.medications.map { it.copy(formId = CatalogSeeds.OTHER_FORM_ID) })
         val remote = original.copy(medications = original.medications.map { it.copy(formId = CatalogSeeds.TABLET_FORM_ID) })
-        val ops = CatalogEdits.diff(original, local, F.editor, F.time, F.publishId)
+        val ops = CatalogEdits.diff(original, local, F.time, F.publishId)
         val review = CatalogEdits.merge(original, local, remote, ops).conflicts.single()
         val confirmed = CatalogEdits.merge(original, local, remote, ops, mapOf(review.key to true))
         assertTrue(confirmed.conflicts.isEmpty())
@@ -108,7 +108,7 @@ class DeletionReviewRegressionTest {
         val marker = Tombstone("medication", med.id, F.time, newId())
         val unrelated = Tombstone("medication", newId(), F.time, newId())
         val remote = original.copy(medications = emptyList(), tombstones = listOf(marker, unrelated))
-        val ops = CatalogEdits.diff(original, local, F.editor, F.time, F.publishId)
+        val ops = CatalogEdits.diff(original, local, F.time, F.publishId)
         val choice = CatalogEdits.merge(original, local, remote, ops).conflicts.single()
         val restored = CatalogEdits.merge(original, local.copy(tombstones = listOf(marker.copy(operationId = newId()))),
             remote, ops, mapOf(choice.key to true))

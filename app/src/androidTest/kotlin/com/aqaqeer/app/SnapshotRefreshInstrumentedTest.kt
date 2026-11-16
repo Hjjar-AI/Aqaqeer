@@ -117,10 +117,10 @@ class SnapshotRefreshInstrumentedTest {
         assertEquals(RefreshOutcome.APPLIED,repository.refresh()); assertEquals(changed,ready().catalog)
         assertEquals(setOf("nameEn","note"),history().filter { it.entityType=="medication" }.map { it.field }.toSet())
         history().filter { it.entityType=="medication" }.forEach {
-            assertEquals(2L,it.publishedRevision); assertNull(it.editedAt); assertNull(it.editorId)
+            assertEquals(2L,it.publishedRevision); assertNull(it.editedAt)
         }
         val publication=history().single { it.field=="publication" }
-        assertEquals(F.editor.id,publication.editorId); assertEquals(F.time,publication.editedAt)
+        assertEquals(F.time,publication.editedAt)
         assertEquals(RefreshOutcome.UNCHANGED,repository.refresh()); assertEquals(3,history().size)
         assertEquals(F.otherPharmacyId,state().publishId)
     }
@@ -137,8 +137,8 @@ class SnapshotRefreshInstrumentedTest {
     @Test fun branchesWrongParentsAndRegressionAreRetainedWithoutReplacingTheBase(): Unit = runBlocking {
         assumeFalse(BuildConfig.IS_DEMO); activate()
         val original=state()
-        for (payload in listOf(next(revision=1,parent=F.editor.id).let { JsonObject(it+("parentPublishId" to JsonNull)) },
-            next(revision=2,parent=F.editor.id))) {
+        for (payload in listOf(next(revision=1,parent=F.installationId).let { JsonObject(it+("parentPublishId" to JsonNull)) },
+            next(revision=2,parent=F.installationId))) {
             assertEquals(RefreshError.PUBLICATION_RECOVERY,rejects<RefreshException> { refresh(remote(payload)).refresh() }.error)
             assertEquals(original.confirmedPayloadJson,state().confirmedPayloadJson)
         }
@@ -150,17 +150,17 @@ class SnapshotRefreshInstrumentedTest {
     @Test fun cleanReaderCatchesUpAcrossGapAndContinuesWithNextPublication(): Unit = runBlocking {
         assumeFalse(BuildConfig.IS_DEMO); activate()
         val changed = F.catalog().copy(medications = F.catalog().medications.map { it.copy(note = "missed publications") })
-        assertEquals(RefreshOutcome.APPLIED, refresh(remote(next(changed, 4, F.otherPharmacyId, F.editor.id))).refresh())
+        assertEquals(RefreshOutcome.APPLIED, refresh(remote(next(changed, 4, F.otherPharmacyId, F.installationId))).refresh())
         assertEquals(changed, ready().catalog); assertEquals(4L, state().revision)
         assertTrue(history().none { it.field == "recoveryCandidate" })
         assertEquals(setOf("note"), history().filter { it.entityType == "medication" }.map { it.field }.toSet())
-        assertEquals(RefreshOutcome.APPLIED, refresh(remote(next(changed, 5, F.editor.id, F.otherPharmacyId))).refresh())
+        assertEquals(RefreshOutcome.APPLIED, refresh(remote(next(changed, 5, F.installationId, F.otherPharmacyId))).refresh())
         assertEquals(5L, state().revision); assertEquals(2, history().count { it.field == "publication" })
     }
     @Test fun gapWithReusedPublicationIdNeverFastForwards(): Unit = runBlocking {
         assumeFalse(BuildConfig.IS_DEMO); activate(); val original = state()
         assertEquals(RefreshError.PUBLICATION_RECOVERY, rejects<RefreshException> {
-            refresh(remote(next(revision = 4, id = F.publishId, parent = F.editor.id))).refresh()
+            refresh(remote(next(revision = 4, id = F.publishId, parent = F.installationId))).refresh()
         }.error)
         assertEquals(original.confirmedPayloadJson, state().confirmedPayloadJson)
         assertEquals(F.catalog(), ready().catalog)
@@ -168,13 +168,13 @@ class SnapshotRefreshInstrumentedTest {
     @Test fun gapWithPendingEditsRetainsTheOriginalBaseAndLocalWork(): Unit = runBlocking {
         assumeFalse(BuildConfig.IS_DEMO); activate(); val original = state()
         val local = F.catalog().copy(medications = F.catalog().medications.map { it.copy(note = "local") })
-        val ops = com.aqaqeer.app.admin.CatalogEdits.diff(F.catalog(), local, F.editor, F.time, F.publishId)
+        val ops = com.aqaqeer.app.admin.CatalogEdits.diff(F.catalog(), local, F.time, F.publishId)
         val db = factory.open()
         try {
             db.catalogDao().putPending(ops)
             db.catalogDao().updateMedications(local.medications)
             assertEquals(RefreshError.PUBLICATION_RECOVERY, rejects<RefreshException> {
-                refresh(remote(next(revision = 4, parent = F.editor.id))).refresh()
+                refresh(remote(next(revision = 4, parent = F.installationId))).refresh()
             }.error)
             assertEquals(ops, db.catalogDao().pending())
             assertEquals(local.medications, db.catalogDao().medications())
@@ -186,7 +186,7 @@ class SnapshotRefreshInstrumentedTest {
         assumeFalse(BuildConfig.IS_DEMO); activate(); val original = state()
         val entered = CompletableDeferred<Unit>(); val release = CompletableDeferred<Unit>(); var pins = 0
         val request = async {
-            rejects<RefreshException> { refresh(remote(next(revision = 4, parent = F.editor.id), pin = {
+            rejects<RefreshException> { refresh(remote(next(revision = 4, parent = F.installationId), pin = {
                 if (++pins == 1) { entered.complete(Unit); release.await() }
             })).refresh() }.error
         }
@@ -211,7 +211,7 @@ class SnapshotRefreshInstrumentedTest {
             db.catalogDao().updateMedications(local)
             assertEquals(0, db.catalogDao().pendingCount())
             assertEquals(RefreshError.PUBLICATION_RECOVERY, rejects<RefreshException> {
-                refresh(remote(next(revision = 4, parent = F.editor.id))).refresh()
+                refresh(remote(next(revision = 4, parent = F.installationId))).refresh()
             }.error)
             assertEquals(local, db.catalogDao().medications())
             assertEquals(original.confirmedPayloadJson, state().confirmedPayloadJson)
@@ -247,7 +247,7 @@ class SnapshotRefreshInstrumentedTest {
         try {
             val sql=db.openHelper.writableDatabase
             val fixtures=listOf(
-                "pending_operations" to "INSERT INTO pending_operations (id,transactionId,entityType,targetId,field,baseValueJson,intendedValueJson,authorId,authorName,authoredAt) VALUES ('op','tx','medication','target','nameEn','null','null','author','name',1)",
+                "pending_operations" to "INSERT INTO pending_operations (id,transactionId,entityType,targetId,field,baseValueJson,intendedValueJson,authoredAt) VALUES ('op','tx','medication','target','nameEn','null','null',1)",
                 "publish_attempts" to "INSERT INTO publish_attempts (publishId,candidatePayloadJson,includedOperationIdsJson,transportPhase) VALUES ('attempt','{}','[]','UNCERTAIN')")
             for ((table,insert) in fixtures) {
                 sql.execSQL(insert)
@@ -311,7 +311,7 @@ class SnapshotRefreshInstrumentedTest {
         assertEquals(2,history().size)
         val deleted=changed.copy(medications=emptyList(),availability=emptyList(),tombstones=listOf(
             Tombstone("medication",changed.medications.single().id,F.time,F.otherPharmacyId)))
-        assertEquals(RefreshOutcome.APPLIED,refresh(remote(next(deleted,3,F.editor.id,F.otherPharmacyId))).refresh())
+        assertEquals(RefreshOutcome.APPLIED,refresh(remote(next(deleted,3,F.installationId,F.otherPharmacyId))).refresh())
         assertEquals(deleted,ready().catalog); assertEquals(3L,state().revision)
         assertEquals(6,history().size)
         assertEquals("\"Observed before deletion\"",history().single { it.field=="note" }.newValue)

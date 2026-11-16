@@ -24,10 +24,10 @@ class CatalogSearchMatrixTest(private val label: String, private val query: Stri
         val seed = F.catalog(); val section = seed.sections.single().id
         val a = seed.medications.single().copy(genericEn = "Alpha", nameEn = "Alpha commercial", strength = "500 mg", brand = "Brand")
         val b = a.copy(id = F.otherPharmacyId, genericEn = "Beta", nameEn = "Beta commercial", strength = "10 mg", categoryId = "other", brand = null)
-        val c = a.copy(id = F.editor.id, genericEn = "Alpha extra", nameEn = null, categoryId = "other")
+        val c = a.copy(id = F.installationId, genericEn = "Alpha extra", nameEn = null, categoryId = "other")
         val catalog = seed.copy(medications = listOf(c, b, a), categories = seed.categories + Category("other", "آخر"),
-            availability = listOf(Availability(a.id, section, AvailabilityStatus.OUT, F.time, F.editor),
-                Availability(b.id, section, AvailabilityStatus.AVAILABLE, F.time, F.editor)))
+            availability = listOf(Availability(a.id, section, AvailabilityStatus.OUT, F.time),
+                Availability(b.id, section, AvailabilityStatus.AVAILABLE, F.time)))
         val matchingQuery = when (query) { "" -> setOf(a.id, b.id, c.id); "ALPHA", "٥٠٠", "alpha brand" -> setOf(a.id, c.id); else -> emptySet() }
         val expected = matchingQuery.filter { id ->
             (categories.isEmpty() || id == a.id) && (statuses.isEmpty() || (if (id == a.id) AvailabilityStatus.OUT else if (id == b.id) AvailabilityStatus.AVAILABLE else AvailabilityStatus.UNKNOWN) in statuses)

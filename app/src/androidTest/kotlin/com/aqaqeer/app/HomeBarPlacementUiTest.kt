@@ -21,7 +21,7 @@ class HomeBarPlacementUiTest {
     private val second = Section(F.otherPharmacyId, "القسم الثاني")
     private val catalog = F.catalog().let { c -> c.copy(sections = c.sections + second,
         availability = c.availability.map { it.copy(status = AvailabilityStatus.OUT) } +
-            Availability(c.medications.single().id, second.id, AvailabilityStatus.AVAILABLE, F.time, F.editor)) }
+            Availability(c.medications.single().id, second.id, AvailabilityStatus.AVAILABLE, F.time)) }
 
     private fun layout(sectionsBottom: Boolean, searchBottom: Boolean) {
         var state by mutableStateOf(AppUiState(sectionId = second.id, query = "Fixture", appliedQuery = "Fixture",

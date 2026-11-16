@@ -39,7 +39,7 @@ class PharmacySharingInstrumentedTest {
         val repository = CatalogRepository(factory, secure, requirements, com.aqaqeer.app.maintenance.MaintenanceStage(context), com.aqaqeer.app.data.DisplayPreferences(context))
         val admin = AdminRepository(factory, requirements, secure, com.aqaqeer.app.maintenance.MaintenanceStage(context), com.aqaqeer.app.admin.PinThrottle(context, secure), com.aqaqeer.app.data.DisplayPreferences(context))
         suspend fun ready() = withTimeout(15000) { repository.observe().first { it !is CatalogState.Loading } as CatalogState.Ready }
-        suspend fun create() { ready(); admin.create("صيدلية الاختبار", "Asia/Damascus", "المحرر", "الرئيسي", "123456".toCharArray(), "١٢٣٤٥٦".toCharArray()) }
+        suspend fun create() { ready(); admin.create("صيدلية الاختبار", "Asia/Damascus", "الرئيسي", "123456".toCharArray(), "١٢٣٤٥٦".toCharArray()) }
         fun sharing(remote: Remote) = PharmacySharing(admin, secure, requirements,
             SnapshotReadClient(remote, EnvelopeReader(root)), remote, remote, context)
         suspend fun setup(remote: Remote, sharing: PharmacySharing) { sharing.saveSetup("123:test", -123L, remote.title) }
@@ -78,7 +78,7 @@ class PharmacySharingInstrumentedTest {
     }
     private suspend fun medicine(p: Profile, name: String = "Medicine"): Medication {
         val value = Medication(newId(), name, "10 mg", CatalogSeeds.OTHER_FORM_ID, CatalogSeeds.UNCATEGORIZED_ID,
-            Instant.now(), Instant.now(), EditorRef(newId(), "placeholder"), genericEn = name)
+            Instant.now(), Instant.now(), genericEn = name)
         p.admin.saveMedication(value); return p.ready().catalog.medications.single { it.id == value.id }
     }
     @After fun cleanOwnedProfiles() { profiles.forEach { p ->
@@ -110,19 +110,19 @@ class PharmacySharingInstrumentedTest {
         val pinClock = java.time.Clock.fixed(Instant.now(), java.time.ZoneOffset.UTC)
         val pinAdmin = AdminRepository(reader.factory, reader.requirements, reader.secure, com.aqaqeer.app.maintenance.MaintenanceStage(reader.context), com.aqaqeer.app.admin.PinThrottle(reader.context, reader.secure), com.aqaqeer.app.data.DisplayPreferences(reader.context), pinClock)
         var failed = false
-        try { pinAdmin.promote("000000".toCharArray(), "محرر ثانٍ") } catch (_: Exception) { failed = true }
+        try { pinAdmin.promote("000000".toCharArray()) } catch (_: Exception) { failed = true }
         assertTrue(failed)
         val check = reader.factory.open()
         try { assertEquals(1, check.catalogDao().control()!!.failedPins) } finally { check.close() }
         failed = false
-        try { AdminRepository(reader.factory, reader.requirements, reader.secure, com.aqaqeer.app.maintenance.MaintenanceStage(reader.context), com.aqaqeer.app.admin.PinThrottle(reader.context, reader.secure), com.aqaqeer.app.data.DisplayPreferences(reader.context), pinClock).promote("123456".toCharArray(), "محرر ثانٍ") }
+        try { AdminRepository(reader.factory, reader.requirements, reader.secure, com.aqaqeer.app.maintenance.MaintenanceStage(reader.context), com.aqaqeer.app.admin.PinThrottle(reader.context, reader.secure), com.aqaqeer.app.data.DisplayPreferences(reader.context), pinClock).promote("123456".toCharArray()) }
         catch (_: Exception) { failed = true }; assertTrue(failed)
         val throttle = com.aqaqeer.app.maintenance.MaintenanceStore(reader.secure)
             .decode<com.aqaqeer.app.admin.PinDelay>("pin-delay")!!
         assertEquals(1, throttle.failures)
         delay((throttle.retryAtElapsed - android.os.SystemClock.elapsedRealtime()).coerceAtLeast(0) + 1)
         AdminRepository(reader.factory, reader.requirements, reader.secure, com.aqaqeer.app.maintenance.MaintenanceStage(reader.context), com.aqaqeer.app.admin.PinThrottle(reader.context, reader.secure), com.aqaqeer.app.data.DisplayPreferences(reader.context), java.time.Clock.fixed(pinClock.instant().plusSeconds(3), java.time.ZoneOffset.UTC))
-            .promote("123456".toCharArray(), "محرر ثانٍ")
+            .promote("123456".toCharArray())
         assertTrue(reader.ready().admin)
         val sharedMed = reader.ready().catalog.medications.single()
         owner.admin.saveMedication(sharedMed.copy(note = "owner conflict"))
@@ -265,7 +265,7 @@ class PharmacySharingInstrumentedTest {
         owner.admin.saveMedication(owner.ready().catalog.medications.single().copy(note = "after backup"))
         backup.restore(Uri.fromFile(backupFile), "recovery passphrase".toCharArray(), "صيدلية الاختبار", true)
         assertFalse(owner.ready().admin)
-        owner.admin.promote("123456".toCharArray(), "محرر الاستعادة")
+        owner.admin.promote("123456".toCharArray())
         sharing.confirmRestoredConnection(token, target.title)
         sharing.reconcileRestore(false, "")
         assertFalse("Live restore reconciliation must clear pause", owner.ready().restorePaused)
@@ -280,7 +280,7 @@ class PharmacySharingInstrumentedTest {
         assertEquals("Manual republication after live reconciliation",reader.ready().catalog.medications.single().note)
 
         // Use a synthetic pharmacy PIN only; the actual bot token is never revoked here.
-        reader.admin.promote("123456".toCharArray(),"قارئ اختبار مفوض")
+        reader.admin.promote("123456".toCharArray())
         val pin=com.aqaqeer.app.maintenance.PinChanges(owner.admin,com.aqaqeer.app.maintenance.MaintenanceStore(owner.secure))
         pin.change("123456".toCharArray(),"654321".toCharArray(),"654321".toCharArray())
         sharing.publish();assertTrue(sharing.status.value.verified)
@@ -311,7 +311,7 @@ class PharmacySharingInstrumentedTest {
         val baseline = try { Json.decodeFromString<SnapshotWire>(db.catalogDao().snapshotState()!!.confirmedPayloadJson!!).supported() }
             finally { db.close() }
         val changed = SnapshotCandidate.Supported(baseline.compatibility, 2, newId(), baseline.publishId, 1,
-            Instant.now(), baseline.publishedBy, baseline.catalog.copy(medications = baseline.catalog.medications.map { it.copy(note = "theirs") }))
+            Instant.now(), baseline.catalog.copy(medications = baseline.catalog.medications.map { it.copy(note = "theirs") }))
         val active = PendingConnectionStore(p.secure, "active-connection")
         active.withCandidate(active.info()!!.id) { c ->
             val secrets = c.copySecrets()
@@ -338,8 +338,7 @@ class PharmacySharingInstrumentedTest {
         try {
             val dao = db.catalogDao()
             dao.deletePending(dao.pending().map { it.id })
-            val first = PendingOperation(newId(), newId(), "medication", med.id, "note", "null", "\"first\"",
-                med.updatedBy.id, med.updatedBy.name, Instant.parse("2026-11-10T12:00:00Z"), null)
+            val first = PendingOperation(newId(), newId(), "medication", med.id, "note", "null", "\"first\"", Instant.parse("2026-11-10T12:00:00Z"), null)
             val second = first.copy(id = newId(), transactionId = newId(), baseValueJson = "\"first\"",
                 intendedValueJson = "\"second\"", authoredAt = first.authoredAt.minusSeconds(500))
             dao.putPending(listOf(first, second))
