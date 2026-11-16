@@ -7,4 +7,4 @@ internal object AppStrings {
     lateinit var resources: Resources
 }
 internal fun uiText(id: Int, vararg arguments: Any?): String = if (arguments.isEmpty())
-    AppStrings.resources.getString(id) else AppStrings.resources.getString(id, *arguments)
+    AppStrings.resources.getString(id) else String.format(java.util.Locale.ROOT, AppStrings.resources.getString(id), *arguments)

@@ -155,7 +155,7 @@ private class A5Report(
     private fun newPage() {
         owner.ensureActive()
         page?.let { document.finishPage(it); page = null }
-        if (++pageNumber > 1000) throw CsvProblem("التقرير يحتاج أكثر من ١٠٠٠ صفحة؛ قلّل نطاقه")
+        if (++pageNumber > 1000) throw CsvProblem("التقرير يحتاج أكثر من 1000 صفحة؛ قلّل نطاقه")
         page = document.startPage(PdfDocument.PageInfo.Builder(420, 595, pageNumber).create())
         canvas.drawBitmap(emblem, null, RectF(margin, 18f, 54f, 52f), null)
         var headerY = 17f
@@ -302,7 +302,7 @@ private class A5Report(
                 tableActive = true
                 // Reserve a bounded category/column heading plus a first readable row.
                 val heading = layout(short(group.nameAr, 80), width - 8, true, 9.4f)
-                val columns = snapshot.sections.maxOf { layout("١\n${short(it.nameAr, 20)}", (sectionWidth - padding * 2).toInt(), true, 7.4f, true).height }
+                val columns = snapshot.sections.maxOf { layout("1\n${short(it.nameAr, 20)}", (sectionWidth - padding * 2).toInt(), true, 7.4f, true).height }
                 if (bottom - y < heading.height + columns + 56f) newPage() else tableHeader()
                 medications.forEach { med -> medication(med, ++number) }
                 y += 8f

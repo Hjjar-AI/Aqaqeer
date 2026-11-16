@@ -24,7 +24,7 @@ internal object CsvCodec {
         private var count = 0
         private fun account(n: Int): Int {
             if (n > 0) count += n
-            if (count > MAX_BYTES) throw CsvProblem("ملف CSV أكبر من ١٠ ميبيبايت")
+            if (count > MAX_BYTES) throw CsvProblem("ملف CSV أكبر من 10 ميبيبايت")
             return n
         }
         override fun read(): Int = `in`.read().also { if (it >= 0) account(1) }
@@ -78,7 +78,7 @@ internal object CsvCodec {
             var dataRecords = 0
             fun endCell() {
                 val value = cell.toString()
-                if (value.toByteArray(Charsets.UTF_8).size > MAX_CELL_BYTES) throw CsvProblem("خلية CSV تتجاوز ٦٤ كيبيبايت")
+                if (value.toByteArray(Charsets.UTF_8).size > MAX_CELL_BYTES) throw CsvProblem("خلية CSV تتجاوز 64 كيبيبايت")
                 cells += value; cell.setLength(0); state = 0
                 if (cells.size > medicationColumns.size + 5 + resultColumns.size) throw CsvProblem("عدد أعمدة CSV غير مدعوم")
             }
@@ -91,7 +91,7 @@ internal object CsvCodec {
                         throw CsvProblem("يحتوي CSV أعمدة غير معروفة")
                     header = cells.toList()
                 } else {
-                    if (++dataRecords > MAX_ROWS) throw CsvProblem("عدد صفوف CSV يتجاوز ١٠٠٠٠")
+                    if (++dataRecords > MAX_ROWS) throw CsvProblem("عدد صفوف CSV يتجاوز 10000")
                     if (cells.any { it.isNotBlank() }) records += CsvRecord(number, cells.toList())
                 }
                 number++; cells.clear(); started = false

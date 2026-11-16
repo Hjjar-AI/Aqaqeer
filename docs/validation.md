@@ -2,6 +2,20 @@
 
 [Requirements](requirements.md) define acceptance; [plan](plan.md) owns remaining work. The evidence manifest (local-only: `../local/verification/manifest.json`) retains original results, public hashes and provenance. Ignored evidence may be absent in fresh checkouts. Source checks, compilation, runtime results and human acceptance remain distinct.
 
+<a id="initial-attribution-free-baseline--2026-11-16"></a>
+
+## Initial attribution-free baseline — 2026-11-16
+
+**Production source implemented; compilation and runtime acceptance unexecuted.** Models, repositories, serializers, strict payload readers, backup allowlists, protected staging, seeds/demo data and UI remove editor attribution while retaining timestamps, operation IDs, installation authorization and publication lineage. Derived timestamp selection uses operation time then operation ID. Room and revised file definitions remain initial version 1; incompatible development data has no conversion or destructive fallback.
+
+Home source includes pinned selected-position bars, shared quick/sheet filters and projection freshness inputs, guarded refresh shortcuts, a primary top pending control, stable selection slots/bottom actions, collapsible groups, adaptive cards and detail/status menus. Fetched markers are installation-local and accumulate through the current/next session; successful-fetch comparisons include removed availability pairs. Navigation/Settings, adaptive forms, Maintenance steps/disclosures, pharmacy-day History/shortcuts, setup checklist, review filters, conflict comparisons, copy actions, status legend and representative RTL/theme/large-text preview declarations are implemented. Western digits include report/CSV error text and locale-independent numeric resource formatting; input digit normalization remains intact. Source declarations do not establish rendered/accessibility acceptance.
+
+The explicitly authorized one-time local counter reset was performed **31→0 under the existing counter lock**; read-back remains 0, so the next normal packaging reservation is 1 / `0.0.1`. Reservation creation, lookup, suggestions and workflow documentation use `android-initial-build-N`. The repository-settings template protects old and new reservation tags. Old tags were not changed; no remote reservation/settings change or packaging occurred. Runtime revisions, key versions and operational IDs were not reset.
+
+Source-only checks completed: production call-site/constructor and merge/refresh-state review; no `EditorRef`, `updatedBy`, `publishedBy`, `createdBy`, editor ID/name or author ID/name identifiers in production Kotlin; delimiter and selected constructor-argument checks across **90 production Kotlin files**; **9 values XML files** parsed and **789 string references** resolved; four version-helper Python sources parsed without executing reservations; workflow policy **15 workflows / 0 problems**; documentation local paths/anchors and whitespace checks. The temporary source checker is lexical, not a Kotlin compiler or behavioral test.
+
+The checked-in Room schema export is historical and predates attribution removal; [its README](../app/schemas/README.md) explicitly marks it stale. Regeneration/review requires separately authorized KSP compilation; no generated identity hash was handwritten. [Plan I1–I4](plan.md#initial-attribution-free-baseline--2026-11-16) tracks this artifact, compilation, format/UI/session acceptance and actual reservations. Earlier dated build/test/delivery evidence below predates this baseline. This batch did not inspect/change/run tests, inspect/change migrations, run Gradle/builds/compilation/lint, dispatch workflows, access devices or mutate live remote data.
+
 <a id="review-fixes-home-placement"></a>
 
 ## Review fixes and Home placement — 2026-11-15
