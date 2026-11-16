@@ -440,35 +440,42 @@ internal fun statusLabel(status: AvailabilityStatus): String = uiText(when (stat
     LazyColumn(Modifier.fillMaxSize().testTag("settings"), contentPadding = PaddingValues(UiSpacing.page),
         verticalArrangement = Arrangement.spacedBy(UiSpacing.group)) {
         item { SettingsGroup(uiText(R.string.review_appearance), initiallyExpanded = true) {
-            PreferenceChoiceRow(uiText(R.string.ui_aqaqeer_app_034), ThemeChoice.entries, theme, setTheme, {
+            SettingsChoiceRows(uiText(R.string.ui_aqaqeer_app_034), ThemeChoice.entries, theme, setTheme, {
                 uiText(when (it) { ThemeChoice.SYSTEM -> R.string.ui_aqaqeer_app_035; ThemeChoice.LIGHT -> R.string.ui_aqaqeer_app_036
                     ThemeChoice.DARK -> R.string.ui_aqaqeer_app_037; ThemeChoice.AMOLED -> R.string.ui_aqaqeer_app_038 })
             }, choiceModifier = { Modifier.testTag("theme_${it.name}") })
-            PreferenceChoiceRow(uiText(R.string.ui_aqaqeer_app_039), ThemeAccent.entries, accent, setAccent, {
+            SettingsChoiceRows(uiText(R.string.ui_aqaqeer_app_039), ThemeAccent.entries, accent, setAccent, {
                 uiText(when (it) { ThemeAccent.GOLD -> R.string.ui_aqaqeer_app_040; ThemeAccent.BLUE -> R.string.ui_aqaqeer_app_041
                     ThemeAccent.GREEN -> R.string.ui_aqaqeer_app_042; ThemeAccent.PURPLE -> R.string.ui_aqaqeer_app_043; ThemeAccent.CRIMSON -> R.string.ui_aqaqeer_app_044 })
             }, swatch = { appColorScheme(theme, it, systemDark).primary })
         } }
         item { SettingsGroup(uiText(R.string.review_list_display)) {
-            PreferenceChoices(uiText(R.string.ui_aqaqeer_app_045), HomeSort.entries, preferences.sort, "sort", setSort) {
+            SettingsChoiceRows(uiText(R.string.ui_aqaqeer_app_045), HomeSort.entries, preferences.sort, setSort, label = {
                 uiText(when (it) { HomeSort.SCIENTIFIC_NAME -> R.string.ui_aqaqeer_app_046; HomeSort.ARABIC_NAME -> R.string.ui_aqaqeer_app_047
                     HomeSort.ENGLISH_NAME -> R.string.ui_aqaqeer_app_048; HomeSort.AVAILABILITY -> R.string.ui_aqaqeer_app_049 })
+            }, modifier = Modifier.testTag("sort_preference"), choiceModifier = { Modifier.testTag("sort_${it.name}") })
+            ContentSection {
+                CardLayoutPicker(preferences.layout, setLayout)
+                MedicationLayoutPreview(preferences.layout)
             }
-            CardLayoutPicker(preferences.layout, setLayout)
-            MedicationLayoutPreview(preferences.layout)
             SwitchChoiceRow(preferences.twoColumns, uiText(R.string.review_adaptive_columns), uiText(R.string.review_adaptive_columns_help), Modifier.testTag("two_columns"), setTwoColumns)
-            SwitchChoiceRow(preferences.groupingEnabled, uiText(R.string.ui_home_screen_025), uiText(R.string.ui_home_screen_026), change = setGroupingEnabled)
-            if (preferences.groupingEnabled) PreferenceChoices(uiText(R.string.ui_home_screen_027), HomeGrouping.entries,
-                preferences.grouping, "grouping", setGrouping) { uiText(if (it == HomeGrouping.CATEGORY) R.string.ui_pharmacy_admin_screen_073 else R.string.ui_home_screen_028) }
-            PreferenceChoices(uiText(R.string.ui_aqaqeer_app_056), NameDisplay.entries, preferences.names, "names", setNames) {
-                uiText(when (it) { NameDisplay.ARABIC -> R.string.ui_aqaqeer_app_057; NameDisplay.ENGLISH -> R.string.ui_aqaqeer_app_058; NameDisplay.BOTH -> R.string.ui_aqaqeer_app_059 })
+            ContentSection {
+                SwitchChoiceRow(preferences.groupingEnabled, uiText(R.string.ui_home_screen_025), uiText(R.string.ui_home_screen_026), change = setGroupingEnabled)
+                if (preferences.groupingEnabled) SettingsChoiceRows(uiText(R.string.ui_home_screen_027), HomeGrouping.entries,
+                    preferences.grouping, setGrouping, label = { uiText(if (it == HomeGrouping.CATEGORY) R.string.ui_pharmacy_admin_screen_073 else R.string.ui_home_screen_028) },
+                    modifier = Modifier.testTag("grouping_preference"), choiceModifier = { Modifier.testTag("grouping_${it.name}") })
             }
+            SettingsChoiceRows(uiText(R.string.ui_aqaqeer_app_056), NameDisplay.entries, preferences.names, setNames, label = {
+                uiText(when (it) { NameDisplay.ARABIC -> R.string.ui_aqaqeer_app_057; NameDisplay.ENGLISH -> R.string.ui_aqaqeer_app_058; NameDisplay.BOTH -> R.string.ui_aqaqeer_app_059 })
+            }, modifier = Modifier.testTag("names_preference"), choiceModifier = { Modifier.testTag("names_${it.name}") })
         } }
         item { SettingsGroup(uiText(R.string.review_dates_placement)) {
             SwitchChoiceRow(preferences.sectionsAtBottom, uiText(R.string.home_sections_bottom), uiText(R.string.home_sections_bottom_help), Modifier.testTag("sections_at_bottom"), setSectionsAtBottom)
             SwitchChoiceRow(preferences.searchAtBottom, uiText(R.string.home_search_bottom), uiText(R.string.home_search_bottom_help), Modifier.testTag("search_at_bottom"), setSearchAtBottom)
-            SwitchChoiceRow(preferences.secondaryHijri, uiText(R.string.ui_aqaqeer_app_060), uiText(R.string.ui_aqaqeer_app_061), Modifier.testTag("secondary_hijri"), setSecondaryHijri)
-            ExpandableInformation(uiText(R.string.ui_aqaqeer_app_063), uiText(R.string.ui_aqaqeer_app_064))
+            ContentSection {
+                SwitchChoiceRow(preferences.secondaryHijri, uiText(R.string.ui_aqaqeer_app_060), uiText(R.string.ui_aqaqeer_app_061), Modifier.testTag("secondary_hijri"), setSecondaryHijri)
+                ExpandableInformation(uiText(R.string.ui_aqaqeer_app_063), uiText(R.string.ui_aqaqeer_app_064))
+            }
         } }
         openBackup?.let { item { NavigationCard(uiText(R.string.ui_screen_titles_011), it) } }
         item { NavigationCard(uiText(R.string.ui_screen_titles_013), openAbout, Modifier.testTag("open_about")) }

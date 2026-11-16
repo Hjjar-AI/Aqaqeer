@@ -44,7 +44,7 @@ class DisplayPreferences(private val context: Context) {
         CardLayout.entries.firstOrNull { it.name == prefs[LAYOUT] } ?: CardLayout.COMPACT,
         NameDisplay.entries.firstOrNull { it.name == prefs[NAMES] } ?: NameDisplay.BOTH,
         prefs[SECONDARY_HIJRI] ?: false,
-        prefs[GROUPING_ENABLED] ?: true,
+        prefs[GROUPING_ENABLED] ?: false,
         HomeGrouping.entries.firstOrNull { it.name == prefs[GROUPING] } ?: HomeGrouping.CATEGORY,
         prefs[TWO_COLUMNS] ?: true,
         prefs[SECTIONS_AT_BOTTOM] ?: true,

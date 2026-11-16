@@ -245,7 +245,7 @@ Fetched-change markers/filter track medication business-data and availability-st
 
 Home provides a locally saved sort preference: scientific name alphabetically (default), commercial Arabic name, commercial English name, or current-section availability in the order OUT, LOW, UNKNOWN, AVAILABLE with scientific-name ordering within groups. Scientific ordering uses normalized genericAr, falling back to genericEn, then normalized alternate scientific name (empty when absent), strength, createdAt and ID. Commercial sorting falls back to another available name when absent.
 
-Save preferences in installation-local DataStore, never synchronize them or replace an explicit saved sort. Search relevance temporarily overrides browsing sort; clearing search restores it. Home grouping is optional and enabled by default according to category, with no group/letter headers when off.
+Save preferences in installation-local DataStore, never synchronize them or replace an explicit saved sort. Search relevance temporarily overrides browsing sort; clearing search restores it. Home grouping is optional and disabled by default, with no group/letter headers when off. Enabling it uses category mode unless another mode is selected.
 
 Settings offers a grouping toggle and scientific-letter/category mode, remembered independently of sort and status/category filters. When enabled, headings span all grid columns. Without search, groups are alphabetical and retain the chosen browsing order within each group.
 
@@ -344,7 +344,8 @@ Required startup failures lead to their recovery screen. About uses the existing
 | Concern | Required behavior |
 | --- | --- |
 | Groups | Settings has collapsible Appearance / List display / Dates and bar placement groups, initially only Appearance expanded. |
-| Layout preview | Use visual compact/expanded choices with a direct preview. |
+| Layout preview | Use visual compact/expanded choices with a labeled, bordered direct preview immediately below in the same setting block. |
+| Option alignment | Settings uses consistently aligned full-width radio rows for theme, accent, sort, grouping mode and name display; keep each setting under its own heading and separate independent setting blocks by 24 dp. Keep related controls/preview and grouping/Hijri explanations together with smaller gaps. |
 | Spacing | Use 24 dp between major admin groups, smaller within-group gaps, and no redundant dividers between bordered groups. |
 | Field convention | Form explanations use supporting text; optional fields alone are marked, with one required-field convention. |
 | PIN warnings | Weak-PIN warnings appear below inputs. |

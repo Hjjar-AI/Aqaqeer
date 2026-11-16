@@ -2,6 +2,9 @@ package com.aqaqeer.app.ui
 
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -122,16 +125,47 @@ internal data class Notice(val text: String, val severity: NoticeSeverity = Noti
 
 @Composable internal fun SettingsGroup(title: String, initiallyExpanded: Boolean = false, content: @Composable ColumnScope.() -> Unit) {
     var expanded by rememberSaveable(title) { mutableStateOf(initiallyExpanded) }
-    GroupedCard { CollapsibleGroup(title, expanded, { expanded = !expanded }, content = content) }
+    GroupedCard {
+        Column(Modifier.fillMaxWidth().animateContentSize()) {
+            TextButton(onClick = { expanded = !expanded },
+                modifier = Modifier.fillMaxWidth().heightIn(min = UiSpacing.touch).semantics {
+                    stateDescription = uiText(if (expanded) R.string.ui_home_drawer_010 else R.string.ui_home_drawer_011)
+                }, contentPadding = PaddingValues(0.dp), shape = MaterialTheme.shapes.medium) {
+                Text(title, Modifier.weight(1f).semantics { heading() }, style = MaterialTheme.typography.titleMedium)
+                Text(if (expanded) "▴" else "▾")
+            }
+            if (expanded) ContentSection(modifier = Modifier.padding(top = UiSpacing.related), spacing = UiSpacing.group, content = content)
+        }
+    }
+}
+
+/** Settings choices keep a stable aligned row per value instead of mixing wrapped chips. */
+@Composable internal fun <T> SettingsChoiceRows(title: String, choices: List<T>, selected: T,
+    select: (T) -> Unit, label: (T) -> String, modifier: Modifier = Modifier,
+    choiceModifier: (T) -> Modifier = { Modifier },
+    swatch: ((T) -> androidx.compose.ui.graphics.Color)? = null) {
+    ContentSection(modifier = modifier) {
+        Text(title, Modifier.semantics { heading() }, style = MaterialTheme.typography.titleSmall)
+        RadioChoiceRows(choices, selected, select, label, choiceModifier = choiceModifier) { choice ->
+            Row(verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(UiSpacing.related)) {
+                swatch?.let { Box(Modifier.size(16.dp).background(it(choice), CircleShape)) }
+                Text(label(choice), Modifier.weight(1f))
+            }
+        }
+    }
 }
 
 @Composable internal fun CardLayoutPicker(selected: com.aqaqeer.app.data.CardLayout, change: (com.aqaqeer.app.data.CardLayout) -> Unit) {
-    AdaptivePickers(first = { LayoutChoice(com.aqaqeer.app.data.CardLayout.COMPACT, selected, change) },
-        second = { LayoutChoice(com.aqaqeer.app.data.CardLayout.EXPANDED, selected, change) })
+    ContentSection {
+        Text(uiText(R.string.ui_aqaqeer_app_050), Modifier.semantics { heading() }, style = MaterialTheme.typography.titleSmall)
+        AdaptivePickers(first = { LayoutChoice(com.aqaqeer.app.data.CardLayout.COMPACT, selected, change) },
+            second = { LayoutChoice(com.aqaqeer.app.data.CardLayout.EXPANDED, selected, change) })
+    }
 }
 @Composable private fun LayoutChoice(layout: com.aqaqeer.app.data.CardLayout, selected: com.aqaqeer.app.data.CardLayout,
     change: (com.aqaqeer.app.data.CardLayout) -> Unit) {
-    FilterChip(selected == layout, onClick = { change(layout) }, label = {
+    FilterChip(selected == layout, onClick = { change(layout) }, modifier = Modifier.fillMaxWidth(), shape = MaterialTheme.shapes.medium, label = {
         Column { Text(uiText(if (layout == com.aqaqeer.app.data.CardLayout.COMPACT) R.string.ui_aqaqeer_app_051 else R.string.ui_aqaqeer_app_052))
             repeat(if (layout == com.aqaqeer.app.data.CardLayout.COMPACT) 2 else 4) {
                 HorizontalDivider(Modifier.width(72.dp).padding(vertical = 2.dp))
@@ -140,11 +174,14 @@ internal data class Notice(val text: String, val severity: NoticeSeverity = Noti
     })
 }
 @Composable internal fun MedicationLayoutPreview(layout: com.aqaqeer.app.data.CardLayout) {
-    Column(verticalArrangement = Arrangement.spacedBy(UiSpacing.hair)) {
-        Text(uiText(R.string.ui_aqaqeer_app_053), style = MaterialTheme.typography.labelMedium)
-        Text(uiText(R.string.ui_aqaqeer_app_054), style = if (layout == com.aqaqeer.app.data.CardLayout.COMPACT) MaterialTheme.typography.titleSmall else MaterialTheme.typography.titleLarge)
-        if (layout == com.aqaqeer.app.data.CardLayout.EXPANDED) SupportingText(uiText(R.string.ui_aqaqeer_app_055))
-        StatusBadge(com.aqaqeer.app.data.AvailabilityStatus.AVAILABLE)
+    Surface(modifier = Modifier.fillMaxWidth(), shape = MaterialTheme.shapes.medium,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant), color = MaterialTheme.colorScheme.surface) {
+        Column(Modifier.padding(UiSpacing.section), verticalArrangement = Arrangement.spacedBy(UiSpacing.hair)) {
+            Text(uiText(R.string.ui_aqaqeer_app_053), style = MaterialTheme.typography.labelMedium)
+            Text(uiText(R.string.ui_aqaqeer_app_054), style = if (layout == com.aqaqeer.app.data.CardLayout.COMPACT) MaterialTheme.typography.titleSmall else MaterialTheme.typography.titleLarge)
+            if (layout == com.aqaqeer.app.data.CardLayout.EXPANDED) SupportingText(uiText(R.string.ui_aqaqeer_app_055))
+            StatusBadge(com.aqaqeer.app.data.AvailabilityStatus.AVAILABLE)
+        }
     }
 }
 

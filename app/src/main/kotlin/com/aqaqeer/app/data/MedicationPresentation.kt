@@ -13,7 +13,7 @@ enum class NameDisplay { ARABIC, ENGLISH, BOTH }
 enum class HomeGrouping { SCIENTIFIC_LETTER, CATEGORY }
 data class HomePreferences(val sort: HomeSort = HomeSort.SCIENTIFIC_NAME,
     val layout: CardLayout = CardLayout.COMPACT, val names: NameDisplay = NameDisplay.BOTH,
-    val secondaryHijri: Boolean = false, val groupingEnabled: Boolean = true,
+    val secondaryHijri: Boolean = false, val groupingEnabled: Boolean = false,
     val grouping: HomeGrouping = HomeGrouping.CATEGORY, val twoColumns: Boolean = true,
     val sectionsAtBottom: Boolean = true, val searchAtBottom: Boolean = true)
 data class HomeFilters(val statuses: Set<AvailabilityStatus> = emptySet(), val categoryIds: Set<String> = emptySet(),
