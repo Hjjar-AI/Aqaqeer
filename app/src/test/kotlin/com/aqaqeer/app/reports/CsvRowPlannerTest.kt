@@ -30,7 +30,8 @@ class CsvRowPlannerTest {
     }
     @Test fun blankUpdatesPreserveValuesAndExplicitClearingRemovesOptionalValues() {
         val enriched = catalog.copy(medications = listOf(med.copy(nameAr = "تجاري", nameEn = "Commercial", note = "keep", brand = "Brand", expiryDate = java.time.LocalDate.of(2027, 1, 1))))
-        val table = CsvCodec.read("nameEn,note,brand\n,,".byteInputStream()) {}
+        val table = CsvCodec.read("nameEn,note,brand,strength\n,,,${med.strength}".byteInputStream()) {}
+        assertEquals(1, table.records.size)
         fun plan(clear: Set<String>) = CsvRowPlanner.plan(F.publishId, enriched, table, table.records.single(), CsvDecision(CsvAction.UPDATE, med.id, clear = clear))
         assertEquals("keep", plan(emptySet()).medication.note)
         assertEquals("Brand", plan(emptySet()).medication.brand)
@@ -61,7 +62,8 @@ class CsvRowPlannerTest {
         assertEquals("10 mg", a.medication.strength); assertEquals("2026-12-31", a.medication.expiryDate.toString())
     }
     @Test fun clearingLastScientificNameRejectsButRetainingAlternateSucceeds() {
-        val table = CsvCodec.read("genericEn\n\"\"".byteInputStream()) {}
+        val table = CsvCodec.read("genericEn,strength\n\"\",${med.strength}".byteInputStream()) {}
+        assertEquals(1, table.records.size)
         val decision = CsvDecision(CsvAction.UPDATE, med.id, clear = setOf("genericEn"))
         assertThrows(CsvProblem::class.java) { CsvRowPlanner.plan(F.publishId, catalog, table, table.records.single(), decision) }
         val bilingual = catalog.copy(medications = listOf(med.copy(genericAr = "علمي")))

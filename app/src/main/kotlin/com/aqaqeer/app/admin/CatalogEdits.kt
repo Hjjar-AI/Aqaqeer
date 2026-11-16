@@ -91,7 +91,7 @@ internal object CatalogEdits {
             val after = if (deletes) deletionRows(remote, targets) else emptyMap()
             if (deletes && before != after) {
                 val fingerprint = java.security.MessageDigest.getInstance("SHA-256")
-                    .digest(editJson.encodeToString(after.toSortedMap()).toByteArray())
+                    .digest(editJson.encodeToString(JsonObject(after.toSortedMap())).toByteArray())
                     .joinToString("") { "%02x".format(it) }
                 val key = "delete:$tx:$fingerprint"
                 if (choices[key] == null) {
