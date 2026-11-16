@@ -537,6 +537,9 @@ All debug release/prerelease/draft choices set Latest to false. Release records 
 
 Workflow 03 accepts `scope=jvm` for only the two JVM flavor jobs plus public JDK vectors, or `scope=all` (default) to also compile debug/instrumentation/release sources. `coverage=false` remains the default. It offers opt-in per-flavor unit coverage with AGP JaCoCo 0.8.16. Reports have no percentage threshold and do not run device tests. Verification APK workflows 07/08 are also default-branch-only. Workflow 08 generates/inspects the three production outputs and separately opens the universal APK on an owned GitHub-hosted API 35 emulator with a throwaway signer. Its 30-second process observation is startup evidence only. The helper treats an empty Android `pm path` exit-1 result as expected package absence, while transport errors remain failures; progress/failure JSON identifies the failing phase. No local emulators or production signing credentials are involved.
 
+JVM `Test` tasks use `-Xshare:off` to disable class-data sharing only in test workers, avoiding the bootstrap-classpath notice from mocking instrumentation. This does not set Gradle-daemon or APK runtime flags; existing test heap/parallelism settings remain. As with other build-script edits, the basic CI cache key changes for the next run; previous cache entries are preserved.
+
+
 The pinned setup-gradle action already validates wrapper JARs; policy forbids disabling this. Workflow YAML checks reject expressions inside shell bodies and permit secrets only in explicit signing-step environments. All new workflows are manual, public-only, bounded Ubuntu jobs with full action pins and one-day artifacts where appropriate. Only the existing run-cleanup workflow has a schedule.
 
 ### Why hosted retries can download Gradle again

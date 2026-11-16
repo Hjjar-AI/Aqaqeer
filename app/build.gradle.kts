@@ -254,4 +254,9 @@ tasks.named { it in roomSchemaWriters }.configureEach {
 }
 
 // Large boundary fixtures run sequentially; they must not compete for heap.
-tasks.withType<Test>().configureEach { maxHeapSize = "1536m"; maxParallelForks = 1 }
+tasks.withType<Test>().configureEach {
+    maxHeapSize = "1536m"
+    maxParallelForks = 1
+    // Mocking instrumentation extends the bootstrap classpath; CDS is unnecessary in test JVMs.
+    jvmArgs("-Xshare:off")
+}
