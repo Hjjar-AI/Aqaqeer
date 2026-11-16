@@ -32,7 +32,7 @@ import com.aqaqeer.app.data.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable internal fun HomeSectionsBar(active: List<Section>, selectedId: String?,
-    outCounts: Map<String, Int>, selectSection: (String) -> Unit) {
+    outCounts: Map<String, Int>, selectSection: (String) -> Unit, availableSearchSections: Set<String> = emptySet()) {
     if (active.isNotEmpty()) BoxWithConstraints(Modifier.fillMaxWidth()) {
         val measurer = androidx.compose.ui.text.rememberTextMeasurer()
         val style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold)
@@ -45,16 +45,18 @@ import com.aqaqeer.app.data.*
         val tabs: @Composable () -> Unit = {
             active.forEach { section ->
                 val selected = selectedId == section.id
+                val searchMatch = section.id in availableSearchSections
                 Tab(selected = selected, onClick = { selectSection(section.id) },
                     selectedContentColor = MaterialTheme.colorScheme.onPrimary,
-                    unselectedContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    unselectedContentColor = if (searchMatch) MaterialTheme.colorScheme.onSecondaryContainer else MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.clip(MaterialTheme.shapes.medium)
-                        .background(if (selected) MaterialTheme.colorScheme.primary else Color.Transparent)
+                        .background(when { selected -> MaterialTheme.colorScheme.primary; searchMatch -> MaterialTheme.colorScheme.secondaryContainer; else -> Color.Transparent })
                         .testTag("section_${section.id}").semantics {
-                        contentDescription = section.nameAr
+                        contentDescription = section.nameAr + if (searchMatch) " · " + uiText(R.string.review_section_search_stock) else ""
                     }) {
                     Row(Modifier.heightIn(min = UiSpacing.touch).padding(horizontal = UiSpacing.related),
                         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(UiSpacing.hair)) {
+                        if (searchMatch) AppIcon(UiIcon.SEARCH, Modifier.size(16.dp))
                         Text(section.nameAr, style = style, fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium)
                     }
                 }

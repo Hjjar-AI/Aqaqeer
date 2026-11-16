@@ -6,13 +6,15 @@ import kotlinx.coroutines.ensureActive
 @androidx.compose.runtime.Immutable
 data class MedicationRowUi(val medication: Medication, val form: MedicationForm?, val category: String,
     val status: AvailabilityStatus, val elsewhere: List<Section>, val unpublished: Boolean, val fetched: Boolean = false)
+data class SectionSearchResults(val section: Section, val rows: List<MedicationRowUi>)
 data class HomeBrowseResult(val catalog: CatalogSnapshot? = null, val sectionId: String? = null,
     val query: String = "", val filters: HomeFilters = HomeFilters(), val preferences: HomePreferences = HomePreferences(),
     val visible: List<Medication> = emptyList(), val groups: List<MedicationGroup> = emptyList(),
     val rows: Map<String, MedicationRowUi> = emptyMap(),
     val fetched: Set<String> = emptySet(), val unpublished: Set<String> = emptySet(),
     val today: java.time.LocalDate? = null, val otherSections: Map<String, Set<String>> = emptyMap(),
-    val readerStockOnly: Boolean = false)
+    val readerStockOnly: Boolean = false, val availableSearchSections: Set<String> = emptySet(),
+    val otherSectionResults: List<SectionSearchResults> = emptyList())
 
 /** Immutable normalized content; query work never normalizes inside a sort comparator. */
 class CatalogSearchIndex(val catalog: CatalogSnapshot) {
@@ -101,14 +103,34 @@ class CatalogSearchIndex(val catalog: CatalogSnapshot) {
                 if (extraIds.isEmpty()) null else candidate.id to extraIds
             }.toMap()
         }
+        val stocked = setOf(AvailabilityStatus.AVAILABLE, AvailabilityStatus.LOW)
+        val searchStatuses = if (effectiveFilters.statuses.isEmpty()) stocked else effectiveFilters.statuses.intersect(stocked)
+        val stockMatches = if (MedicationPresentation.normalizedSearch(query).isEmpty() || searchStatuses.isEmpty()) emptyMap() else {
+            val stockFilters = effectiveFilters.copy(statuses = searchStatuses)
+            catalog.sections.filter { it.isActive }.mapNotNull { candidate ->
+                currentCoroutineContext().ensureActive()
+                val matches = browse(candidate.id, query, stockFilters, preferences.sort).filter(::extra)
+                if (matches.isEmpty()) null else candidate.id to matches
+            }.toMap()
+        }
+        val availableSearchSections = stockMatches.keys
         val groups = if (preferences.groupingEnabled) grouped(visible, preferences.grouping, scores,
             MedicationPresentation.normalizedSearch(query).isNotEmpty()) else emptyList()
+        fun row(med: Medication, sectionId: String?): MedicationRowUi =
+            MedicationRowUi(med, catalog.formsById[med.formId], catalog.categoriesById[med.categoryId]?.nameAr ?: "غير مصنف",
+                sectionId?.let { catalog.status(med.id, it) } ?: AvailabilityStatus.UNKNOWN,
+                MedicationPresentation.availableElsewhere(catalog, med.id, sectionId), med.id in unpublished, med.id in fetched)
         val rows = visible.associate { med ->
             currentCoroutineContext().ensureActive()
-            med.id to MedicationRowUi(med, catalog.formsById[med.formId], catalog.categoriesById[med.categoryId]?.nameAr ?: "غير مصنف",
-                section?.let { catalog.status(med.id, it) } ?: AvailabilityStatus.UNKNOWN,
-                MedicationPresentation.availableElsewhere(catalog, med.id, section), med.id in unpublished, med.id in fetched)
+            med.id to row(med, section)
         }
-        return HomeBrowseResult(catalog, section, query, filters, preferences, visible, groups, rows, fetched, unpublished, today, otherSections, readerStockOnly)
+        val otherSectionResults = if (section == null) emptyList() else catalog.sections.filter { it.isActive && it.id != section }.mapNotNull { candidate ->
+            val matches = stockMatches[candidate.id] ?: return@mapNotNull null
+            SectionSearchResults(candidate, matches.map { med ->
+                currentCoroutineContext().ensureActive()
+                row(med, candidate.id)
+            })
+        }
+        return HomeBrowseResult(catalog, section, query, filters, preferences, visible, groups, rows, fetched, unpublished, today, otherSections, readerStockOnly, availableSearchSections, otherSectionResults)
     }
 }

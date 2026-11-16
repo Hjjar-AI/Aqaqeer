@@ -167,11 +167,13 @@ import java.time.ZoneId
         projection.readerStockOnly == (!ready.admin && !ready.isDemo)
     val visible = if (projectionReady) projection.visible else emptyList()
     val groups = if (projectionReady) projection.groups else emptyList()
+    val otherSectionResults = if (projectionReady && !bulkMode) projection.otherSectionResults else emptyList()
     val searching = MedicationPresentation.normalizedSearch(state.appliedQuery).isNotEmpty()
     var searchText by rememberSaveable(catalog.pharmacy.pharmacyId, stateSaver = TextFieldValue.Saver) { mutableStateOf(TextFieldValue(state.query)) }
     fun changeSearch(value: TextFieldValue) { searchText = value; setQuery(value.text) }
     val browseHeading: @Composable () -> Unit = {
-        HomeSectionsBar(active, selected?.id, catalog.outCounts, selectSection)
+        HomeSectionsBar(active, selected?.id, catalog.outCounts, selectSection,
+            availableSearchSections = if (projectionReady) projection.availableSearchSections else emptySet())
     }
     val searchControls: @Composable () -> Unit = {
         HomeSearchControls(searchText, ::changeSearch, searching, state.filters, visible.size,
@@ -212,7 +214,7 @@ import java.time.ZoneId
                     val containing = groups.firstOrNull { group -> group.medications.any { it.id == highlightedMedication } }?.key
                     if (containing != null) collapsedGroups = collapsedGroups - containing
                     val leading = (if (scrollingSections) 1 else 0) + (if (bulkMode && canEdit && selected != null) 1 else 0) +
-                        (if (editor == null && (availabilityBusy || availabilityMessage != null)) 1 else 0) + (if (selected == null) 1 else 0)
+                        (if (editor == null && (availabilityBusy || availabilityMessage != null)) 1 else 0) + (if (selected == null) 1 else 0) + (if (searching && selected != null) 1 else 0)
                     val groupedIndex = if (!state.homePreferences.groupingEnabled) medicationIndex else {
                         var offset = 0
                         for (group in groups) {
@@ -275,7 +277,15 @@ import java.time.ZoneId
                         }
                         if (!projectionReady) items(4, key = { "loading_$it" }) { MedicationSkeleton(state.homePreferences.layout) }
                         if (selected == null) item(span = { GridItemSpan(maxLineSpan) }) { InformationCard(uiText(R.string.ui_home_screen_010), uiText(R.string.ui_home_screen_011)) }
-                        if (projectionReady && visible.isEmpty()) item(span = { GridItemSpan(maxLineSpan) }) {
+                        if (projectionReady && searching && selected != null)
+                            item(key = "current_search_section_${selected.id}", span = { GridItemSpan(maxLineSpan) }) {
+                                ContentSection {
+                                    SectionHeading(selected.nameAr)
+                                    if (visible.isEmpty() && otherSectionResults.isNotEmpty())
+                                        SupportingText(uiText(R.string.review_no_results_in_section))
+                                }
+                            }
+                        if (projectionReady && visible.isEmpty() && otherSectionResults.isEmpty()) item(span = { GridItemSpan(maxLineSpan) }) {
                             GroupedCard(title = if (catalog.medications.isEmpty()) uiText(R.string.ui_home_screen_012) else uiText(R.string.ui_choice_components_003)) {
                                 EmptyCapsule(Modifier.size(96.dp).align(Alignment.CenterHorizontally))
                                 if (catalog.medications.isEmpty()) {
@@ -329,6 +339,21 @@ import java.time.ZoneId
                                 if (group.key !in collapsedGroups) items(group.medications, key = { it.id }, itemContent = card)
                             }
                         } else items(visible, key = { it.id }, itemContent = card)
+                        otherSectionResults.forEach { result ->
+                            stickyHeader(key = "other_search_section_${result.section.id}") {
+                                Surface(color = MaterialTheme.colorScheme.background) {
+                                    SectionHeading(result.section.nameAr, Modifier.padding(top = UiSpacing.section))
+                                }
+                            }
+                            items(result.rows, key = { "other_search_${result.section.id}_${it.medication.id}" }) { row ->
+                                MedicationCard(row, result.section.id, state.homePreferences.copy(groupingEnabled = false), today,
+                                    onQuickEdit = null, bulkSelected = null, toggleSelection = {},
+                                    onClick = { if (editor == null && !filtersOpen && canOpenHomeModal()) openMedication(row.medication.id) },
+                                    modifier = Modifier.animateItem(), query = state.appliedQuery,
+                                    highlighted = row.medication.id == highlightedMedication,
+                                    unpublished = ready.admin && row.unpublished)
+                            }
+                        }
                     }
                 }
             }
