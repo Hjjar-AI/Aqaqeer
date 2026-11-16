@@ -61,6 +61,12 @@ def check(path):
                     if not isinstance(runs, dict) or runs.get('using') != 'composite':
                         problem(label, 'only local composite actions are allowed')
                     else:
+                        if directory.name == 'setup-android':
+                            setup = next((item for item in runs.get('steps', [])
+                                          if isinstance(item, dict) and str(item.get('uses', '')).startswith('gradle/actions/setup-gradle@')), {})
+                            if (local.get('inputs', {}).get('setup-gradle', {}).get('default') != 'true'
+                                    or setup.get('if') != "${{ inputs.setup-gradle == 'true' }}"):
+                                problem(label, 'shared setup must default Gradle caching on and guard signing opt-out')
                         steps_check(runs.get('steps'), str(candidates[0].relative_to(root)),
                                     (*stack, directory), checkout=True)
                 except (OSError, ValueError, yaml.YAMLError) as error:
@@ -261,6 +267,13 @@ def check(path):
                     problem(name, 'debug builds must depend on reservation')
                 if name == 'sign-debug' and (job.get('needs') != ['reserve', 'build-debug'] or job.get('environment') != 'debug-signing'):
                     problem(name, 'debug signing must be isolated after reservation/build in debug-signing')
+            signing_only = ((path.name in ('android.yml', 'publish-debug.yml') and name == 'sign-debug')
+                            or (path.name == 'publish-release.yml' and name == 'publish'))
+            for step in job.get('steps', []):
+                if isinstance(step, dict) and step.get('uses') == './.github/actions/setup-android':
+                    expected = 'false' if signing_only else 'true'
+                    if step.get('with', {}).get('setup-gradle', 'true') != expected:
+                        problem(name, 'Gradle cache opt-out is restricted to signing-only jobs')
             steps_check(job.get('steps'), name)
             if path.name in ('android.yml', 'publish-debug.yml') and name == 'build-debug':
                 steps = job.get('steps', [])

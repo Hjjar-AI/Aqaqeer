@@ -399,7 +399,7 @@ internal fun statusLabel(status: AvailabilityStatus): String = uiText(when (stat
                     editor = AvailabilitySelection(requireNotNull(catalog.pharmacy).pharmacyId, section, listOf(medication),
                         mapOf(medication.id to catalog.status(medication.id, section.id)), false)
                 }) else null, expanded = captured != null, dismiss = { if (!busy) editor = null }, enabled = !busy && (captured == null || current),
-                    choose = { status -> if (current && captured != null && !vm.adminBusy.value) vm.saveAvailability(captured, BulkMedicationChanges(status = status)) { if (editor == captured) editor = null } })
+                    choose = { status -> if (current && !vm.adminBusy.value) vm.saveAvailability(captured, BulkMedicationChanges(status = status)) { if (editor == captured) editor = null } })
                 if (record == null) SupportingText(uiText(R.string.ui_aqaqeer_app_031))
                 else {
                     SupportingText(relativeTime(record.updatedAt, now))

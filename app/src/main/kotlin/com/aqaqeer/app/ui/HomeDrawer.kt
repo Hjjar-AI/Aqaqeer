@@ -48,7 +48,7 @@ import com.aqaqeer.app.data.*
                     NavigationDrawerItem(label = { Text(category.nameAr) }, selected = filters.categoryIds == setOf(category.id), onClick = { chooseCategory(category.id) })
                 }
             }
-            if (pharmacy != null && ready?.isDemo == false) CollapsibleGroup(uiText(R.string.ui_home_drawer_005), catalogOpen, { catalogOpen = !catalogOpen }) {
+            if (pharmacy != null && !ready.isDemo) CollapsibleGroup(uiText(R.string.ui_home_drawer_005), catalogOpen, { catalogOpen = !catalogOpen }) {
                 DrawerRow(uiText(R.string.ui_screen_titles_002), { openRoute("admin") }, icon = UiIcon.TOOLS)
             }
             CollapsibleGroup(uiText(R.string.ui_home_drawer_008), applicationOpen, { applicationOpen = !applicationOpen }) {

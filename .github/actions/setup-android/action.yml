@@ -1,6 +1,9 @@
 name: Set up Aqaqeer Android tooling
 description: Shared pinned JDK, default-branch Gradle cache writes and SDK setup after checkout
 inputs:
+  setup-gradle:
+    description: Configure Gradle and restore its cache; false only for signing-only jobs that never invoke Gradle
+    default: 'true'
   diagnostics-directory:
     description: Directory under ci-output for SDK setup diagnostics
     required: true
@@ -22,6 +25,7 @@ runs:
         java-version: '21'
 
     - name: Set up Gradle cache
+      if: ${{ inputs.setup-gradle == 'true' }}
       uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6.4.1
       with:
         cache-provider: basic

@@ -110,6 +110,7 @@ jobs:
         uses: ./.github/actions/setup-android
         with:
           diagnostics-directory: ci-output/release
+          setup-gradle: 'false'
       - name: Download this run's unsigned APK and shrinker evidence
         env:
           GH_TOKEN: ${{ github.token }}

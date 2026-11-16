@@ -7,10 +7,12 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalClipboardManager
+import android.content.ClipData
+import androidx.compose.ui.platform.ClipEntry
+import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.*
-import androidx.compose.ui.text.AnnotatedString
+import kotlinx.coroutines.launch
 import androidx.compose.ui.unit.dp
 import com.aqaqeer.app.R
 import com.aqaqeer.app.uiText
@@ -83,11 +85,15 @@ internal data class Notice(val text: String, val severity: NoticeSeverity = Noti
 }
 
 @Composable internal fun CopyableValue(label: String, value: String) {
-    val clipboard = LocalClipboardManager.current
+    val clipboard = LocalClipboard.current
+    val scope = rememberCoroutineScope()
     var copied by remember(value) { mutableStateOf(false) }
     Row(verticalAlignment = Alignment.CenterVertically) {
         Column(Modifier.weight(1f)) { SupportingText(label); Text(bidi(value)) }
-        TextButton(onClick = { clipboard.setText(AnnotatedString(value)); copied = true }) {
+        TextButton(onClick = { scope.launch {
+            clipboard.setClipEntry(ClipEntry(ClipData.newPlainText(label, value)))
+            copied = true
+        } }) {
             Text(uiText(if (copied) R.string.review_copied else R.string.review_copy))
         }
     }
