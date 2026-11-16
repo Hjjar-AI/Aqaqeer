@@ -409,9 +409,8 @@ import java.time.ZoneId
             verticalArrangement = Arrangement.spacedBy(UiSpacing.related)) {
             SectionHeading(uiText(R.string.ui_home_screen_023))
             Column(Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(UiSpacing.related)) {
-                if (showStatuses) {
-                    SectionHeading(uiText(R.string.ui_home_screen_024))
+                verticalArrangement = Arrangement.spacedBy(UiSpacing.group)) {
+                if (showStatuses) ContentSection(title = uiText(R.string.ui_home_screen_024)) {
                     WrappingContent(Modifier.testTag("status_filters")) {
                         if (admin) FilterChip(
                             selected = filters.statuses == setOf(AvailabilityStatus.AVAILABLE, AvailabilityStatus.LOW),
@@ -421,14 +420,17 @@ import java.time.ZoneId
                             modifier = Modifier.testTag("filter_${status.name}")) }
                     }
                 }
-                SectionHeading(uiText(R.string.ui_pharmacy_admin_screen_073))
-                WrappingContent(Modifier.testTag("category_filters")) {
-                    catalog.categories.forEach { category -> FilterChip(selected = category.id in filters.categoryIds,
-                        onClick = { toggleCategory(category.id) }, label = { Text(category.nameAr) },
-                        modifier = Modifier.testTag("category_${category.id}")) }
+                ContentSection(title = uiText(R.string.ui_pharmacy_admin_screen_073)) {
+                    WrappingContent(Modifier.testTag("category_filters")) {
+                        catalog.categories.forEach { category -> FilterChip(selected = category.id in filters.categoryIds,
+                            onClick = { toggleCategory(category.id) }, label = { Text(category.nameAr) },
+                            modifier = Modifier.testTag("category_${category.id}")) }
+                    }
+                }
+                ContentSection(title = uiText(R.string.review_extra_filters)) {
+                    HomeExtraFilters(filters, admin, toggleExtraFilter)
                 }
                 FilterSummary(filters, clear)
-                HomeExtraFilters(filters, admin, toggleExtraFilter)
             }
             Button(onClick = dismiss) { Text(uiText(R.string.ui_home_screen_029)) }
         }

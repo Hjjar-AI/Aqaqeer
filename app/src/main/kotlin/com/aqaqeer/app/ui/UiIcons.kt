@@ -27,7 +27,7 @@ internal enum class UiIcon(val resource: Int, val intrinsicColors: Boolean = fal
     FORM_SPRAY(R.drawable.ic_form_spray, true),
     FORM_SUPPOSITORY(R.drawable.ic_form_suppository, true),
     FORM_FORM(R.drawable.ic_form_form, true),
-    HOME(R.drawable.ic_home), REPORT(R.drawable.ic_report), BACKUP(R.drawable.ic_backup),
+    CATEGORY(R.drawable.ic_category), HOME(R.drawable.ic_home), REPORT(R.drawable.ic_report), BACKUP(R.drawable.ic_backup),
     TOOLS(R.drawable.ic_tools), SETUP(R.drawable.ic_setup), CONNECTION(R.drawable.ic_connection),
     SETTINGS(R.drawable.ic_settings), MENU(R.drawable.ic_menu), BACK(R.drawable.ic_back), MORE(R.drawable.ic_more), SEARCH(R.drawable.ic_search),
     FILTER(R.drawable.ic_filter), EDIT(R.drawable.ic_edit), CLOSE(R.drawable.ic_close),

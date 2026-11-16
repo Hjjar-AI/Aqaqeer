@@ -1,5 +1,6 @@
 package com.aqaqeer.app.ui
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -9,6 +10,9 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.Alignment
@@ -31,7 +35,7 @@ import com.aqaqeer.app.data.*
     outCounts: Map<String, Int>, selectSection: (String) -> Unit) {
     if (active.isNotEmpty()) BoxWithConstraints(Modifier.fillMaxWidth()) {
         val measurer = androidx.compose.ui.text.rememberTextMeasurer()
-        val style = MaterialTheme.typography.titleSmall
+        val style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold)
         val density = LocalDensity.current
         val required = remember(active, style, density) {
             active.maxOf { section -> with(density) {
@@ -40,13 +44,18 @@ import com.aqaqeer.app.data.*
         }
         val tabs: @Composable () -> Unit = {
             active.forEach { section ->
-                Tab(selected = selectedId == section.id, onClick = { selectSection(section.id) },
-                    modifier = Modifier.testTag("section_${section.id}").semantics {
+                val selected = selectedId == section.id
+                Tab(selected = selected, onClick = { selectSection(section.id) },
+                    selectedContentColor = MaterialTheme.colorScheme.onPrimary,
+                    unselectedContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.clip(MaterialTheme.shapes.medium)
+                        .background(if (selected) MaterialTheme.colorScheme.primary else Color.Transparent)
+                        .testTag("section_${section.id}").semantics {
                         contentDescription = section.nameAr
                     }) {
                     Row(Modifier.heightIn(min = UiSpacing.touch).padding(horizontal = UiSpacing.related),
                         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(UiSpacing.hair)) {
-                        Text(section.nameAr, style = style)
+                        Text(section.nameAr, style = style, fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium)
                     }
                 }
             }

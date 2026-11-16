@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="review_extra_filters">فلاتر إضافية</string>
     <string name="review_refresh_now">تحديث الآن</string>
     <string name="review_select">تحديد</string>
     <string name="review_expiry_soon">ينتهي قريباً</string>

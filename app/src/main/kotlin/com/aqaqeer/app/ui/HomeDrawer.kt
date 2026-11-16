@@ -3,6 +3,8 @@ package com.aqaqeer.app.ui
 import com.aqaqeer.app.uiText
 import com.aqaqeer.app.R
 
+import androidx.compose.animation.animateContentSize
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.ui.semantics.Role
@@ -19,6 +21,7 @@ import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.unit.dp
 import com.aqaqeer.app.data.*
 
@@ -27,6 +30,11 @@ import com.aqaqeer.app.data.*
 @Composable internal fun HomeDrawer(ready: CatalogState.Ready?, filters: HomeFilters, busy: Boolean,
     openRoute: (String) -> Unit, chooseCategory: (String?) -> Unit, showDataTimes: () -> Unit) {
     val pharmacy = ready?.catalog?.pharmacy
+    val categories = ready?.catalog?.categories.orEmpty()
+    val drawerCategories = remember(categories) {
+        categories.sortedWith(compareBy<Category> { it.id == CatalogSeeds.UNCATEGORIZED_ID }
+            .thenBy { normalizedName(it.nameAr) }.thenBy { it.nameAr }.thenBy { it.id })
+    }
     var categoriesOpen by rememberSaveable(pharmacy?.pharmacyId) { mutableStateOf(true) }
     var catalogOpen by rememberSaveable(pharmacy?.pharmacyId) { mutableStateOf(false) }
     var applicationOpen by rememberSaveable(pharmacy?.pharmacyId) { mutableStateOf(false) }
@@ -40,17 +48,17 @@ import com.aqaqeer.app.data.*
                     style = MaterialTheme.typography.titleMedium)
             }
             CompactDrawerItem(icon = UiIcon.HOME, label = uiText(R.string.ui_home_drawer_001), selected = true, onClick = { openRoute("home") })
-            if (pharmacy != null) CollapsibleGroup(uiText(R.string.ui_home_drawer_002), categoriesOpen, { categoriesOpen = !categoriesOpen }, contentSpacing = 0.dp) {
+            if (pharmacy != null) DrawerGroup(uiText(R.string.ui_home_drawer_002), categoriesOpen, { categoriesOpen = !categoriesOpen }, UiIcon.CATEGORY) {
                 if (filters.categoryIds.size > 1) SupportingText(uiText(R.string.ui_home_drawer_003))
                 CompactDrawerItem(label = uiText(R.string.ui_home_drawer_004), selected = filters.categoryIds.isEmpty(), onClick = { chooseCategory(null) })
-                ready.catalog.categories.forEach { category ->
+                drawerCategories.forEach { category ->
                     CompactDrawerItem(label = category.nameAr, selected = filters.categoryIds == setOf(category.id), onClick = { chooseCategory(category.id) })
                 }
             }
-            if (pharmacy != null && !ready.isDemo) CollapsibleGroup(uiText(R.string.ui_home_drawer_005), catalogOpen, { catalogOpen = !catalogOpen }, contentSpacing = 0.dp) {
+            if (pharmacy != null && !ready.isDemo) DrawerGroup(uiText(R.string.ui_home_drawer_005), catalogOpen, { catalogOpen = !catalogOpen }, UiIcon.HISTORY) {
                 DrawerRow(uiText(R.string.ui_screen_titles_002), { openRoute("admin") }, icon = UiIcon.TOOLS)
             }
-            CollapsibleGroup(uiText(R.string.ui_home_drawer_008), applicationOpen, { applicationOpen = !applicationOpen }, contentSpacing = 0.dp) {
+            DrawerGroup(uiText(R.string.ui_home_drawer_008), applicationOpen, { applicationOpen = !applicationOpen }, UiIcon.INFO) {
                 DrawerRow(uiText(R.string.ui_screen_titles_013), { openRoute("about") }, icon = UiIcon.INFO)
                 if (pharmacy != null) DrawerRow(uiText(R.string.ui_home_drawer_009), showDataTimes, icon = UiIcon.CALENDAR)
             }
@@ -58,6 +66,29 @@ import com.aqaqeer.app.data.*
         Surface(shadowElevation = UiSpacing.hair) {
             DrawerRow(uiText(R.string.ui_screen_titles_012), { openRoute("settings") }, icon = UiIcon.SETTINGS)
         }
+    }
+}
+
+/** Drawer disclosure headings use the same icon language and corners as navigation rows. */
+@Composable private fun DrawerGroup(title: String, expanded: Boolean, toggle: () -> Unit,
+    icon: UiIcon, content: @Composable ColumnScope.() -> Unit) {
+    Column(Modifier.fillMaxWidth().animateContentSize()) {
+        OutlinedButton(onClick = toggle,
+            modifier = Modifier.fillMaxWidth().heightIn(min = UiSpacing.touch).semantics {
+                stateDescription = uiText(if (expanded) R.string.ui_home_drawer_010 else R.string.ui_home_drawer_011)
+            }, shape = MaterialTheme.shapes.medium,
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+            colors = ButtonDefaults.outlinedButtonColors(
+                containerColor = if (expanded) MaterialTheme.colorScheme.surfaceVariant else Color.Transparent,
+                contentColor = MaterialTheme.colorScheme.onSurface),
+            contentPadding = PaddingValues(horizontal = UiSpacing.section, vertical = UiSpacing.related)) {
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(UiSpacing.related)) {
+                AppIcon(icon)
+                Text(title, Modifier.weight(1f).semantics { heading() }, style = MaterialTheme.typography.titleSmall)
+            }
+        }
+        if (expanded) ContentSection(spacing = 0.dp, content = content)
     }
 }
 
