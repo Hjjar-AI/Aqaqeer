@@ -33,6 +33,8 @@ import com.aqaqeer.app.reports.*
         catch (_: Exception) { vm.saveCsv(null); vm.adminMessage.value = uiText(R.string.ui_reports_screen_002) }
     }
     LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(UiSpacing.page), verticalArrangement = Arrangement.spacedBy(UiSpacing.section)) {
+        item { StepHeader(listOf(uiText(R.string.ui_csv_import_screen_002), uiText(R.string.ui_csv_import_screen_007), uiText(R.string.ui_csv_import_screen_013)),
+            if (state.finished) 2 else if (session != null) 1 else 0) }
         item {
             GroupedCard(title = uiText(R.string.ui_pharmacy_admin_screen_046)) {
                 Text(uiText(R.string.ui_csv_import_screen_001))

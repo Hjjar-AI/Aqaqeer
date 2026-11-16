@@ -109,15 +109,15 @@ import kotlinx.serialization.json.*
                     if (ready.admin) FormField(uiText(R.string.ui_pharmacy_admin_screen_021), leaveName, { leaveName = it }, submitted = formSubmitted, required = true,
                         validate = { if (it == catalog.pharmacy?.name) null else uiText(R.string.ui_pharmacy_admin_screen_022) })
                     CheckChoiceRow(confirmedLeave, uiText(R.string.ui_pharmacy_admin_screen_023)) { confirmedLeave = it }
+                    if (ready.uncertain) NoticeStrip(Notice(uiText(R.string.ui_pharmacy_admin_screen_025), NoticeSeverity.WARNING))
                     Button(colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error, contentColor = MaterialTheme.colorScheme.onError), enabled = confirmedLeave && !busy, onClick = {
                         formSubmitted = true
                         if (ready.admin && leaveName != catalog.pharmacy?.name) { revealInvalid(); return@Button }
                         vm.command("home") { vm.admin.leave(leaveName, true) }
                     }) { Text(uiText(R.string.ui_pharmacy_admin_screen_024)) }
-                    if (ready.uncertain) Text(uiText(R.string.ui_pharmacy_admin_screen_025))
                 }
             }
-            !ready.admin || ready.isDemo -> Text(uiText(R.string.ui_pharmacy_admin_screen_026))
+            (!ready.admin && state.route != "admin") || ready.isDemo -> Text(uiText(R.string.ui_pharmacy_admin_screen_026))
             ready.requiresUpdate && state.route !in setOf("review", "admin") -> Text(uiText(R.string.ui_pharmacy_admin_screen_027))
             ready.maintenancePaused && state.route !in setOf("admin", "review") -> Text(uiText(R.string.ui_pharmacy_admin_screen_028))
             state.route == "setup" -> TelegramSetup(vm, busy, catalog.medications.isEmpty())
@@ -242,6 +242,8 @@ internal fun reviewValue(field: String, raw: String, catalog: CatalogSnapshot, l
     SupportingText(uiText(R.string.ui_pharmacy_admin_screen_087))
     SectionHeading(uiText(R.string.ui_pharmacy_admin_screen_088))
     SupportingText(uiText(R.string.ui_pharmacy_admin_screen_089))
+    StepHeader(listOf(uiText(R.string.ui_pharmacy_admin_screen_093), uiText(R.string.ui_pharmacy_admin_screen_096), uiText(R.string.ui_pharmacy_admin_screen_098)),
+        if (title != null) 2 else if (group.isNotBlank()) 1 else 0)
     GroupedCard(title = uiText(R.string.ui_pharmacy_admin_screen_090)) {
         FormField(uiText(R.string.ui_pharmacy_admin_screen_091), token, { token = it }, secret = true, required = true)
         SelectionContainer { Text(bidi("/aqsetup ${challenge}")) }

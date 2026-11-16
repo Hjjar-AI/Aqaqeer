@@ -39,6 +39,8 @@ import java.time.format.DateTimeFormatter
     }
     val pick = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { selected = it }
     FormPage(Modifier.testTag("backup_screen")) {
+        StepHeader(listOf(uiText(R.string.ui_backup_screen_014), uiText(R.string.ui_backup_screen_016), uiText(R.string.ui_backup_screen_020)),
+            if (ready.restorePaused) 2 else if (selected != null) 1 else 0)
         OperationStatus(busy || sharing.busy, message,
             if (exportSucceeded) uiText(R.string.ui_backup_screen_001) else if (restoreSession) sharing.message else null,
             vm::cancelAdminOperation)
@@ -49,7 +51,7 @@ import java.time.format.DateTimeFormatter
                 return@FormPage
             }
             RestoreReview(ready, vm, busy || sharing.busy)
-            HorizontalDivider()
+            Spacer(Modifier.height(UiSpacing.group))
         }
         if (ready.admin) {
             GroupedCard(title = uiText(R.string.ui_backup_screen_005)) {
@@ -62,9 +64,9 @@ import java.time.format.DateTimeFormatter
                     try { export.launch("aqaqeer-backup-${time.format(DateTimeFormatter.ofPattern("yyyy-MM-dd-HHmm"))}.aqbak") }
                     catch (_: Exception) { secrets.clear(); vm.adminMessage.value = uiText(R.string.ui_backup_screen_007) }
                 }) { Text(uiText(R.string.ui_backup_screen_008)) }
-                Text(uiText(R.string.ui_backup_screen_009))
+                SupportingText(uiText(R.string.ui_backup_screen_009))
             }
-            HorizontalDivider()
+            Spacer(Modifier.height(UiSpacing.group))
         }
         if (ready.maintenancePaused) {
             InformationCard(uiText(R.string.ui_backup_screen_010), uiText(R.string.ui_backup_screen_011))
@@ -82,11 +84,11 @@ import java.time.format.DateTimeFormatter
                         FormField(uiText(R.string.ui_backup_screen_018), typedName, { typedName = it }, required = true)
                         CheckChoiceRow(confirmed, uiText(R.string.ui_backup_screen_019)) { confirmed = it }
                     }
-                    Button(enabled = !busy && restorePassword.isNotEmpty() &&
+                    DestructiveConfirmButton(enabled = !busy && restorePassword.isNotEmpty() &&
                         (ready.catalog.pharmacy == null || confirmed && typedName == ready.catalog.pharmacy.name), onClick = {
                         val uri = selected ?: return@Button; val p = restorePassword.toCharArray(); restorePassword = ""
                         vm.secretCommand("home", p) { vm.backups.restore(uri, p, typedName, confirmed); selected = null }
-                    }) { Text(uiText(R.string.ui_backup_screen_020)) }
+                    }, label = uiText(R.string.ui_backup_screen_020))
                 }
             }
         } else Text(uiText(R.string.ui_backup_screen_021))

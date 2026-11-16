@@ -72,13 +72,13 @@ internal object CsvRowPlanner {
                     throw CsvProblem("يلزم اختيار إنشاء دواء آخر صراحة للتكرار")
                 if (decision.action == CsvAction.UPDATE && decision.targetId in repeatedTargets) throw CsvProblem("أكثر من صف يحدث معرّف الدواء نفسه؛ اختر صفاً واحداً")
                 val plan = plan(id, baseline, table, record, decision)
-                val next = plan.apply(baseline, previewAuthor, Instant.EPOCH)
+                val next = plan.apply(baseline, Instant.EPOCH)
                 CatalogRules.validate(next)
                 val additions = buildList {
                     plan.category?.let { add("تصنيف مقترح: ${it.nameAr}") }
                     plan.form?.let { add("شكل دوائي مقترح: ${it.nameAr}") }
                 }
-                val changes = CatalogEdits.diff(baseline, next, previewAuthor, Instant.EPOCH, null).map { op ->
+                val changes = CatalogEdits.diff(baseline, next, Instant.EPOCH, null).map { op ->
                     val field = if (op.entityType == "availability") "section:${op.targetId.substringAfter('/')}" else op.field
                     fun bounded(value: String) = historyPreview(value).let { it.text.orEmpty() + if (it.shortened) "… (مختصر)" else "" }
                     CsvFieldChange(field, bounded(op.baseValueJson), bounded(op.intendedValueJson))

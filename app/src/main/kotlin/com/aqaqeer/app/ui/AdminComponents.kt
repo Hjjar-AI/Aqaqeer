@@ -218,13 +218,5 @@ internal class BackupExportSecrets {
 /** A short explanation stays available without occupying the primary reading path. */
 @Composable internal fun ExpandableInformation(title: String, body: String) {
     var expanded by rememberSaveable(title) { mutableStateOf(false) }
-    Column(Modifier.animateContentSize(tween(180))) {
-        TextButton(onClick = { expanded = !expanded }) {
-            AppIcon(UiIcon.INFO)
-            Spacer(Modifier.width(UiSpacing.hair))
-            Text(if (expanded) uiText(R.string.ui_admin_components_030, title) else title)
-            RowChevron(down = true)
-        }
-        if (expanded) Text(body, style = MaterialTheme.typography.bodyMedium)
-    }
+    CollapsibleGroup(title, expanded, { expanded = !expanded }) { SupportingText(body) }
 }

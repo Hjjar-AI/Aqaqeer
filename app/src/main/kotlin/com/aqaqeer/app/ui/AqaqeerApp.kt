@@ -476,6 +476,7 @@ internal fun statusLabel(status: AvailabilityStatus): String = uiText(when (stat
     LazyColumn(Modifier.fillMaxSize().testTag("about"), contentPadding = PaddingValues(UiSpacing.page),
         verticalArrangement = Arrangement.spacedBy(UiSpacing.section), horizontalAlignment = Alignment.CenterHorizontally) {
         item { BrandEmblem(Modifier.size(160.dp)) }
+        item { ExpandableInformation(uiText(R.string.review_legend), uiText(R.string.review_legend_body) + "\n" + uiText(R.string.review_changed) + ": " + uiText(R.string.review_changed_help)) }
         item {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(uiText(R.string.ui_screen_titles_020), style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Bold)
