@@ -20,6 +20,14 @@ Source review checked production call sites, selection/role/busy predicates, sha
 
 Started at `2351b36`; HEAD advanced through `bae75f9` to `62a1669` during source work, incorporating this batch. Rechecked the current source and retained the remaining corrections without recreating committed changes. Shape tokens preserve the pre-existing default extra-large dialog shape; the search-specific 24 dp token does not change unrelated Material surfaces. No tests were inspected/authored/run; no Gradle, compilation, packaging, lint, workflow or device execution occurred. Compilation, visible sizing/state retention, gesture interaction, accessibility/haptics and performance remain unverified; [remaining acceptance](plan.md#responsive-ui-follow-up--source-implemented--2026-11-17) is tracked separately.
 
+## Hosted debug publication — 2026-11-17
+
+Reviewed [workflow 10 run 43967349302](https://github.com/Hjjar-AI/Aqaqeer/actions/runs/43967349302) at `e9dadd413f60fec76198677ba804472fa528fd25`, matching HEAD at review. All six jobs succeeded: shared code reservation, standard/demo builds, standard/demo isolated signing and publication. Code **7** was reserved under `android-initial-build-7`; [prerelease debug-6-1](https://github.com/Hjjar-AI/Aqaqeer/releases/tag/debug-6-1) contains both 0.0.7 debug APKs plus per-flavor signer/package/version receipts and checksum files. The release tag uses workflow numbering independently of the APK version code.
+
+Standard assembled in **1m 19s** (42 actionable tasks: 33 executed, 9 cached); demo in **1m 27s** (42 actionable: 34 executed, 8 cached). Both Kotlin/Java compilation paths executed, with no compiler warnings/errors found. Both flavors reported inability to strip `libandroidx.graphics.path.so`, `libdatastore_shared_counter.so` and `libsqlcipher.so`, explicitly packaging them unchanged; this did not fail packaging/signing. Git default-branch hints are tooling noise. Build jobs restored/saved basic Gradle caches; signing-only setup recorded `setup-gradle: false` and omitted that action.
+
+This establishes debug compilation/resource processing/packaging and successful signing/publication jobs for the recorded source. No test or lint tasks ran. No APK was downloaded/installed during review; artifact byte equality, update installation, production signing, Android UI/gesture/accessibility behavior and performance remain unverified. Logs/review with retained hashes are inventoried under `hostedBuild43967349302` in the local evidence manifest (ignored, may be absent in fresh checkouts). No workflow was dispatched or rerun, no local build was started, and production sources were not changed by this review.
+
 ## Current verification checkpoint — 2026-11-16
 
 Evidence applies to the recorded source revision and environment. A later source change or a selected check does not inherit an earlier pass automatically.
@@ -27,8 +35,8 @@ Evidence applies to the recorded source revision and environment. A later source
 | Area | Latest inspected evidence | Still pending |
 | --- | --- | --- |
 | JVM regressions and source warnings | [Workflow 03](https://github.com/Hjjar-AI/Aqaqeer/actions/runs/43906281538), `f1293ba`: both flavors passed 545 cases each; JDK vectors passed; zero Kotlin source warnings. | The subsequent test-only CDS option has source checks only. |
-| Debug distribution and initial hosted numbering | [Workflow 10](https://github.com/Hjjar-AI/Aqaqeer/actions/runs/43902658141), `68cb2fb`: code 1, both debug flavors built, signed and published. | Later increments/local coordination, revised signing setup, production signing/update continuity. |
-| Signing-cache optimization | Source/policy checks restrict Gradle opt-out to signing-only jobs; build caching remains enabled. | Execution of the revised signing jobs. Earlier cache-hit evidence predates the change. |
+| Debug distribution and hosted numbering | [Workflow 10](https://github.com/Hjjar-AI/Aqaqeer/actions/runs/43967349302), `e9dadd4`: code 7, both debug flavors compiled, packaged, signed and published. Earlier code-1 evidence remains dated below. | Device/update installation, local/hosted coordination and production signing continuity. |
+| Signing-cache optimization | [Workflow 10](https://github.com/Hjjar-AI/Aqaqeer/actions/runs/43967349302) restored/saved build-job caches; both signing jobs recorded `setup-gradle: false` and skipped Gradle setup. | No performance improvement is quantified by this comparison. |
 | Room export and fresh storage | Production models define attribution-free version 1; historical export is explicitly labeled. | Retain/review a regenerated export; fresh initialization and non-destructive incompatible-database acceptance. |
 | Android presentation and lifecycle | Dated historical Android results below; current source/selector checks are recorded separately. | Latest UI, large-text/layout/role/refresh/session/day-boundary acceptance. |
 
