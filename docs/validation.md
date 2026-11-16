@@ -6,7 +6,7 @@
 
 ## Initial attribution-free baseline — 2026-11-16
 
-**Production source implemented; compilation and runtime acceptance unexecuted.** Models, repositories, serializers, strict payload readers, backup allowlists, protected staging, seeds/demo data and UI remove editor attribution while retaining timestamps, operation IDs, installation authorization and publication lineage. Derived timestamp selection uses operation time then operation ID. Room and revised file definitions remain initial version 1; incompatible development data has no conversion or destructive fallback.
+**Production source implemented; hosted compilation/JVM evidence is recorded below, while Android runtime acceptance remains pending.** Models, repositories, serializers, strict payload readers, backup allowlists, protected staging, seeds/demo data and UI remove editor attribution while retaining timestamps, operation IDs, installation authorization and publication lineage. Derived timestamp selection uses operation time then operation ID. Room and revised file definitions remain initial version 1; incompatible development data has no conversion or destructive fallback.
 
 Home source includes pinned selected-position bars, shared quick/sheet filters and projection freshness inputs, guarded refresh shortcuts, a primary top pending control, stable selection slots/bottom actions, collapsible groups, adaptive cards and detail/status menus. Fetched markers are installation-local and accumulate through the current/next session; successful-fetch comparisons include removed availability pairs. Navigation/Settings, adaptive forms, Maintenance steps/disclosures, pharmacy-day History/shortcuts, setup checklist, review filters, conflict comparisons, copy actions, status legend and representative RTL/theme/large-text preview declarations are implemented. Western digits include report/CSV error text and locale-independent numeric resource formatting; input digit normalization remains intact. Source declarations do not establish rendered/accessibility acceptance.
 
@@ -32,6 +32,12 @@ Lexical delimiter/selected-constructor and resource-reference checks cover **74 
 
 The fingerprint now serializes an ordered JsonObject instead of asking for a polymorphic SortedMap serializer. CSV fixtures retain blank fields and all clearing/preservation assertions while supplying unchanged strength so their records survive blank-row filtering. These corrections passed both hosted JVM flavors. No assertion was weakened. Original first-run diagnostics and subsequent failed/successful XML/log bundles with reconciled results are retained under local-only `../local/verification/runs/current/initial-jvm-20261116/` and inventoried in the local manifest. No local tests, builds, compilation, lint, migrations, device/live work or remote reservations were performed.
 
+
+### Warning and cache follow-up — 2026-11-16
+
+Reviewed successful [workflow 10 run 43902658141](https://github.com/Hjjar-AI/Aqaqeer/actions/runs/43902658141) at `68cb2fb`: both builds/signers and publication passed. Both builds report the same three warnings: redundant captured-null condition, redundant drawer safe call and deprecated LocalClipboardManager. Four build/signing jobs restore the same 772,616,204-byte basic cache; each skips saving an existing exact key. Both builds report 39 tasks executed / 3 from cache and store a new project configuration entry, with no Gradle-wrapper download observed. Cache archive transfers are distinct from downloading dependencies anew.
+
+Source corrections remove the redundant conditions and use LocalClipboard/ClipEntry with coroutine-backed copy and success feedback after completion. Shared Android setup defaults Gradle on; only signing-only jobs in workflows 06/10/11 opt out, retaining JDK/SDK and signature/package/version checks. Existing caches, build-job caching, isolated signing, pins and permissions are preserved. Policy checks enforce the opt-out scope and action guard/default. Production delimiter/constructor/resource references, workflow policy across 15 workflows, changed-document links and whitespace passed. Hosted compilation/warning verification is pending; no signing/packaging run, local build/test/lint or device action was executed for this correction.
 
 <a id="review-fixes-home-placement"></a>
 
