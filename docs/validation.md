@@ -16,6 +16,14 @@ Source-only checks completed: production call-site/constructor and merge/refresh
 
 The checked-in Room schema export is historical and predates attribution removal; [its README](../app/schemas/README.md) explicitly marks it stale. Regeneration/review requires separately authorized KSP compilation; no generated identity hash was handwritten. [Plan I1–I4](plan.md#initial-attribution-free-baseline--2026-11-16) tracks this artifact, compilation, format/UI/session acceptance and actual reservations. Earlier dated build/test/delivery evidence below predates this baseline. This batch did not inspect/change/run tests, inspect/change migrations, run Gradle/builds/compilation/lint, dispatch workflows, access devices or mutate live remote data.
 
+### Test-source follow-up — 2026-11-16
+
+The user authorized test modification/creation without execution, then specifically authorized workflow 03 with JVM scope after the files were finished. Shared fixtures and affected JVM/Android callers now use attribution-free constructors, creation/promotion signatures, History medication/type filters, Context-aware refresh and current projection inputs. UI expectations follow pinned top tabs, disclosure-based Settings, anchored menus, bulk preview/save, Western digits and Arabic civil Hijri month names. Migration tests were excluded.
+
+Authored **16 new Kotlin methods**: 5 projection/filter/expiry/cross-section cases, 3 initial-format/old-attribution rejection cases, 2 timestamp/order merge cases, 4 local marker/session cases, 1 committed-fetch/failure/no-change integration case and 1 large-text/four-placement case. **4 additional Python methods** cover initial registry filtering, first reservation, consumed-code rejection and isolated local counter/lock continuity. The Python cases mock remote calls and use temporary counters; none was run. No production test seam was added or behavioral assertion weakened to obtain a pass.
+
+Lexical delimiter/selected-constructor and resource-reference checks cover **74 non-migration Kotlin test/fixture files**. All selected workflow-07 method declarations exist: **7 demo invocations per API and 64 standard invocations** (78 when both demo APIs and standard are selected). Python source AST, workflow YAML/policy and changed-document local links/whitespace were checked. These checks do not establish compilation or behavior. Workflow 03 now supports `scope=jvm` (two JVM flavor jobs plus public JDK crypto vectors) or `scope=all` (default, adding compilation jobs); policy guards reject a JVM matrix containing compilation-only jobs. Hosted dispatch/result is pending at this checkpoint. No local tests, builds, compilation, lint, migrations, device/live work or remote reservations were performed.
+
 <a id="review-fixes-home-placement"></a>
 
 ## Review fixes and Home placement — 2026-11-15

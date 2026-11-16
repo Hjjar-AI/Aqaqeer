@@ -68,7 +68,7 @@ class HomeUiTest {
         show(excluded)
     }
     @Test fun savedSortLayoutAndNamesSurviveRecreationAndNewPreferenceReader() {
-        compose.onNodeWithTag("home_menu").performClick(); compose.onNodeWithTag("settings_menu").performClick()
+        compose.onNodeWithTag("home_menu").performClick(); compose.onNodeWithText(uiText(R.string.ui_screen_titles_012)).performClick()
         choosePreference("sort_AVAILABILITY") { it.sort == HomeSort.AVAILABILITY }
         choosePreference("layout_EXPANDED") { it.layout == CardLayout.EXPANDED }
         choosePreference("names_ARABIC") { it.names == NameDisplay.ARABIC }

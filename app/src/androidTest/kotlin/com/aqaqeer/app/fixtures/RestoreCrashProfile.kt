@@ -260,7 +260,7 @@ internal class RestoreCrashProfile(val base: Context, val root: File, val namesp
                 override fun <T : ViewModel> create(modelClass: Class<T>): T =
                     CatalogViewModel(repository, DisplayPreferences(context), SavedStateHandle(),
                         ConnectionImportRepository(context, repository, secure, reads, requirements),
-                        SnapshotRefreshRepository(factory, secure, reads, requirements), HistoryRepository(factory),
+                        SnapshotRefreshRepository(factory, secure, reads, requirements, context), HistoryRepository(factory),
                         CsvImportRepository(admin, output, context), ReportRepository(admin, output, PdfReports(context)),
                         admin, PharmacySharing(admin, secure, requirements, reads,
                             object : TelegramSetupTransport {

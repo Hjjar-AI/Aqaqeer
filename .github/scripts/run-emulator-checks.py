@@ -79,11 +79,17 @@ STANDARD_CASES = (
     ('Review-HomeBarPlacement-changingPlacementPreservesQueryFiltersAndSelectedSection', 'HomeBarPlacementUiTest#changingPlacementPreservesQueryFiltersAndSelectedSection', False),
     ('Review-HomeBarPlacement-keyboardHidesBottomSectionsAndDismissalRestoresSelectionAndQuery', 'HomeBarPlacementUiTest#keyboardHidesBottomSectionsAndDismissalRestoresSelectionAndQuery', False),
     ('Review-HomeBarPlacement-compactBottomSectionsRemainReachableAfterScrollingTheCatalog', 'HomeBarPlacementUiTest#compactBottomSectionsRemainReachableAfterScrollingTheCatalog', False),
-    ('Review-HomeBarPlacement-compactTopSectionsScrollWithTheGridWhileSearchStaysFixed', 'HomeBarPlacementUiTest#compactTopSectionsScrollWithTheGridWhileSearchStaysFixed', False),
+    ('Review-HomeBarPlacement-compactTopSectionsStayPinnedWhileTheGridScrolls', 'HomeBarPlacementUiTest#compactTopSectionsStayPinnedWhileTheGridScrolls', False),
     ('Review-ViewModel-bottomPlacementPreferencesPersistIndependentlyWithoutCatalogOrPendingChanges', 'ViewModelInstrumentedTest#bottomPlacementPreferencesPersistIndependentlyWithoutCatalogOrPendingChanges', False),
     ('Review-ViewModel-taxonomyDeleteConfirmationDoesNotCarryAcrossRowsTypesOrNew', 'ViewModelInstrumentedTest#taxonomyDeleteConfirmationDoesNotCarryAcrossRowsTypesOrNew', False),
     ('Review-ViewModel-blankSectionsDefaultActiveAfterTypeChangeNewAndSuccessfulSave', 'ViewModelInstrumentedTest#blankSectionsDefaultActiveAfterTypeChangeNewAndSuccessfulSave', False),
     ('Review-ViewModel-sectionTypedNameClearsOnSelectionAndSuccessfulDeleteResetsForm', 'ViewModelInstrumentedTest#sectionTypedNameClearsOnSelectionAndSuccessfulDeleteResetsForm', False),
+    ('Initial-Home-largeText', 'HomeBarPlacementUiTest#largeTextKeepsAllFourBarPlacementsPinnedAndSearchVisible', False),
+    ('Initial-Fetch-commit-failure-nochange', 'SnapshotRefreshInstrumentedTest#committedFetchMarksRemovedAvailabilityAndFailureOrNoChangeRetainsMarkers', False),
+    ('Initial-Markers-accumulatedMarkersSurviveNextSessionAndRetireBeforeThird', 'FetchedChangesInstrumentedTest#accumulatedMarkersSurviveNextSessionAndRetireBeforeThird', False),
+    ('Initial-Markers-changingAgainRenewsOnlyThatMedicationLifetime', 'FetchedChangesInstrumentedTest#changingAgainRenewsOnlyThatMedicationLifetime', False),
+    ('Initial-Markers-repeatedActivityStartAndNoChangeDoNotAdvanceOrClearSession', 'FetchedChangesInstrumentedTest#repeatedActivityStartAndNoChangeDoNotAdvanceOrClearSession', False),
+    ('Initial-Markers-pharmacyMarkersRemainIndependentAndReopenFromPersistedState', 'FetchedChangesInstrumentedTest#pharmacyMarkersRemainIndependentAndReopenFromPersistedState', False),
 )
 
 

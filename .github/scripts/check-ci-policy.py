@@ -1,6 +1,7 @@
 """Enforce public CI safeguards and the single scheduled cleanup exception."""
 
 from pathlib import Path
+import json
 import re
 
 import yaml
@@ -165,6 +166,22 @@ def check(path):
         }
         if path.name in expected_jobs and set(jobs) != expected_jobs[path.name]:
             problem(path.name, 'distribution jobs must preserve reservation/build/signing boundaries')
+        if path.name == 'verification.yml':
+            scope = dispatch.get('inputs', {}).get('scope', {})
+            if (scope.get('type') != 'choice' or scope.get('default') != 'all'
+                    or scope.get('options') != ['all', 'jvm'] or scope.get('required') is not True):
+                problem(path.name, 'verification requires explicit all/default or jvm scope')
+            selection = jobs.get('verify', {}).get('strategy', {}).get('matrix', {}).get('include', '')
+            match = re.fullmatch(r"\$\{\{ fromJSON\(inputs.scope == 'jvm' && '([^']+)' \|\| '([^']+)'\) \}\}", selection)
+            if not match:
+                problem(path.name, 'verification matrix must select the fixed JVM/all job lists')
+            else:
+                jvm, all_checks = (json.loads(value) for value in match.groups())
+                if ([entry.get('tasks') for entry in jvm] != [':app:testStandardDebugUnitTest', ':app:testDemoDebugUnitTest']
+                        or any(entry.get('kind') != 'unit' for entry in jvm)
+                        or all_checks[:2] != jvm or len(all_checks) != 4
+                        or any(entry.get('kind') != 'compile' for entry in all_checks[2:])):
+                    problem(path.name, 'JVM scope must exclude compilation-only jobs and retain both flavors')
         if path.name == 'cleanup-debug.yml':
             dispatch = triggers.get('workflow_dispatch', {})
             inputs = dispatch.get('inputs', {}) if isinstance(dispatch, dict) else {}
@@ -195,7 +212,7 @@ def check(path):
                 dispatch = triggers.get('workflow_dispatch', {})
                 inputs = dispatch.get('inputs', {}) if isinstance(dispatch, dict) else {}
                 if inputs.get('standard_functional') != {
-                    'description': 'Options: false = demo checks only; true = also run 58 offline standard CSV/report, bulk/PIN and review/UI regression cases on API 35 after demo checks. Default: false.',
+                    'description': 'Options: false = demo checks only; true = also run 64 offline standard CSV/report, bulk/PIN and review/UI regression cases on API 35 after demo checks. Default: false.',
                     'type': 'boolean', 'default': False,
                 } or job.get('needs') != 'emulator':
                     problem(name, 'standard functional checks must be opt-in and wait for the demo emulators')

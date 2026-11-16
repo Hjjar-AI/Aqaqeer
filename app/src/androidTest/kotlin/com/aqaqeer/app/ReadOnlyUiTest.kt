@@ -29,7 +29,7 @@ class ReadOnlyUiTest {
     }
     private fun settings() {
         compose.onNodeWithTag("home_menu").performClick()
-        compose.onNodeWithTag("settings_menu").performClick()
+        compose.onNodeWithText(uiText(R.string.ui_screen_titles_012)).performClick()
         compose.onNodeWithTag("settings").assertIsDisplayed()
     }
 
@@ -78,7 +78,6 @@ class ReadOnlyUiTest {
         val prefs = DisplayPreferences(compose.activity.applicationContext)
         val originalTheme = runBlocking { prefs.theme.first() }
         try {
-            compose.onNodeWithText("المظهر").performClick()
             compose.onNodeWithTag("theme_DARK").performScrollTo().performClick()
             runBlocking { withTimeout(5_000) { prefs.theme.first { it == ThemeChoice.DARK } } }
             compose.onNodeWithTag("settings").performScrollToNode(hasTestTag("open_about"))

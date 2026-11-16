@@ -33,7 +33,6 @@ class CreationUiTest {
         compose.waitUntil(15000) { compose.onAllNodesWithTag("create_pharmacy").fetchSemanticsNodes().isNotEmpty() }
         compose.onNodeWithTag("create_pharmacy").performClick()
         compose.onNodeWithTag("اسم الصيدلية").performTextInput("صيدلية واجهة الاختبار")
-        compose.onNodeWithTag("اسم المحرر").performScrollTo().performTextInput("محرر الاختبار")
         compose.onNodeWithTag("رمز الإدارة — أربعة أرقام على الأقل").performScrollTo().performTextInput("123456")
         compose.onNodeWithTag("تأكيد رمز الإدارة").performScrollTo().performTextInput("123456")
         compose.onNodeWithText("إنشاء الصيدلية").performScrollTo().performClick()
@@ -42,7 +41,7 @@ class CreationUiTest {
         compose.onNodeWithText("إضافة دواء").performClick()
         compose.onNodeWithTag("الاسم العلمي بالإنجليزية").performTextInput("UI Medicine")
         compose.onNodeWithTag("الاسم التجاري بالإنجليزية").performScrollTo().performTextInput("UI Medicine")
-        compose.onNodeWithTag("العيار — مطلوب").performScrollTo().performTextInput("10 mg")
+        compose.onNodeWithTag("العيار").performScrollTo().performTextInput("10 mg")
         compose.onNodeWithText("حفظ محلياً").performScrollTo().performClick()
         // Saving must commit the medication, independently of lazy-list composition.
         compose.waitUntil(15000) {

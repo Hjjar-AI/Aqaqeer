@@ -80,7 +80,7 @@ class CsvPreviewRevisionTest {
         val skipped = revise(first, 2, first.rows.single().decision.copy(action = CsvAction.SKIP))
         assertNull(skipped.rows.single().error); assertNull(skipped.rows.single().plan); assertMatchesFull(skipped)
     }
-    @Test fun revisionPreservesExistingCreationTimeAndUpdatesAttribution() {
+    @Test fun revisionPreservesExistingCreationTimeAndUpdatesTimestamp() {
         val med = catalog.medications.single(); val first = initial("note\nChanged")
         val updated = revise(first, 2, CsvDecision(CsvAction.UPDATE, med.id))
         val now = F.time.plusSeconds(10); val next = updated.rows.single().plan!!.apply(catalog, now).medications.single()

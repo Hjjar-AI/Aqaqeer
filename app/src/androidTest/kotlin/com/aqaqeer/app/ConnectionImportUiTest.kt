@@ -15,7 +15,7 @@ import org.junit.Test
 
 class ConnectionImportUiTest {
     @get:Rule val compose = createComposeRule()
-    private val pending = PendingConnectionInfo("public-stage",F.pharmacyId,"صيدلية الاختبار",F.time,F.editor)
+    private val pending = PendingConnectionInfo("public-stage",F.pharmacyId,"صيدلية الاختبار",F.time)
     private fun awaitImportScreen() {
         compose.waitUntil(15_000) {
             compose.onAllNodesWithTag("connection_import").fetchSemanticsNodes(atLeastOneRootRequired = false).isNotEmpty()

@@ -151,13 +151,13 @@ class UiEnhancementTest {
         compose.setContent {
             val d=LocalDensity.current
             CompositionLocalProvider(LocalDensity provides Density(d.density,2f)) {
-                AqaqeerTheme(ThemeChoice.DARK) { AvailabilityEditor(selection,false,null,{cancellations++},{saves++}) }
+                AqaqeerTheme(ThemeChoice.DARK) { BulkMedicationEditor(selection,c,false,null,{cancellations++},{saves++},{true}) }
             }
         }
         compose.onNodeWithText("غير متوفر").performScrollTo().performClick()
-        compose.onNodeWithText("معاينة جميع الأدوية المحددة").performClick()
+        compose.onNodeWithText(uiText(R.string.ui_bulk_medication_editor_010)).performClick()
         compose.onNodeWithText("Item 29",substring=true).performScrollTo().assertIsDisplayed()
-        compose.onNodeWithText("حفظ").assertIsDisplayed().performClick()
+        compose.onNodeWithText(uiText(R.string.ui_pharmacy_admin_screen_109)).assertIsDisplayed().performClick()
         compose.onNodeWithText("إلغاء").assertIsDisplayed().performClick()
         compose.runOnIdle { assertEquals(1,saves);assertEquals(1,cancellations) }
     }

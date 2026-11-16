@@ -118,7 +118,7 @@ class HomeBarPlacementUiTest {
         val list = compose.onNodeWithTag("home").fetchSemanticsNode().boundsInRoot
         assertTrue(compose.onNodeWithTag("section_${second.id}").fetchSemanticsNode().boundsInRoot.top >= list.bottom)
     }
-    @Test fun compactTopSectionsScrollWithTheGridWhileSearchStaysFixed() {
+    @Test fun compactTopSectionsStayPinnedWhileTheGridScrolls() {
         val large = catalog.copy(medications = (1..30).map { i -> catalog.medications.single().copy(
             id = "00000000-0000-4000-8000-%012d".format(java.util.Locale.ROOT, i), nameEn = "Medication $i", genericEn = "Medication $i") },
             availability = emptyList())
@@ -130,8 +130,34 @@ class HomeBarPlacementUiTest {
         } } }
         compose.onNodeWithTag("section_${second.id}").assertIsDisplayed()
         compose.onNodeWithTag("home").performScrollToNode(hasTestTag("med_Medication 9"))
-        compose.onNodeWithTag("section_${second.id}").assertDoesNotExist()
+        compose.onNodeWithTag("section_${second.id}").assertIsDisplayed().assertIsSelected()
         compose.onNodeWithTag("search").assertIsDisplayed()
+        val list = compose.onNodeWithTag("home").fetchSemanticsNode().boundsInRoot
+        assertTrue(compose.onNodeWithTag("section_${second.id}").fetchSemanticsNode().boundsInRoot.bottom <= list.top)
+    }
+
+    @Test fun largeTextKeepsAllFourBarPlacementsPinnedAndSearchVisible() {
+        var state by mutableStateOf(AppUiState(sectionId = second.id,
+            homePreferences = HomePreferences(groupingEnabled = false)))
+        compose.setContent {
+            val density = LocalDensity.current
+            CompositionLocalProvider(LocalDensity provides Density(density.density, 1.6f)) {
+                AqaqeerTheme(ThemeChoice.DARK) { Box(Modifier.width(420.dp).height(640.dp)) {
+                    HomeScreen(CatalogState.Ready(catalog, false), state, F.time, {}, {}, {}, {}, {}, {}, {},
+                        projection = homeProjection(catalog, state))
+                } }
+            }
+        }
+        for ((sectionsBottom, searchBottom) in listOf(true to true, true to false, false to true, false to false)) {
+            compose.runOnIdle { state = state.copy(homePreferences = state.homePreferences.copy(
+                sectionsAtBottom = sectionsBottom, searchAtBottom = searchBottom)) }
+            compose.onNodeWithTag("search").assertIsDisplayed()
+            compose.onNodeWithTag("section_${second.id}").assertIsDisplayed().assertIsSelected()
+            val list = compose.onNodeWithTag("home").fetchSemanticsNode().boundsInRoot
+            val tabs = compose.onNodeWithTag("section_${second.id}").fetchSemanticsNode().boundsInRoot
+            assertTrue(list.height > 0f)
+            if (sectionsBottom) assertTrue(tabs.top >= list.bottom) else assertTrue(tabs.bottom <= list.top)
+        }
     }
 
 }

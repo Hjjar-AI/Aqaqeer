@@ -27,7 +27,6 @@ class HomeFixtureUiTest {
     @get:Rule val compose = createComposeRule()
     private fun catalog(): CatalogSnapshot {
         val seed = CatalogSeeds.unconfigured()
-        val editor = EditorRef("test", "Test")
         val sections = seed.sections + Section("second", "الفرع الآخر", orderIndex = 1)
         val categories = seed.categories + Category("long", "تصنيف ذو اسم عربي طويل يمكن الوصول إليه بالتمرير الأفقي", orderIndex = 1)
         val med = Medication("m", "English only", "10 mg", CatalogSeeds.OTHER_FORM_ID, "long",
@@ -73,11 +72,11 @@ class HomeFixtureUiTest {
         var now by mutableStateOf(Instant.parse("2026-11-09T20:59:59Z"))
         compose.setContent {
             AqaqeerTheme(ThemeChoice.DARK) {
-                HomeScreen(CatalogState.Ready(catalog, false), AppUiState(), now, {}, {}, {}, {}, {}, {}, {}, projection = homeProjection(catalog))
+                HomeScreen(CatalogState.Ready(catalog, false), AppUiState(), now, {}, {}, {}, {}, {}, {}, {}, projection = homeProjection(catalog, now = now))
             }
         }
         compose.onNodeWithTag("home").performScrollToNode(hasTestTag("med_English only"))
-        compose.onNodeWithTag("expiry_m", useUnmergedTree = true).assertTextEquals("قريب الانتهاء")
+        compose.onNodeWithTag("expiry_m", useUnmergedTree = true).assertTextEquals(uiText(R.string.ui_medication_components_011))
         compose.runOnIdle { now = Instant.parse("2026-11-09T21:00:00Z") }
         compose.onNodeWithTag("expiry_m", useUnmergedTree = true).assertTextEquals("منتهي الصلاحية")
         compose.onNodeWithTag("med_English only").assertTextContains("غير متوفر")

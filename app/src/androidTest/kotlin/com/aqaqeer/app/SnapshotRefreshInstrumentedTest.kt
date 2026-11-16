@@ -28,7 +28,12 @@ class SnapshotRefreshInstrumentedTest {
     private val base = ApplicationProvider.getApplicationContext<Context>()
     private val namespace = "refresh_${UUID.randomUUID()}"
     private val root = File(base.noBackupFilesDir, namespace).apply { mkdirs() }
-    private val context = object : ContextWrapper(base) { override fun getNoBackupFilesDir() = root }
+    private val context = object : ContextWrapper(base) {
+        override fun getApplicationContext(): Context = this
+        override fun getNoBackupFilesDir() = root
+        override fun getSharedPreferences(name: String, mode: Int) = base.getSharedPreferences("${namespace}_$name", mode)
+    }
+    @org.junit.Before fun openMarkerSession() { FetchedChanges.finishTask(); FetchedChanges.beginSession(context) }
     private val protected = KeystoreSecureStore(context, namespace)
     private var beforeWrite: (String, ByteArray) -> Unit = { _, _ -> }
     private var afterWrite: (String) -> Unit = {}
@@ -66,6 +71,9 @@ class SnapshotRefreshInstrumentedTest {
         throw AssertionError("No exception")
     }
     @After fun cleanupOnlyOwnedProfile() {
+        context.getSharedPreferences("fetched_changes", Context.MODE_PRIVATE).edit().clear().commit()
+        FetchedChanges.finishTask(); FetchedChanges.beginSession(context); FetchedChanges.finishTask()
+        base.deleteSharedPreferences("${namespace}_fetched_changes")
         context.deleteDatabase(factory.databaseName)
         root.deleteRecursively()
         KeyStore.getInstance("AndroidKeyStore").apply { load(null); deleteEntry(protected.keyAlias) }
@@ -76,7 +84,7 @@ class SnapshotRefreshInstrumentedTest {
     }
     private fun refresh(transport: SnapshotReadTransport = transport(), at: java.time.Instant = checkedAt.plusSeconds(60)) =
         SnapshotRefreshRepository(factory,store,SnapshotReadClient(transport,EnvelopeReader(root),
-            clock=Clock.fixed(at,ZoneOffset.UTC)),requirements)
+            clock=Clock.fixed(at,ZoneOffset.UTC)),requirements,context)
     private fun next(catalog: CatalogSnapshot = F.catalog(), revision: Int = 2, id: String = F.otherPharmacyId,
         parent: String = F.publishId): JsonObject = JsonObject(F.snapshot(catalog)+mapOf(
             "revision" to JsonPrimitive(revision),"publishId" to JsonPrimitive(id),
@@ -315,6 +323,21 @@ class SnapshotRefreshInstrumentedTest {
         assertEquals(deleted,ready().catalog); assertEquals(3L,state().revision)
         assertEquals(6,history().size)
         assertEquals("\"Observed before deletion\"",history().single { it.field=="note" }.newValue)
+    }
+
+    @Test fun committedFetchMarksRemovedAvailabilityAndFailureOrNoChangeRetainsMarkers(): Unit = runBlocking {
+        assumeFalse(BuildConfig.IS_DEMO); activate()
+        val medication = F.catalog().medications.single().id
+        val payload = next(F.catalog().copy(availability = emptyList()))
+        assertEquals(RefreshOutcome.APPLIED, refresh(remote(payload)).refresh())
+        assertEquals(setOf(medication), FetchedChanges.ids.value[F.pharmacyId])
+        val retained = state()
+        var failedRead = false
+        rejects<SnapshotReadException> { refresh(transport(pin = { failedRead = true; throw TelegramFailure() })).refresh() }
+        assertTrue(failedRead); assertEquals(retained, state())
+        assertEquals(setOf(medication), FetchedChanges.ids.value[F.pharmacyId])
+        assertEquals(RefreshOutcome.UNCHANGED, refresh(remote(payload)).refresh())
+        assertEquals(setOf(medication), FetchedChanges.ids.value[F.pharmacyId])
     }
 
 }

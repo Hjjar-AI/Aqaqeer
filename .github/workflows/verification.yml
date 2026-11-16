@@ -3,6 +3,12 @@ name: 03 - Checks - Tests and compilation
 on:
   workflow_dispatch:
     inputs:
+      scope:
+        description: "Options: all = run JVM tests and debug/instrumentation/release compilation; jvm = run only JVM tests for both flavors. Both include public JDK crypto vectors. Default: all."
+        type: choice
+        required: true
+        options: [all, jvm]
+        default: all
       coverage:
         description: "Options: false = run JVM tests without coverage reports; true = also generate JVM coverage reports for both flavors. Default: false."
         type: boolean
@@ -24,21 +30,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - check: standard-unit-tests
-            kind: unit
-            tasks: :app:testStandardDebugUnitTest
-          - check: demo-unit-tests
-            kind: unit
-            tasks: :app:testDemoDebugUnitTest
-          - check: debug-and-instrumentation-compilation
-            kind: compile
-            tasks: >-
-              :app:compileStandardDebugSources :app:compileDemoDebugSources
-              :app:compileStandardDebugAndroidTestSources :app:compileDemoDebugAndroidTestSources
-          - check: release-compilation
-            kind: compile
-            tasks: :app:compileStandardReleaseSources
+        include: ${{ fromJSON(inputs.scope == 'jvm' && '[{"check":"standard-unit-tests","kind":"unit","tasks":":app:testStandardDebugUnitTest"},{"check":"demo-unit-tests","kind":"unit","tasks":":app:testDemoDebugUnitTest"}]' || '[{"check":"standard-unit-tests","kind":"unit","tasks":":app:testStandardDebugUnitTest"},{"check":"demo-unit-tests","kind":"unit","tasks":":app:testDemoDebugUnitTest"},{"check":"debug-and-instrumentation-compilation","kind":"compile","tasks":":app:compileStandardDebugSources :app:compileDemoDebugSources :app:compileStandardDebugAndroidTestSources :app:compileDemoDebugAndroidTestSources"},{"check":"release-compilation","kind":"compile","tasks":":app:compileStandardReleaseSources"}]') }}
     steps:
       - name: Check out repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1

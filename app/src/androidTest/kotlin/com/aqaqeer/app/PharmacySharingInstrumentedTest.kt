@@ -105,7 +105,7 @@ class PharmacySharingInstrumentedTest {
         var rejected = false
         try { medicine(reader, "Unauthorized") } catch (_: Exception) { rejected = true }; assertTrue(rejected)
         owner.admin.saveMedication(med.copy(note = "shared update")); sharing.publish()
-        SnapshotRefreshRepository(reader.factory, reader.secure, SnapshotReadClient(remote, EnvelopeReader(reader.root)), reader.requirements).refresh()
+        SnapshotRefreshRepository(reader.factory, reader.secure, SnapshotReadClient(remote, EnvelopeReader(reader.root)), reader.requirements, reader.context).refresh()
         assertEquals("shared update", reader.ready().catalog.medications.single().note)
         val pinClock = java.time.Clock.fixed(Instant.now(), java.time.ZoneOffset.UTC)
         val pinAdmin = AdminRepository(reader.factory, reader.requirements, reader.secure, com.aqaqeer.app.maintenance.MaintenanceStage(reader.context), com.aqaqeer.app.admin.PinThrottle(reader.context, reader.secure), com.aqaqeer.app.data.DisplayPreferences(reader.context), pinClock)
@@ -255,7 +255,7 @@ class PharmacySharingInstrumentedTest {
         assertFalse(reader.ready().admin)
         owner.admin.saveMedication(med.copy(note = "Verified second publication")); sharing.publish()
         assertTrue("Media replacement must verify", sharing.status.value.verified)
-        SnapshotRefreshRepository(reader.factory, reader.secure, readerReads, reader.requirements).refresh()
+        SnapshotRefreshRepository(reader.factory, reader.secure, readerReads, reader.requirements, reader.context).refresh()
         assertEquals("Verified second publication", reader.ready().catalog.medications.single().note)
         assertEquals(2, owned.size)
         val backup = com.aqaqeer.app.backup.BackupRepository(owner.context, owner.factory, owner.secure,
@@ -276,7 +276,7 @@ class PharmacySharingInstrumentedTest {
         val previous=owner.ready().catalog.medications.single()
         owner.admin.saveMedication(previous.copy(note="Manual republication after live reconciliation"))
         sharing.publish();assertTrue("Manual republication must verify",sharing.status.value.verified)
-        SnapshotRefreshRepository(reader.factory,reader.secure,readerReads,reader.requirements).refresh()
+        SnapshotRefreshRepository(reader.factory,reader.secure,readerReads,reader.requirements, reader.context).refresh()
         assertEquals("Manual republication after live reconciliation",reader.ready().catalog.medications.single().note)
 
         // Use a synthetic pharmacy PIN only; the actual bot token is never revoked here.
@@ -285,7 +285,7 @@ class PharmacySharingInstrumentedTest {
         pin.change("123456".toCharArray(),"654321".toCharArray(),"654321".toCharArray())
         sharing.publish();assertTrue(sharing.status.value.verified)
         assertTrue("Exact initiating device keeps its verified PIN authorization",owner.ready().admin)
-        SnapshotRefreshRepository(reader.factory,reader.secure,readerReads,reader.requirements).refresh()
+        SnapshotRefreshRepository(reader.factory,reader.secure,readerReads,reader.requirements, reader.context).refresh()
         assertFalse("A peer observing the changed live PIN must lose administration",reader.ready().admin)
         val replacementFile=File(owner.root,"replacement-live.aqz")
         sharing.export(Uri.fromFile(replacementFile),"12345678".toCharArray())

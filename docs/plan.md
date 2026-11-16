@@ -4,7 +4,7 @@
 
 ## Initial attribution-free baseline — 2026-11-16
 
-Approved production changes cover initial-v1 attribution-free storage/files, timestamp/operation-ID merge ordering, fresh APK numbering, Home/cards/detail/filter/selection changes, two-session fetched markers, Settings/navigation, forms, Maintenance, History and source previews. [Validation](validation.md#initial-attribution-free-baseline--2026-11-16) records source checks and limits. Earlier results below predate this baseline and do not validate it. Existing test-authoring authorizations do not extend to this batch.
+Approved production changes cover initial-v1 attribution-free storage/files, timestamp/operation-ID merge ordering, fresh APK numbering, Home/cards/detail/filter/selection changes, two-session fetched markers, Settings/navigation, forms, Maintenance, History and source previews. [Validation](validation.md#initial-attribution-free-baseline--2026-11-16) records source checks and limits. Earlier results below predate this baseline and do not validate it. The user subsequently authorized test repair/creation without local execution, then workflow 03 with JVM scope only.
 
 | ID / priority | Dependency | Remaining work / acceptance |
 | --- | --- | --- |
@@ -13,7 +13,7 @@ Approved production changes cover initial-v1 attribution-free storage/files, tim
 | I3 / P1 — UI/session acceptance | Separate authorization; I2 | All four search/tab placements, large text, narrow/wide layouts, stable selection, role restrictions, refresh failures/no-change fetches, marker accumulation/refresh and current-plus-next session lifetime, task/process versus rotation/backgrounding, Sunday/midnight boundaries. Check History, menus, forms, disclosures and previews. |
 | I4 / P1 — Reservation acceptance | Separate packaging/hosted authorization | Next local and fresh hosted reservations yield code 1 / 0.0.1, then increment monotonically with locking. Preserve old tags and live publication/key/installation identities. No packaging or remote reservation was performed. |
 
-No test inspection/work, Gradle/build/compilation/lint, workflow dispatch, device/live access or migrations are authorized for this batch. Existing independent stops remain in force.
+Test repair/creation is now authorized; 16 new Kotlin methods and 4 offline Python reservation methods are authored, alongside existing fixture/API/UI repairs. Workflow 03 gains `scope=jvm` (both JVM flavors and public JDK vectors; coverage off); the user authorized dispatch after the files are finished. Its run status belongs in validation. Workflow 07 source selects 64 standard methods plus 7 demo invocations per API; no emulator dispatch is authorized. Python reservation tests remain unexecuted and are not part of the JVM selection. Local tests/Gradle/build/compilation/lint, other workflow dispatches, device/live access and migrations remain unauthorized. Existing independent stops remain in force.
 
 ## Baseline and current stop
 

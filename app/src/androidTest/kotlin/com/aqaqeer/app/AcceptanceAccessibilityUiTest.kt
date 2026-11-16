@@ -20,7 +20,7 @@ class AcceptanceAccessibilityUiTest {
         check(BuildConfig.APPLICATION_ID.contains(".verification."))
         compose.waitUntil(15000) { compose.onAllNodesWithTag("home").fetchSemanticsNodes().isNotEmpty() }
         compose.onNodeWithTag("home_menu").performClick()
-        compose.onNodeWithTag("settings_menu").performClick()
+        compose.onNodeWithText(uiText(R.string.ui_screen_titles_012)).performClick()
         compose.waitForIdle()
         val automation=InstrumentationRegistry.getInstrumentation().uiAutomation
         val nodes=mutableListOf<JsonElement>();var labeledActions=0;var focused=false

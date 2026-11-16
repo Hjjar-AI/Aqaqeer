@@ -53,19 +53,18 @@ class AdminHistoryInstrumentedTest {
             assertEquals(before, p.admin.transaction { Triple(it.catalog(), it.pending(), it.history()) })
         }
     }
-    @Test fun historyCombinesTimezoneEditorAndMedicationFiltersAndRedactsVerifiers(): Unit = runBlocking {
+    @Test fun historyCombinesTimezoneAndMedicationFiltersAndRedactsVerifiers(): Unit = runBlocking {
         val med = p.medication(); val id = p.ready().catalog.pharmacy!!.pharmacyId
-        val editor = p.admin.transaction { it.deviceIdentity()!!.id }
         val at = Instant.parse("2026-11-10T21:00:00Z") // Damascus next civil day.
         val entries = listOf(
             HistoryEntry(newId(), null, "medication", med.id, MedicationPresentation.identity(med), "note", null, "\"new\"", at, null, null),
             HistoryEntry(newId(), null, "pharmacy", id, "صيدلية", "adminPinVerifier", "SECRET", "SECRET", at, null, null))
         p.admin.transaction { it.clearHistory(); it.insertHistory(entries) }
         val repo = HistoryRepository(p.factory)
-        val filter = HistoryFilter(LocalDate.of(2026,11,11), LocalDate.of(2026,11,11), editor, med.id)
+        val filter = HistoryFilter(LocalDate.of(2026,11,11), LocalDate.of(2026,11,11), medicationId = med.id)
         val page = withTimeout(10000) { repo.observe(id, filter, 0).first() }
         assertEquals(listOf(entries.first().id), page.entries.map { it.id })
-        val hidden = repo.observe(id, HistoryFilter(editorId = UNKNOWN_HISTORY_EDITOR), 0).first().entries.single()
+        val hidden = repo.observe(id, HistoryFilter(entityType = "pharmacy"), 0).first().entries.single()
         assertTrue(hidden.valuesHidden); assertNull(hidden.before.text); assertNull(hidden.after.text)
         assertTrue(repo.observe(id, HistoryFilter(through = LocalDate.of(2026,11,10)), 0).first().entries.isEmpty())
     }

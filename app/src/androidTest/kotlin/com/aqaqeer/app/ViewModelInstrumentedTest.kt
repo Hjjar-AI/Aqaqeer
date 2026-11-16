@@ -40,7 +40,7 @@ class ViewModelInstrumentedTest {
             val factory = object : ViewModelProvider.Factory {
                 @Suppress("UNCHECKED_CAST") override fun <T : ViewModel> create(modelClass: Class<T>): T =
                     CatalogViewModel(p.repository,prefs,saved,ConnectionImportRepository(p.context,p.repository,p.secure,reads,p.requirements),
-                        SnapshotRefreshRepository(p.factory,p.secure,reads,p.requirements),HistoryRepository(p.factory),imports,reports,
+                        SnapshotRefreshRepository(p.factory,p.secure,reads,p.requirements,p.context),HistoryRepository(p.factory),imports,reports,
                         p.admin,p.sharing(remote),p.backups,maintenance,PinChanges(p.admin,MaintenanceStore(p.secure)),p.context) as T
             }
             vm = ViewModelProvider(owner,factory)[CatalogViewModel::class.java]
