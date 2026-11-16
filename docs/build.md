@@ -30,6 +30,8 @@ The complete walkthrough below expands these points with commands, settings, out
 | Publish a signed production APK with GitHub | [Configure GitHub signing](#configure-github-signing) |
 | Release an update, recover from a failed run or solve a problem | [Updates and distribution](#updates-and-distribution), then [release troubleshooting](#release-troubleshooting) |
 
+Project-independent workstation references are indexed in `/mnt/Common/General Pograming and IDE Related Guides/README.md`. Start with `Android Signing Keys and GitHub Secrets.md` for the general identity/password/fingerprint, backup and CI-secret walkthrough. Companion guides cover Actions, shared toolchains, verification evidence and encrypted backup/recovery design. These are explanatory references; this document remains authoritative for this project's exact commands, names and pinned versions. The guide examples were not executed during extraction.
+
 ## Pinned toolchain
 
 | Component | Version |

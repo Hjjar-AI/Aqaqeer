@@ -24,6 +24,12 @@ The user subsequently authorized bringing Main/Zee to feature parity. Both main 
 
 User reload/interaction in **Main/Zee and Ay Code** remains pending; syntax/hash checks do not establish live picker or web-host acceptance. No workflow was dispatched, no automatic editor reload performed, and app builds/tests/lint, devices and live Telegram remain untouched. An extension update can overwrite the customization; inspect the active version and prepare a new targeted patch rather than copying full bundles across instances.
 
+## Project-independent guide extraction — 2026-11-15
+
+Reviewed the documentation set for reusable engineering guidance, focusing on build/signing, Actions, toolchain ownership, verification and encrypted backup/recovery contracts. Created five general guides plus an index beside the existing workstation VS Code guide at `/mnt/Common/General Pograming and IDE Related Guides/`: signing keys/GitHub secrets; Actions builds/artifacts/releases; shared Android SDKs/Gradle caches; test scope/evidence/recovery; and encrypted backup format/recovery design. The new guides omit project identities, fixed local paths, product policies and historical run counts; their sample parameters and workflow pins are explicitly examples rather than universal defaults. The existing VS Code guide remains separately labeled as workstation-specific.
+
+All six files were prepared locally and created without replacing existing documents, then read back against the reviewed drafts. Source checks resolved 21 local guide links, syntax-checked five Bash example blocks without running them, and parsed one sample workflow YAML with full-length action pins. These checks do not verify external provider behavior or make example commands executed evidence. No private keys, credentials or protected credential hashes were accessed or generated; no signing, secret upload, workflow dispatch, app build/test/lint, migration or device/network operation was performed. Public draft/creation receipt: local-only `../local/reference-guides/2026-11-15/receipt.json`.
+
 ## Current hosted evidence — 2026-11-14
 
 | Check | Source / run | Confirmed result |
