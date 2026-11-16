@@ -1,5 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="review_demo_mode">وضع العرض التجريبي</string>
+    <string name="review_demo_reader">قارئ</string>
+    <string name="review_demo_admin">إدارة تجريبية</string>
+    <string name="review_demo_edit_help">تعديلات على بيانات مؤقتة فقط. يمكنك التبديل بين القارئ والإدارة لمعاينتها. التعديلات غير محفوظة بصورة دائمة، ولا تتصل النسخة بخدمات النشر.</string>
+    <string name="review_demo_local_only">عرض محلي: المزامنة والنشر والاتصالات الحقيقية غير متاحة.</string>
+    <string name="review_demo_reset">إعادة البيانات التجريبية</string>
+    <string name="review_demo_reset_help">ستُحذف التعديلات والسجل التجريبي وتعود بيانات العرض الأصلية.</string>
     <string name="review_no_results_in_section">لا توجد نتائج في هذا القسم</string>
     <string name="review_section_search_stock">توجد نتائج بحث متوفرة في هذا القسم</string>
     <string name="review_extra_filters">فلاتر إضافية</string>

@@ -159,7 +159,7 @@ internal fun statusLabel(status: AvailabilityStatus): String = uiText(when (stat
                 chooseCategory = { id -> afterDrawer { viewModel.setQuickCategory(id) } },
                 showDataTimes = { afterDrawer { dataTimesOpen = true } }) }
         }) {
-        val canAdd = readyForTitle?.let { it.admin && !it.isDemo && !it.requiresUpdate && !it.maintenancePaused } == true
+        val canAdd = readyForTitle?.let { it.admin && !it.requiresUpdate && !it.maintenancePaused } == true
         Scaffold(
             floatingActionButton = {
                 val keyboardOpen = WindowInsets.ime.getBottom(LocalDensity.current) > 0
@@ -222,19 +222,19 @@ internal fun statusLabel(status: AvailabilityStatus): String = uiText(when (stat
                         AppIcon(UiIcon.BACK, description = uiText(R.string.ui_aqaqeer_app_009))
                     }
                 }, actions = {
-                    if (drawerEligible && readyForTitle.admin && (readyForTitle.pendingCount > 0 || readyForTitle.uncertain || sharing.busy) && !readyForTitle.isDemo) {
+                    if (drawerEligible && readyForTitle.admin && (readyForTitle.pendingCount > 0 || readyForTitle.uncertain || sharing.busy)) {
                         TextButton(enabled = !adminBusy, onClick = viewModel::review) {
                             Text(uiText(R.string.ui_aqaqeer_app_011, MedicationPresentation.displayDigits(readyForTitle.pendingCount.toString())))
                         }
                     }
                     val ready = state.catalog as? CatalogState.Ready
-                    val editable = ready?.let { it.admin && !it.isDemo && !it.requiresUpdate && !it.maintenancePaused } == true
+                    val editable = ready?.let { it.admin && !it.requiresUpdate && !it.maintenancePaused } == true
                     val medicationId = state.route.removePrefix("med:").takeIf { state.route.startsWith("med:") }
                     if (editable && medicationId != null) IconButton(enabled = !adminBusy,
                         onClick = { navigate("edit-med:${medicationId}") }) {
                         AppIcon(UiIcon.EDIT, description = uiText(R.string.ui_aqaqeer_app_012))
                     }
-                    if (medicationId != null && ready?.admin == true && !ready.isDemo) Box {
+                    if (medicationId != null && ready?.admin == true) Box {
                         IconButton(onClick = { menuOpen = true }) { AppIcon(UiIcon.MORE, description = uiText(R.string.ui_aqaqeer_app_013)) }
                         DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
                             DropdownMenuItem(text = { Text(uiText(R.string.ui_aqaqeer_app_014)) },
@@ -266,7 +266,8 @@ internal fun statusLabel(status: AvailabilityStatus): String = uiText(when (stat
                         viewModel::setSectionsAtBottom, viewModel::setSearchAtBottom, viewModel::setGroupingEnabled, viewModel::setGrouping,
                         if (state.catalog is CatalogState.Ready && !state.catalog.isDemo && !configured) ({ navigate("backup") }) else null,
                         null,
-                        null) { navigate("about") }
+                        null, demo = BuildConfig.IS_DEMO, demoAdmin = (state.catalog as? CatalogState.Ready)?.admin == true,
+                        changeDemoAdmin = viewModel::setDemoAdmin, resetDemo = viewModel::resetDemo) { navigate("about") }
                     "maintenance" -> MaintenanceScreen(state.catalog as? CatalogState.Ready, viewModel)
                     "backup" -> BackupScreen(state, viewModel)
                     "csv-import" -> CsvImportScreen(state.catalog as? CatalogState.Ready, viewModel)
@@ -373,7 +374,7 @@ internal fun statusLabel(status: AvailabilityStatus): String = uiText(when (stat
     var editor by rememberSaveable(catalog.pharmacy?.pharmacyId, medication.id, stateSaver = AvailabilitySelectionSaver) { mutableStateOf<AvailabilitySelection?>(null) }
     val busy by vm.adminBusy.collectAsStateWithLifecycle()
     val message by vm.adminMessage.collectAsStateWithLifecycle()
-    val canEdit = ready.admin && !ready.isDemo && !ready.requiresUpdate && !ready.maintenancePaused
+    val canEdit = ready.admin && !ready.requiresUpdate && !ready.maintenancePaused
     LaunchedEffect(canEdit, catalog.pharmacy?.pharmacyId) { if (!canEdit || editor?.pharmacyId != catalog.pharmacy?.pharmacyId) editor = null }
     SideEffect { if (editor?.restored == true) editor = editor?.resolve(catalog) }
     val listState = androidx.compose.foundation.lazy.rememberLazyListState()
@@ -435,10 +436,13 @@ internal fun statusLabel(status: AvailabilityStatus): String = uiText(when (stat
     accent: ThemeAccent, setAccent: (ThemeAccent) -> Unit, setTwoColumns: (Boolean) -> Unit,
     setSectionsAtBottom: (Boolean) -> Unit, setSearchAtBottom: (Boolean) -> Unit,
     setGroupingEnabled: (Boolean) -> Unit, setGrouping: (HomeGrouping) -> Unit,
-    openBackup: (() -> Unit)? = null, openMaintenance: (() -> Unit)? = null, openLeave: (() -> Unit)? = null, openAbout: () -> Unit) {
+    openBackup: (() -> Unit)? = null, openMaintenance: (() -> Unit)? = null, openLeave: (() -> Unit)? = null,
+    demo: Boolean = false, demoAdmin: Boolean = false, changeDemoAdmin: (Boolean) -> Unit = {}, resetDemo: () -> Unit = {},
+    openAbout: () -> Unit) {
     val systemDark = androidx.compose.foundation.isSystemInDarkTheme()
     LazyColumn(Modifier.fillMaxSize().testTag("settings"), contentPadding = PaddingValues(UiSpacing.page),
         verticalArrangement = Arrangement.spacedBy(UiSpacing.group)) {
+        if (demo) item(key = "demo_mode") { DemoModeControls(demoAdmin, changeDemoAdmin, resetDemo) }
         item { SettingsGroup(uiText(R.string.review_appearance), initiallyExpanded = true) {
             SettingsChoiceRows(uiText(R.string.ui_aqaqeer_app_034), ThemeChoice.entries, theme, setTheme, {
                 uiText(when (it) { ThemeChoice.SYSTEM -> R.string.ui_aqaqeer_app_035; ThemeChoice.LIGHT -> R.string.ui_aqaqeer_app_036

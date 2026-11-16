@@ -18,7 +18,7 @@ import java.time.LocalDate
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable internal fun HistoryScreen(ready: CatalogState.Ready?, medicationId: String?, vm: CatalogViewModel, showHijri: Boolean = false) {
-    if (ready == null || !ready.admin || ready.isDemo) {
+    if (ready == null || !ready.admin) {
         FormPage { InformationCard(uiText(R.string.ui_screen_titles_015), uiText(R.string.ui_history_screen_001)) }
         return
     }

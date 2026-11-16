@@ -103,7 +103,7 @@ import java.time.ZoneId
     }
     val active = catalog.sections.filter { it.isActive }
     val selected = active.firstOrNull { it.id == state.sectionId } ?: active.firstOrNull()
-    val canEdit = ready.admin && !ready.requiresUpdate && !ready.maintenancePaused && !ready.isDemo && saveAvailability != null
+    val canEdit = ready.admin && !ready.requiresUpdate && !ready.maintenancePaused && saveAvailability != null
     var bulkMode by rememberSaveable(catalog.pharmacy.pharmacyId, selected?.id, canEdit) { mutableStateOf(false) }
     var selectedIds by rememberSaveable(catalog.pharmacy.pharmacyId, selected?.id, canEdit,
         stateSaver = Saver<Set<String>, ArrayList<String>>(save = { ArrayList(it) }, restore = { it.toSet() })) { mutableStateOf(emptySet<String>()) }
@@ -127,7 +127,7 @@ import java.time.ZoneId
     val notifyBulk by rememberUpdatedState(onBulkModeChanged)
     DisposableEffect(Unit) { onDispose { notifyModal(false); notifyBulk(false) } }
     if (filtersOpen) HomeFilterSheet(catalog, state.filters, toggleStatus, toggleCategory, clearFilters,
-        ready.admin && !ready.isDemo, toggleExtraFilter, showStatuses = ready.admin || ready.isDemo,
+        ready.admin, toggleExtraFilter, showStatuses = ready.admin,
         toggleAvailable = toggleAvailableFilter) { filtersOpen = false }
     LaunchedEffect(availabilitySavedId) {
         if (availabilitySavedId != null && editor?.id == availabilitySavedId) {
@@ -164,7 +164,7 @@ import java.time.ZoneId
     val projectionReady = projection.catalog == catalog && projection.sectionId == selected?.id &&
         projection.query == state.appliedQuery && projection.filters == state.filters && projection.preferences == state.homePreferences && projection.fetched == state.fetchedIds &&
         projection.unpublished == ready.unpublishedMedicationIds && projection.today == today &&
-        projection.readerStockOnly == (!ready.admin && !ready.isDemo)
+        projection.readerStockOnly == !ready.admin
     val visible = if (projectionReady) projection.visible else emptyList()
     val groups = if (projectionReady) projection.groups else emptyList()
     val otherSectionResults = if (projectionReady && !bulkMode) projection.otherSectionResults else emptyList()
@@ -186,7 +186,7 @@ import java.time.ZoneId
                     focus.clearFocus(); bulkMode = true; changeBulkSelection(emptySet())
                 }
             }) else null, compact = state.homePreferences.searchAtBottom,
-            showFetchedChip = (!ready.admin || ready.isDemo) && (state.fetchedIds.isNotEmpty() || state.filters.fetchedOnly),
+            showFetchedChip = !ready.admin && (state.fetchedIds.isNotEmpty() || state.filters.fetchedOnly),
             toggleFetched = { toggleExtraFilter("fetched") })
         if (projectionReady && projection.otherSections.isNotEmpty()) {
             SupportingText(uiText(R.string.review_elsewhere, projection.otherSections.values.flatten().toSet().size.toString()))

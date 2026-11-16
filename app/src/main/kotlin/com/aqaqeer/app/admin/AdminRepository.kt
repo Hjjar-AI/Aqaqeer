@@ -142,8 +142,11 @@ class AdminRepository @Inject constructor(private val factory: DatabaseFactory,
         }
         adminCheck(valid) { "رمز الإدارة غير صحيح" }
     }
-    internal suspend fun edit(pinIntent: String? = null, change: (CatalogSnapshot, DeviceIdentity, Instant, String) -> CatalogSnapshot) = transaction { dao ->
-        editInTransaction(dao, pinIntent, change)
+    internal suspend fun edit(pinIntent: String? = null, change: (CatalogSnapshot, DeviceIdentity, Instant, String) -> CatalogSnapshot) {
+        if (BuildConfig.IS_DEMO) {
+            adminCheck(pinIntent == null)
+            withContext(Dispatchers.Default) { DemoSession.edit(change) }
+        } else transaction { dao -> editInTransaction(dao, pinIntent, change) }
     }
     internal suspend fun editInTransaction(dao: CatalogDao, pinIntent: String? = null,
         change: (CatalogSnapshot, DeviceIdentity, Instant, String) -> CatalogSnapshot) {
@@ -373,7 +376,10 @@ class AdminRepository @Inject constructor(private val factory: DatabaseFactory,
     internal suspend fun clearReconnectIfDone(verified: Boolean = false) = transaction { dao ->
         if (verified || (dao.pendingCount() == 0 && dao.attemptCount() == 0)) dao.control()?.let { dao.control(it.copy(reconnectPending = false)) }
     }
-    suspend fun pending(): List<PendingOperation> = transaction { dao -> adminCheck(dao.deviceIdentity()?.adminMode == true); dao.pending() }
+    suspend fun pending(): List<PendingOperation> {
+        if (BuildConfig.IS_DEMO) return DemoSession.initialize().let { adminCheck(it.admin); it.pending }
+        return transaction { dao -> adminCheck(dao.deviceIdentity()?.adminMode == true); dao.pending() }
+    }
     suspend fun leave(typedName: String, confirmed: Boolean) = sharingGate.withLock {
         transaction { dao ->
             adminCheck(!BuildConfig.IS_DEMO && confirmed)

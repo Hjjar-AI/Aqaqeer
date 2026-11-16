@@ -34,6 +34,7 @@ import com.aqaqeer.app.data.MedicationPresentation
 }
 
 internal fun publicationBlockedReason(ready: CatalogState.Ready, sharing: SharingStatus, working: Boolean): String? = when {
+        ready.isDemo -> uiText(R.string.review_demo_local_only)
         ready.requiresUpdate -> uiText(R.string.ui_pending_changes_banner_006)
         ready.maintenancePaused -> uiText(R.string.ui_pharmacy_admin_screen_032)
         ready.restorePaused -> uiText(R.string.ui_pharmacy_admin_screen_033)

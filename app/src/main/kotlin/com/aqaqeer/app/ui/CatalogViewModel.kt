@@ -2,6 +2,7 @@ package com.aqaqeer.app.ui
 
 import com.aqaqeer.app.uiText
 import com.aqaqeer.app.R
+import com.aqaqeer.app.BuildConfig
 
 import android.net.Uri
 import android.content.Context
@@ -227,6 +228,7 @@ class CatalogViewModel @Inject constructor(
     internal fun review() = command("review") { pendingEdits.value = admin.pending() }
     internal fun publish(choices: Map<String, Boolean> = emptyMap(), reviewOnFailure: Boolean = false,
         recoverPin: Boolean = false) = command {
+        check(!BuildConfig.IS_DEMO)
         sharing.publish(choices, recoverPin); pendingEdits.value = admin.pending(); admin.clearReconnectIfDone(sharing.status.value.verified)
         if (reviewOnFailure && !sharing.status.value.verified) navigate("review")
     }
@@ -238,6 +240,7 @@ class CatalogViewModel @Inject constructor(
         }
     }
     private suspend fun markReconnectSafely() {
+        if (BuildConfig.IS_DEMO) return
         try { admin.markReconnect() }
         catch (e: CancellationException) { throw e }
         catch (_: Exception) { /* Best effort; the pending edits remain durable. */ }
@@ -290,13 +293,16 @@ class CatalogViewModel @Inject constructor(
             emit(CatalogState.RecoveryRequired)
             return@flow
         }
-        emitAll(repository.observe())
+        if (BuildConfig.IS_DEMO) DemoSession.initialize()
+        emitAll(if (BuildConfig.IS_DEMO) combine(repository.observe(), DemoSession.state) { source, session ->
+            if (source is CatalogState.Ready && session != null) DemoSession.ready(source, session) else source
+        } else repository.observe())
     } }, preferences.theme, preferences.accent, route, sectionPreference) {
         catalog, theme, accent, route, section ->
         val snapshot = (catalog as? CatalogState.Ready)?.catalog
         val requested = if (savedState.get<String>("sectionPharmacy") == snapshot?.pharmacy?.pharmacyId) section.first else null
         val selected = requested ?: snapshot?.pharmacy?.pharmacyId?.let { section.second[it] }
-        AppUiState(catalog, theme, route, snapshot?.sections?.firstOrNull { it.isActive && it.id == selected }?.id
+        AppUiState(catalog, theme, if (BuildConfig.IS_DEMO && !demoRouteAllowed(route)) "home" else route, snapshot?.sections?.firstOrNull { it.isActive && it.id == selected }?.id
             ?: snapshot?.sections?.firstOrNull { it.isActive }?.id, accent = accent)
     }
     private val liveBase = combine(base, FetchedChanges.ids) { base, ids ->
@@ -305,7 +311,7 @@ class CatalogViewModel @Inject constructor(
     }
     val state: StateFlow<AppUiState> = combine(liveBase, preferences.home, browsing, refreshState, onlineState) { base, home, browsing, refresh, online ->
         val ready = base.catalog as? CatalogState.Ready
-        val readerStockOnly = ready != null && !ready.admin && !ready.isDemo
+        val readerStockOnly = ready != null && !ready.admin
         base.copy(homePreferences = home, query = browsing.first, appliedQuery = browsing.second,
             filters = browsing.third.copy(
                 statuses = if (readerStockOnly) emptySet() else browsing.third.statuses,
@@ -315,6 +321,11 @@ class CatalogViewModel @Inject constructor(
         AppUiState(theme = theme, accent = accent)
     })
     init {
+        viewModelScope.launch {
+            state.collect { current ->
+                if (BuildConfig.IS_DEMO && current.catalog is CatalogState.Ready && !demoRouteAllowed(current.route)) navigate("home")
+            }
+        }
         viewModelScope.launch {
             state.map { current -> (current.catalog as? CatalogState.Ready)?.let { ready ->
                 ready.catalog.pharmacy?.pharmacyId to (ready.admin && !ready.isDemo)
@@ -351,7 +362,7 @@ class CatalogViewModel @Inject constructor(
         BrowseRequest(current.sectionId, current.appliedQuery, current.filters, current.homePreferences,
             (current.catalog as? CatalogState.Ready)?.unpublishedMedicationIds.orEmpty(), current.fetchedIds,
             MedicationPresentation.today(now, (current.catalog as? CatalogState.Ready)?.catalog?.pharmacy?.timezone ?: "Asia/Damascus"),
-            (current.catalog as? CatalogState.Ready)?.let { !it.admin && !it.isDemo } == true)
+            (current.catalog as? CatalogState.Ready)?.let { !it.admin } == true)
     }.distinctUntilChanged()) { index, request -> index to request }.mapLatest { (index, request) ->
         withContext(kotlinx.coroutines.Dispatchers.Default) {
             index?.project(request.section, request.query, request.filters, request.preferences, request.unpublished, request.fetched, request.today, readerStockOnly = request.readerStockOnly) ?: HomeBrowseResult()
@@ -361,7 +372,7 @@ class CatalogViewModel @Inject constructor(
     internal val history: StateFlow<HistoryUiState> = combine(
         state.map { current ->
             val ready = current.catalog as? CatalogState.Ready
-            Triple(ready?.catalog?.pharmacy?.pharmacyId, current.route, ready?.admin == true && !ready.isDemo)
+            Triple(ready?.catalog?.pharmacy?.pharmacyId, current.route, ready?.admin == true)
         }.distinctUntilChanged(), historyRequest,
     ) { access, request -> access to request }.flatMapLatest { (access, request) ->
         val (pharmacyId, destination, authorized) = access
@@ -423,6 +434,7 @@ class CatalogViewModel @Inject constructor(
     internal fun destinationStateKey(destination: String): String = if (destination.startsWith("edit-med:"))
         destination + ":" + savedState.get<String>("draft:$destination").orEmpty() else destination
     fun navigate(destination: String) {
+        if (BuildConfig.IS_DEMO && !demoRouteAllowed(destination)) return
         if (destination == route.value) return
         if (destination.startsWith("edit-med:")) savedState["draft:$destination"] = java.util.UUID.randomUUID().toString()
         val stack = savedState.get<ArrayList<String>>("backStack") ?: arrayListOf("home").also {
@@ -433,7 +445,29 @@ class CatalogViewModel @Inject constructor(
         savedState["backStack"] = stack
         changeRoute(destination)
     }
+    private fun demoRouteAllowed(destination: String): Boolean = when {
+        destination in setOf("home", "settings", "about") || destination.startsWith("med:") -> true
+        destination in setOf("admin", "taxonomy", "review", "history") || destination.startsWith("edit-med:") || destination.startsWith("history:") -> DemoSession.initialize().admin
+        else -> false
+    }
+    internal fun setDemoAdmin(value: Boolean) {
+        if (!BuildConfig.IS_DEMO || adminBusy.value) return
+        DemoSession.setAdmin(value)
+        pendingEdits.value = emptyList()
+        navigate("home")
+    }
+    internal fun resetDemo() {
+        if (!BuildConfig.IS_DEMO || adminBusy.value) return
+        DemoSession.reset()
+        pendingEdits.value = emptyList(); highlightedMedication.value = null; availabilitySavedId.value = null
+        clearFilters(); setQuery(""); navigate("home")
+    }
     private fun changeRoute(destination: String) {
+        if (BuildConfig.IS_DEMO && !demoRouteAllowed(destination)) {
+            savedState["backStack"] = arrayListOf("home")
+            savedState["route"] = "home"
+            return
+        }
         if (destination != "history" && !destination.startsWith("history:")) historyRequest.value = HistoryRequest()
         adminMessage.value = null
         feedback.value = null
@@ -597,13 +631,13 @@ class CatalogViewModel @Inject constructor(
     fun setQuery(value: String) { savedState["query"] = value }
     fun toggleStatus(value: AvailabilityStatus) {
         val ready = state.value.catalog as? CatalogState.Ready ?: return
-        if (!ready.admin && !ready.isDemo) return
+        if (!ready.admin) return
         if (value !in MedicationPresentation.editableStatuses) return
         savedState["statuses"] = ArrayList(statuses.value.toSet().let { if (value.name in it) it - value.name else it + value.name })
     }
     internal fun toggleAvailableFilter() {
         val ready = state.value.catalog as? CatalogState.Ready ?: return
-        if (!ready.admin || ready.isDemo) return
+        if (!ready.admin) return
         val available = setOf(AvailabilityStatus.AVAILABLE.name, AvailabilityStatus.LOW.name)
         savedState["statuses"] = ArrayList(if (statuses.value.toSet() == available) emptySet() else available)
     }

@@ -30,7 +30,7 @@ The app tracks availability, not quantities or inventory transactions. It does n
 | Joining an existing pharmacy | Obtain its encrypted `.aqz` connection file and password from an admin, then import, verify and activate it. Joining starts in Reader mode. |
 | Creating a pharmacy | Enter its name, timezone, first section and confirmed admin PIN. Add medications offline, then configure Telegram and publish when ready. |
 | Recovering a pharmacy | Import an encrypted `.aqbak` backup with its passphrase, review the restored state and reconcile with live data before publication. |
-| Exploring the interface | Use the separate demo app; it opens a local, read-only sample pharmacy without connecting to Telegram. |
+| Exploring the interface | Use the separate demo app; it opens a local sample pharmacy with Reader and simulated Admin modes, without connecting to Telegram. |
 
 Follow the [Arabic user guide](docs/user-guide-ar.md) for screen-by-screen instructions and [operations guide](docs/operations.md) for Telegram setup, backups and recovery.
 
@@ -69,10 +69,10 @@ Choose `both` to build the flavors independently. Add `--offline` only when the 
 | Variant | Package | Initial state |
 | --- | --- | --- |
 | Standard debug | `com.aqaqeer.app.debug` | Unconfigured pharmacy |
-| Demo debug | `com.aqaqeer.app.demo.debug` | Local, read-only sample pharmacy |
+| Demo debug | `com.aqaqeer.app.demo.debug` | Sample pharmacy: Reader / simulated Admin |
 | Production | `com.aqaqeer.app` | Unconfigured pharmacy |
 
-The demo contains [40 psychiatry/supportive-care sample entries](docs/demo-data.md), with fictional availability and expiry dates. Demo data never enters standard builds; demo release builds are disabled.
+The demo contains [40 psychiatry/supportive-care sample entries](docs/demo-data.md), with fictional availability and expiry dates. Choose the demo mode in Settings. Simulated Admin can edit temporary samples, review changes and view History; Reader follows normal reader visibility. Reset restores the samples, and a fresh app process discards edits. No real synchronization/publication is available. Demo data never enters standard builds; demo release builds are disabled.
 
 ### GitHub Actions
 

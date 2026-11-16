@@ -237,7 +237,7 @@
     <string name="ui_aqaqeer_app_021" formatted="false">"البيانات متاحة محلياً. تحقق من الاتصال ورمز الإدارة الحالي ثم راجع الاستعادة قبل النشر."</string>
     <string name="ui_aqaqeer_app_022" formatted="false">"مراجعة الاستعادة"</string>
     <string name="ui_aqaqeer_app_023" formatted="false">"اختر دواء لعرض تفاصيله"</string>
-    <string name="ui_aqaqeer_app_024" formatted="false">"عرض تجريبي · للقراءة فقط"</string>
+    <string name="ui_aqaqeer_app_024" formatted="false">"عرض تجريبي · بيانات مؤقتة"</string>
     <string name="ui_aqaqeer_app_025" formatted="false">"بيانات توضيحية منفصلة عن أي صيدلية حقيقية"</string>
     <string name="ui_aqaqeer_app_026" formatted="false">"شكل غير معروف"</string>
     <string name="ui_aqaqeer_app_027" formatted="false">"غير مصنف"</string>

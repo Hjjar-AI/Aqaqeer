@@ -36,7 +36,7 @@ import kotlinx.serialization.json.*
     var confirmedLeave by rememberSaveable(state.route) { mutableStateOf(false) }
     var formSubmitted by rememberSaveable(state.route) { mutableStateOf(false) }
     if (state.route.startsWith("edit-med:")) {
-        if (ready.isDemo || !ready.admin || ready.requiresUpdate || ready.maintenancePaused) {
+        if (!ready.admin || ready.requiresUpdate || ready.maintenancePaused) {
             FormPage { InformationCard(uiText(R.string.ui_pharmacy_admin_screen_001), uiText(R.string.ui_pharmacy_admin_screen_002)) }
             return
         }
@@ -117,9 +117,17 @@ import kotlinx.serialization.json.*
                     }) { Text(uiText(R.string.ui_pharmacy_admin_screen_024)) }
                 }
             }
-            (!ready.admin && state.route != "admin") || ready.isDemo -> Text(uiText(R.string.ui_pharmacy_admin_screen_026))
+            (!ready.admin && state.route != "admin") -> Text(uiText(R.string.ui_pharmacy_admin_screen_026))
             ready.requiresUpdate && state.route !in setOf("review", "admin") -> Text(uiText(R.string.ui_pharmacy_admin_screen_027))
             ready.maintenancePaused && state.route !in setOf("admin", "review") -> Text(uiText(R.string.ui_pharmacy_admin_screen_028))
+            ready.isDemo && state.route == "admin" -> {
+                InformationCard(uiText(R.string.review_demo_admin), uiText(R.string.review_demo_edit_help))
+                NavigationCard(uiText(R.string.ui_screen_titles_009), { vm.navigate("edit-med:new") })
+                NavigationCard(uiText(R.string.ui_screen_titles_005), { vm.navigate("taxonomy") })
+                NavigationCard(uiText(R.string.ui_screen_titles_015), { vm.openHistory() })
+                NavigationCard(uiText(R.string.ui_screen_titles_004), vm::review)
+            }
+            ready.isDemo && state.route !in setOf("taxonomy", "review") -> Text(uiText(R.string.review_demo_local_only))
             state.route == "setup" -> TelegramSetup(vm, busy, catalog.medications.isEmpty())
             state.route == "export-connection" -> ConnectionExport(vm, ready.lifecycle == "SHARED", busy)
             state.route == "review" -> {
@@ -146,10 +154,11 @@ import kotlinx.serialization.json.*
                         }
                     }
                 }
+                if (ready.isDemo) SupportingText(uiText(R.string.review_demo_local_only))
                 var choices by remember { mutableStateOf<Map<String, Boolean>>(emptyMap()) }
                 ConflictChoices(sharing.conflicts, choices, catalog) { choices = it }
-                Button(enabled = (ready.pendingCount > 0 || ready.uncertain || ready.lifecycle == "LOCAL_DRAFT") && !busy && !sharing.busy && !ready.requiresUpdate && !ready.restorePaused && !ready.maintenancePaused, onClick = { vm.publish(choices) }) { Text(uiText(R.string.ui_pharmacy_admin_screen_037)) }
-                if (ready.lifecycle == "SHARED") PinRecoveryAction(
+                Button(enabled = !ready.isDemo && (ready.pendingCount > 0 || ready.uncertain || ready.lifecycle == "LOCAL_DRAFT") && !busy && !sharing.busy && !ready.requiresUpdate && !ready.restorePaused && !ready.maintenancePaused, onClick = { vm.publish(choices) }) { Text(uiText(R.string.ui_pharmacy_admin_screen_037)) }
+                if (!ready.isDemo && ready.lifecycle == "SHARED") PinRecoveryAction(
                     enabled = !busy && !sharing.busy && !ready.requiresUpdate && !ready.restorePaused && !ready.maintenancePaused,
                     recover = { vm.publish(choices, recoverPin = true) })
             }

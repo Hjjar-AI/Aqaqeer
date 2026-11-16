@@ -2,6 +2,7 @@ package com.aqaqeer.app.data
 
 import androidx.room.withTransaction
 import androidx.sqlite.db.SimpleSQLiteQuery
+import com.aqaqeer.app.admin.DemoSession
 import com.aqaqeer.app.BuildConfig
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.currentCoroutineContext
@@ -77,6 +78,10 @@ class HistoryRepository @Inject constructor(private val factory: DatabaseFactory
         require(filter.from == null || filter.from.year in 1..9999)
         require(filter.through == null || filter.through.year in 1..9999)
         require(filter.from == null || filter.through == null || filter.from <= filter.through)
+        if (BuildConfig.IS_DEMO) {
+            emitAll(DemoSession.state.filterNotNull().map { DemoSession.historyPage(it, pharmacyId, filter, page) })
+            return@flow
+        }
         val lease = factory.acquire()
         val database = lease.database
         try {

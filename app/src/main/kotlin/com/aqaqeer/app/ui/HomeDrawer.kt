@@ -48,6 +48,7 @@ import com.aqaqeer.app.data.*
                     style = MaterialTheme.typography.titleMedium)
             }
             CompactDrawerItem(icon = UiIcon.HOME, label = uiText(R.string.ui_home_drawer_001), selected = true, onClick = { openRoute("home") })
+            if (ready?.isDemo == true) DrawerRow(uiText(R.string.review_demo_mode), { openRoute("settings") }, icon = UiIcon.SETTINGS)
             if (pharmacy != null) DrawerGroup(uiText(R.string.ui_home_drawer_002), categoriesOpen, { categoriesOpen = !categoriesOpen }, UiIcon.CATEGORY) {
                 if (filters.categoryIds.size > 1) SupportingText(uiText(R.string.ui_home_drawer_003))
                 CompactDrawerItem(label = uiText(R.string.ui_home_drawer_004), selected = filters.categoryIds.isEmpty(), onClick = { chooseCategory(null) })
@@ -55,7 +56,7 @@ import com.aqaqeer.app.data.*
                     CompactDrawerItem(label = category.nameAr, selected = filters.categoryIds == setOf(category.id), onClick = { chooseCategory(category.id) })
                 }
             }
-            if (pharmacy != null && !ready.isDemo) DrawerGroup(uiText(R.string.ui_home_drawer_005), catalogOpen, { catalogOpen = !catalogOpen }, UiIcon.HISTORY) {
+            if (pharmacy != null && (!ready.isDemo || ready.admin)) DrawerGroup(uiText(R.string.ui_home_drawer_005), catalogOpen, { catalogOpen = !catalogOpen }, UiIcon.HISTORY) {
                 DrawerRow(uiText(R.string.ui_screen_titles_002), { openRoute("admin") }, icon = UiIcon.TOOLS)
             }
             DrawerGroup(uiText(R.string.ui_home_drawer_008), applicationOpen, { applicationOpen = !applicationOpen }, UiIcon.INFO) {
