@@ -30,7 +30,7 @@ import java.time.Instant
 import javax.inject.Inject
 
 private data class BrowseRequest(val section: String?, val query: String, val filters: HomeFilters,
-    val preferences: HomePreferences, val unpublished: Set<String>, val fetched: Set<String>, val today: java.time.LocalDate)
+    val preferences: HomePreferences, val unpublished: Set<String>, val fetched: Set<String>, val today: java.time.LocalDate, val readerStockOnly: Boolean)
 internal data class UiFeedback(val message: String, val route: String, val medicationId: String? = null,
     val undo: AvailabilityUndo? = null, val id: String = java.util.UUID.randomUUID().toString())
 
@@ -304,7 +304,13 @@ class CatalogViewModel @Inject constructor(
         base.copy(fetchedIds = ids[ready?.catalog?.pharmacy?.pharmacyId].orEmpty())
     }
     val state: StateFlow<AppUiState> = combine(liveBase, preferences.home, browsing, refreshState, onlineState) { base, home, browsing, refresh, online ->
-        base.copy(homePreferences = home, query = browsing.first, appliedQuery = browsing.second, filters = browsing.third.copy(unpublishedOnly = browsing.third.unpublishedOnly && (base.catalog as? CatalogState.Ready)?.admin == true), refresh = refresh, online = online)
+        val ready = base.catalog as? CatalogState.Ready
+        val readerStockOnly = ready != null && !ready.admin && !ready.isDemo
+        base.copy(homePreferences = home, query = browsing.first, appliedQuery = browsing.second,
+            filters = browsing.third.copy(
+                statuses = if (readerStockOnly) emptySet() else browsing.third.statuses,
+                unpublishedOnly = browsing.third.unpublishedOnly && ready?.admin == true),
+            refresh = refresh, online = online)
     }.stateIn(viewModelScope, SharingStarted.Eagerly, DisplayPreferences.startupPresentation(context).let { (theme, accent) ->
         AppUiState(theme = theme, accent = accent)
     })
@@ -344,10 +350,11 @@ class CatalogViewModel @Inject constructor(
     internal val homeBrowse = combine(searchIndex, combine(state, browseDay) { current, now -> current to now }.map { (current, now) ->
         BrowseRequest(current.sectionId, current.appliedQuery, current.filters, current.homePreferences,
             (current.catalog as? CatalogState.Ready)?.unpublishedMedicationIds.orEmpty(), current.fetchedIds,
-            MedicationPresentation.today(now, (current.catalog as? CatalogState.Ready)?.catalog?.pharmacy?.timezone ?: "Asia/Damascus"))
+            MedicationPresentation.today(now, (current.catalog as? CatalogState.Ready)?.catalog?.pharmacy?.timezone ?: "Asia/Damascus"),
+            (current.catalog as? CatalogState.Ready)?.let { !it.admin && !it.isDemo } == true)
     }.distinctUntilChanged()) { index, request -> index to request }.mapLatest { (index, request) ->
         withContext(kotlinx.coroutines.Dispatchers.Default) {
-            index?.project(request.section, request.query, request.filters, request.preferences, request.unpublished, request.fetched, request.today) ?: HomeBrowseResult()
+            index?.project(request.section, request.query, request.filters, request.preferences, request.unpublished, request.fetched, request.today, readerStockOnly = request.readerStockOnly) ?: HomeBrowseResult()
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(stopTimeoutMillis = 0, replayExpirationMillis = 0), HomeBrowseResult())
     private val historyRequest = MutableStateFlow(HistoryRequest())
@@ -589,10 +596,14 @@ class CatalogViewModel @Inject constructor(
     fun setAccent(accent: ThemeAccent) { viewModelScope.launch { preferences.setAccent(accent) } }
     fun setQuery(value: String) { savedState["query"] = value }
     fun toggleStatus(value: AvailabilityStatus) {
+        val ready = state.value.catalog as? CatalogState.Ready ?: return
+        if (!ready.admin && !ready.isDemo) return
         if (value !in MedicationPresentation.editableStatuses) return
         savedState["statuses"] = ArrayList(statuses.value.toSet().let { if (value.name in it) it - value.name else it + value.name })
     }
     internal fun toggleAvailableFilter() {
+        val ready = state.value.catalog as? CatalogState.Ready ?: return
+        if (!ready.admin || ready.isDemo) return
         val available = setOf(AvailabilityStatus.AVAILABLE.name, AvailabilityStatus.LOW.name)
         savedState["statuses"] = ArrayList(if (statuses.value.toSet() == available) emptySet() else available)
     }

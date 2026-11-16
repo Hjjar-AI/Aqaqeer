@@ -1,8 +1,7 @@
 package com.aqaqeer.app.ui
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
@@ -61,8 +60,10 @@ import com.aqaqeer.app.data.*
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable internal fun HomeSearchControls(query: TextFieldValue, changeQuery: (TextFieldValue) -> Unit,
     searching: Boolean, filters: HomeFilters, visibleCount: Int, totalCount: Int,
-    openFilters: () -> Unit, clearFilters: () -> Unit, select: (() -> Unit)? = null, compact: Boolean = false) {
+    openFilters: () -> Unit, clearFilters: () -> Unit, select: (() -> Unit)? = null, compact: Boolean = false,
+    showFetchedChip: Boolean = false, toggleFetched: () -> Unit = {}) {
     val focus = LocalFocusManager.current
+    val searchShape = RoundedCornerShape(24.dp)
     ContentSection {
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(UiSpacing.related)) {
@@ -70,6 +71,14 @@ import com.aqaqeer.app.data.*
                 IconButton(onClick = { changeQuery(TextFieldValue("")); focus.clearFocus() },
                     modifier = Modifier.testTag("clear_search")) {
                     AppIcon(UiIcon.CLOSE, description = uiText(R.string.ui_home_screen_005))
+                }
+            }) else null
+            val searchActions: (@Composable () -> Unit)? = if (clearSearch != null || showFetchedChip) ({
+                Row(verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(UiSpacing.hair),
+                    modifier = Modifier.padding(end = if (showFetchedChip) UiSpacing.hair else 0.dp)) {
+                    clearSearch?.invoke()
+                    if (showFetchedChip) CompactFilterChip(filters.fetchedOnly, uiText(R.string.review_whats_new), toggleFetched)
                 }
             }) else null
             if (compact) {
@@ -86,16 +95,20 @@ import com.aqaqeer.app.data.*
                             enabled = true, singleLine = true, visualTransformation = VisualTransformation.None,
                             interactionSource = interaction,
                             placeholder = { Text(uiText(R.string.ui_home_screen_004)) },
-                            leadingIcon = { AppIcon(UiIcon.SEARCH) }, trailingIcon = clearSearch,
-                            contentPadding = PaddingValues(horizontal = UiSpacing.section, vertical = UiSpacing.related))
+                            leadingIcon = { AppIcon(UiIcon.SEARCH) }, trailingIcon = searchActions,
+                            contentPadding = PaddingValues(horizontal = UiSpacing.section, vertical = UiSpacing.related),
+                            container = {
+                                OutlinedTextFieldDefaults.Container(enabled = true, isError = false,
+                                    interactionSource = interaction, colors = OutlinedTextFieldDefaults.colors(), shape = searchShape)
+                            })
                     })
             } else {
-                OutlinedTextField(value = query, onValueChange = changeQuery, singleLine = true,
+                OutlinedTextField(value = query, onValueChange = changeQuery, singleLine = true, shape = searchShape,
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
                     keyboardActions = KeyboardActions(onSearch = { focus.clearFocus() }),
                     placeholder = { Text(uiText(R.string.ui_home_screen_004)) },
                     modifier = Modifier.weight(1f).testTag("search"),
-                    leadingIcon = { AppIcon(UiIcon.SEARCH) }, trailingIcon = clearSearch)
+                    leadingIcon = { AppIcon(UiIcon.SEARCH) }, trailingIcon = searchActions)
             }
             select?.let { TextButton(onClick = it) { Text(uiText(R.string.review_select)) } }
             val filterCount = filters.statuses.size + filters.categoryIds.size + listOf(filters.expiringSoon, filters.unpublishedOnly, filters.fetchedOnly).count { it }
@@ -121,25 +134,7 @@ import com.aqaqeer.app.data.*
     }
 }
 
-@Composable internal fun HomeQuickFilters(filters: HomeFilters, admin: Boolean,
-    toggleAvailable: () -> Unit, toggleExtra: (String) -> Unit,
-    hasFetchedChanges: Boolean) {
-    val scroll = rememberScrollState()
-    val showFetched = hasFetchedChanges || filters.fetchedOnly
-    LaunchedEffect(showFetched) {
-        if (showFetched) scroll.animateScrollTo(0)
-    }
-    Row(Modifier.fillMaxWidth().horizontalScroll(scroll).heightIn(min = UiSpacing.touch),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(UiSpacing.hair)) {
-        if (showFetched) HomeQuickFilterChip(filters.fetchedOnly, uiText(R.string.review_whats_new)) { toggleExtra("fetched") }
-        val available = setOf(AvailabilityStatus.AVAILABLE, AvailabilityStatus.LOW)
-        HomeQuickFilterChip(filters.statuses == available, uiText(R.string.review_available_only), toggleAvailable)
-        if (admin) HomeQuickFilterChip(filters.unpublishedOnly, uiText(R.string.review_unpublished)) { toggleExtra("unpublished") }
-    }
-}
-
-@Composable private fun HomeQuickFilterChip(selected: Boolean, label: String, toggle: () -> Unit) {
+@Composable private fun CompactFilterChip(selected: Boolean, label: String, toggle: () -> Unit) {
     FilterChip(selected = selected, onClick = toggle,
         label = { Text(label, style = MaterialTheme.typography.labelMedium, maxLines = 1, softWrap = false) })
 }

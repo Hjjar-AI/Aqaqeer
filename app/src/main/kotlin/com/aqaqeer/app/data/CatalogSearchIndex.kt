@@ -11,7 +11,8 @@ data class HomeBrowseResult(val catalog: CatalogSnapshot? = null, val sectionId:
     val visible: List<Medication> = emptyList(), val groups: List<MedicationGroup> = emptyList(),
     val rows: Map<String, MedicationRowUi> = emptyMap(),
     val fetched: Set<String> = emptySet(), val unpublished: Set<String> = emptySet(),
-    val today: java.time.LocalDate? = null, val otherSections: Map<String, Set<String>> = emptyMap())
+    val today: java.time.LocalDate? = null, val otherSections: Map<String, Set<String>> = emptyMap(),
+    val readerStockOnly: Boolean = false)
 
 /** Immutable normalized content; query work never normalizes inside a sort comparator. */
 class CatalogSearchIndex(val catalog: CatalogSnapshot) {
@@ -85,16 +86,18 @@ class CatalogSearchIndex(val catalog: CatalogSnapshot) {
     }
     suspend fun project(section: String?, query: String, filters: HomeFilters, preferences: HomePreferences,
         unpublished: Set<String>, fetched: Set<String> = emptySet(),
-        today: java.time.LocalDate = MedicationPresentation.today(java.time.Instant.now(), catalog.pharmacy?.timezone ?: "Asia/Damascus")): HomeBrowseResult {
+        today: java.time.LocalDate = MedicationPresentation.today(java.time.Instant.now(), catalog.pharmacy?.timezone ?: "Asia/Damascus"),
+        readerStockOnly: Boolean = false): HomeBrowseResult {
         currentCoroutineContext().ensureActive()
-        val (ordered, scores) = ordered(section, query, filters, preferences.sort)
+        val effectiveFilters = if (readerStockOnly) filters.copy(statuses = setOf(AvailabilityStatus.AVAILABLE, AvailabilityStatus.LOW)) else filters
+        val (ordered, scores) = ordered(section, query, effectiveFilters, preferences.sort)
         fun extra(med: Medication) = (!filters.expiringSoon || MedicationPresentation.expiry(med, today) == ExpiryState.SOON) &&
             (!filters.unpublishedOnly || med.id in unpublished) && (!filters.fetchedOnly || med.id in fetched)
         val visible = ordered.map { it.medication }.filter(::extra)
-        val otherSections = if (query.isBlank() || filters.statuses.isEmpty()) emptyMap() else {
+        val otherSections = if (query.isBlank() || effectiveFilters.statuses.isEmpty()) emptyMap() else {
             val here = visible.map { it.id }.toSet()
             catalog.sections.filter { it.isActive && it.id != section }.mapNotNull { candidate ->
-                val extraIds = browse(candidate.id, query, filters, preferences.sort).filter(::extra).map { it.id }.toSet() - here
+                val extraIds = browse(candidate.id, query, effectiveFilters, preferences.sort).filter(::extra).map { it.id }.toSet() - here
                 if (extraIds.isEmpty()) null else candidate.id to extraIds
             }.toMap()
         }
@@ -106,6 +109,6 @@ class CatalogSearchIndex(val catalog: CatalogSnapshot) {
                 section?.let { catalog.status(med.id, it) } ?: AvailabilityStatus.UNKNOWN,
                 MedicationPresentation.availableElsewhere(catalog, med.id, section), med.id in unpublished, med.id in fetched)
         }
-        return HomeBrowseResult(catalog, section, query, filters, preferences, visible, groups, rows, fetched, unpublished, today, otherSections)
+        return HomeBrowseResult(catalog, section, query, filters, preferences, visible, groups, rows, fetched, unpublished, today, otherSections, readerStockOnly)
     }
 }

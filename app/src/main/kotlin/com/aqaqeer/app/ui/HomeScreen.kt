@@ -127,7 +127,8 @@ import java.time.ZoneId
     val notifyBulk by rememberUpdatedState(onBulkModeChanged)
     DisposableEffect(Unit) { onDispose { notifyModal(false); notifyBulk(false) } }
     if (filtersOpen) HomeFilterSheet(catalog, state.filters, toggleStatus, toggleCategory, clearFilters,
-        ready.admin && !ready.isDemo, toggleExtraFilter) { filtersOpen = false }
+        ready.admin && !ready.isDemo, toggleExtraFilter, showStatuses = ready.admin || ready.isDemo,
+        toggleAvailable = toggleAvailableFilter) { filtersOpen = false }
     LaunchedEffect(availabilitySavedId) {
         if (availabilitySavedId != null && editor?.id == availabilitySavedId) {
             editor = null; selectedIds = emptySet(); bulkMode = false; bulkSheetOpen = false
@@ -162,7 +163,8 @@ import java.time.ZoneId
     val today = MedicationPresentation.today(now, catalog.pharmacy.timezone)
     val projectionReady = projection.catalog == catalog && projection.sectionId == selected?.id &&
         projection.query == state.appliedQuery && projection.filters == state.filters && projection.preferences == state.homePreferences && projection.fetched == state.fetchedIds &&
-        projection.unpublished == ready.unpublishedMedicationIds && projection.today == today
+        projection.unpublished == ready.unpublishedMedicationIds && projection.today == today &&
+        projection.readerStockOnly == (!ready.admin && !ready.isDemo)
     val visible = if (projectionReady) projection.visible else emptyList()
     val groups = if (projectionReady) projection.groups else emptyList()
     val searching = MedicationPresentation.normalizedSearch(state.appliedQuery).isNotEmpty()
@@ -181,8 +183,9 @@ import java.time.ZoneId
                 if (contextValid && canOpenHomeModal() && !availabilityInProgress() && !filtersOpen && editor == null) {
                     focus.clearFocus(); bulkMode = true; changeBulkSelection(emptySet())
                 }
-            }) else null, compact = state.homePreferences.searchAtBottom)
-        HomeQuickFilters(state.filters, canEdit, toggleAvailableFilter, toggleExtraFilter, hasFetchedChanges = state.fetchedIds.isNotEmpty())
+            }) else null, compact = state.homePreferences.searchAtBottom,
+            showFetchedChip = (!ready.admin || ready.isDemo) && (state.fetchedIds.isNotEmpty() || state.filters.fetchedOnly),
+            toggleFetched = { toggleExtraFilter("fetched") })
         if (projectionReady && projection.otherSections.isNotEmpty()) {
             SupportingText(uiText(R.string.review_elsewhere, projection.otherSections.values.flatten().toSet().size.toString()))
             WrappingContent {
@@ -400,18 +403,23 @@ import java.time.ZoneId
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable private fun HomeFilterSheet(catalog: CatalogSnapshot, filters: HomeFilters,
     toggleStatus: (AvailabilityStatus) -> Unit, toggleCategory: (String) -> Unit, clear: () -> Unit,
-    admin: Boolean, toggleExtraFilter: (String) -> Unit, dismiss: () -> Unit) {
+    admin: Boolean, toggleExtraFilter: (String) -> Unit, showStatuses: Boolean = true, toggleAvailable: () -> Unit = {}, dismiss: () -> Unit) {
     ModalBottomSheet(onDismissRequest = dismiss, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
         Column(Modifier.fillMaxWidth().heightIn(max = viewportHeight()).padding(UiSpacing.page),
             verticalArrangement = Arrangement.spacedBy(UiSpacing.related)) {
             SectionHeading(uiText(R.string.ui_home_screen_023))
             Column(Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(UiSpacing.related)) {
-                SectionHeading(uiText(R.string.ui_home_screen_024))
-                WrappingContent(Modifier.testTag("status_filters")) {
-                    MedicationPresentation.editableStatuses.forEach { status -> FilterChip(selected = status in filters.statuses,
-                        onClick = { toggleStatus(status) }, label = { Text(statusLabel(status)) },
-                        modifier = Modifier.testTag("filter_${status.name}")) }
+                if (showStatuses) {
+                    SectionHeading(uiText(R.string.ui_home_screen_024))
+                    WrappingContent(Modifier.testTag("status_filters")) {
+                        if (admin) FilterChip(
+                            selected = filters.statuses == setOf(AvailabilityStatus.AVAILABLE, AvailabilityStatus.LOW),
+                            onClick = toggleAvailable, label = { Text(uiText(R.string.review_available_only)) })
+                        MedicationPresentation.editableStatuses.forEach { status -> FilterChip(selected = status in filters.statuses,
+                            onClick = { toggleStatus(status) }, label = { Text(statusLabel(status)) },
+                            modifier = Modifier.testTag("filter_${status.name}")) }
+                    }
                 }
                 SectionHeading(uiText(R.string.ui_pharmacy_admin_screen_073))
                 WrappingContent(Modifier.testTag("category_filters")) {
