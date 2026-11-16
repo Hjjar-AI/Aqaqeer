@@ -335,7 +335,7 @@ Branding: preserve the original transparent gold master for splash, About and in
 
 V1 explicitly includes a launch splash screen and an About screen. Use a simple branded splash using the logo, whose lettering includes عقاقير, with a background and system-bar icon contrast matching the saved local theme/accent (pure black in AMOLED), preserving the selected artwork. The platform starting frame may precede local-preference availability; use system-mode resource fallbacks without blocking startup to read DataStore.
 
-Continue into the existing Home/onboarding/recovery routing as soon as essential local startup is ready. Do not add a forced minimum display duration or wait for Telegram refresh. The latest user request authorizes a larger emblem and a brief 60 ms enlargement/fade splash exit transition with both animations starting immediately; preserve the artwork, respect disabled system animations and keep it within launch routing rather than adding an introduction screen.
+Continue into the existing Home/onboarding/recovery routing as soon as essential local startup is ready. Do not add a forced minimum display duration or wait for Telegram refresh. Use a larger emblem and a brief splash exit transition: enlargement starts immediately and lasts 240 ms; the 100 ms fade starts at 160 ms, completing the overlay at 260 ms so the motion remains perceptible; preserve the artwork, respect disabled system animations and keep it within launch routing rather than adding an introduction screen.
 
 Required startup failures lead to their recovery screen. About uses the existing Arabic interface and the app-information/developer-credit/contact requirements in section 10.
 

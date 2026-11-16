@@ -58,7 +58,9 @@ internal fun animateSplashExit(provider: SplashScreenViewProvider, decor: ViewGr
     provider.remove()
     return AnimatorSet().apply {
         val fade = ObjectAnimator.ofFloat(layer, View.ALPHA, 1f, 0f).apply {
-            duration = 60
+            duration = 100
+            // Keep the enlargement visible before fading the overlay near the end.
+            startDelay = 160
             interpolator = PathInterpolator(0.22f, 0f, 0.2f, 1f)
         }
         val growth = AnimatorSet().apply {
@@ -66,7 +68,7 @@ internal fun animateSplashExit(provider: SplashScreenViewProvider, decor: ViewGr
                 ObjectAnimator.ofFloat(emblem, View.SCALE_X, initialScale, 1f),
                 ObjectAnimator.ofFloat(emblem, View.SCALE_Y, initialScale, 1f),
             )
-            duration = 60
+            duration = 240
             interpolator = PathInterpolator(0.22f, 0f, 0.2f, 1f)
         }
         playTogether(growth, fade)
