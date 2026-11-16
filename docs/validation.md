@@ -2,6 +2,20 @@
 
 [Requirements](requirements.md) define acceptance; [plan](plan.md) owns remaining work. The evidence manifest (local-only: `../local/verification/manifest.json`) retains original results, public hashes and provenance. Ignored evidence may be absent in fresh checkouts. Source checks, compilation, runtime results and human acceptance remain distinct.
 
+## Current verification checkpoint — 2026-11-16
+
+Evidence applies to the recorded source revision and environment. A later source change or a selected check does not inherit an earlier pass automatically.
+
+| Area | Latest inspected evidence | Still pending |
+| --- | --- | --- |
+| JVM regressions and source warnings | [Workflow 03](https://github.com/Hjjar-AI/Aqaqeer/actions/runs/43906281538), `f1293ba`: both flavors passed 545 cases each; JDK vectors passed; zero Kotlin source warnings. | The subsequent test-only CDS option has source checks only. |
+| Debug distribution and initial hosted numbering | [Workflow 10](https://github.com/Hjjar-AI/Aqaqeer/actions/runs/43902658141), `68cb2fb`: code 1, both debug flavors built, signed and published. | Later increments/local coordination, revised signing setup, production signing/update continuity. |
+| Signing-cache optimization | Source/policy checks restrict Gradle opt-out to signing-only jobs; build caching remains enabled. | Execution of the revised signing jobs. Earlier cache-hit evidence predates the change. |
+| Room export and fresh storage | Production models define attribution-free version 1; historical export is explicitly labeled. | Retain/review a regenerated export; fresh initialization and non-destructive incompatible-database acceptance. |
+| Android presentation and lifecycle | Dated historical Android results below; current source/selector checks are recorded separately. | Latest UI, large-text/layout/role/refresh/session/day-boundary acceptance. |
+
+Remaining scope and activity stops are in [plan](plan.md); [verification scope](test-coverage.md) separates source selections, automated results and human acceptance. Historical receipts and original failures are preserved below.
+
 <a id="initial-attribution-free-baseline--2026-11-16"></a>
 
 ## Initial attribution-free baseline — 2026-11-16
@@ -35,7 +49,7 @@ The fingerprint now serializes an ordered JsonObject instead of asking for a pol
 
 ### Warning and cache follow-up — 2026-11-16
 
-Reviewed successful [workflow 10 run 43902658141](https://github.com/Hjjar-AI/Aqaqeer/actions/runs/43902658141) at `68cb2fb`: both builds/signers and publication passed. Both builds report the same three warnings: redundant captured-null condition, redundant drawer safe call and deprecated LocalClipboardManager. Four build/signing jobs restore the same 772,616,204-byte basic cache; each skips saving an existing exact key. Both builds report 39 tasks executed / 3 from cache and store a new project configuration entry, with no Gradle-wrapper download observed. Cache archive transfers are distinct from downloading dependencies anew.
+Reviewed successful [workflow 10 run 43902658141](https://github.com/Hjjar-AI/Aqaqeer/actions/runs/43902658141) at `68cb2fb`: initial hosted code 1, both builds/signers and publication passed. Both builds report the same three warnings: redundant captured-null condition, redundant drawer safe call and deprecated LocalClipboardManager. Four build/signing jobs restore the same 772,616,204-byte basic cache; each skips saving an existing exact key. Both builds report 39 tasks executed / 3 from cache and store a new project configuration entry, with no Gradle-wrapper download observed. Cache archive transfers are distinct from downloading dependencies anew.
 
 Source corrections remove the redundant conditions and use LocalClipboard/ClipEntry with coroutine-backed copy and success feedback after completion. Shared Android setup defaults Gradle on; only signing-only jobs in workflows 06/10/11 opt out, retaining JDK/SDK and signature/package/version checks. Existing caches, build-job caching, isolated signing, pins and permissions are preserved. Policy checks enforce the opt-out scope and action guard/default. Production delimiter/constructor/resource references, workflow policy across 15 workflows, changed-document links and whitespace passed. [Workflow 03 run 43905431010](https://github.com/Hjjar-AI/Aqaqeer/actions/runs/43905431010), source `652001e`, passed both JVM flavor jobs and public JDK vectors. Both logs confirm the three app warnings are gone; they expose only three test-source warnings (unused Unit in RefreshPolicyTest/EnvelopeReaderTest and a redundant non-null assertion in RemoteObservationHistoryTest). Those source expressions were corrected without changing assertions. Final [workflow 03 run 43906281538](https://github.com/Hjjar-AI/Aqaqeer/actions/runs/43906281538) at `f1293ba` passed 545 cases in each flavor (zero failures/errors/skips) and JDK vectors. Both full compiler logs have zero Kotlin source warnings. The separate OpenJDK class-sharing notice remains: test instrumentation extends the bootstrap classpath, limiting class-sharing optimization; no test correctness failure is indicated. Final XML, job logs and reconciled warning/result receipts are retained under local-only `../local/verification/runs/current/warnings-20261116/run-43906281538/` and inventoried in the local manifest. Original logs are retained under local-only `../local/verification/runs/current/warnings-20261116/run-43905431010/` and inventoried in the local manifest. No signing/packaging run, local build/test/lint or device action was executed for this correction.
 
@@ -44,7 +58,7 @@ The user subsequently approved disabling CDS in JVM test workers. `app/build.gra
 
 ### README refresh — 2026-11-16
 
-Reworked the root README with the English-first title `Aqaqeer · عقاقير`, existing artwork, feature overview, joining/creation/restore/demo entry routes, APK verification, build/package distinctions, key workflows and a documentation index. Preserved trusted-user/publication limits, device-local History, initial-format compatibility, licensing and contact. Checked the described settings and commands against current production/configuration sources; local links/assets/anchors and whitespace passed. Documentation-only change; no builds, tests, lint, workflow dispatch or remote service checks.
+Reworked the root README with the English-first title `Aqaqeer · عقاقير`, existing artwork, feature overview, joining/creation/restore/demo entry routes, APK verification, build/package distinctions, key workflows and a documentation index. Preserved trusted-user/publication limits, device-local History, initial-format compatibility, licensing and contact. Checked the described settings and commands against current production/configuration sources; local links/assets/anchors and whitespace passed. Documentation-only change; no builds, tests, lint, workflow dispatch or remote service checks. Subsequent guide reconciliation corrected Arabic UI/demo/splash instructions, the pinned SQLCipher version, workflow scopes, stale schema-export wording and completed distribution status. Requirements/architecture additions were relocated by topic with their rules and incoming anchors preserved. A current evidence matrix and revision/environment-based verification scope distinguish current source from historical passes; documentation integrity checks covered the revised local links and anchors.
 
 <a id="review-fixes-home-placement"></a>
 

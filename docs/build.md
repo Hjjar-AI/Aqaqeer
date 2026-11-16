@@ -2,7 +2,7 @@
 
 # Aqaqeer build, signing and release guide
 
-The 2026-11-16 initial-baseline reset sets the local last-reserved code to 0 so the next packaging reservation is code 1 (`0.0.1`). Hosted reservations use the fresh `android-initial-build-N` namespace. Old `android-build-N` tags are preserved and excluded from this new sequence. This is a one-time authorized baseline reset, not recovery from a failed build; subsequent reservations remain monotonic and consumed codes stay consumed. No build or remote reservation was executed for the reset.
+The one-time 2026-11-16 initial-baseline reset set the local last-reserved code to 0, making the next normal reservation code 1 (`0.0.1`). Read the current counter/registry before later distribution; do not repeat the reset. Hosted reservations use the fresh `android-initial-build-N` namespace. Old `android-build-N` tags are preserved and excluded from this new sequence. This is a one-time authorized baseline reset, not recovery from a failed build; subsequent reservations remain monotonic and consumed codes stay consumed. No build or remote reservation was executed for the reset.
 
 
 ## Compact summary
@@ -44,7 +44,7 @@ Project-independent workstation references are indexed in `/mnt/Common/General P
 | Built-in Kotlin / Compose compiler | 2.4.21 |
 | KSP / Hilt | 2.3.13 / 2.60.1 |
 | Compose BOM / Room | 2026.09.00 / 2.8.5 |
-| SQLCipher Community | 4.19.1 |
+| SQLCipher Community | 4.20.0 |
 | Compile / target / minimum SDK | 37 / 37 / 26 |
 | Build JDK / Java bytecode target | 21 / 17 |
 
@@ -445,7 +445,15 @@ For repeated use, keep a short release record with source, code, package, public
 
 ### Tests and compilation without a device
 
-Four independent `fail-fast: false` entries select `testStandardDebugUnitTest`, `testDemoDebugUnitTest`, both debug/instrumentation `compile…Sources` sets, and `compileStandardReleaseSources`; all use explicit `:app:` tasks. A fifth job runs the existing [JDK vector verifier](../tools/VerifyCryptoVectors.java) through a standard-library exporter. No connected tasks, packaging/version reservation or credentials occur in this workflow. JVM XML totals distinguish failures/errors/skips, reject missing/malformed/empty/all-skipped results, and report executed counts. Partial skips remain visible without an arbitrary failure percentage; compile success is not runtime acceptance. Exact task lists live in the linked workflow.
+[Workflow 03](../.github/workflows/verification.yml) has two explicit scopes, with `coverage=false` by default:
+
+| Input | Selected checks |
+| --- | --- |
+| `scope=jvm` | Standard and demo JVM unit tests, plus the public JDK crypto-vector verifier. |
+| `scope=all` (default) | The JVM/vector checks above, debug and instrumentation-source compilation for both flavors, and standard-release compilation. |
+| `coverage=true` | Add per-flavor JVM coverage reports; no coverage percentage gate or device execution. |
+
+The matrix uses `fail-fast: false` and exact `:app:` tasks. The JDK job uses the existing [vector verifier](../tools/VerifyCryptoVectors.java) and standard-library exporter. No connected tasks, packaging/version reservation or signing credentials occur here. JVM XML totals distinguish failures/errors/skips and reject missing, malformed, empty or all-skipped results. Partial skips remain visible without an arbitrary failure percentage. Compilation is separate from runtime acceptance; exact task lists live in the workflow and executed outcomes in [validation](validation.md#current-verification-checkpoint--2026-11-16).
 
 ### Hosted emulator screenshots and recordings
 
@@ -510,7 +518,9 @@ The [helper](../.github/production-lint.init.gradle) disables both test-source a
 
 ## Fresh initial Room export
 
-Current production declares database version 1 without historical upgrade registrations. [Schema status](../app/schemas/README.md) links its generated/reviewed export. Future exports require separately authorized KSP compilation and review of entities, publication-time column, price/currency exclusion and identity hash. Do not handwrite generated hashes, restore old exports or treat this instruction as build/test/schema-change authorization.
+Production models define attribution-free Room version 1 for fresh installations. The [checked-in export](../app/schemas/README.md) is historical: it predates attribution removal and is not a reviewed export of current models. Compilation on a hosted runner does not replace or validate this tracked file automatically.
+
+On a separately authorized KSP compilation, retain the generated export and review its entities, attribution-free columns, exact publication-time column, price/currency exclusion and generated identity hash. Keep earlier delivery evidence dated; do not handwrite hashes, introduce conversions or wipe an incompatible database. The [plan](plan.md#initial-attribution-free-baseline--2026-11-16) tracks the remaining export review. This documentation does not authorize execution.
 
 ## Repository and release maintenance
 
