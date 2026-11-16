@@ -316,8 +316,6 @@ internal fun statusLabel(status: AvailabilityStatus): String = uiText(when (stat
                                 { navigate("create") }, { navigate("backup") }, adminBusy, adminMessage,
                                 saveAvailability = { selection, status, complete ->
                                     viewModel.saveAvailability(selection, BulkMedicationChanges(status = status), complete)
-                                }, pendingBanner = {
-                                    PendingChangesBanner(catalogState, sharing, adminBusy, viewModel::review, { viewModel.publish(reviewOnFailure = true) })
                                 }, pageHeader = pageHeader, openAddMedication = { viewModel.newMedicationName = ""; navigate("edit-med:new") },
                                 availabilitySavedId = availabilitySavedId, publicationBusy = sharing.busy,
                                 publicationBlockReason = publicationBlockedReason(catalogState, sharing, adminBusy || sharing.busy),

@@ -728,7 +728,7 @@ The expected conventional names are `app-standard-debug.apk` and `app-demo-debug
 
 ### Versioning and installation limits
 
-The local wrapper preserves its locked counter in ignored `local/versioning/`. Distribution workflows 06/10/11 first reserve a shared `android-build-N` code; the wrapper honors that reservation without resetting local state. Debug distribution uses a separate permanent `debug-signing` identity, while production uses `release-signing`. Run numbers label artifacts and release tags independently of the embedded app version.
+The local wrapper preserves its locked counter in ignored `local/versioning/`. Distribution workflows 06/10/11 first reserve a shared `android-initial-build-N` code; the wrapper honors that reservation without resetting local state. Debug distribution uses a separate permanent `debug-signing` identity, while production uses `release-signing`. Run numbers label artifacts and release tags independently of the embedded app version.
 
 Standard debug, demo debug, production and isolated previews have different package identities. Update continuity requires the same package and signer; never uninstall/clear an existing pharmacy to bypass a conflict. A cache can be evicted or written concurrently and is not a release-number authority. The [build/signing guide](build.md#signed-release-apks-local-and-github) owns exact reservation, key and publication commands.
 
@@ -802,7 +802,7 @@ Yes, if the workflow permits it: after the dispatch definition exists on the def
 
 ### Why is my artifact number different from the app version?
 
-GitHub run metadata and application version metadata are separate systems. Aqaqeer distribution workflows reserve `android-build-N` independently of the workflow run number. Naming an artifact with `github.run_number` does not set the embedded Android `versionCode`.
+GitHub run metadata and application version metadata are separate systems. Aqaqeer distribution workflows reserve `android-initial-build-N` independently of the workflow run number. Naming an artifact with `github.run_number` does not set the embedded Android `versionCode`.
 
 ### Should every project run every check in one job?
 

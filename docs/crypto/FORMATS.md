@@ -63,3 +63,5 @@ The outer v1 envelope, KDF/AAD and limits remain unchanged. Cell Base64 and enve
 
 
 The initial medication row excludes priceMinor/currency. The snapshot-state row includes nullable authenticated publishedAt as exact ISO Instant text immediately after slot; restore checks it against the confirmed payload (null for an unpublished draft). All ordered column changes are defined together in backupTables. Room schema numbering is independent of envelope/payload identifiers; Room is a fresh version-1 baseline and existing development databases/files are not upgrade targets. Cryptographic algorithms, AAD, limits and key handling are unchanged.
+
+Initial attribution-free schema: medication/availability rows contain timestamps without `updatedBy`; history omits editor ID/name; pending operations omit author ID/name; snapshot and connection payloads omit publisher/creator. Backup table allowlists and nested strict readers use these initial v1 shapes. Installation-local fetched-change/session/checklist state is excluded. No old-file rewriting or migration is performed.

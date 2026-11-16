@@ -83,7 +83,7 @@ import java.time.ZoneId
     openSettings: () -> Unit, openConnection: (() -> Unit)? = null, refresh: (() -> Unit)? = null, openCreate: (() -> Unit)? = null, openRestore: (() -> Unit)? = null,
     availabilityBusy: Boolean = false, availabilityMessage: String? = null,
     saveAvailability: ((AvailabilitySelection, AvailabilityStatus, () -> Unit) -> Unit)? = null,
-    pendingBanner: @Composable () -> Unit = {}, pageHeader: (@Composable () -> Unit)? = null,
+ pageHeader: (@Composable () -> Unit)? = null,
     openAddMedication: (() -> Unit)? = null,
     availabilitySavedId: String? = null, publicationBusy: Boolean = false, publicationBlockReason: String? = null,
     onModalVisibilityChanged: (Boolean) -> Unit = {}, availabilityInProgress: () -> Boolean = { availabilityBusy },
@@ -253,7 +253,7 @@ import java.time.ZoneId
                 }
             }
             if (gridState.canScrollBackward) HorizontalDivider()
-            HomeNoticeStrip(ready, state, now, pendingBanner, pageHeader, refresh, publicationBusy, publicationBlockReason,
+            HomeNoticeStrip(ready, state, now, pageHeader, refresh, publicationBusy, publicationBlockReason,
                 maxHeight = noticeMaxHeight)
             Box(Modifier.weight(1f)) {
                 RefreshContainer(refresh, state.refresh.busy) {
@@ -305,7 +305,8 @@ import java.time.ZoneId
                                 bulkSelected = if (bulkMode && contextValid && canEdit) medication.id in selectedIds else null,
                                 toggleSelection = { if (!availabilityBusy) changeBulkSelection(if (medication.id in selectedIds)
                                     selectedIds - medication.id else selectedIds + medication.id) },
-                                onClick = { openMedication(medication.id) }, selectionEnabled = !availabilityBusy,
+                                onClick = { openMedication(medication.id) }, selectionEnabled = !availabilityBusy && (editor == null || editor?.bulk == true ||
+                                    editor?.expected?.all { (id, before) -> catalog.medications.any { it.id == id } && catalog.status(id, editor!!.section.id) == before } == true),
                                 modifier = Modifier.animateItem(), query = state.appliedQuery, highlighted = medication.id == highlightedMedication,
                                 unpublished = ready.admin && medication.id in ready.unpublishedMedicationIds,
                                 onLongClick = if (canEdit && saveBulk != null && selected != null && !bulkMode && !availabilityBusy) ({
@@ -459,7 +460,7 @@ import java.time.ZoneId
 
 /** One pinned entry point; expanding retains the existing notice actions and publication guards. */
 @Composable private fun HomeNoticeStrip(ready: CatalogState.Ready, state: AppUiState, now: Instant,
-    pendingBanner: @Composable () -> Unit, pageHeader: (@Composable () -> Unit)?, refresh: (() -> Unit)?, publicationBusy: Boolean, publicationBlockReason: String?,
+    pageHeader: (@Composable () -> Unit)?, refresh: (() -> Unit)?, publicationBusy: Boolean, publicationBlockReason: String?,
     maxHeight: androidx.compose.ui.unit.Dp) {
     val clock = rememberPresentationTime(ready.catalog.pharmacy?.timezone ?: "Asia/Damascus")
     val notices = buildList {

@@ -381,9 +381,7 @@ internal fun reviewValue(field: String, raw: String, catalog: CatalogSnapshot, l
         GregorianDateField(uiText(R.string.ui_pharmacy_admin_screen_071), expiry, { expiry = it }, submitted = submitted)
 
     }
-    TextButton(onClick = { optionalOpen = !optionalOpen }) { Text(if (optionalOpen) uiText(R.string.ui_pharmacy_admin_screen_115) else uiText(R.string.ui_pharmacy_admin_screen_116)) }
-    Column(Modifier.animateContentSize(tween(180))) {
-    if (optionalOpen) {
+    CollapsibleGroup(uiText(R.string.ui_pharmacy_admin_screen_116), optionalOpen, { optionalOpen = !optionalOpen }) {
     GroupedCard {
         FormField(uiText(R.string.ui_pharmacy_admin_screen_072), threshold, { threshold = MedicationPresentation.westernDigits(it) }, submitted = submitted,
             required = true, validate = FormGuidance::threshold, ltr = true, imeAction = ImeAction.Done, onDone = { if (!busy) save() })
@@ -394,7 +392,6 @@ internal fun reviewValue(field: String, raw: String, catalog: CatalogSnapshot, l
     }
     GroupedCard(title = uiText(R.string.ui_pharmacy_admin_screen_118)) {
         FormField(uiText(R.string.ui_pharmacy_admin_screen_069), brand, { brand = it }, submitted = submitted, required = false); FormField(uiText(R.string.ui_pharmacy_admin_screen_070), note, { note = it }, submitted = submitted, required = false, singleLine = false)
-    }
     }
     }
     if (c.medications.any { other -> other.id != id &&

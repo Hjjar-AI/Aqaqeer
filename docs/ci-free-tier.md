@@ -60,7 +60,7 @@ For broader prevention, review GitHub's repository **Settings → security** opt
 
 ## Repository/release maintenance controls
 
-Distribution workflows 06/10/11 are default-branch-only and share durable android-build-N reservations. Debug keys live in a separate debug-signing environment, exposed only to an isolated signing step; production uses release-signing. All debug publication modes set latest=false. Production bundles retain three inspected signed APKs and compressed mappings in Releases. Source changes do not establish signing/update acceptance.
+Distribution workflows 06/10/11 are default-branch-only and share durable android-initial-build-N reservations. Debug keys live in a separate debug-signing environment, exposed only to an isolated signing step; production uses release-signing. All debug publication modes set latest=false. Production bundles retain three inspected signed APKs and compressed mappings in Releases. Source changes do not establish signing/update acceptance.
 
 Manual workflows 12–15 cover build-tooling checks, redacted full-history scanning, preview-first debug-release cleanup and actionlint update proposals. They add no schedules. Workflow 08's separate API 35 startup job uses a verified owned GitHub emulator, temporary key and no real credentials. Workflow 03's optional coverage is limited to JVM tests and has no percentage gate. Existing workflow independence and resource limits are preserved.
 
