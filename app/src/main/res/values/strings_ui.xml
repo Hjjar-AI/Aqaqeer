@@ -186,7 +186,7 @@
     <string name="ui_pharmacy_admin_screen_107" formatted="false">"حفظ ملف الاتصال"</string>
     <string name="ui_pharmacy_admin_screen_108" formatted="false">"أدخل اسماً علمياً بالعربية أو الإنجليزية على الأقل"</string>
     <string name="ui_pharmacy_admin_screen_109" formatted="false">"حفظ محلياً"</string>
-    <string name="ui_pharmacy_admin_screen_110" formatted="false">"سيُضاف الدواء بحالة متوفر في الأقسام الحالية؛ يمكنك تعديل التوافر بعد الحفظ."</string>
+    <string name="ui_pharmacy_admin_screen_110" formatted="false">"يمكنك تحديد توافر الدواء في كل قسم قبل الحفظ؛ الحالة الافتراضية هي متوفر."</string>
     <string name="ui_pharmacy_admin_screen_111" formatted="false">"الاسم العلمي وبيانات الدواء"</string>
     <string name="ui_pharmacy_admin_screen_112" formatted="false">"أحد الاسمين العلميين مطلوب"</string>
     <string name="ui_pharmacy_admin_screen_113" formatted="false">"العيار — مطلوب"</string>
@@ -777,4 +777,7 @@
     <string name="logic_missing_medication">الدواء المحدد لم يعد موجوداً؛ راجع التحديد</string>
     <string name="edit_availability_immediate_hint">تُحفظ تغييرات التوافر فوراً لكل قسم. زر «حفظ محلياً» يحفظ بيانات الدواء أدناه.</string>
     <string name="edit_availability_no_sections">لا توجد أقسام لعرض التوافر.</string>
+    <string name="new_availability_title">التوافر عند الإضافة</string>
+    <string name="new_availability_hint">اختر التوافر لكل قسم؛ يُحفظ مع الدواء عند الضغط على «حفظ محلياً». الافتراضي: متوافر.</string>
+    <string name="new_availability_reset">إعادة التوافر الافتراضي</string>
 </resources>

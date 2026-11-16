@@ -63,6 +63,35 @@ internal val AvailabilitySelectionSaver = Saver<AvailabilitySelection?, String>(
 )
 
 
+/** Initial choices are drafts until the new medication and all its availability rows commit together. */
+internal val InitialAvailabilitySaver = Saver<Map<String, AvailabilityStatus>, ArrayList<String>>(
+    save = { choices -> ArrayList(choices.flatMap { (id, status) -> listOf(id, status.name) }) },
+    restore = { saved -> runCatching {
+        require(saved.size % 2 == 0)
+        saved.chunked(2).associate { (id, status) -> id to AvailabilityStatus.valueOf(status) }
+    }.getOrNull() },
+)
+
+@Composable internal fun NewMedicationAvailabilityControls(catalog: CatalogSnapshot,
+    choices: Map<String, AvailabilityStatus>, busy: Boolean, reset: () -> Unit,
+    change: (String, AvailabilityStatus) -> Unit) {
+    GroupedCard(title = uiText(R.string.new_availability_title)) {
+        SupportingText(uiText(R.string.new_availability_hint))
+        if (catalog.sections.isEmpty()) SupportingText(uiText(R.string.edit_availability_no_sections))
+        catalog.sections.forEach { section ->
+            key(section.id) {
+                val current = choices[section.id] ?: AvailabilityStatus.AVAILABLE
+                SectionAvailabilityChoices(section, current, busy) { status ->
+                    if (!busy) change(section.id, status)
+                }
+            }
+        }
+        if (choices.isNotEmpty()) TextButton(enabled = !busy, onClick = reset) {
+            Text(uiText(R.string.new_availability_reset))
+        }
+    }
+}
+
 /** Existing medications expose immediate per-section changes without a details/sheet navigation step. */
 @Composable internal fun MedicationAvailabilityControls(catalog: CatalogSnapshot, medication: Medication,
     busy: Boolean, isSaving: () -> Boolean, save: (AvailabilitySelection, AvailabilityStatus) -> Unit) {
@@ -73,23 +102,28 @@ internal val AvailabilitySelectionSaver = Saver<AvailabilitySelection?, String>(
         catalog.sections.forEach { section ->
             key(section.id) {
                 val current = catalog.status(medication.id, section.id)
-                Text(section.nameAr + if (section.isActive) "" else uiText(R.string.ui_aqaqeer_app_030),
-                    style = MaterialTheme.typography.titleSmall)
-                if (section.isActive) WrappingContent {
-                    if (current == AvailabilityStatus.UNKNOWN) StatusBadge(current)
-                    MedicationPresentation.editableStatuses.forEach { status ->
-                        FilterChip(selected = current == status, enabled = !busy,
-                            onClick = {
-                                if (!isSaving() && status != current) save(
-                                    AvailabilitySelection(pharmacyId, section, listOf(medication),
-                                        mapOf(medication.id to current), bulk = false), status)
-                            }, label = { Text(statusLabel(status)) },
-                            modifier = Modifier.heightIn(min = UiSpacing.touch).semantics {
-                                contentDescription = section.nameAr + " · " + statusLabel(status)
-                            })
-                    }
-                } else StatusBadge(current)
+                SectionAvailabilityChoices(section, current, busy) { status ->
+                    if (!isSaving() && status != current) save(
+                        AvailabilitySelection(pharmacyId, section, listOf(medication),
+                            mapOf(medication.id to current), bulk = false), status)
+                }
             }
         }
     }
+}
+
+@Composable private fun SectionAvailabilityChoices(section: Section, current: AvailabilityStatus,
+    busy: Boolean, choose: (AvailabilityStatus) -> Unit) {
+    Text(section.nameAr + if (section.isActive) "" else uiText(R.string.ui_aqaqeer_app_030),
+        style = MaterialTheme.typography.titleSmall)
+    if (section.isActive) WrappingContent {
+        if (current == AvailabilityStatus.UNKNOWN) StatusBadge(current)
+        MedicationPresentation.editableStatuses.forEach { status ->
+            FilterChip(selected = current == status, enabled = !busy,
+                onClick = { choose(status) }, label = { Text(statusLabel(status)) },
+                modifier = Modifier.heightIn(min = UiSpacing.touch).semantics {
+                    contentDescription = section.nameAr + " · " + statusLabel(status)
+                })
+        }
+    } else StatusBadge(current)
 }

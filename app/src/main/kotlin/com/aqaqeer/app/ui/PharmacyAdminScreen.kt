@@ -365,6 +365,9 @@ internal fun reviewValue(field: String, raw: String, catalog: CatalogSnapshot, l
     var threshold by rememberSaveable(c.pharmacy?.pharmacyId, old?.id) { mutableStateOf((old?.expirySoonThresholdDays ?: 60).toString()) }
     var category by rememberSaveable(c.pharmacy?.pharmacyId, old?.id) { mutableStateOf(old?.categoryId ?: CatalogSeeds.UNCATEGORIZED_ID) }
     var form by rememberSaveable(c.pharmacy?.pharmacyId, old?.id) { mutableStateOf(old?.formId ?: CatalogSeeds.defaultMedicationFormId(c.forms)) }
+    var initialAvailability by rememberSaveable(id, stateSaver = InitialAvailabilitySaver) {
+        mutableStateOf(emptyMap<String, AvailabilityStatus>())
+    }
     var confirmDelete by rememberSaveable(c.pharmacy?.pharmacyId, old?.id) { mutableStateOf(false) }
     var submitted by rememberSaveable(c.pharmacy?.pharmacyId, old?.id) { mutableStateOf(false) }
     val formFocus = remember { FormFocusController() }
@@ -387,11 +390,13 @@ internal fun reviewValue(field: String, raw: String, catalog: CatalogSnapshot, l
             return
         }
         fun optional(s: String) = s.trim().takeIf { it.isNotEmpty() }
+        val initialChoices = if (old == null) initialAvailability.toMap() else null
         vm.command {
             vm.admin.saveMedication(Medication(id = id, nameEn = optional(en), strength = strength.trim(), formId = form,
                 categoryId = category, createdAt = Instant.now(), updatedAt = Instant.now(),
                 nameAr = optional(ar), genericAr = optional(genericAr), genericEn = optional(genericEn), brand = optional(brand),
-                note = optional(note), expiryDate = optional(expiry)?.let(LocalDate::parse), expirySoonThresholdDays = threshold.toInt()), expectedPharmacy = c.pharmacy?.pharmacyId, requireExisting = old != null, confirmedDuplicates = if (duplicateConfirmed) duplicates else emptySet())
+                note = optional(note), expiryDate = optional(expiry)?.let(LocalDate::parse), expirySoonThresholdDays = threshold.toInt()), expectedPharmacy = c.pharmacy?.pharmacyId, requireExisting = old != null, confirmedDuplicates = if (duplicateConfirmed) duplicates else emptySet(),
+                initialAvailability = initialChoices)
             vm.newMedicationName = ""
             vm.medicationSaved(id, old == null)
         }
@@ -424,6 +429,11 @@ internal fun reviewValue(field: String, raw: String, catalog: CatalogSnapshot, l
         })
         GregorianDateField(uiText(R.string.ui_pharmacy_admin_screen_071), expiry, { expiry = it }, submitted = submitted)
 
+    }
+    if (old == null) NewMedicationAvailabilityControls(c, initialAvailability, busy,
+        reset = { initialAvailability = emptyMap() }) { section, status ->
+        initialAvailability = if (status == AvailabilityStatus.AVAILABLE) initialAvailability - section
+            else initialAvailability + (section to status)
     }
     CollapsibleGroup(uiText(R.string.ui_pharmacy_admin_screen_116), optionalOpen, { optionalOpen = !optionalOpen }) {
     GroupedCard {

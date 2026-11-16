@@ -93,7 +93,7 @@ import com.aqaqeer.app.data.*
             AppIcon(UiIcon.CLOSE, description = uiText(R.string.ui_home_screen_005))
         } else AppIcon(UiIcon.SEARCH)
     }
-    // The field's trailing slot belongs exclusively to Filters, including on narrow screens.
+    // Filters stay last; the optional What’s new chip sits immediately before them.
     val filterAction: @Composable () -> Unit = {
         IconButton(onClick = openFilters, modifier = Modifier.size(UiSpacing.filterButton).semantics {
             contentDescription = uiText(R.string.ui_home_screen_002) +
@@ -104,6 +104,13 @@ import com.aqaqeer.app.data.*
                     Text(MedicationPresentation.displayDigits(filterCount.toString()))
                 }
             }) { AppIcon(UiIcon.FILTER) }
+        }
+    }
+    val trailingActions: @Composable () -> Unit = {
+        Row(verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(UiSpacing.hair)) {
+            if (showFetchedChip) CompactFilterChip(filters.fetchedOnly, uiText(R.string.review_whats_new), toggleFetched)
+            filterAction()
         }
     }
     ContentSection {
@@ -121,7 +128,7 @@ import com.aqaqeer.app.data.*
                         OutlinedTextFieldDefaults.DecorationBox(value = query.text, innerTextField = innerTextField,
                             enabled = true, singleLine = true, visualTransformation = VisualTransformation.None,
                             interactionSource = interaction, placeholder = { Text(uiText(R.string.ui_home_screen_004)) },
-                            leadingIcon = leadingAction, trailingIcon = filterAction,
+                            leadingIcon = leadingAction, trailingIcon = trailingActions,
                             contentPadding = PaddingValues(horizontal = UiSpacing.section, vertical = UiSpacing.related),
                             container = {
                                 OutlinedTextFieldDefaults.Container(enabled = true, isError = false,
@@ -132,7 +139,7 @@ import com.aqaqeer.app.data.*
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search, autoCorrectEnabled = false, capitalization = KeyboardCapitalization.None),
                 keyboardActions = KeyboardActions(onSearch = { focus.clearFocus() }),
                 placeholder = { Text(uiText(R.string.ui_home_screen_004)) },
-                modifier = Modifier.weight(1f).testTag("search"), leadingIcon = leadingAction, trailingIcon = filterAction)
+                modifier = Modifier.weight(1f).testTag("search"), leadingIcon = leadingAction, trailingIcon = trailingActions)
             addMedication?.let { add ->
                 FilledIconButton(onClick = add, enabled = addEnabled,
                     modifier = Modifier.size(UiSpacing.touch), shape = MaterialTheme.shapes.medium) {
@@ -140,8 +147,7 @@ import com.aqaqeer.app.data.*
                 }
             }
         }
-        if (showSummary || showFetchedChip) WrappingContent {
-            if (showFetchedChip) CompactFilterChip(filters.fetchedOnly, uiText(R.string.review_whats_new), toggleFetched)
+        if (showSummary) WrappingContent {
             if (showSummary) Text(uiText(R.string.ui_home_screen_006,
                 MedicationPresentation.displayDigits(visibleCount.toString()), MedicationPresentation.displayDigits(totalCount.toString())),
                 style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)

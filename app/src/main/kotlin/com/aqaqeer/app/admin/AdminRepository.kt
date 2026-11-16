@@ -208,18 +208,29 @@ class AdminRepository @Inject constructor(private val factory: DatabaseFactory,
         }
         dao.applyChanges(before, next)
     }
-    suspend fun saveMedication(value: Medication, expectedPharmacy: String? = null, requireExisting: Boolean = false, confirmedDuplicates: Set<String> = emptySet()) = edit { c, _, now, _ ->
-        if (expectedPharmacy != null) adminCheck(c.pharmacy?.pharmacyId == expectedPharmacy)
-        val old = c.medications.firstOrNull { it.id == value.id }
-        val normalized = value.copy(strength = MedicationDuplicates.strength(value.strength))
-        val duplicates = MedicationDuplicates.find(normalized, MedicationDuplicates.index(c.medications)).toSet()
-        adminCheck(duplicates == confirmedDuplicates) { "يوجد دواء بالاسم والتركيز والشكل نفسه؛ راجع التكرار وأكد الحفظ" }
-        adminCheck(!requireExisting || old != null) { "لم يعد هذا الدواء موجوداً" }
-        c.copy(medications = c.medications.filterNot { it.id == value.id } + normalized.copy(
-            createdAt = old?.createdAt ?: now, updatedAt = now),
-            availability = if (old != null) c.availability else c.availability + c.sections.map {
-                Availability(value.id, it.id, AvailabilityStatus.AVAILABLE, now)
-            })
+    suspend fun saveMedication(value: Medication, expectedPharmacy: String? = null, requireExisting: Boolean = false,
+        confirmedDuplicates: Set<String> = emptySet(), initialAvailability: Map<String, AvailabilityStatus>? = null) {
+        val initialChoices = initialAvailability?.toMap()
+        edit { c, _, now, _ ->
+            if (expectedPharmacy != null) adminCheck(c.pharmacy?.pharmacyId == expectedPharmacy)
+            val old = c.medications.firstOrNull { it.id == value.id }
+            if (initialChoices != null) {
+                adminRequire(!requireExisting) { "التوافر الابتدائي متاح عند إضافة دواء جديد فقط" }
+                adminCheck(old == null) { "أُضيف الدواء بالفعل؛ افتح التعديل بدلاً من إضافته مجدداً" }
+                val activeSections = c.sections.filter { it.isActive }.map { it.id }.toSet()
+                adminRequire(initialChoices.keys.all { it in activeSections }) { "تغيرت الأقسام المختارة؛ راجع التوافر أو أعده إلى الافتراضي" }
+                adminRequire(initialChoices.values.all { it in MedicationPresentation.editableStatuses }) { "اختر حالة توافر صالحة" }
+            }
+            val normalized = value.copy(strength = MedicationDuplicates.strength(value.strength))
+            val duplicates = MedicationDuplicates.find(normalized, MedicationDuplicates.index(c.medications)).toSet()
+            adminCheck(duplicates == confirmedDuplicates) { "يوجد دواء بالاسم والتركيز والشكل نفسه؛ راجع التكرار وأكد الحفظ" }
+            adminCheck(!requireExisting || old != null) { "لم يعد هذا الدواء موجوداً" }
+            c.copy(medications = c.medications.filterNot { it.id == value.id } + normalized.copy(
+                createdAt = old?.createdAt ?: now, updatedAt = now),
+                availability = if (old != null) c.availability else c.availability + c.sections.map {
+                    Availability(value.id, it.id, initialChoices?.get(it.id) ?: AvailabilityStatus.AVAILABLE, now)
+                })
+        }
     }
     suspend fun availability(medication: String, section: String, status: AvailabilityStatus) =
         bulkAvailability(setOf(medication), section, status)
