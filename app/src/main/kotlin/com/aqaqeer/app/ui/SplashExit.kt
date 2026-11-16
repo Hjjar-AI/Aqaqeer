@@ -9,71 +9,85 @@ import android.graphics.Bitmap
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
+import android.view.ViewTreeObserver
 import android.view.animation.PathInterpolator
 import android.widget.FrameLayout
-import android.widget.ImageView
 import androidx.core.splashscreen.SplashScreenViewProvider
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlin.coroutines.resume
 
-/** A native-splash exit transition; never holds startup for a timer or a network request. */
+/** The exit callback can arrive before the decor has usable bounds. Wait for layout, not a timer. */
+internal suspend fun awaitSplashLayout(decor: ViewGroup) {
+    if (decor.width > 0 && decor.height > 0) return
+    suspendCancellableCoroutine<Unit> { continuation ->
+        val observer = decor.viewTreeObserver
+        val listener = object : ViewTreeObserver.OnPreDrawListener {
+            override fun onPreDraw(): Boolean {
+                if (decor.width > 0 && decor.height > 0) {
+                    if (observer.isAlive) observer.removeOnPreDrawListener(this)
+                    if (continuation.isActive) continuation.resume(Unit)
+                }
+                return true
+            }
+        }
+        observer.addOnPreDrawListener(listener)
+        continuation.invokeOnCancellation {
+            if (observer.isAlive) observer.removeOnPreDrawListener(listener)
+        }
+        decor.requestLayout()
+    }
+}
+
+/** Counter-rotating internal ring lines, followed by a fade into the ready application. */
 internal fun animateSplashExit(provider: SplashScreenViewProvider, decor: ViewGroup, background: Int, bitmap: Bitmap): Animator? {
-    if (!ValueAnimator.areAnimatorsEnabled()) {
+    if (!ValueAnimator.areAnimatorsEnabled() || decor.width == 0 || decor.height == 0) {
         provider.remove()
         return null
     }
-    val density = decor.resources.displayMetrics.density
     val width = decor.width
     val height = decor.height
-    if (width == 0 || height == 0) {
-        provider.remove()
-        return null
-    }
-    val layer = FrameLayout(decor.context).apply {
-        setBackgroundColor(background)
-        importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS
-        layout(0, 0, width, height)
-    }
-    // Outside the system icon mask, the complete bitmap can grow without clipping the lettering.
-    val edge = minOf(width * 0.86f, height * 0.62f, 420f * density).toInt()
+    val density = decor.resources.displayMetrics.density
     val icon = provider.iconView
     val iconLocation = IntArray(2).also(icon::getLocationOnScreen)
     val decorLocation = IntArray(2).also(decor::getLocationOnScreen)
-    // Match the native 17%-inset bitmap and its position exactly before enlarging it.
-    val initialScale = if (icon.width > 0) (icon.width * 0.66f / edge).coerceAtMost(1f) else 1f
-    val emblem = ImageView(decor.context).apply {
-        setImageBitmap(bitmap)
-        scaleType = ImageView.ScaleType.FIT_CENTER
-        scaleX = initialScale
-        scaleY = initialScale
-        translationX = iconLocation[0] - decorLocation[0] + icon.width / 2f - width / 2f
-        translationY = iconLocation[1] - decorLocation[1] + icon.height / 2f - height / 2f
+    // Keep the full logo stationary at the native splash size and center, without its icon mask.
+    val nativeEdge = if (icon.width > 0) icon.width * 0.66f else 190f * density
+    val edge = minOf(nativeEdge, width * 0.86f, height * 0.62f, 420f * density).toInt().coerceAtLeast(1)
+    val centerX = if (icon.width > 0) iconLocation[0] - decorLocation[0] + icon.width / 2 else width / 2
+    val centerY = if (icon.height > 0) iconLocation[1] - decorLocation[1] + icon.height / 2 else height / 2
+    val layer = FrameLayout(decor.context).apply {
+        setBackgroundColor(background)
+        importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS
+        isClickable = false
+        isFocusable = false
     }
-    layer.addView(emblem, FrameLayout.LayoutParams(edge, edge, Gravity.CENTER))
+    val emblem = SplashEmblemView(decor.context, bitmap)
+    layer.addView(emblem, FrameLayout.LayoutParams(edge, edge, Gravity.TOP or Gravity.LEFT).apply {
+        leftMargin = centerX - edge / 2
+        topMargin = centerY - edge / 2
+    })
+    // Use an ordinary attached child so drawing/invalidation participates in the normal view tree.
+    decor.addView(layer, ViewGroup.LayoutParams(width, height))
     layer.measure(
         View.MeasureSpec.makeMeasureSpec(width, View.MeasureSpec.EXACTLY),
         View.MeasureSpec.makeMeasureSpec(height, View.MeasureSpec.EXACTLY),
     )
     layer.layout(0, 0, width, height)
-    // An overlay cannot consume touches or become a second navigation destination.
-    decor.overlay.add(layer)
     provider.remove()
     return AnimatorSet().apply {
+        val rings = ValueAnimator.ofFloat(0f, 360f).apply {
+            duration = 640
+            interpolator = PathInterpolator(0.4f, 0f, 0.2f, 1f)
+            addUpdateListener { emblem.ringDegrees = it.animatedValue as Float }
+        }
         val fade = ObjectAnimator.ofFloat(layer, View.ALPHA, 1f, 0f).apply {
-            duration = 100
-            // Keep the enlargement visible before fading the overlay near the end.
-            startDelay = 160
+            duration = 160
+            startDelay = 560
             interpolator = PathInterpolator(0.22f, 0f, 0.2f, 1f)
         }
-        val growth = AnimatorSet().apply {
-            playTogether(
-                ObjectAnimator.ofFloat(emblem, View.SCALE_X, initialScale, 1f),
-                ObjectAnimator.ofFloat(emblem, View.SCALE_Y, initialScale, 1f),
-            )
-            duration = 240
-            interpolator = PathInterpolator(0.22f, 0f, 0.2f, 1f)
-        }
-        playTogether(growth, fade)
+        playTogether(rings, fade)
         addListener(object : AnimatorListenerAdapter() {
-            override fun onAnimationEnd(animation: Animator) { decor.overlay.remove(layer) }
+            override fun onAnimationEnd(animation: Animator) { decor.removeView(layer) }
         })
         start()
     }

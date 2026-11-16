@@ -208,14 +208,6 @@ import java.time.ZoneId
             }) else null, compact = state.homePreferences.searchAtBottom,
             showFetchedChip = !ready.admin && (state.fetchedIds.isNotEmpty() || state.filters.fetchedOnly),
             toggleFetched = { toggleExtraFilter("fetched") })
-        if (projectionReady && projection.otherSections.isNotEmpty()) {
-            SupportingText(uiText(R.string.review_elsewhere, projection.otherSections.values.flatten().toSet().size.toString()))
-            WrappingContent {
-                active.filter { it.id in projection.otherSections }.forEach { section ->
-                    AssistChip(onClick = { selectSection(section.id) }, label = { Text(section.nameAr) })
-                }
-            }
-        }
     }
     BoxWithConstraints(Modifier.fillMaxSize()) {
         val compactHeight = maxHeight < 480.dp || LocalDensity.current.fontScale > 1.4f

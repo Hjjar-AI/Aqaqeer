@@ -13,7 +13,8 @@ import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
-import com.aqaqeer.app.ui.BrandAssets
+import com.aqaqeer.app.ui.SplashArtwork
+import com.aqaqeer.app.ui.awaitSplashLayout
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -66,7 +67,7 @@ class MainActivity : ComponentActivity() {
             isAppearanceLightNavigationBars = !dark
         }
         // Start the shared decode while the database initializes; never decode in the exit callback.
-        val splashBitmap = lifecycleScope.async(Dispatchers.IO) { BrandAssets.bitmap(resources, 2) }
+        val splashBitmap = lifecycleScope.async(Dispatchers.IO) { SplashArtwork.bitmap(resources) }
         // Local database readiness only; never a timer, network call, or PIN lock.
         splash.setKeepOnScreenCondition { viewModel.state.value.catalog is CatalogState.Loading }
         splash.setOnExitAnimationListener { provider ->
@@ -74,9 +75,11 @@ class MainActivity : ComponentActivity() {
                 var handedOff = false
                 try {
                     val bitmap = splashBitmap.await()
+                    val decor = window.decorView as ViewGroup
+                    awaitSplashLayout(decor)
                     val state = viewModel.state.value
                     val background = appColorScheme(state.theme, state.accent, systemDark).background.toArgb()
-                    splashExit = animateSplashExit(provider, window.decorView as ViewGroup, background, bitmap)
+                    splashExit = animateSplashExit(provider, decor, background, bitmap)
                     handedOff = true
                 } finally {
                     // Also release the native splash if destruction cancels the pending hand-off.
