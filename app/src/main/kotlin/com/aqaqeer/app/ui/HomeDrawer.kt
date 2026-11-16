@@ -87,6 +87,7 @@ import com.aqaqeer.app.data.*
                 horizontalArrangement = Arrangement.spacedBy(UiSpacing.related)) {
                 AppIcon(icon)
                 Text(title, Modifier.weight(1f).semantics { heading() }, style = MaterialTheme.typography.titleSmall)
+                ExpansionChevron(expanded)
             }
         }
         if (expanded) ContentSection(spacing = 0.dp, content = content)

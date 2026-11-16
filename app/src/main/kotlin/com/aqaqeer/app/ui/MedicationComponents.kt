@@ -17,7 +17,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.drawWithCache
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.*
@@ -38,7 +40,8 @@ import java.time.LocalDate
     query: String = "", primaryStyle: TextStyle = MaterialTheme.typography.titleLarge, maxLines: Int = Int.MAX_VALUE,
     secondary: Boolean = false, strength: String? = null, titleTrailing: (@Composable () -> Unit)? = null) {
     val separateStrength = strength != null && maxLines != Int.MAX_VALUE
-    MedicationPresentation.names(ar, en, mode).forEachIndexed { index, name ->
+    val names = remember(ar, en, mode) { MedicationPresentation.names(ar, en, mode) }
+    names.forEachIndexed { index, name ->
         val highlight = MaterialTheme.colorScheme.primary
         val text = remember(name, query, highlight, strength, index, separateStrength) { buildAnnotatedString {
             if (name.english) append('\u2066')
@@ -114,7 +117,8 @@ import java.time.LocalDate
     val medication = row.medication
     val compact = preferences.layout == CardLayout.COMPACT
     val form = row.form
-    val name = MedicationPresentation.identity(medication, form?.nameAr ?: uiText(R.string.ui_aqaqeer_app_026))
+    val formName = form?.nameAr ?: uiText(R.string.ui_aqaqeer_app_026)
+    val name = remember(medication, formName) { MedicationPresentation.identity(medication, formName) }
     val status = row.status
     val edge by animateColorAsState(statusTone(status).edge, tween(180), label = "status edge")
     val unavailableStripe = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.06f)
@@ -126,7 +130,7 @@ import java.time.LocalDate
         }
     }) else null
     val interaction = if (bulkSelected == null) Modifier.combinedClickable(role = Role.Button, onClick = onClick,
-        onLongClick = onLongClick, onLongClickLabel = if (onLongClick != null) uiText(R.string.ui_medication_components_003) else null)
+        onLongClick = onLongClick, hapticFeedbackEnabled = false, onLongClickLabel = if (onLongClick != null) uiText(R.string.ui_medication_components_003) else null)
         else Modifier.toggleable(value = bulkSelected, enabled = selectionEnabled, role = Role.Checkbox,
             onValueChange = { toggleSelection() }).semantics {
                 contentDescription = uiText(R.string.ui_medication_components_004, name, statusLabel(status)) + if (unpublished) uiText(R.string.ui_medication_components_005) else ""
@@ -140,19 +144,22 @@ import java.time.LocalDate
         border = BorderStroke(1.dp, if (highlighted) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant),
         colors = CardDefaults.cardColors(containerColor = if (bulkSelected == true || highlighted)
             MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface)) {
-        Column(Modifier.fillMaxWidth().drawBehind {
-            if (status == AvailabilityStatus.OUT) {
-                // Decoration stays behind content so names and controls retain full opacity.
+        Column(Modifier.fillMaxWidth().drawWithCache {
+            val stripes = Path().apply {
                 val spacing = 16.dp.toPx()
                 var x = -size.height
                 while (x < size.width) {
-                    drawLine(unavailableStripe, Offset(x, 0f), Offset(x + size.height, size.height), 2.dp.toPx())
+                    moveTo(x, 0f); lineTo(x + size.height, size.height)
                     x += spacing
                 }
             }
+            val stripeStroke = Stroke(2.dp.toPx())
             val stroke = 4.dp.toPx()
             val x = if (rtl) size.width - stroke / 2 else stroke / 2
-            drawLine(edge, Offset(x, 0f), Offset(x, size.height), stroke)
+            onDrawBehind {
+                if (status == AvailabilityStatus.OUT) drawPath(stripes, unavailableStripe, style = stripeStroke)
+                drawLine(edge, Offset(x, 0f), Offset(x, size.height), stroke)
+            }
         }.padding(if (compact) UiSpacing.related else UiSpacing.section), verticalArrangement = Arrangement.spacedBy(UiSpacing.hair)) {
             Row(horizontalArrangement = Arrangement.spacedBy(UiSpacing.hair), verticalAlignment = Alignment.Top) {
                 // Fixed slot prevents selection-mode row/width changes for editable cards.
@@ -197,22 +204,26 @@ import java.time.LocalDate
 @Composable private fun MedicationBadges(medication: Medication, today: LocalDate, status: AvailabilityStatus?,
     onQuickEdit: (() -> Unit)?, name: String, expanded: Boolean, dismiss: () -> Unit,
     choose: (AvailabilityStatus) -> Unit, enabled: Boolean) {
-    if (status == null && MedicationPresentation.expiry(medication, today) == null) return
+    val expiry = remember(medication, today) { MedicationPresentation.expiry(medication, today) }
+    if (status == null && expiry == null) return
     FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(UiSpacing.hair),
         verticalArrangement = Arrangement.spacedBy(UiSpacing.hair)) {
         if (status != null) Box(Modifier.align(Alignment.CenterVertically)) {
             EditableStatusPill(status, onQuickEdit, expanded, dismiss, choose, enabled, dense = true)
         }
-        if (MedicationPresentation.expiry(medication, today) != null)
-            Box(Modifier.align(Alignment.CenterVertically)) { ExpiryBadge(medication, today, dense = true) }
+        if (expiry != null)
+            Box(Modifier.align(Alignment.CenterVertically).testTag("expiry_${medication.id}")) { ExpiryBadge(expiry, dense = true) }
     }
 }
 
 @Composable internal fun ExpiryBadge(medication: Medication, today: LocalDate, dense: Boolean = false) {
-    MedicationPresentation.expiry(medication, today)?.let { expiry ->
+    val expiry = remember(medication, today) { MedicationPresentation.expiry(medication, today) }
+    expiry?.let { Box(Modifier.testTag("expiry_${medication.id}")) { ExpiryBadge(it, dense) } }
+}
+
+@Composable private fun ExpiryBadge(expiry: ExpiryState, dense: Boolean) {
         val expired = expiry == ExpiryState.EXPIRED
         val tone = if (expired) LocalStatusColors.current.out else LocalStatusColors.current.low
         MedicationBadge(if (expired) uiText(R.string.ui_medication_components_010) else uiText(R.string.ui_medication_components_011), tone, dense = dense,
-            icon = UiIcon.WARNING, modifier = Modifier.testTag("expiry_${medication.id}"))
-    }
+            icon = UiIcon.WARNING)
 }

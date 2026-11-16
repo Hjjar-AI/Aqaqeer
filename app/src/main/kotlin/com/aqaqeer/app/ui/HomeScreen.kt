@@ -11,7 +11,12 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.*
-import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.awaitHorizontalTouchSlopOrCancellation
+import androidx.compose.foundation.gestures.horizontalDrag
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.*
@@ -95,6 +100,7 @@ import java.time.ZoneId
     toggleExtraFilter: (String) -> Unit = {}, onBottomBarsHeightChanged: (Int) -> Unit = {}, toggleAvailableFilter: () -> Unit = {}) {
     val catalog = ready.catalog
     val focus = LocalFocusManager.current
+    val haptics = LocalHapticFeedback.current
     if (catalog.pharmacy == null) {
         LazyColumn(Modifier.fillMaxSize().testTag("home"), contentPadding = PaddingValues(UiSpacing.page)) {
             item { WelcomeScreen(openSettings, if (ready.isDemo) null else openConnection, if (ready.isDemo) null else openCreate, if (ready.isDemo) null else openRestore) }
@@ -118,13 +124,14 @@ import java.time.ZoneId
     }
     var bulkSheetOpen by rememberSaveable(contextKey) { mutableStateOf(false) }
     var filtersOpen by rememberSaveable(catalog.pharmacy.pharmacyId) { mutableStateOf(false) }
+    var noticeDialogOpen by remember(catalog.pharmacy.pharmacyId) { mutableStateOf(false) }
     val notifyModal by rememberUpdatedState(onModalVisibilityChanged)
     val editorCurrent = editor?.let {
         contextValid && canEdit && !it.restored && (!it.bulk || saveBulk != null) &&
             it.pharmacyId == catalog.pharmacy.pharmacyId && it.section.id == selected?.id
     } == true
     val editorVisible = editorCurrent && editor?.bulk == false
-    SideEffect { notifyModal(filtersOpen || editorVisible || bulkSheetOpen); onBulkModeChanged(bulkMode && contextValid) }
+    SideEffect { notifyModal(filtersOpen || editorVisible || bulkSheetOpen || noticeDialogOpen); onBulkModeChanged(bulkMode && contextValid) }
     val notifyBulk by rememberUpdatedState(onBulkModeChanged)
     DisposableEffect(Unit) { onDispose { notifyModal(false); notifyBulk(false) } }
     if (filtersOpen) HomeFilterSheet(catalog, state.filters, toggleStatus, toggleCategory, clearFilters,
@@ -196,7 +203,7 @@ import java.time.ZoneId
                 }
             }, clearFilters = clearFilters, select = if (canEdit && saveBulk != null && selected != null && !bulkMode) ({
                 if (contextValid && canOpenHomeModal() && !availabilityInProgress() && !filtersOpen && editor == null) {
-                    focus.clearFocus(); bulkMode = true; changeBulkSelection(emptySet())
+                    focus.clearFocus(); haptics.performHapticFeedback(HapticFeedbackType.LongPress); bulkMode = true; changeBulkSelection(emptySet())
                 }
             }) else null, compact = state.homePreferences.searchAtBottom,
             showFetchedChip = !ready.admin && (state.fetchedIds.isNotEmpty() || state.filters.fetchedOnly),
@@ -212,7 +219,6 @@ import java.time.ZoneId
     }
     BoxWithConstraints(Modifier.fillMaxSize()) {
         val compactHeight = maxHeight < 480.dp || LocalDensity.current.fontScale > 1.4f
-        val scrollingSections = false
         val keyboardOpen = WindowInsets.ime.getBottom(LocalDensity.current) > 0
         val showBottomBars = state.homePreferences.searchAtBottom || state.homePreferences.sectionsAtBottom && !keyboardOpen
         val reportBottomHeight by rememberUpdatedState(onBottomBarsHeightChanged)
@@ -220,13 +226,13 @@ import java.time.ZoneId
         DisposableEffect(Unit) { onDispose { reportBottomHeight(0) } }
         val gridState = rememberLazyGridState()
         var collapsedGroups by rememberSaveable(catalog.pharmacy.pharmacyId, selected?.id, state.homePreferences.grouping) { mutableStateOf(emptyList<String>()) }
-        LaunchedEffect(highlightedMedication, projectionReady, scrollingSections) {
+        LaunchedEffect(highlightedMedication, projectionReady) {
             if (highlightedMedication != null && projectionReady) {
                 val medicationIndex = visible.indexOfFirst { it.id == highlightedMedication }
                 if (medicationIndex >= 0) {
                     val containing = groups.firstOrNull { group -> group.medications.any { it.id == highlightedMedication } }?.key
                     if (containing != null) collapsedGroups = collapsedGroups - containing
-                    val leading = (if (scrollingSections) 1 else 0) + (if (bulkMode && canEdit && selected != null) 1 else 0) +
+                    val leading = (if (bulkMode && canEdit && selected != null) 1 else 0) +
                         (if (editor == null && (availabilityBusy || availabilityMessage != null)) 1 else 0) + (if (selected == null) 1 else 0) + (if (searching && selected != null) 1 else 0)
                     val groupedIndex = if (!state.homePreferences.groupingEnabled) medicationIndex else {
                         var offset = 0
@@ -245,19 +251,26 @@ import java.time.ZoneId
         val swipeThreshold = with(LocalDensity.current) { 64.dp.toPx() }
         val canSwipe = active.size > 1 && !bulkMode && editor == null && !filtersOpen && !bulkSheetOpen &&
             !availabilityBusy && canOpenHomeModal()
-        val sectionSwipe = if (!canSwipe) Modifier else Modifier.pointerInput(active.map { it.id }, selected?.id, rtl, swipeThreshold) {
-            var distance = 0f
-            detectHorizontalDragGestures(
-                onDragStart = { distance = 0f },
-                onHorizontalDrag = { change, amount -> change.consume(); distance += amount },
-                onDragCancel = { distance = 0f },
-                onDragEnd = {
-                    if (kotlin.math.abs(distance) >= swipeThreshold) {
-                        val next = active.indexOf(selected) + if ((distance > 0) == rtl) 1 else -1
-                        active.getOrNull(next)?.let { selectSection(it.id) }
-                    }
-                    distance = 0f
-                })
+        val drawerEdge = with(LocalDensity.current) { 24.dp.toPx() }
+        val sectionSwipe = if (!canSwipe) Modifier else Modifier.pointerInput(active.map { it.id }, selected?.id, rtl, swipeThreshold, drawerEdge) {
+            awaitEachGesture {
+                val down = awaitFirstDown(requireUnconsumed = false)
+                val fromDrawerEdge = if (rtl) down.position.x >= size.width - drawerEdge else down.position.x <= drawerEdge
+                if (fromDrawerEdge) return@awaitEachGesture
+                var distance = 0f
+                val drag = awaitHorizontalTouchSlopOrCancellation(down.id) { change, overSlop ->
+                    distance += overSlop
+                    change.consume()
+                } ?: return@awaitEachGesture
+                val completed = horizontalDrag(drag.id) { change ->
+                    distance += change.position.x - change.previousPosition.x
+                    change.consume()
+                }
+                if (completed && kotlin.math.abs(distance) >= swipeThreshold) {
+                    val next = active.indexOf(selected) + if ((distance > 0) == rtl) 1 else -1
+                    active.getOrNull(next)?.let { selectSection(it.id) }
+                }
+            }
         }
         val showAdd = openAddMedication != null && canEdit && !bulkMode && contextValid
         val noticeMaxHeight = maxHeight * if (bulkMode) 0.25f else 0.4f
@@ -272,7 +285,8 @@ import java.time.ZoneId
             }
             if (gridState.canScrollBackward) HorizontalDivider()
             HomeNoticeStrip(ready, state, now, pageHeader, refresh, publicationBusy, publicationBlockReason,
-                maxHeight = noticeMaxHeight)
+                maxHeight = noticeMaxHeight, compact = compactHeight,
+                onDialogVisibilityChanged = { noticeDialogOpen = it })
             Box(Modifier.weight(1f)) {
                 RefreshContainer(refresh, state.refresh.busy) {
                     LazyVerticalGrid(columns = if (state.homePreferences.twoColumns) GridCells.Adaptive(160.dp * maxOf(1f, LocalDensity.current.fontScale)) else GridCells.Fixed(1), state = gridState,
@@ -281,7 +295,6 @@ import java.time.ZoneId
                             bottom = if (showAdd) UiSpacing.fabClearance else UiSpacing.page),
                         horizontalArrangement = Arrangement.spacedBy(UiSpacing.related),
                         verticalArrangement = Arrangement.spacedBy(UiSpacing.related)) {
-                        if (scrollingSections) item(key = "browse_context", span = { GridItemSpan(maxLineSpan) }) { browseHeading() }
                         if (canEdit && selected != null && bulkMode && contextValid) item(span = { GridItemSpan(maxLineSpan) }) {
                             SupportingText(uiText(R.string.ui_home_screen_009))
                         }
@@ -300,7 +313,7 @@ import java.time.ZoneId
                             }
                         if (displayed != null && visible.isEmpty() && otherSectionResults.isEmpty()) item(span = { GridItemSpan(maxLineSpan) }) {
                             GroupedCard(title = if (catalog.medications.isEmpty()) uiText(R.string.ui_home_screen_012) else uiText(R.string.ui_choice_components_003)) {
-                                EmptyCapsule(Modifier.size(96.dp).align(Alignment.CenterHorizontally))
+                                EmptyCapsule(Modifier.size(if (compactHeight) 64.dp else 96.dp).align(Alignment.CenterHorizontally))
                                 if (catalog.medications.isEmpty()) {
                                     SupportingText(uiText(R.string.ui_home_screen_013))
                                     if (canEdit && openAddMedication != null) Button(onClick = openAddMedication) { Text(uiText(R.string.ui_screen_titles_009)) }
@@ -337,7 +350,7 @@ import java.time.ZoneId
                                 unpublished = ready.admin && medication.id in ready.unpublishedMedicationIds,
                                 onLongClick = if (canEdit && saveBulk != null && selected != null && !bulkMode && !availabilityBusy && medication.id in medicationIds) ({
                                     if (contextValid && editor == null && !filtersOpen && !availabilityInProgress() && canOpenHomeModal()) {
-                                        focus.clearFocus(); bulkMode = true; changeBulkSelection(setOf(medication.id))
+                                        focus.clearFocus(); haptics.performHapticFeedback(HapticFeedbackType.LongPress); bulkMode = true; changeBulkSelection(setOf(medication.id))
                                     }
                                 }) else null)
                         }
@@ -510,7 +523,7 @@ import java.time.ZoneId
 /** One pinned entry point; expanding retains the existing notice actions and publication guards. */
 @Composable private fun HomeNoticeStrip(ready: CatalogState.Ready, state: AppUiState, now: Instant,
     pageHeader: (@Composable () -> Unit)?, refresh: (() -> Unit)?, publicationBusy: Boolean, publicationBlockReason: String?,
-    maxHeight: androidx.compose.ui.unit.Dp) {
+    maxHeight: androidx.compose.ui.unit.Dp, compact: Boolean = false, onDialogVisibilityChanged: (Boolean) -> Unit) {
     val clock = rememberPresentationTime(ready.catalog.pharmacy?.timezone ?: "Asia/Damascus")
     val notices = buildList {
         if (ready.requiresUpdate) add(uiText(R.string.ui_home_screen_036))
@@ -534,8 +547,37 @@ import java.time.ZoneId
         }
         if (ready.isDemo) add(uiText(R.string.ui_aqaqeer_app_004))
     }
-    if (notices.isEmpty()) return
+    val notifyDialog by rememberUpdatedState(onDialogVisibilityChanged)
+    DisposableEffect(Unit) { onDispose { notifyDialog(false) } }
+    if (notices.isEmpty()) {
+        SideEffect { notifyDialog(false) }
+        return
+    }
     var expanded by rememberSaveable(ready.catalog.pharmacy?.pharmacyId) { mutableStateOf(false) }
+    SideEffect { notifyDialog(expanded && compact) }
+    val noticeDetails: @Composable ColumnScope.() -> Unit = {
+        if (compact && refresh != null && !ready.isDemo && ready.lifecycle == "SHARED" &&
+            (ready.lastSuccessfulRefreshAt == null || Duration.between(ready.lastSuccessfulRefreshAt, clock) >= Duration.ofHours(24)))
+            NoticeStrip(Notice(uiText(R.string.ui_home_screen_035), NoticeSeverity.WARNING,
+                uiText(R.string.review_refresh_now), refresh), enabled = !state.refresh.busy)
+        if (ready.requiresUpdate) InformationCard(uiText(R.string.ui_home_screen_045), uiText(R.string.ui_home_screen_046))
+        if (refresh != null && state.refresh.error != null) RefreshControls(state.refresh, refresh)
+        if (!state.online) SupportingText(uiText(R.string.ui_home_screen_033))
+        if (!ready.isDemo && ready.lifecycle == "SHARED") {
+            if (ready.lastSuccessfulRefreshAt == null) SupportingText(uiText(R.string.ui_home_screen_034))
+            else if (Duration.between(ready.lastSuccessfulRefreshAt, clock) >= Duration.ofHours(24))
+                SupportingText(uiText(R.string.ui_home_screen_035))
+        }
+
+        pageHeader?.invoke()
+        if (ready.isDemo) DemoNotice()
+    }
+    if (expanded && compact) AlertDialog(onDismissRequest = { expanded = false }, text = {
+        Column(Modifier.heightIn(max = viewportHeight(0.7f)).verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(UiSpacing.related), content = noticeDetails)
+    }, confirmButton = {
+        TextButton(onClick = { expanded = false }) { Text(uiText(R.string.ui_choice_components_004)) }
+    })
     Surface(color = if (ready.requiresUpdate || state.refresh.error != null) MaterialTheme.colorScheme.errorContainer
         else if (ready.lastSuccessfulRefreshAt?.let { Duration.between(it, clock) >= Duration.ofHours(24) } == true)
             LocalStatusColors.current.low.container else MaterialTheme.colorScheme.surfaceVariant,
@@ -544,27 +586,15 @@ import java.time.ZoneId
             TextButton(onClick = { expanded = !expanded }, modifier = Modifier.fillMaxWidth()) {
                 AppIcon(if (ready.requiresUpdate || state.refresh.error != null) UiIcon.WARNING else UiIcon.INFO)
                 Text(notices.first() + if (notices.size > 1) uiText(R.string.ui_home_screen_043, MedicationPresentation.displayDigits(notices.size.toString())) else "",
-                    modifier = Modifier.weight(1f), maxLines = 2, overflow = TextOverflow.Ellipsis)
-                RowChevron(down = true)
+                    modifier = Modifier.weight(1f), maxLines = if (compact) 1 else 2, overflow = TextOverflow.Ellipsis)
+                ExpansionChevron(expanded)
             }
-            if (refresh != null && !ready.isDemo && ready.lifecycle == "SHARED" &&
+            if (!compact && refresh != null && !ready.isDemo && ready.lifecycle == "SHARED" &&
                 (ready.lastSuccessfulRefreshAt == null || Duration.between(ready.lastSuccessfulRefreshAt, clock) >= Duration.ofHours(24)))
                 NoticeStrip(Notice(uiText(R.string.ui_home_screen_035), NoticeSeverity.WARNING,
                     uiText(R.string.review_refresh_now), refresh), enabled = !state.refresh.busy)
-            if (expanded) Column(Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(UiSpacing.related)) {
-                if (ready.requiresUpdate) InformationCard(uiText(R.string.ui_home_screen_045), uiText(R.string.ui_home_screen_046))
-                if (refresh != null && state.refresh.error != null) RefreshControls(state.refresh, refresh)
-                if (!state.online) SupportingText(uiText(R.string.ui_home_screen_033))
-                if (!ready.isDemo && ready.lifecycle == "SHARED") {
-                    if (ready.lastSuccessfulRefreshAt == null) SupportingText(uiText(R.string.ui_home_screen_034))
-                    else if (Duration.between(ready.lastSuccessfulRefreshAt, clock) >= Duration.ofHours(24))
-                        SupportingText(uiText(R.string.ui_home_screen_035))
-                }
-
-                pageHeader?.invoke()
-                if (ready.isDemo) DemoNotice()
-            }
+            if (expanded && !compact) Column(Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(UiSpacing.related), content = noticeDetails)
         }
     }
 }

@@ -35,21 +35,22 @@ private val ArabicFont = FontFamily(
     Font(R.font.noto_sans_arabic, FontWeight.Bold, variationSettings = FontVariation.Settings(FontVariation.weight(700))),
 )
 private val BaseTypography = Typography()
-private val AppShapes = Shapes(
+internal val AppShapes = Shapes(
     small = RoundedCornerShape(8.dp),
     medium = RoundedCornerShape(12.dp),
     large = RoundedCornerShape(16.dp),
+    extraLarge = RoundedCornerShape(24.dp),
 )
 private val ArabicTypography = Typography(
     displayLarge = BaseTypography.displayLarge.copy(fontFamily = ArabicFont),
     displayMedium = BaseTypography.displayMedium.copy(fontFamily = ArabicFont),
     displaySmall = BaseTypography.displaySmall.copy(fontFamily = ArabicFont),
-    headlineLarge = BaseTypography.headlineLarge.copy(fontFamily = ArabicFont),
-    headlineMedium = BaseTypography.headlineMedium.copy(fontFamily = ArabicFont),
-    headlineSmall = BaseTypography.headlineSmall.copy(fontFamily = ArabicFont),
-    titleLarge = BaseTypography.titleLarge.copy(fontFamily = ArabicFont),
-    titleMedium = BaseTypography.titleMedium.copy(fontFamily = ArabicFont),
-    titleSmall = BaseTypography.titleSmall.copy(fontFamily = ArabicFont),
+    headlineLarge = BaseTypography.headlineLarge.copy(fontFamily = ArabicFont, lineHeight = 48.sp),
+    headlineMedium = BaseTypography.headlineMedium.copy(fontFamily = ArabicFont, lineHeight = 42.sp),
+    headlineSmall = BaseTypography.headlineSmall.copy(fontFamily = ArabicFont, lineHeight = 36.sp),
+    titleLarge = BaseTypography.titleLarge.copy(fontFamily = ArabicFont, lineHeight = 34.sp),
+    titleMedium = BaseTypography.titleMedium.copy(fontFamily = ArabicFont, lineHeight = 26.sp),
+    titleSmall = BaseTypography.titleSmall.copy(fontFamily = ArabicFont, lineHeight = 23.sp),
     bodyLarge = BaseTypography.bodyLarge.copy(fontFamily = ArabicFont, lineHeight = 26.sp),
     bodyMedium = BaseTypography.bodyMedium.copy(fontFamily = ArabicFont, lineHeight = 23.sp),
     bodySmall = BaseTypography.bodySmall.copy(fontFamily = ArabicFont, fontSize = 14.sp, lineHeight = 23.sp),

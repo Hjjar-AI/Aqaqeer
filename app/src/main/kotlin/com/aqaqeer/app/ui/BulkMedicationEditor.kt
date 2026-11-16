@@ -47,11 +47,11 @@ private data class BulkFieldOption(val value: String?, val label: String)
                     onClick = { if (!savingNow()) statusName = option.value }, label = { Text(option.label) }) }
             }
             AdaptivePickers(first = {
-                ChoicePicker(uiText(R.string.ui_pharmacy_admin_screen_074), forms, forms.find { it.value == formId }, { it.label }, enabled = !busy) {
+                ChoicePicker(uiText(R.string.ui_pharmacy_admin_screen_074), forms, forms.find { it.value == formId }, { it.label }, enabled = !busy, itemKey = { it.value }) {
                     if (!savingNow()) formId = it.value
                 }
             }, second = {
-                ChoicePicker(uiText(R.string.ui_pharmacy_admin_screen_073), categories, categories.find { it.value == categoryId }, { it.label }, enabled = !busy) {
+                ChoicePicker(uiText(R.string.ui_pharmacy_admin_screen_073), categories, categories.find { it.value == categoryId }, { it.label }, enabled = !busy, itemKey = { it.value }) {
                     if (!savingNow()) categoryId = it.value
                 }
             })

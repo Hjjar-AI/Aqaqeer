@@ -415,9 +415,9 @@ internal fun reviewValue(field: String, raw: String, catalog: CatalogSnapshot, l
             supportingText = uiText(R.string.ui_pharmacy_admin_screen_112), validate = { scientificError })
         FormField(uiText(R.string.ui_pharmacy_admin_screen_113), strength, { strength = it }, submitted = submitted, required = true)
         AdaptivePickers(first = {
-            ChoicePicker(uiText(R.string.ui_pharmacy_admin_screen_114), c.forms, c.forms.find { it.id == form }, { it.nameAr }) { form = it.id }
+            ChoicePicker(uiText(R.string.ui_pharmacy_admin_screen_114), c.forms, c.forms.find { it.id == form }, { it.nameAr }, itemKey = { it.id }) { form = it.id }
         }, second = {
-            ChoicePicker(uiText(R.string.ui_pharmacy_admin_screen_073), c.categories, c.categories.find { it.id == category }, { it.nameAr }) { category = it.id }
+            ChoicePicker(uiText(R.string.ui_pharmacy_admin_screen_073), c.categories, c.categories.find { it.id == category }, { it.nameAr }, itemKey = { it.id }) { category = it.id }
         })
         GregorianDateField(uiText(R.string.ui_pharmacy_admin_screen_071), expiry, { expiry = it }, submitted = submitted)
 
@@ -457,7 +457,7 @@ internal fun reviewValue(field: String, raw: String, catalog: CatalogSnapshot, l
     var deleteConfirm by remember { mutableStateOf(false) }
     fun resetConfirmation() { deleteName = ""; deleteConfirm = false }
     fun resetForm() { selected = null; name = ""; english = ""; active = true; resetConfirmation() }
-    ChoicePicker(uiText(R.string.ui_pharmacy_admin_screen_124), listOf("section", "category", "form"), type, ::entityLabel) { type = it; resetForm() }
+    ChoicePicker(uiText(R.string.ui_pharmacy_admin_screen_124), listOf("section", "category", "form"), type, ::entityLabel, itemKey = { it }) { type = it; resetForm() }
     data class RowValue(val id: String, val ar: String, val en: String?, val protected: Boolean, val active: Boolean = true)
     val rows = when (type) {
         "section" -> c.sections.map { RowValue(it.id, it.nameAr, it.nameEn, false, it.isActive) }

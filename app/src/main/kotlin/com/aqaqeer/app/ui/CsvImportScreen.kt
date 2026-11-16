@@ -108,9 +108,9 @@ import com.aqaqeer.app.reports.*
             if (row.duplicates.size == 1) TextButton(enabled = !busy, onClick = {
                 change(decision.copy(action = CsvAction.UPDATE, targetId = row.duplicates.single(), selected = false))
             }) { Text(uiText(R.string.logic_csv_update_match)) }
-            ChoicePicker(uiText(R.string.ui_csv_import_screen_023), CsvAction.entries, decision.action, ::csvActionLabel, enabled = !busy) { change(decision.copy(action = it, selected = false)) }
+            ChoicePicker(uiText(R.string.ui_csv_import_screen_023), CsvAction.entries, decision.action, ::csvActionLabel, enabled = !busy, itemKey = { it.name }) { change(decision.copy(action = it, selected = false)) }
             if (decision.action == CsvAction.UPDATE) ChoicePicker(uiText(R.string.ui_csv_import_screen_024), session.baseline.medications,
-                session.baseline.medications.find { it.id == decision.targetId }, { "${MedicationPresentation.identity(it, session.baseline.forms.find { form -> form.id == it.formId }?.nameAr)} · ${bidi(it.id)}" }, enabled = !busy) {
+                session.baseline.medications.find { it.id == decision.targetId }, { "${MedicationPresentation.identity(it, session.baseline.forms.find { form -> form.id == it.formId }?.nameAr)} · ${bidi(it.id)}" }, enabled = !busy, itemKey = { it.id }) {
                 change(decision.copy(targetId = it.id, selected = false))
             }
             if (row.plan?.category != null || row.plan?.form != null) {

@@ -26,6 +26,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
@@ -63,7 +64,16 @@ internal fun statusLabel(status: AvailabilityStatus): String = uiText(when (stat
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
-@Composable private fun AppContent(state: AppUiState, viewModel: CatalogViewModel) {
+@Composable private fun AppContent(state: AppUiState, viewModel: CatalogViewModel) = BoxWithConstraints(Modifier.fillMaxSize()) {
+    val density = LocalDensity.current
+    val direction = LocalLayoutDirection.current
+    val contentInsets = ScaffoldDefaults.contentWindowInsets
+    val horizontalInsets = with(density) {
+        (contentInsets.getLeft(this, direction) + contentInsets.getRight(this, direction)).toDp()
+    }
+    val dualPane = maxWidth - horizontalInsets >= UiSpacing.contentWidth
+    fun destinationKey(route: String) = if (dualPane && route.startsWith("med:")) "home" else route
+    val homeDestination = destinationKey(state.route) == "home"
     val connectionImport by viewModel.connectionImport.collectAsStateWithLifecycle()
     val availabilitySavedId by viewModel.availabilitySavedId.collectAsStateWithLifecycle()
     val adminBusy by viewModel.adminBusy.collectAsStateWithLifecycle()
@@ -94,7 +104,6 @@ internal fun statusLabel(status: AvailabilityStatus): String = uiText(when (stat
     val navigate = viewModel::navigate
     val back = viewModel::back
     val now = rememberPresentationDate((state.catalog as? CatalogState.Ready)?.catalog?.pharmacy?.timezone ?: "Asia/Damascus")
-    var menuOpen by remember { mutableStateOf(false) }
     val snackbar = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
@@ -117,15 +126,31 @@ internal fun statusLabel(status: AvailabilityStatus): String = uiText(when (stat
     val titleMedication = state.route.takeIf { it.startsWith("med:") }?.removePrefix("med:")
         ?.let { id -> readyForTitle?.catalog?.medications?.find { it.id == id } }
     val title = when {
-        titleMedication != null -> bidi(MedicationPresentation.identity(titleMedication))
-        state.route == "home" -> readyForTitle?.catalog?.pharmacy?.name ?: screenTitle(state.route)
+        titleMedication != null && !dualPane -> bidi(MedicationPresentation.identity(titleMedication))
+        homeDestination -> readyForTitle?.catalog?.pharmacy?.name ?: screenTitle(state.route)
         else -> screenTitle(state.route)
     }
+    val medicationActions: @Composable (CatalogState.Ready, Medication) -> Unit = { ready, medication ->
+        val editable = ready.admin && !ready.requiresUpdate && !ready.maintenancePaused
+        var detailMenuOpen by remember(medication.id) { mutableStateOf(false) }
+        if (editable) IconButton(enabled = !adminBusy,
+            onClick = { navigate("edit-med:${medication.id}") }) {
+            AppIcon(UiIcon.EDIT, description = uiText(R.string.ui_aqaqeer_app_012))
+        }
+        if (ready.admin) Box {
+            IconButton(onClick = { detailMenuOpen = true }) { AppIcon(UiIcon.MORE, description = uiText(R.string.ui_aqaqeer_app_013)) }
+            DropdownMenu(expanded = detailMenuOpen, onDismissRequest = { detailMenuOpen = false }) {
+                DropdownMenuItem(text = { Text(uiText(R.string.ui_aqaqeer_app_014)) },
+                    leadingIcon = { AppIcon(UiIcon.HISTORY) },
+                    onClick = { detailMenuOpen = false; viewModel.openHistory(medication.id) })
+            }
+        }
+    }
     val pharmacyId = readyForTitle?.catalog?.pharmacy?.pharmacyId
-    val drawerEligible = state.route == "home" && configured && readyForTitle != null
+    val drawerEligible = homeDestination && configured && readyForTitle != null
     var homeModalOpen by remember { mutableStateOf(false) }
     var homeBulkActive by remember { mutableStateOf(false) }
-    var homeBottomBarsHeight by remember(pharmacyId, state.route) { mutableIntStateOf(0) }
+    var homeBottomBarsHeight by remember(pharmacyId, destinationKey(state.route)) { mutableIntStateOf(0) }
     var dataTimesOpen by rememberSaveable(pharmacyId) { mutableStateOf(false) }
     val drawerState = remember(pharmacyId) {
         DrawerState(DrawerValue.Closed, confirmStateChange = { target ->
@@ -155,15 +180,16 @@ internal fun statusLabel(status: AvailabilityStatus): String = uiText(when (stat
         gesturesEnabled = drawerEligible && !homeModalOpen && !dataTimesOpen,
         drawerContent = {
             DrawerFiltersContent(viewModel) { filters -> HomeDrawer(readyForTitle, filters, adminBusy || sharing.busy,
-                openRoute = { route -> afterDrawer { if (route != "home") navigate(route) } },
+                openRoute = { route -> afterDrawer { if (route != state.route) navigate(route) } },
                 chooseCategory = { id -> afterDrawer { viewModel.setQuickCategory(id) } },
                 showDataTimes = { afterDrawer { dataTimesOpen = true } }) }
         }) {
         val canAdd = readyForTitle?.let { it.admin && !it.requiresUpdate && !it.maintenancePaused } == true
         Scaffold(
+            floatingActionButtonPosition = if (dualPane && homeDestination) FabPosition.Start else FabPosition.End,
             floatingActionButton = {
                 val keyboardOpen = WindowInsets.ime.getBottom(LocalDensity.current) > 0
-                androidx.compose.animation.AnimatedVisibility(visible = state.route == "home" && canAdd && !homeModalOpen && !homeBulkActive && !dataTimesOpen && !drawerState.isOpen && !keyboardOpen,
+                androidx.compose.animation.AnimatedVisibility(visible = homeDestination && canAdd && !homeModalOpen && !homeBulkActive && !dataTimesOpen && !drawerState.isOpen && !keyboardOpen,
                     modifier = Modifier.padding(bottom = with(LocalDensity.current) { homeBottomBarsHeight.toDp() }),
                     enter = fadeIn(tween(180)), exit = fadeOut(tween(180))) {
                     FloatingActionButton(onClick = { if (!viewModel.adminBusy.value) { viewModel.newMedicationName = ""; navigate("edit-med:new") } }) {
@@ -179,14 +205,14 @@ internal fun statusLabel(status: AvailabilityStatus): String = uiText(when (stat
                 }.coerceAtLeast(UiSpacing.touch)
                 TopAppBar(title = {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(UiSpacing.related)) {
-                        if (state.route == "home" && configured) BrandEmblem(Modifier.size(32.dp), description = null)
+                        if (homeDestination && configured) BrandEmblem(Modifier.size(32.dp), description = null)
                         Column(Modifier.weight(1f).then(if (drawerEligible) Modifier
                             .heightIn(min = UiSpacing.touch)
                             .clickable(enabled = !homeModalOpen && !dataTimesOpen,
                                 onClickLabel = uiText(R.string.ui_aqaqeer_app_003)) {
                                 afterDrawer { dataTimesOpen = true }
                             } else Modifier), verticalArrangement = Arrangement.Center) {
-                            if (titleMedication != null) {
+                            if (titleMedication != null && !dualPane) {
                                 Text(bidi(MedicationPresentation.scientificName(titleMedication)), fontWeight = FontWeight.Bold,
                                     maxLines = 1, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.titleLarge, modifier = Modifier.testTag("screen_title"))
                                 Text(bidi(MedicationPresentation.westernDigits(titleMedication.strength)), style = MaterialTheme.typography.labelLarge)
@@ -208,7 +234,7 @@ internal fun statusLabel(status: AvailabilityStatus): String = uiText(when (stat
                         }
                     }
                 }, navigationIcon = {
-                    if (state.route == "home") IconButton(
+                    if (homeDestination) IconButton(
                         enabled = !homeModalOpen && !dataTimesOpen,
                         onClick = {
                             if (!homeModalOpen && !dataTimesOpen) {
@@ -218,7 +244,7 @@ internal fun statusLabel(status: AvailabilityStatus): String = uiText(when (stat
                         }, modifier = Modifier.testTag("home_menu")) {
                         AppIcon(if (drawerEligible) UiIcon.MENU else UiIcon.SETTINGS, description = if (drawerEligible) uiText(R.string.ui_aqaqeer_app_008) else uiText(R.string.ui_screen_titles_012))
                     }
-                    if (state.route != "home") IconButton(enabled = !adminBusy, onClick = back, modifier = Modifier.testTag("back")) {
+                    if (!homeDestination) IconButton(enabled = !adminBusy, onClick = back, modifier = Modifier.testTag("back")) {
                         AppIcon(UiIcon.BACK, description = uiText(R.string.ui_aqaqeer_app_009))
                     }
                 }, actions = {
@@ -227,29 +253,16 @@ internal fun statusLabel(status: AvailabilityStatus): String = uiText(when (stat
                             Text(uiText(R.string.ui_aqaqeer_app_011, MedicationPresentation.displayDigits(readyForTitle.pendingCount.toString())))
                         }
                     }
-                    val ready = state.catalog as? CatalogState.Ready
-                    val editable = ready?.let { it.admin && !it.requiresUpdate && !it.maintenancePaused } == true
-                    val medicationId = state.route.removePrefix("med:").takeIf { state.route.startsWith("med:") }
-                    if (editable && medicationId != null) IconButton(enabled = !adminBusy,
-                        onClick = { navigate("edit-med:${medicationId}") }) {
-                        AppIcon(UiIcon.EDIT, description = uiText(R.string.ui_aqaqeer_app_012))
-                    }
-                    if (medicationId != null && ready?.admin == true) Box {
-                        IconButton(onClick = { menuOpen = true }) { AppIcon(UiIcon.MORE, description = uiText(R.string.ui_aqaqeer_app_013)) }
-                        DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
-                            DropdownMenuItem(text = { Text(uiText(R.string.ui_aqaqeer_app_014)) },
-                                leadingIcon = { AppIcon(UiIcon.HISTORY) },
-                                onClick = { menuOpen = false; viewModel.openHistory(medicationId) })
-                        }
-                    }
-                }, expandedHeight = if (state.route == "home" && configured || titleMedication != null) homeBarHeight else TopAppBarDefaults.TopAppBarExpandedHeight,
+                    if (!dualPane && readyForTitle != null && titleMedication != null)
+                        medicationActions(readyForTitle, titleMedication)
+                }, expandedHeight = if (homeDestination && configured || titleMedication != null) homeBarHeight else TopAppBarDefaults.TopAppBarExpandedHeight,
                     colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background))
             }, snackbarHost = { SnackbarHost(snackbar) },
         ) { insets ->
             ScreenFrame(wide = state.route == "home" || state.route.startsWith("med:"), form = state.route in setOf("create", "promote", "leave", "setup", "export-connection", "connection", "backup", "maintenance", "taxonomy")
                 || state.route.startsWith("edit-med:"),
                 modifier = Modifier.padding(insets).consumeWindowInsets(insets).imePadding()) {
-                AnimatedContent(targetState = state, contentKey = { it.route }, label = "route",
+                AnimatedContent(targetState = state, contentKey = { destinationKey(it.route) }, label = "route",
                     transitionSpec = { fadeIn(tween(180)) togetherWith fadeOut(tween(180)) }) { displayed ->
                 val destinationContent: @Composable () -> Unit = {
                 val state = displayed
@@ -310,8 +323,7 @@ internal fun statusLabel(status: AvailabilityStatus): String = uiText(when (stat
                                 if (catalogState.admin && !catalogState.isDemo && catalogState.lifecycle == "LOCAL_DRAFT")
                                     SupportingText(uiText(R.string.ui_pharmacy_admin_screen_038))
                             }) else null
-                            BoxWithConstraints(Modifier.fillMaxSize()) {
-                            val dualPane = maxWidth >= 840.dp
+                            Box(Modifier.fillMaxSize()) {
                             val browseContent: @Composable () -> Unit = {
                             HomeStateContent(viewModel) { state, browse, highlighted -> HomeScreen(catalogState, state, now, viewModel::selectSection, viewModel::setQuery,
                                 viewModel::toggleStatus, viewModel::toggleCategory, viewModel::clearFilters,
@@ -341,7 +353,27 @@ internal fun statusLabel(status: AvailabilityStatus): String = uiText(when (stat
                             if (dualPane) Row(Modifier.fillMaxSize(), horizontalArrangement = Arrangement.spacedBy(UiSpacing.section)) {
                                 Box(Modifier.weight(1f).fillMaxHeight()) { browseContent() }
                                 VerticalDivider()
-                                Box(Modifier.weight(1f).fillMaxHeight()) { detailContent() }
+                                Column(Modifier.weight(1f).fillMaxHeight()) {
+                                    if (medication != null) {
+                                        Row(Modifier.fillMaxWidth().padding(horizontal = UiSpacing.related),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(UiSpacing.related)) {
+                                            IconButton(enabled = !adminBusy && !homeModalOpen && !dataTimesOpen,
+                                                onClick = back, modifier = Modifier.testTag("back")) {
+                                                AppIcon(UiIcon.BACK, description = uiText(R.string.ui_aqaqeer_app_009))
+                                            }
+                                            Column(Modifier.weight(1f)) {
+                                                Text(bidi(MedicationPresentation.scientificName(medication)),
+                                                    style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                                                Text(bidi(MedicationPresentation.westernDigits(medication.strength)),
+                                                    style = MaterialTheme.typography.labelLarge)
+                                            }
+                                            medicationActions(catalogState, medication)
+                                        }
+                                        HorizontalDivider()
+                                    }
+                                    Box(Modifier.weight(1f)) { detailContent() }
+                                }
                             } else if (medication != null) detailContent() else browseContent()
                             }
 
@@ -349,8 +381,9 @@ internal fun statusLabel(status: AvailabilityStatus): String = uiText(when (stat
                     }
                 }
                 }
-                if (displayed.route == "home" || displayed.route.startsWith("edit-med:"))
-                    destinationStates.SaveableStateProvider(viewModel.destinationStateKey(displayed.route), destinationContent)
+                val displayedDestination = destinationKey(displayed.route)
+                if (displayedDestination == "home" || displayed.route.startsWith("edit-med:"))
+                    destinationStates.SaveableStateProvider(viewModel.destinationStateKey(displayedDestination), destinationContent)
                 else destinationContent()
                 }
             }

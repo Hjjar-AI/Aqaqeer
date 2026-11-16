@@ -125,7 +125,7 @@ import java.time.LocalDate
     val selected = if (selectedId == null) all else values.find { it.id == selectedId } ?: HistoryOption(selectedId, uiText(R.string.ui_history_screen_019, selectedId))
     ChoicePicker(label, listOf(all) + values, selected, {
         if (it.id.isEmpty()) it.name else "${bidi(it.name)} · ${bidi(it.id)}"
-    }) { choose(it.id.takeIf(String::isNotEmpty)) }
+    }, itemKey = { it.id }) { choose(it.id.takeIf(String::isNotEmpty)) }
 }
 
 private fun historyDate(value: String): LocalDate? = runCatching {

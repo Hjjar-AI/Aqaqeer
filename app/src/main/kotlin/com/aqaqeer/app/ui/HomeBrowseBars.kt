@@ -3,7 +3,6 @@ package com.aqaqeer.app.ui
 import androidx.compose.foundation.background
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
@@ -23,6 +22,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
@@ -56,13 +56,13 @@ import com.aqaqeer.app.data.*
                     }) {
                     Row(Modifier.heightIn(min = UiSpacing.touch).padding(horizontal = UiSpacing.related),
                         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(UiSpacing.hair)) {
-                        if (searchMatch) AppIcon(UiIcon.SEARCH, Modifier.size(16.dp))
+                        Box(Modifier.size(16.dp)) { if (searchMatch) AppIcon(UiIcon.SEARCH, Modifier.fillMaxSize()) }
                         Text(section.nameAr, style = style, fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium)
                     }
                 }
             }
         }
-        Surface(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp),
+        Surface(modifier = Modifier.fillMaxWidth(), shape = MaterialTheme.shapes.large,
             color = MaterialTheme.colorScheme.background,
             border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)) {
             if (required <= maxWidth) PrimaryTabRow(selectedTabIndex = active.indexOfFirst { it.id == selectedId }.coerceAtLeast(0),
@@ -79,72 +79,82 @@ import com.aqaqeer.app.data.*
     openFilters: () -> Unit, clearFilters: () -> Unit, select: (() -> Unit)? = null, compact: Boolean = false,
     showFetchedChip: Boolean = false, toggleFetched: () -> Unit = {}) {
     val focus = LocalFocusManager.current
-    val searchShape = RoundedCornerShape(24.dp)
-    ContentSection {
-        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(UiSpacing.related)) {
-            val clearSearch: (@Composable () -> Unit)? = if (query.text.isNotEmpty()) ({
-                IconButton(onClick = { changeQuery(TextFieldValue("")); focus.clearFocus() },
-                    modifier = Modifier.testTag("clear_search")) {
-                    AppIcon(UiIcon.CLOSE, description = uiText(R.string.ui_home_screen_005))
+    val searchShape = MaterialTheme.shapes.extraLarge
+    BoxWithConstraints(Modifier.fillMaxWidth()) {
+        val narrow = maxWidth < 400.dp || LocalDensity.current.fontScale > 1.15f
+        val hasFilters = filters.statuses.isNotEmpty() || filters.categoryIds.isNotEmpty() ||
+            filters.expiringSoon || filters.unpublishedOnly || filters.fetchedOnly
+        val showSummary = searching || hasFilters
+        ContentSection {
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(UiSpacing.related)) {
+                val clearSearch: (@Composable () -> Unit)? = if (query.text.isNotEmpty()) ({
+                    IconButton(onClick = { changeQuery(TextFieldValue("")); focus.clearFocus() },
+                        modifier = Modifier.testTag("clear_search")) {
+                        AppIcon(UiIcon.CLOSE, description = uiText(R.string.ui_home_screen_005))
+                    }
+                }) else null
+                val searchActions: (@Composable () -> Unit)? = if (clearSearch != null || showFetchedChip && !narrow) ({
+                    Row(verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(UiSpacing.hair),
+                        modifier = Modifier.padding(end = if (showFetchedChip && !narrow) UiSpacing.hair else 0.dp)) {
+                        clearSearch?.invoke()
+                        if (showFetchedChip && !narrow) CompactFilterChip(filters.fetchedOnly, uiText(R.string.review_whats_new), toggleFetched)
+                    }
+                }) else null
+                if (compact) {
+                    val interaction = remember { MutableInteractionSource() }
+                    BasicTextField(value = query, onValueChange = changeQuery, singleLine = true,
+                        modifier = Modifier.weight(1f).heightIn(min = UiSpacing.touch).testTag("search"),
+                        textStyle = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onSurface),
+                        cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
+                        interactionSource = interaction,
+                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search, autoCorrectEnabled = false, capitalization = KeyboardCapitalization.None),
+                        keyboardActions = KeyboardActions(onSearch = { focus.clearFocus() }),
+                        decorationBox = { innerTextField ->
+                            OutlinedTextFieldDefaults.DecorationBox(value = query.text, innerTextField = innerTextField,
+                                enabled = true, singleLine = true, visualTransformation = VisualTransformation.None,
+                                interactionSource = interaction,
+                                placeholder = { Text(uiText(R.string.ui_home_screen_004)) },
+                                leadingIcon = { AppIcon(UiIcon.SEARCH) }, trailingIcon = searchActions,
+                                contentPadding = PaddingValues(horizontal = UiSpacing.section, vertical = UiSpacing.related),
+                                container = {
+                                    OutlinedTextFieldDefaults.Container(enabled = true, isError = false,
+                                        interactionSource = interaction, colors = OutlinedTextFieldDefaults.colors(), shape = searchShape)
+                                })
+                        })
+                } else {
+                    OutlinedTextField(value = query, onValueChange = changeQuery, singleLine = true, shape = searchShape,
+                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search, autoCorrectEnabled = false, capitalization = KeyboardCapitalization.None),
+                        keyboardActions = KeyboardActions(onSearch = { focus.clearFocus() }),
+                        placeholder = { Text(uiText(R.string.ui_home_screen_004)) },
+                        modifier = Modifier.weight(1f).testTag("search"),
+                        leadingIcon = { AppIcon(UiIcon.SEARCH) }, trailingIcon = searchActions)
                 }
-            }) else null
-            val searchActions: (@Composable () -> Unit)? = if (clearSearch != null || showFetchedChip) ({
-                Row(verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(UiSpacing.hair),
-                    modifier = Modifier.padding(end = if (showFetchedChip) UiSpacing.hair else 0.dp)) {
-                    clearSearch?.invoke()
-                    if (showFetchedChip) CompactFilterChip(filters.fetchedOnly, uiText(R.string.review_whats_new), toggleFetched)
+                if (!narrow) select?.let { TextButton(onClick = it) { Text(uiText(R.string.review_select)) } }
+                val filterCount = filters.statuses.size + filters.categoryIds.size + listOf(filters.expiringSoon, filters.unpublishedOnly, filters.fetchedOnly).count { it }
+                OutlinedIconButton(onClick = {
+                    openFilters()
+                },
+                    modifier = Modifier.size(UiSpacing.filterButton).semantics {
+                        contentDescription = uiText(R.string.ui_home_screen_002) + if (filterCount > 0) uiText(R.string.ui_home_screen_003, MedicationPresentation.displayDigits(filterCount.toString())) else ""
+                    }) {
+                    BadgedBox(badge = {
+                        if (filterCount > 0) Badge(Modifier.clearAndSetSemantics { }) { Text(MedicationPresentation.displayDigits(filterCount.toString())) }
+                    }) { AppIcon(UiIcon.FILTER) }
                 }
-            }) else null
-            if (compact) {
-                val interaction = remember { MutableInteractionSource() }
-                BasicTextField(value = query, onValueChange = changeQuery, singleLine = true,
-                    modifier = Modifier.weight(1f).heightIn(min = UiSpacing.touch).testTag("search"),
-                    textStyle = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onSurface),
-                    cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
-                    interactionSource = interaction,
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                    keyboardActions = KeyboardActions(onSearch = { focus.clearFocus() }),
-                    decorationBox = { innerTextField ->
-                        OutlinedTextFieldDefaults.DecorationBox(value = query.text, innerTextField = innerTextField,
-                            enabled = true, singleLine = true, visualTransformation = VisualTransformation.None,
-                            interactionSource = interaction,
-                            placeholder = { Text(uiText(R.string.ui_home_screen_004)) },
-                            leadingIcon = { AppIcon(UiIcon.SEARCH) }, trailingIcon = searchActions,
-                            contentPadding = PaddingValues(horizontal = UiSpacing.section, vertical = UiSpacing.related),
-                            container = {
-                                OutlinedTextFieldDefaults.Container(enabled = true, isError = false,
-                                    interactionSource = interaction, colors = OutlinedTextFieldDefaults.colors(), shape = searchShape)
-                            })
-                    })
-            } else {
-                OutlinedTextField(value = query, onValueChange = changeQuery, singleLine = true, shape = searchShape,
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                    keyboardActions = KeyboardActions(onSearch = { focus.clearFocus() }),
-                    placeholder = { Text(uiText(R.string.ui_home_screen_004)) },
-                    modifier = Modifier.weight(1f).testTag("search"),
-                    leadingIcon = { AppIcon(UiIcon.SEARCH) }, trailingIcon = searchActions)
             }
-            select?.let { TextButton(onClick = it) { Text(uiText(R.string.review_select)) } }
-            val filterCount = filters.statuses.size + filters.categoryIds.size + listOf(filters.expiringSoon, filters.unpublishedOnly, filters.fetchedOnly).count { it }
-            OutlinedIconButton(onClick = {
-                openFilters()
-            },
-                modifier = Modifier.size(UiSpacing.filterButton).semantics {
-                    contentDescription = uiText(R.string.ui_home_screen_002) + if (filterCount > 0) uiText(R.string.ui_home_screen_003, MedicationPresentation.displayDigits(filterCount.toString())) else ""
-                }) {
-                BadgedBox(badge = {
-                    if (filterCount > 0) Badge(Modifier.clearAndSetSemantics { }) { Text(MedicationPresentation.displayDigits(filterCount.toString())) }
-                }) { AppIcon(UiIcon.FILTER) }
-            }
-        }
-        if (searching || filters.statuses.isNotEmpty() || filters.categoryIds.isNotEmpty() || filters.expiringSoon || filters.unpublishedOnly || filters.fetchedOnly) {
-            WrappingContent {
-                Text(uiText(R.string.ui_home_screen_006, MedicationPresentation.displayDigits(visibleCount.toString()), MedicationPresentation.displayDigits(totalCount.toString())),
-                    style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                if (filters.statuses.isNotEmpty() || filters.categoryIds.isNotEmpty() || filters.expiringSoon || filters.unpublishedOnly || filters.fetchedOnly)
-                    TextButton(onClick = clearFilters) { Text(uiText(R.string.ui_history_screen_017)) }
+            if (showSummary || narrow && (select != null || showFetchedChip)) {
+                WrappingContent {
+                    if (narrow) {
+                        select?.let { TextButton(onClick = it) { Text(uiText(R.string.review_select)) } }
+                        if (showFetchedChip) CompactFilterChip(filters.fetchedOnly, uiText(R.string.review_whats_new), toggleFetched)
+                    }
+                    if (showSummary) Text(uiText(R.string.ui_home_screen_006, MedicationPresentation.displayDigits(visibleCount.toString()), MedicationPresentation.displayDigits(totalCount.toString())),
+                        style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    if (hasFilters)
+                        TextButton(onClick = clearFilters) { Text(uiText(R.string.ui_history_screen_017)) }
+                }
             }
         }
     }

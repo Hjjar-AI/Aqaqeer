@@ -55,10 +55,10 @@ import com.aqaqeer.app.reports.*
                     GroupedCard(title = uiText(R.string.ui_reports_screen_003)) {
                         ChoicePicker(uiText(R.string.ui_reports_screen_004), ReportPreset.entries, preset, {
                             when (it) { ReportPreset.OUT -> uiText(R.string.ui_reports_screen_005); ReportPreset.FULL -> uiText(R.string.ui_reports_screen_006); ReportPreset.EXPIRING_SOON -> uiText(R.string.ui_reports_screen_007) }
-                        }, enabled = !busy) { preset = it }
+                        }, enabled = !busy, itemKey = { it.name }) { preset = it }
                         if (preset == ReportPreset.OUT) CheckChoiceRow(allSections, uiText(R.string.logic_all_shortages), enabled = !busy) { allSections = it }
                         if (preset == ReportPreset.OUT && !allSections) ChoicePicker(uiText(R.string.ui_reports_screen_008), ready.catalog.sections,
-                            ready.catalog.sections.find { it.id == section }, { it.nameAr }, enabled = !busy) { section = it.id }
+                            ready.catalog.sections.find { it.id == section }, { it.nameAr }, enabled = !busy, itemKey = { it.id }) { section = it.id }
                         CheckChoiceRow(unpublished, uiText(R.string.ui_reports_screen_009), enabled = !busy) { unpublished = it }
                         Button(enabled = !busy, onClick = { vm.prepareReport(request) }) { Text(uiText(R.string.ui_reports_screen_010)) }
                         ExpandableInformation(uiText(R.string.ui_reports_screen_011),

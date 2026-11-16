@@ -28,7 +28,7 @@ import com.aqaqeer.app.uiText
         TextButton(onClick = toggle, modifier = Modifier.fillMaxWidth().heightIn(min = UiSpacing.touch)
             .semantics { stateDescription = uiText(if (expanded) R.string.ui_home_drawer_010 else R.string.ui_home_drawer_011) }) {
             Text(title, Modifier.weight(1f))
-            Text(if (expanded) "▴" else "▾")
+            ExpansionChevron(expanded)
         }
         if (expanded) ContentSection(spacing = contentSpacing, content = content)
     }
@@ -61,8 +61,18 @@ internal data class Notice(val text: String, val severity: NoticeSeverity = Noti
     require(steps.isNotEmpty() && current in steps.indices)
     Column(verticalArrangement = Arrangement.spacedBy(UiSpacing.hair)) {
         Text("${current + 1} / ${steps.size} · ${steps[current]}", style = MaterialTheme.typography.titleMedium)
-        // Discrete named steps describe workflow state, not estimated work or time.
-        steps.forEachIndexed { index, label ->
+        val compactHeight = viewportHeight(1f) < 480.dp || LocalDensity.current.fontScale > 1.4f
+        if (compactHeight) {
+            Row(Modifier.semantics {
+                contentDescription = steps.mapIndexed { index, label -> "${index + 1}. $label" }.joinToString("; ")
+            }, horizontalArrangement = Arrangement.spacedBy(UiSpacing.related)) {
+                steps.forEachIndexed { index, _ ->
+                    Box(Modifier.size(8.dp).background(
+                        if (index <= current) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant,
+                        CircleShape))
+                }
+            }
+        } else steps.forEachIndexed { index, label ->
             SupportingText("${if (index < current) "✓" else if (index == current) "●" else "○"} $label")
         }
     }
@@ -79,9 +89,10 @@ internal data class Notice(val text: String, val severity: NoticeSeverity = Noti
 }
 
 @Composable internal fun EmptyState(title: String, body: String? = null, actions: (@Composable () -> Unit)? = null) {
-    Column(Modifier.fillMaxWidth().padding(UiSpacing.group), horizontalAlignment = Alignment.CenterHorizontally,
+    val compactHeight = viewportHeight(1f) < 480.dp || LocalDensity.current.fontScale > 1.4f
+    Column(Modifier.fillMaxWidth().padding(if (compactHeight) UiSpacing.section else UiSpacing.group), horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(UiSpacing.section)) {
-        AppIcon(UiIcon.FORM_CAPSULE, Modifier.size(96.dp))
+        AppIcon(UiIcon.FORM_CAPSULE, Modifier.size(if (compactHeight) 64.dp else 96.dp))
         Text(title, style = MaterialTheme.typography.titleMedium)
         body?.let { SupportingText(it) }
         actions?.invoke()
@@ -132,7 +143,7 @@ internal data class Notice(val text: String, val severity: NoticeSeverity = Noti
                     stateDescription = uiText(if (expanded) R.string.ui_home_drawer_010 else R.string.ui_home_drawer_011)
                 }, contentPadding = PaddingValues(0.dp), shape = MaterialTheme.shapes.medium) {
                 Text(title, Modifier.weight(1f).semantics { heading() }, style = MaterialTheme.typography.titleMedium)
-                Text(if (expanded) "▴" else "▾")
+                ExpansionChevron(expanded)
             }
             if (expanded) ContentSection(modifier = Modifier.padding(top = UiSpacing.related), spacing = UiSpacing.group, content = content)
         }

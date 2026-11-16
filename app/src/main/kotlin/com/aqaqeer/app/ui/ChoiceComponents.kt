@@ -9,6 +9,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.ui.graphics.graphicsLayer
 import com.aqaqeer.app.data.MedicationPresentation
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -95,7 +97,7 @@ import androidx.compose.ui.unit.dp
 }
 
 @Composable internal fun <T> ChoicePicker(label: String, values: List<T>, selected: T?, name: (T) -> String,
-    enabled: Boolean = true, choose: (T) -> Unit) {
+    enabled: Boolean = true, itemKey: (T) -> String = { it.toString() }, choose: (T) -> Unit) {
     var expanded by remember { mutableStateOf(false) }
     Box(Modifier.fillMaxWidth()) {
         Surface(shape = MaterialTheme.shapes.small, color = MaterialTheme.colorScheme.surfaceVariant,
@@ -119,10 +121,13 @@ import androidx.compose.ui.unit.dp
                 labeled.filter { it.third.contains(normalized) }
             }
             AlertDialog(onDismissRequest = { expanded = false }, title = { Text(label) }, text = {
-                Column(verticalArrangement = Arrangement.spacedBy(UiSpacing.related)) {
+                BoxWithConstraints(Modifier.fillMaxWidth()) {
+                // Dialog constraints already reflect IME resizing; do not subtract it twice.
+                Column(Modifier.heightIn(max = minOf(maxHeight, viewportHeight(0.65f))),
+                    verticalArrangement = Arrangement.spacedBy(UiSpacing.related)) {
                     if (values.size > 8) FormField(uiText(R.string.ui_choice_components_002), query, { query = it })
-                    LazyColumn(Modifier.fillMaxWidth().heightIn(max = viewportHeight(0.5f))) {
-                        items(visible) { (value, text, _) ->
+                    LazyColumn(Modifier.fillMaxWidth().weight(1f, fill = false)) {
+                        items(visible, key = { itemKey(it.first) }) { (value, text, _) ->
                             TextButton(onClick = { choose(value); expanded = false }, modifier = Modifier.fillMaxWidth()) {
                                 Text(text, modifier = Modifier.weight(1f))
                                 if (value == selected) AppIcon(UiIcon.CHECK)
@@ -131,9 +136,16 @@ import androidx.compose.ui.unit.dp
                     }
                     if (visible.isEmpty()) Text(uiText(R.string.ui_choice_components_003))
                 }
+                }
             }, confirmButton = { TextButton(onClick = { expanded = false }) { Text(uiText(R.string.ui_choice_components_004)) } })
         }
     }
+}
+
+/** A decorative disclosure indicator; the owning control exposes its expanded state. */
+@Composable internal fun ExpansionChevron(expanded: Boolean) {
+    val rotation by animateFloatAsState(if (expanded) 180f else 0f, tween(180), label = "disclosure")
+    Box(Modifier.graphicsLayer { rotationZ = rotation }) { RowChevron(down = true) }
 }
 
 /** Decorative chevron follows navigation direction without adding a spoken label. */
