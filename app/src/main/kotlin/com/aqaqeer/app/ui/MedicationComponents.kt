@@ -110,7 +110,7 @@ import java.time.LocalDate
     bulkSelected: Boolean?, toggleSelection: () -> Unit, onClick: () -> Unit, modifier: Modifier = Modifier,
     selectionEnabled: Boolean = true, query: String = "", unpublished: Boolean = false,
     onLongClick: (() -> Unit)? = null, highlighted: Boolean = false,
-    quickMenuOpen: Boolean = false, dismissQuickMenu: () -> Unit = {}, chooseStatus: (AvailabilityStatus) -> Unit = {}) {
+    reserveSelectionSpace: Boolean = false, quickMenuOpen: Boolean = false, dismissQuickMenu: () -> Unit = {}, chooseStatus: (AvailabilityStatus) -> Unit = {}) {
     val medication = row.medication
     val compact = preferences.layout == CardLayout.COMPACT
     val form = row.form
@@ -156,7 +156,7 @@ import java.time.LocalDate
         }.padding(if (compact) UiSpacing.related else UiSpacing.section), verticalArrangement = Arrangement.spacedBy(UiSpacing.hair)) {
             Row(horizontalArrangement = Arrangement.spacedBy(UiSpacing.hair), verticalAlignment = Alignment.Top) {
                 // Fixed slot prevents selection-mode row/width changes for editable cards.
-                if (onLongClick != null || bulkSelected != null) Box(Modifier.size(24.dp)) {
+                if (reserveSelectionSpace || bulkSelected != null) Box(Modifier.size(24.dp)) {
                     if (bulkSelected != null) Checkbox(checked = bulkSelected, onCheckedChange = null,
                         enabled = selectionEnabled, modifier = Modifier.size(24.dp).testTag("select_${medication.id}").clearAndSetSemantics { })
                 }

@@ -42,23 +42,19 @@ private data class BulkFieldOption(val value: String?, val label: String)
     val categories = listOf(unchanged) + catalog.categories.map { BulkFieldOption(it.id, it.nameAr) }
     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(UiSpacing.hair)) {
         if (!preview) {
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(UiSpacing.hair)) {
-                Box(Modifier.weight(1f)) {
-                    ChoicePicker(uiText(R.string.ui_home_screen_024), statuses, statuses.find { it.value == statusName }, { it.label }, enabled = !busy) {
-                        if (!savingNow()) statusName = it.value
-                    }
-                }
-                Box(Modifier.weight(1f)) {
-                    ChoicePicker(uiText(R.string.ui_pharmacy_admin_screen_074), forms, forms.find { it.value == formId }, { it.label }, enabled = !busy) {
-                        if (!savingNow()) formId = it.value
-                    }
-                }
-                Box(Modifier.weight(1f)) {
-                    ChoicePicker(uiText(R.string.ui_pharmacy_admin_screen_073), categories, categories.find { it.value == categoryId }, { it.label }, enabled = !busy) {
-                        if (!savingNow()) categoryId = it.value
-                    }
-                }
+            WrappingContent {
+                statuses.forEach { option -> FilterChip(selected = option.value == statusName, enabled = !busy,
+                    onClick = { if (!savingNow()) statusName = option.value }, label = { Text(option.label) }) }
             }
+            AdaptivePickers(first = {
+                ChoicePicker(uiText(R.string.ui_pharmacy_admin_screen_074), forms, forms.find { it.value == formId }, { it.label }, enabled = !busy) {
+                    if (!savingNow()) formId = it.value
+                }
+            }, second = {
+                ChoicePicker(uiText(R.string.ui_pharmacy_admin_screen_073), categories, categories.find { it.value == categoryId }, { it.label }, enabled = !busy) {
+                    if (!savingNow()) categoryId = it.value
+                }
+            })
             if (formId != null || categoryId != null) SupportingText(uiText(R.string.ui_bulk_medication_editor_002))
         } else {
             val count = selection.medications.count(::changed)

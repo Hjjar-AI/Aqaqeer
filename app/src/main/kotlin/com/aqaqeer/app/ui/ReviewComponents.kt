@@ -112,3 +112,51 @@ internal data class Notice(val text: String, val severity: NoticeSeverity = Noti
         }
     }
 }
+
+@Composable internal fun SettingsGroup(title: String, initiallyExpanded: Boolean = false, content: @Composable ColumnScope.() -> Unit) {
+    var expanded by rememberSaveable(title) { mutableStateOf(initiallyExpanded) }
+    GroupedCard { CollapsibleGroup(title, expanded, { expanded = !expanded }, content = content) }
+}
+
+@Composable internal fun CardLayoutPicker(selected: com.aqaqeer.app.data.CardLayout, change: (com.aqaqeer.app.data.CardLayout) -> Unit) {
+    AdaptivePickers(first = { LayoutChoice(com.aqaqeer.app.data.CardLayout.COMPACT, selected, change) },
+        second = { LayoutChoice(com.aqaqeer.app.data.CardLayout.EXPANDED, selected, change) })
+}
+@Composable private fun LayoutChoice(layout: com.aqaqeer.app.data.CardLayout, selected: com.aqaqeer.app.data.CardLayout,
+    change: (com.aqaqeer.app.data.CardLayout) -> Unit) {
+    FilterChip(selected == layout, onClick = { change(layout) }, label = {
+        Column { Text(uiText(if (layout == com.aqaqeer.app.data.CardLayout.COMPACT) R.string.ui_aqaqeer_app_051 else R.string.ui_aqaqeer_app_052))
+            repeat(if (layout == com.aqaqeer.app.data.CardLayout.COMPACT) 2 else 4) {
+                HorizontalDivider(Modifier.width(72.dp).padding(vertical = 2.dp))
+            }
+        }
+    })
+}
+@Composable internal fun MedicationLayoutPreview(layout: com.aqaqeer.app.data.CardLayout) {
+    Column(verticalArrangement = Arrangement.spacedBy(UiSpacing.hair)) {
+        Text(uiText(R.string.ui_aqaqeer_app_053), style = MaterialTheme.typography.labelMedium)
+        Text(uiText(R.string.ui_aqaqeer_app_054), style = if (layout == com.aqaqeer.app.data.CardLayout.COMPACT) MaterialTheme.typography.titleSmall else MaterialTheme.typography.titleLarge)
+        if (layout == com.aqaqeer.app.data.CardLayout.EXPANDED) SupportingText(uiText(R.string.ui_aqaqeer_app_055))
+        StatusBadge(com.aqaqeer.app.data.AvailabilityStatus.AVAILABLE)
+    }
+}
+
+@Composable internal fun SetupChecklist(ready: com.aqaqeer.app.data.CatalogState.Ready, navigate: (String) -> Unit) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val pharmacy = ready.catalog.pharmacy?.pharmacyId ?: return
+    val prefs = remember { context.getSharedPreferences("setup_checklist", android.content.Context.MODE_PRIVATE) }
+    var hidden by rememberSaveable(pharmacy) { mutableStateOf(prefs.getBoolean(pharmacy, false)) }
+    val tasks = listOf(
+        Triple(R.string.review_check_catalog, ready.catalog.medications.isNotEmpty(), "edit-med:new"),
+        Triple(R.string.review_check_connection, ready.hasPublicationConnection, "setup"),
+        Triple(R.string.review_check_publish, ready.publishedAt != null, "review"),
+        Triple(R.string.review_check_backup, ready.hasBackup, "backup"))
+    if (!hidden) GroupedCard(title = uiText(R.string.review_setup_checklist)) {
+        tasks.forEach { (label, complete, route) ->
+            TextButton(onClick = { navigate(route) }, enabled = !complete) { Text("${if (complete) "✓" else "○"} ${uiText(label)}") }
+        }
+        if (tasks.all { it.second }) TextButton(onClick = { prefs.edit().putBoolean(pharmacy, true).apply(); hidden = true }) {
+            Text(uiText(R.string.review_hide_checklist))
+        }
+    }
+}

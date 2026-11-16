@@ -117,7 +117,7 @@ internal fun statusLabel(status: AvailabilityStatus): String = uiText(when (stat
     val titleMedication = state.route.takeIf { it.startsWith("med:") }?.removePrefix("med:")
         ?.let { id -> readyForTitle?.catalog?.medications?.find { it.id == id } }
     val title = when {
-        titleMedication != null -> bidi(MedicationPresentation.scientificName(titleMedication))
+        titleMedication != null -> bidi(MedicationPresentation.identity(titleMedication))
         state.route == "home" -> readyForTitle?.catalog?.pharmacy?.name ?: screenTitle(state.route)
         else -> screenTitle(state.route)
     }
@@ -150,14 +150,12 @@ internal fun statusLabel(status: AvailabilityStatus): String = uiText(when (stat
     }
     BackHandler(drawerState.isOpen) { scope.launch { drawerState.close() } }
     if (dataTimesOpen && drawerEligible && !homeModalOpen)
-        DataTimesDialog(readyForTitle, now) { dataTimesOpen = false }
+        DataTimesDialog(readyForTitle, now, refresh = if (!readyForTitle.isDemo && readyForTitle.lifecycle == "SHARED" && !readyForTitle.restorePaused && !readyForTitle.maintenancePaused) ({ viewModel.refreshCatalog() }) else null, busy = state.refresh.busy) { dataTimesOpen = false }
     ModalNavigationDrawer(drawerState = drawerState,
         gesturesEnabled = drawerEligible && !homeModalOpen && !dataTimesOpen,
         drawerContent = {
             DrawerFiltersContent(viewModel) { filters -> HomeDrawer(readyForTitle, filters, adminBusy || sharing.busy,
                 openRoute = { route -> afterDrawer { if (route != "home") navigate(route) } },
-                openReview = { afterDrawer(viewModel::review) },
-                openHistory = { afterDrawer { viewModel.openHistory() } },
                 chooseCategory = { id -> afterDrawer { viewModel.setQuickCategory(id) } },
                 showDataTimes = { afterDrawer { dataTimesOpen = true } }) }
         }) {
@@ -220,8 +218,6 @@ internal fun statusLabel(status: AvailabilityStatus): String = uiText(when (stat
                         AppIcon(UiIcon.BACK, description = uiText(R.string.ui_aqaqeer_app_009))
                     }
                 }, actions = {
-                    if (drawerEligible) IconButton(enabled = !homeModalOpen && !dataTimesOpen,
-                        onClick = { afterDrawer { dataTimesOpen = true } }) { AppIcon(UiIcon.INFO, description = uiText(R.string.ui_aqaqeer_app_010)) }
                     if (drawerEligible && readyForTitle.admin && readyForTitle.pendingCount > 0 && !readyForTitle.isDemo) {
                         TextButton(enabled = publicationBlockedReason(readyForTitle, sharing, adminBusy || sharing.busy) == null,
                             onClick = { viewModel.publish(reviewOnFailure = true) }) {
@@ -264,10 +260,10 @@ internal fun statusLabel(status: AvailabilityStatus): String = uiText(when (stat
                     "settings" -> SettingsScreen(state.theme, viewModel::setTheme, state.homePreferences, viewModel::setSort,
                         viewModel::setLayout, viewModel::setNames, viewModel::setSecondaryHijri,
                         state.accent, viewModel::setAccent, viewModel::setTwoColumns,
-                        viewModel::setSectionsAtBottom, viewModel::setSearchAtBottom,
-                        if (state.catalog is CatalogState.Ready && !state.catalog.isDemo && (state.catalog.admin || !configured)) ({ navigate("backup") }) else null,
-                        if (state.catalog is CatalogState.Ready && !state.catalog.isDemo && configured) ({ navigate("maintenance") }) else null,
-                        if (state.catalog is CatalogState.Ready && !state.catalog.isDemo && configured) ({ navigate("leave") }) else null) { navigate("about") }
+                        viewModel::setSectionsAtBottom, viewModel::setSearchAtBottom, viewModel::setGroupingEnabled, viewModel::setGrouping,
+                        if (state.catalog is CatalogState.Ready && !state.catalog.isDemo && !configured) ({ navigate("backup") }) else null,
+                        null,
+                        null) { navigate("about") }
                     "maintenance" -> MaintenanceScreen(state.catalog as? CatalogState.Ready, viewModel)
                     "backup" -> BackupScreen(state, viewModel)
                     "csv-import" -> CsvImportScreen(state.catalog as? CatalogState.Ready, viewModel)
@@ -331,13 +327,13 @@ internal fun statusLabel(status: AvailabilityStatus): String = uiText(when (stat
                                 setGroupingEnabled = viewModel::setGroupingEnabled, setGrouping = viewModel::setGrouping,
                                 saveBulk = viewModel::saveAvailability, projection = browse, highlightedMedication = highlighted,
                                 prefillMedication = { query -> viewModel.newMedicationName = query; navigate("edit-med:new") },
-                                onBulkModeChanged = { homeBulkActive = it },
+                                onBulkModeChanged = { homeBulkActive = it }, toggleExtraFilter = viewModel::toggleExtraFilter,
                                 onBottomBarsHeightChanged = { homeBottomBarsHeight = it }) }
                             }
                             val detailContent: @Composable () -> Unit = {
                                 if (medication != null) MedicationScreen(catalogState, medication, now,
                                     state.homePreferences.secondaryHijri, pageHeader, viewModel)
-                                else Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text(uiText(R.string.ui_aqaqeer_app_023)) }
+                                else Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { EmptyState(uiText(R.string.ui_aqaqeer_app_023)) }
                             }
                             if (dualPane) Row(Modifier.fillMaxSize(), horizontalArrangement = Arrangement.spacedBy(UiSpacing.section)) {
                                 Box(Modifier.weight(1f).fillMaxHeight()) { browseContent() }
@@ -372,58 +368,58 @@ internal fun statusLabel(status: AvailabilityStatus): String = uiText(when (stat
 @Composable private fun MedicationScreen(ready: CatalogState.Ready, medication: Medication, now: java.time.Instant, showHijri: Boolean,
     pageHeader: (@Composable () -> Unit)?, vm: CatalogViewModel) {
     val catalog = ready.catalog
-    val demo = ready.isDemo
     var editor by rememberSaveable(catalog.pharmacy?.pharmacyId, medication.id, stateSaver = AvailabilitySelectionSaver) { mutableStateOf<AvailabilitySelection?>(null) }
     val busy by vm.adminBusy.collectAsStateWithLifecycle()
     val message by vm.adminMessage.collectAsStateWithLifecycle()
     val canEdit = ready.admin && !ready.isDemo && !ready.requiresUpdate && !ready.maintenancePaused
-    val savedId by vm.availabilitySavedId.collectAsStateWithLifecycle()
-    LaunchedEffect(savedId) { if (savedId != null && editor?.id == savedId) editor = null }
     LaunchedEffect(canEdit, catalog.pharmacy?.pharmacyId) { if (!canEdit || editor?.pharmacyId != catalog.pharmacy?.pharmacyId) editor = null }
     SideEffect { if (editor?.restored == true) editor = editor?.resolve(catalog) }
-    editor?.takeIf { canEdit && !it.restored && it.pharmacyId == catalog.pharmacy?.pharmacyId }?.let { captured ->
-        AvailabilityEditor(captured, busy, message, dismiss = { editor = null }, save = { status ->
-            vm.saveAvailability(captured, BulkMedicationChanges(status = status)) { editor = null }
-        }, current = catalog.sections.any { it.id == captured.section.id && it.isActive } && captured.expected.all { (id, status) -> catalog.status(id, captured.section.id) == status &&
-            catalog.medications.any { it.id == id } }, isSaving = { vm.adminBusy.value })
-    }
-    LazyColumn(Modifier.fillMaxSize().testTag("medication_detail"), contentPadding = PaddingValues(UiSpacing.page),
-        verticalArrangement = Arrangement.spacedBy(UiSpacing.section)) {
-        if (pageHeader != null) item { ContentSection { pageHeader() } }
-        if (demo) item { DemoNotice() }
+    val listState = androidx.compose.foundation.lazy.rememberLazyListState()
+    val scope = rememberCoroutineScope()
+    LazyColumn(Modifier.fillMaxSize().testTag("medication_detail"), state = listState, contentPadding = PaddingValues(UiSpacing.page),
+        verticalArrangement = Arrangement.spacedBy(UiSpacing.group)) {
         item {
-            GroupedCard {
-                SelectionContainer { Column { MedicationSummary(medication, prominent = true, primaryStyle = MaterialTheme.typography.headlineMedium) } }
-                HorizontalDivider(Modifier.padding(vertical = UiSpacing.hair))
-                LabeledValue(uiText(R.string.ui_pharmacy_admin_screen_114), catalog.formsById[medication.formId]?.nameAr ?: uiText(R.string.ui_aqaqeer_app_026))
-                LabeledValue(uiText(R.string.ui_pharmacy_admin_screen_073), catalog.categoriesById[medication.categoryId]?.nameAr ?: uiText(R.string.ui_aqaqeer_app_027))
-                medication.expiryDate?.let {
-                    LabeledValue(uiText(R.string.ui_aqaqeer_app_028), bidi(it.toString()))
-                    SecondaryHijriDate(it, showHijri)
+            WrappingContent {
+                catalog.sections.forEachIndexed { index, section ->
+                    AssistChip(onClick = { scope.launch { listState.animateScrollToItem(index + 1) } }, label = {
+                        Text(section.nameAr + " · " + statusLabel(catalog.status(medication.id, section.id)))
+                    })
                 }
-                ExpiryBadge(medication, MedicationPresentation.today(now, catalog.pharmacy?.timezone ?: "Asia/Damascus"))
-                medication.brand?.let { LabeledValue(uiText(R.string.ui_pharmacy_admin_screen_069), bidi(it)) }
             }
         }
-        item {
-            GroupedCard(title = uiText(R.string.ui_aqaqeer_app_029)) {
-                catalog.sections.forEachIndexed { index, section ->
-                    if (index > 0) HorizontalDivider()
-                    val record = catalog.availability(medication.id, section.id)
-                    WrappingContent {
-                        Text(section.nameAr + if (section.isActive) "" else uiText(R.string.ui_aqaqeer_app_030), fontWeight = FontWeight.Bold)
-                        StatusBadge(catalog.status(medication.id, section.id), onClick = if (canEdit && section.isActive && !busy) ({
-                            editor = AvailabilitySelection(requireNotNull(catalog.pharmacy).pharmacyId, section, listOf(medication),
-                                mapOf(medication.id to catalog.status(medication.id, section.id)), false,
-                                formNames = catalog.formsById.mapValues { it.value.nameAr }, categoryNames = catalog.categoriesById.mapValues { it.value.nameAr })
-                        }) else null, editLabel = uiText(R.string.ui_pharmacy_admin_screen_120))
-                    }
-                    if (record == null) SupportingText(uiText(R.string.ui_aqaqeer_app_031))
-                    else {
-                        RelativeEditTime(record.updatedAt, record.updatedBy.name, catalog.pharmacy?.timezone ?: "Asia/Damascus")
+        items(catalog.sections, key = { "section_${it.id}" }) { section ->
+            var expanded by rememberSaveable(medication.id, section.id) { mutableStateOf(false) }
+            val record = catalog.availability(medication.id, section.id)
+            val captured = editor?.takeIf { it.section.id == section.id }
+            val current = captured != null && !captured.restored && captured.expected[medication.id] == catalog.status(medication.id, section.id)
+            GroupedCard {
+                Text(section.nameAr + if (section.isActive) "" else uiText(R.string.ui_aqaqeer_app_030), fontWeight = FontWeight.Bold)
+                EditableStatusPill(catalog.status(medication.id, section.id), onOpen = if (canEdit && section.isActive && !busy) ({
+                    editor = AvailabilitySelection(requireNotNull(catalog.pharmacy).pharmacyId, section, listOf(medication),
+                        mapOf(medication.id to catalog.status(medication.id, section.id)), false)
+                }) else null, expanded = captured != null, dismiss = { if (!busy) editor = null }, enabled = !busy && (captured == null || current),
+                    choose = { status -> if (current && captured != null && !vm.adminBusy.value) vm.saveAvailability(captured, BulkMedicationChanges(status = status)) { if (editor == captured) editor = null } })
+                if (record == null) SupportingText(uiText(R.string.ui_aqaqeer_app_031))
+                else {
+                    SupportingText(relativeTime(record.updatedAt, now))
+                    CollapsibleGroup(uiText(R.string.ui_history_components_021), expanded, { expanded = !expanded }) {
                         SupportingText(bidi(MedicationPresentation.timestamp(record.updatedAt, catalog.pharmacy?.timezone ?: "Asia/Damascus")))
                     }
                 }
+                if (captured != null) InlineOperationStatus(busy, message)
+            }
+        }
+        if (pageHeader != null) item { ContentSection { pageHeader() } }
+        if (ready.isDemo) item { DemoNotice() }
+        item {
+            GroupedCard {
+                if (medication.nameAr != null || medication.nameEn != null)
+                    Text(uiText(R.string.ui_medication_components_002) + ": " + bidi(MedicationPresentation.names(medication.nameAr, medication.nameEn, NameDisplay.BOTH).joinToString(" · ") { it.text }))
+                LabeledValue(uiText(R.string.ui_pharmacy_admin_screen_074), catalog.formsById[medication.formId]?.nameAr.orEmpty())
+                LabeledValue(uiText(R.string.ui_pharmacy_admin_screen_073), catalog.categoriesById[medication.categoryId]?.nameAr.orEmpty())
+                medication.expiryDate?.let { LabeledValue(uiText(R.string.ui_aqaqeer_app_028), bidi(it.toString())); SecondaryHijriDate(it, showHijri) }
+                ExpiryBadge(medication, MedicationPresentation.today(now, catalog.pharmacy?.timezone ?: "Asia/Damascus"))
+                medication.brand?.let { LabeledValue(uiText(R.string.ui_pharmacy_admin_screen_069), bidi(it)) }
             }
         }
         medication.note?.let { note -> item { InformationCard(uiText(R.string.ui_aqaqeer_app_032), note) } }
@@ -435,77 +431,44 @@ internal fun statusLabel(status: AvailabilityStatus): String = uiText(when (stat
     setNames: (NameDisplay) -> Unit, setSecondaryHijri: (Boolean) -> Unit,
     accent: ThemeAccent, setAccent: (ThemeAccent) -> Unit, setTwoColumns: (Boolean) -> Unit,
     setSectionsAtBottom: (Boolean) -> Unit, setSearchAtBottom: (Boolean) -> Unit,
+    setGroupingEnabled: (Boolean) -> Unit, setGrouping: (HomeGrouping) -> Unit,
     openBackup: (() -> Unit)? = null, openMaintenance: (() -> Unit)? = null, openLeave: (() -> Unit)? = null, openAbout: () -> Unit) {
     val systemDark = androidx.compose.foundation.isSystemInDarkTheme()
     LazyColumn(Modifier.fillMaxSize().testTag("settings"), contentPadding = PaddingValues(UiSpacing.page),
-        verticalArrangement = Arrangement.spacedBy(UiSpacing.section)) {
-        item {
-            NavigationGroup(uiText(R.string.ui_aqaqeer_app_033)) {
-                PreferenceChoiceRow(uiText(R.string.ui_aqaqeer_app_034), ThemeChoice.entries, theme, setTheme, {
-                    when (it) {
-                        ThemeChoice.SYSTEM -> uiText(R.string.ui_aqaqeer_app_035)
-                        ThemeChoice.LIGHT -> uiText(R.string.ui_aqaqeer_app_036)
-                        ThemeChoice.DARK -> uiText(R.string.ui_aqaqeer_app_037)
-                        ThemeChoice.AMOLED -> uiText(R.string.ui_aqaqeer_app_038)
-                    }
-                }, choiceModifier = { Modifier.testTag("theme_${it.name}") })
-                HorizontalDivider()
-                PreferenceChoiceRow(uiText(R.string.ui_aqaqeer_app_039), ThemeAccent.entries, accent, setAccent,
-                    label = { choice -> when (choice) {
-                        ThemeAccent.GOLD -> uiText(R.string.ui_aqaqeer_app_040)
-                        ThemeAccent.BLUE -> uiText(R.string.ui_aqaqeer_app_041)
-                        ThemeAccent.GREEN -> uiText(R.string.ui_aqaqeer_app_042)
-                        ThemeAccent.PURPLE -> uiText(R.string.ui_aqaqeer_app_043)
-                        ThemeAccent.CRIMSON -> uiText(R.string.ui_aqaqeer_app_044)
-                    } }, modifier = Modifier.testTag("accent_preference"),
-                    choiceModifier = { Modifier.testTag("accent_${it.name}") },
-                    swatch = { appColorScheme(theme, it, systemDark).primary })
-                HorizontalDivider()
-                PreferenceChoices(uiText(R.string.ui_aqaqeer_app_045), HomeSort.entries, preferences.sort, "sort", setSort) {
-                    when (it) { HomeSort.SCIENTIFIC_NAME -> uiText(R.string.ui_aqaqeer_app_046); HomeSort.ARABIC_NAME -> uiText(R.string.ui_aqaqeer_app_047); HomeSort.ENGLISH_NAME -> uiText(R.string.ui_aqaqeer_app_048); HomeSort.AVAILABILITY -> uiText(R.string.ui_aqaqeer_app_049) }
-                }
-                HorizontalDivider()
-                PreferenceChoices(uiText(R.string.ui_aqaqeer_app_050), CardLayout.entries, preferences.layout, "layout", setLayout) {
-                    if (it == CardLayout.COMPACT) uiText(R.string.ui_aqaqeer_app_051) else uiText(R.string.ui_aqaqeer_app_052)
-                }
-                SwitchChoiceRow(preferences.twoColumns, uiText(R.string.home_two_columns),
-                    uiText(R.string.home_two_columns_help), Modifier.testTag("two_columns"), setTwoColumns)
-                SwitchChoiceRow(preferences.sectionsAtBottom, uiText(R.string.home_sections_bottom),
-                    uiText(R.string.home_sections_bottom_help), Modifier.testTag("sections_at_bottom"), setSectionsAtBottom)
-                SwitchChoiceRow(preferences.searchAtBottom, uiText(R.string.home_search_bottom),
-                    uiText(R.string.home_search_bottom_help), Modifier.testTag("search_at_bottom"), setSearchAtBottom)
-                GroupedCard(title = uiText(R.string.ui_aqaqeer_app_053)) {
-                    Text(uiText(R.string.ui_aqaqeer_app_054), style = if (preferences.layout == CardLayout.COMPACT)
-                        MaterialTheme.typography.titleSmall else MaterialTheme.typography.titleLarge)
-                    if (preferences.layout == CardLayout.EXPANDED) SupportingText(uiText(R.string.ui_aqaqeer_app_055))
-                    StatusBadge(AvailabilityStatus.AVAILABLE)
-                }
-                HorizontalDivider()
-                PreferenceChoices(uiText(R.string.ui_aqaqeer_app_056), NameDisplay.entries, preferences.names, "names", setNames) {
-                    when (it) { NameDisplay.ARABIC -> uiText(R.string.ui_aqaqeer_app_057); NameDisplay.ENGLISH -> uiText(R.string.ui_aqaqeer_app_058); NameDisplay.BOTH -> uiText(R.string.ui_aqaqeer_app_059) }
-                }
-                HorizontalDivider()
-                SwitchChoiceRow(preferences.secondaryHijri, uiText(R.string.ui_aqaqeer_app_060),
-                    uiText(R.string.ui_aqaqeer_app_061),
-                    Modifier.testTag("secondary_hijri").semantics {
-                        contentDescription = uiText(R.string.ui_aqaqeer_app_062)
-                    }, setSecondaryHijri)
-                ExpandableInformation(uiText(R.string.ui_aqaqeer_app_063),
-                    uiText(R.string.ui_aqaqeer_app_064))
+        verticalArrangement = Arrangement.spacedBy(UiSpacing.group)) {
+        item { SettingsGroup(uiText(R.string.review_appearance), initiallyExpanded = true) {
+            PreferenceChoiceRow(uiText(R.string.ui_aqaqeer_app_034), ThemeChoice.entries, theme, setTheme, {
+                uiText(when (it) { ThemeChoice.SYSTEM -> R.string.ui_aqaqeer_app_035; ThemeChoice.LIGHT -> R.string.ui_aqaqeer_app_036
+                    ThemeChoice.DARK -> R.string.ui_aqaqeer_app_037; ThemeChoice.AMOLED -> R.string.ui_aqaqeer_app_038 })
+            }, choiceModifier = { Modifier.testTag("theme_${it.name}") })
+            PreferenceChoiceRow(uiText(R.string.ui_aqaqeer_app_039), ThemeAccent.entries, accent, setAccent, {
+                uiText(when (it) { ThemeAccent.GOLD -> R.string.ui_aqaqeer_app_040; ThemeAccent.BLUE -> R.string.ui_aqaqeer_app_041
+                    ThemeAccent.GREEN -> R.string.ui_aqaqeer_app_042; ThemeAccent.PURPLE -> R.string.ui_aqaqeer_app_043; ThemeAccent.CRIMSON -> R.string.ui_aqaqeer_app_044 })
+            }, swatch = { appColorScheme(theme, it, systemDark).primary })
+        } }
+        item { SettingsGroup(uiText(R.string.review_list_display)) {
+            PreferenceChoices(uiText(R.string.ui_aqaqeer_app_045), HomeSort.entries, preferences.sort, "sort", setSort) {
+                uiText(when (it) { HomeSort.SCIENTIFIC_NAME -> R.string.ui_aqaqeer_app_046; HomeSort.ARABIC_NAME -> R.string.ui_aqaqeer_app_047
+                    HomeSort.ENGLISH_NAME -> R.string.ui_aqaqeer_app_048; HomeSort.AVAILABILITY -> R.string.ui_aqaqeer_app_049 })
             }
-        }
-        if (openMaintenance != null || openBackup != null || openLeave != null) item {
-            NavigationGroup(uiText(R.string.ui_aqaqeer_app_065)) {
-                openBackup?.let { NavigationRow(uiText(R.string.ui_screen_titles_011), it) }
-                if (openBackup != null && openMaintenance != null) HorizontalDivider()
-                openMaintenance?.let { NavigationRow(uiText(R.string.ui_aqaqeer_app_066), it) }
-                openLeave?.let { HorizontalDivider(); NavigationRow(uiText(R.string.ui_screen_titles_007), it, destructive = true) }
+            CardLayoutPicker(preferences.layout, setLayout)
+            MedicationLayoutPreview(preferences.layout)
+            SwitchChoiceRow(preferences.twoColumns, uiText(R.string.review_adaptive_columns), uiText(R.string.review_adaptive_columns_help), Modifier.testTag("two_columns"), setTwoColumns)
+            SwitchChoiceRow(preferences.groupingEnabled, uiText(R.string.ui_home_screen_025), uiText(R.string.ui_home_screen_026), change = setGroupingEnabled)
+            if (preferences.groupingEnabled) PreferenceChoices(uiText(R.string.ui_home_screen_027), HomeGrouping.entries,
+                preferences.grouping, "grouping", setGrouping) { uiText(if (it == HomeGrouping.CATEGORY) R.string.ui_pharmacy_admin_screen_073 else R.string.ui_home_screen_028) }
+            PreferenceChoices(uiText(R.string.ui_aqaqeer_app_056), NameDisplay.entries, preferences.names, "names", setNames) {
+                uiText(when (it) { NameDisplay.ARABIC -> R.string.ui_aqaqeer_app_057; NameDisplay.ENGLISH -> R.string.ui_aqaqeer_app_058; NameDisplay.BOTH -> R.string.ui_aqaqeer_app_059 })
             }
-        }
-        item {
-            NavigationCard(uiText(R.string.ui_screen_titles_013), openAbout, Modifier.testTag("open_about"),
-                supporting = uiText(R.string.ui_aqaqeer_app_067))
-        }
+        } }
+        item { SettingsGroup(uiText(R.string.review_dates_placement)) {
+            SwitchChoiceRow(preferences.sectionsAtBottom, uiText(R.string.home_sections_bottom), uiText(R.string.home_sections_bottom_help), Modifier.testTag("sections_at_bottom"), setSectionsAtBottom)
+            SwitchChoiceRow(preferences.searchAtBottom, uiText(R.string.home_search_bottom), uiText(R.string.home_search_bottom_help), Modifier.testTag("search_at_bottom"), setSearchAtBottom)
+            SwitchChoiceRow(preferences.secondaryHijri, uiText(R.string.ui_aqaqeer_app_060), uiText(R.string.ui_aqaqeer_app_061), Modifier.testTag("secondary_hijri"), setSecondaryHijri)
+            ExpandableInformation(uiText(R.string.ui_aqaqeer_app_063), uiText(R.string.ui_aqaqeer_app_064))
+        } }
+        openBackup?.let { item { NavigationCard(uiText(R.string.ui_screen_titles_011), it) } }
+        item { NavigationCard(uiText(R.string.ui_screen_titles_013), openAbout, Modifier.testTag("open_about")) }
     }
 }
 
@@ -567,9 +530,16 @@ internal fun statusLabel(status: AvailabilityStatus): String = uiText(when (stat
 }
 
 /** Static placeholder shared by startup and the Home projection. */
-@Composable internal fun MedicationSkeleton() {
-    Surface(Modifier.fillMaxWidth().height(112.dp).clearAndSetSemantics { },
-        color = MaterialTheme.colorScheme.surfaceVariant, shape = MaterialTheme.shapes.medium) { }
+@Composable internal fun MedicationSkeleton(layout: CardLayout = CardLayout.COMPACT) {
+    Surface(Modifier.fillMaxWidth().clearAndSetSemantics { }, color = MaterialTheme.colorScheme.surfaceVariant, shape = MaterialTheme.shapes.medium) {
+        Column(Modifier.padding(UiSpacing.section), verticalArrangement = Arrangement.spacedBy(UiSpacing.related)) {
+            repeat(if (layout == CardLayout.COMPACT) 3 else 6) { index ->
+                Surface(Modifier.fillMaxWidth(if (index == 0) .85f else .6f).height(if (index == 0) 24.dp else 16.dp),
+                    color = MaterialTheme.colorScheme.outlineVariant, shape = MaterialTheme.shapes.small) {}
+            }
+            Spacer(Modifier.height(UiSpacing.touch))
+        }
+    }
 }
 
 @Composable private fun RecoveryScreen(retry: () -> Unit, openSettings: () -> Unit) {
@@ -596,10 +566,7 @@ internal fun statusLabel(status: AvailabilityStatus): String = uiText(when (stat
     content(state, browse, highlighted)
 }
 
-@Composable private fun RelativeEditTime(at: java.time.Instant, author: String, timezone: String) {
-    val now = rememberPresentationTime(timezone)
-    SupportingText(uiText(R.string.ui_aqaqeer_app_090, relativeTime(at, now), bidi(author)))
-}
+
 
 @Composable private fun DueBackupReminder(ready: CatalogState.Ready, backup: () -> Unit, dismiss: () -> Unit) {
     val now = rememberPresentationTime(ready.catalog.pharmacy?.timezone ?: "Asia/Damascus")

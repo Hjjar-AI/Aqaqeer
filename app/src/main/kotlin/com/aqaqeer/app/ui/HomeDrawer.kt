@@ -26,81 +26,39 @@ import com.aqaqeer.app.data.*
 /** Navigation only; callers close the drawer and recheck context before executing callbacks. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable internal fun HomeDrawer(ready: CatalogState.Ready?, filters: HomeFilters, busy: Boolean,
-    openRoute: (String) -> Unit, openReview: () -> Unit, openHistory: () -> Unit,
-    chooseCategory: (String?) -> Unit, showDataTimes: () -> Unit) {
+    openRoute: (String) -> Unit, chooseCategory: (String?) -> Unit, showDataTimes: () -> Unit) {
     val pharmacy = ready?.catalog?.pharmacy
-    val realAdmin = ready?.let { it.admin && !it.isDemo } == true
-    val editable = ready?.let { realAdmin && !it.requiresUpdate && !it.maintenancePaused } == true
-    var categoriesOpen by rememberSaveable(pharmacy?.pharmacyId, realAdmin) { mutableStateOf(true) }
-    var catalogOpen by rememberSaveable(pharmacy?.pharmacyId, realAdmin) { mutableStateOf(true) }
-    var sharingOpen by rememberSaveable(pharmacy?.pharmacyId, realAdmin) { mutableStateOf(true) }
-    var applicationOpen by rememberSaveable(pharmacy?.pharmacyId, realAdmin) { mutableStateOf(true) }
+    var categoriesOpen by rememberSaveable(pharmacy?.pharmacyId) { mutableStateOf(true) }
+    var catalogOpen by rememberSaveable(pharmacy?.pharmacyId) { mutableStateOf(false) }
+    var applicationOpen by rememberSaveable(pharmacy?.pharmacyId) { mutableStateOf(false) }
     val drawerWidth = with(LocalDensity.current) { (LocalWindowInfo.current.containerSize.width.toDp() - 72.dp).coerceIn(1.dp, 320.dp) }
     ModalDrawerSheet(modifier = Modifier.requiredWidth(drawerWidth)) {
-        Column(Modifier.fillMaxHeight().verticalScroll(rememberScrollState()).padding(UiSpacing.related),
-            verticalArrangement = Arrangement.spacedBy(UiSpacing.hair)) {
-            Row(Modifier.fillMaxWidth().padding(vertical = UiSpacing.related),
-                verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(UiSpacing.related)) {
+        Column(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).padding(UiSpacing.related),
+            verticalArrangement = Arrangement.spacedBy(UiSpacing.related)) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(UiSpacing.related)) {
                 BrandEmblem(Modifier.size(40.dp), description = null)
-                Text(pharmacy?.name ?: uiText(R.string.ui_screen_titles_020), modifier = Modifier.weight(1f).semantics { heading() },
+                Text(pharmacy?.name ?: uiText(R.string.ui_screen_titles_020), Modifier.weight(1f).semantics { heading() },
                     style = MaterialTheme.typography.titleMedium)
             }
             NavigationDrawerItem(icon = { AppIcon(UiIcon.HOME) }, label = { Text(uiText(R.string.ui_home_drawer_001)) }, selected = true, onClick = { openRoute("home") })
-            HorizontalDivider()
-            if (pharmacy != null) {
-                DrawerGroup(uiText(R.string.ui_home_drawer_002) + if (filters.categoryIds.isNotEmpty())
-                    " (${MedicationPresentation.displayDigits(filters.categoryIds.size.toString())})" else "",
-                    categoriesOpen, { categoriesOpen = !categoriesOpen }) {
-                    if (filters.categoryIds.size > 1) SupportingText(uiText(R.string.ui_home_drawer_003))
-                    NavigationDrawerItem(label = { Text(uiText(R.string.ui_home_drawer_004)) }, selected = filters.categoryIds.isEmpty(),
-                        onClick = { chooseCategory(null) })
-                    ready.catalog.categories.forEach { category ->
-                        NavigationDrawerItem(label = { Text(category.nameAr) }, selected = filters.categoryIds == setOf(category.id),
-                            onClick = { chooseCategory(category.id) })
-                    }
+            if (pharmacy != null) CollapsibleGroup(uiText(R.string.ui_home_drawer_002), categoriesOpen, { categoriesOpen = !categoriesOpen }) {
+                if (filters.categoryIds.size > 1) SupportingText(uiText(R.string.ui_home_drawer_003))
+                NavigationDrawerItem(label = { Text(uiText(R.string.ui_home_drawer_004)) }, selected = filters.categoryIds.isEmpty(), onClick = { chooseCategory(null) })
+                ready.catalog.categories.forEach { category ->
+                    NavigationDrawerItem(label = { Text(category.nameAr) }, selected = filters.categoryIds == setOf(category.id), onClick = { chooseCategory(category.id) })
                 }
             }
-            if (realAdmin) {
-                HorizontalDivider()
-                DrawerGroup(uiText(R.string.ui_home_drawer_005), catalogOpen, { catalogOpen = !catalogOpen }) {
-                    DrawerRow(uiText(R.string.ui_screen_titles_005), { openRoute("taxonomy") }, enabled = editable && !busy, icon = UiIcon.FORM_FORM)
-                    DrawerRow(uiText(R.string.ui_screen_titles_015), openHistory, enabled = !busy, icon = UiIcon.HISTORY)
-                    DrawerRow(uiText(R.string.ui_pharmacy_admin_screen_046), { openRoute("csv-import") }, enabled = editable && !busy, icon = UiIcon.ADD)
-                    DrawerRow(uiText(R.string.ui_pharmacy_admin_screen_047), { openRoute("reports") }, enabled = editable && !busy, icon = UiIcon.REPORT)
-                    DrawerRow(uiText(R.string.ui_screen_titles_002), { openRoute("admin") })
-                }
-                HorizontalDivider()
-                DrawerGroup(uiText(R.string.ui_home_drawer_006), sharingOpen, { sharingOpen = !sharingOpen }) {
-                    DrawerRow(uiText(R.string.ui_screen_titles_004), openReview, enabled = !busy, icon = UiIcon.PUBLISH,
-                        badge = if (ready.pendingCount > 0) MedicationPresentation.displayDigits(ready.pendingCount.toString()) else null)
-                    if (ready.lifecycle == "LOCAL_DRAFT") DrawerRow(uiText(R.string.ui_home_drawer_007), { openRoute("setup") }, enabled = editable && !busy, icon = UiIcon.SETUP)
-                    DrawerRow(uiText(R.string.ui_screen_titles_008), { openRoute("export-connection") },
-                        enabled = editable && !busy && ready.lifecycle == "SHARED" && !ready.restorePaused, icon = UiIcon.CONNECTION)
-                    DrawerRow(uiText(R.string.ui_screen_titles_011), { openRoute("backup") }, enabled = !busy, icon = UiIcon.BACKUP)
-                    DrawerRow(uiText(R.string.ui_pharmacy_admin_screen_041), { openRoute("maintenance") }, enabled = !busy, icon = UiIcon.TOOLS)
-                }
-            } else if (pharmacy != null && !ready.isDemo) {
-                DrawerRow(uiText(R.string.ui_screen_titles_006), { openRoute("promote") }, enabled = !busy, icon = UiIcon.EDIT)
+            if (pharmacy != null && ready?.isDemo == false) CollapsibleGroup(uiText(R.string.ui_home_drawer_005), catalogOpen, { catalogOpen = !catalogOpen }) {
+                DrawerRow(uiText(R.string.ui_screen_titles_002), { openRoute("admin") }, icon = UiIcon.TOOLS)
             }
-            HorizontalDivider()
-            DrawerGroup(uiText(R.string.ui_home_drawer_008), applicationOpen, { applicationOpen = !applicationOpen }) {
-                DrawerRow(uiText(R.string.ui_screen_titles_012), { openRoute("settings") }, icon = UiIcon.SETTINGS)
+            CollapsibleGroup(uiText(R.string.ui_home_drawer_008), applicationOpen, { applicationOpen = !applicationOpen }) {
                 DrawerRow(uiText(R.string.ui_screen_titles_013), { openRoute("about") }, icon = UiIcon.INFO)
                 if (pharmacy != null) DrawerRow(uiText(R.string.ui_home_drawer_009), showDataTimes, icon = UiIcon.CALENDAR)
             }
         }
-    }
-}
-
-@Composable private fun DrawerGroup(title: String, expanded: Boolean, toggle: () -> Unit,
-    content: @Composable ColumnScope.() -> Unit) {
-    TextButton(onClick = toggle, modifier = Modifier.fillMaxWidth().heightIn(min = UiSpacing.touch)
-        .semantics { stateDescription = if (expanded) uiText(R.string.ui_home_drawer_010) else uiText(R.string.ui_home_drawer_011) }) {
-        Text(title, modifier = Modifier.weight(1f))
-        Box(Modifier.rotate(if (expanded) 180f else 0f)) { RowChevron(down = true) }
-    }
-    Column(Modifier.fillMaxWidth().animateContentSize(tween(180))) {
-        if (expanded) Column(Modifier.fillMaxWidth().padding(start = UiSpacing.related), content = content)
+        Surface(shadowElevation = UiSpacing.hair) {
+            DrawerRow(uiText(R.string.ui_screen_titles_012), { openRoute("settings") }, icon = UiIcon.SETTINGS)
+        }
     }
 }
 

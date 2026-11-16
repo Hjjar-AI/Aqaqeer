@@ -10,6 +10,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.aqaqeer.app.data.*
 import com.aqaqeer.app.maintenance.*
@@ -42,29 +43,40 @@ import com.aqaqeer.app.maintenance.*
             return@FormPage
         }
         if (j == null) {
-            Text(uiText(R.string.ui_maintenance_screen_007))
-            if (ready.lifecycle == "SHARED") ReplacementFileFields(vm, busy)
-            else Text(uiText(R.string.ui_maintenance_screen_008))
+            var openTask by rememberSaveable(ready.catalog.pharmacy.pharmacyId) { mutableStateOf<String?>(null) }
+            fun toggle(task: String) { openTask = if (openTask == task) null else task }
+            if (ready.lifecycle == "SHARED") CollapsibleGroup(uiText(R.string.ui_maintenance_screen_043), openTask == "replacement", { toggle("replacement") }) {
+                ReplacementFileFields(vm, busy)
+            }
             if (ready.admin && !ready.requiresUpdate) {
-                HorizontalDivider()
-                PinChangeFields(vm, busy)
-                if (ready.lifecycle == "SHARED") {
-                    GroupedCard(title = uiText(R.string.ui_maintenance_screen_009)) {
-                        Text(uiText(R.string.ui_maintenance_screen_010))
+                CollapsibleGroup(uiText(R.string.ui_maintenance_screen_048), openTask == "pin", { toggle("pin") }) { PinChangeFields(vm, busy) }
+                if (ready.lifecycle == "SHARED") listOf(MaintenanceKind.ROTATION, MaintenanceKind.MIGRATION).forEach { kind ->
+                    val key = kind.name
+                    CollapsibleGroup(uiText(if (kind == MaintenanceKind.ROTATION) R.string.ui_maintenance_screen_012 else R.string.ui_maintenance_screen_013),
+                        openTask == key, { toggle(key) }) {
+                        NoticeStrip(Notice(uiText(R.string.review_sensitive), NoticeSeverity.WARNING))
+                        SupportingText(uiText(R.string.ui_maintenance_screen_010))
                         if (ready.pendingCount > 0 || ready.uncertain) {
-                            Text(uiText(R.string.ui_maintenance_screen_011))
+                            SupportingText(uiText(R.string.ui_maintenance_screen_011))
                             TextButton(enabled = !busy, onClick = vm::review) { Text(uiText(R.string.ui_screen_titles_004)) }
                         }
                         Button(enabled = !busy && ready.pendingCount == 0 && !ready.uncertain,
-                            onClick = { run { vm.maintenance.begin(MaintenanceKind.ROTATION) } }) { Text(uiText(R.string.ui_maintenance_screen_012)) }
-                        TextButton(enabled = !busy && ready.pendingCount == 0 && !ready.uncertain,
-                            onClick = { run { vm.maintenance.begin(MaintenanceKind.MIGRATION) } }) { Text(uiText(R.string.ui_maintenance_screen_013)) }
+                            onClick = { run { vm.maintenance.begin(kind) } }) {
+                            Text(uiText(if (kind == MaintenanceKind.ROTATION) R.string.ui_maintenance_screen_012 else R.string.ui_maintenance_screen_013))
+                        }
                     }
                 }
             }
             return@FormPage
         }
-        InformationCard(uiText(R.string.ui_maintenance_screen_014), maintenancePhaseLabel(j.phase))
+        val phases = if (j.kind == MaintenanceKind.REPLACEMENT) listOf(MaintenancePhase.PREPARING, MaintenancePhase.STAGED,
+            MaintenancePhase.VERIFIED, MaintenancePhase.ACTIVATING, MaintenancePhase.REVIEW, MaintenancePhase.COMPLETE)
+        else listOf(MaintenancePhase.PREPARING, MaintenancePhase.SOURCE_READY, MaintenancePhase.BACKED_UP) +
+            (if (j.kind == MaintenanceKind.ROTATION) listOf(MaintenancePhase.TOKEN_CHANGE) else emptyList()) +
+            listOf(MaintenancePhase.DESTINATION_READY, MaintenancePhase.PREPARED, MaintenancePhase.UPLOAD_STARTED,
+                MaintenancePhase.UPLOADED, MaintenancePhase.WRITE_STARTED, MaintenancePhase.ACTIVATING, MaintenancePhase.COMPLETE)
+        if (j.phase in phases) StepHeader(phases.map(::maintenancePhaseLabel), phases.indexOf(j.phase))
+        else NoticeStrip(Notice(maintenancePhaseLabel(j.phase), NoticeSeverity.WARNING))
         MaintenanceIdentity(uiText(R.string.ui_maintenance_screen_015), j.sourceTitle, j.sourceBotId, j.sourceGroupId, j.sourceId, j.sourceTime)
         if (j.sourceUnavailable) Text(uiText(R.string.ui_maintenance_screen_016), color = MaterialTheme.colorScheme.error)
         if (j.destinationGroupId != null) MaintenanceIdentity(uiText(R.string.ui_maintenance_screen_017), j.destinationTitle, j.destinationBotId,
@@ -159,12 +171,12 @@ import com.aqaqeer.app.maintenance.*
         FormField(uiText(R.string.ui_maintenance_screen_049), current, { current = it }, secret = true, required = true, numericSecret = true, validate = FormGuidance::pin)
         FormField(uiText(R.string.ui_maintenance_screen_050), next, { next = it }, secret = true, required = true, numericSecret = true, validate = FormGuidance::pin)
         FormField(uiText(R.string.ui_maintenance_screen_051), confirmation, { confirmation = it }, secret = true, required = true, numericSecret = true, validate = { if (it.map { c -> Character.digit(c, 10) } == next.map { c -> Character.digit(c, 10) }) null else uiText(R.string.ui_pharmacy_admin_screen_013) })
+        SupportingText(uiText(R.string.ui_maintenance_screen_053))
         Button(enabled = !busy && current.isNotEmpty() && next.isNotEmpty() && confirmation.isNotEmpty(), onClick = {
             val a = current.toCharArray(); val b = next.toCharArray(); val c = confirmation.toCharArray()
             current = ""; next = ""; confirmation = ""
             vm.secretCommand(null, a, b, c) { vm.pinChanges.change(a, b, c) }
         }) { Text(uiText(R.string.ui_maintenance_screen_052)) }
-        Text(uiText(R.string.ui_maintenance_screen_053))
     }
 }
 
@@ -174,11 +186,12 @@ import com.aqaqeer.app.maintenance.*
 }
 
 @Composable internal fun MaintenanceIdentity(label: String, title: String?, bot: Long?, group: Long?, publication: String?, time: String?) {
-    GroupedCard(title = label) {
+    var expanded by rememberSaveable(label, publication) { mutableStateOf(false) }
+    CollapsibleGroup(label, expanded, { expanded = !expanded }) {
         title?.let { Text(it) }
-        LabeledValue(uiText(R.string.ui_maintenance_screen_056), bot?.let { bidi(it.toString()) } ?: uiText(R.string.ui_maintenance_screen_057))
-        group?.let { LabeledValue(uiText(R.string.ui_maintenance_screen_058), bidi(it.toString())) }
-        publication?.let { LabeledValue(uiText(R.string.ui_maintenance_screen_059), bidi(it)) }
+        bot?.let { CopyableValue(uiText(R.string.ui_maintenance_screen_056), it.toString()) }
+        group?.let { CopyableValue(uiText(R.string.ui_maintenance_screen_058), it.toString()) }
+        publication?.let { CopyableValue(uiText(R.string.ui_maintenance_screen_059), it) }
         time?.let { LabeledValue(uiText(R.string.ui_maintenance_screen_060), bidi(it)) }
     }
 }
@@ -196,13 +209,13 @@ import com.aqaqeer.app.maintenance.*
     }
     GroupedCard(title = uiText(R.string.ui_maintenance_screen_061)) {
         BackupPassphraseFields(password, confirmation, { password = it }, { confirmation = it })
+        SupportingText(uiText(R.string.ui_maintenance_screen_063))
         Button(enabled = !busy && password.codePointCount(0, password.length) >= 8 && password == confirmation, onClick = {
             secrets.clear(); secrets.password = password.toCharArray(); secrets.confirmation = confirmation.toCharArray(); flow = j.id
             password = ""; confirmation = ""
             try { save.launch("aqaqeer-maintenance-backup.aqbak") }
             catch (_: Exception) { secrets.clear(); flow = null; vm.adminMessage.value = uiText(R.string.ui_reports_screen_002) }
         }) { Text(uiText(R.string.ui_maintenance_screen_062)) }
-        Text(uiText(R.string.ui_maintenance_screen_063))
     }
 }
 

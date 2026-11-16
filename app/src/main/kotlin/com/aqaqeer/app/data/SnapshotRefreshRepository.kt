@@ -144,7 +144,7 @@ class SnapshotRefreshRepository @Inject constructor(private val factory: Databas
                 decision
             }
             rejection?.let { throw RefreshException(it) }
-            if (outcome == RefreshOutcome.APPLIED) {
+            if (outcome == RefreshOutcome.APPLIED && incoming != null) {
                 val previous = baseline.catalog.medications.associateBy { it.id }
                 val oldPairs = baseline.catalog.availability.associateBy { it.medicationId to it.sectionId }
                 val changed = incoming.catalog.medications.filter { previous[it.id] != it }.map { it.id }.toSet() +

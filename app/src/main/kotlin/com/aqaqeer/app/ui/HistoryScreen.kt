@@ -33,7 +33,7 @@ import java.time.LocalDate
     if (filtersOpen) ModalBottomSheet(onDismissRequest = { filtersOpen = false },
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
         DialogBody(Modifier.padding(UiSpacing.page)) {
-            HistoryFilters(state.request.filter, medicationId, page?.medications.orEmpty(), page?.editors.orEmpty()) {
+            HistoryFilters(state.request.filter, medicationId, page?.medications.orEmpty(), ready.catalog.pharmacy?.timezone ?: "Asia/Damascus") {
                 vm.filterHistory(it); filtersOpen = false
             }
         }
@@ -41,7 +41,11 @@ import java.time.LocalDate
     LazyColumn(Modifier.fillMaxSize(), state = listState, contentPadding = PaddingValues(UiSpacing.page), verticalArrangement = Arrangement.spacedBy(UiSpacing.section)) {
         item {
             ActionGroup {
-                TextButton(onClick = { filtersOpen = true }) { AppIcon(UiIcon.FILTER); Text(uiText(R.string.ui_history_screen_002)) }
+                val activeFilter = state.request.filter.let { it.from != null || it.through != null || it.entityType != null || (medicationId == null && it.medicationId != null) }
+                TextButton(onClick = { filtersOpen = true }, colors = ButtonDefaults.textButtonColors(
+                    containerColor = if (activeFilter) MaterialTheme.colorScheme.primaryContainer else androidx.compose.ui.graphics.Color.Transparent)) {
+                    AppIcon(UiIcon.FILTER); Text(uiText(R.string.ui_history_screen_002) + if (activeFilter) " ●" else "")
+                }
                 Text(uiText(R.string.ui_history_screen_003, MedicationPresentation.displayDigits((state.request.page + 1).toString())))
             }
             ExpandableInformation(uiText(R.string.ui_history_screen_004), uiText(R.string.ui_history_screen_005))
@@ -49,12 +53,21 @@ import java.time.LocalDate
             if (state.error != null) TextButton(onClick = vm::retryHistory) { Text(uiText(R.string.ui_history_screen_006)) }
         }
         if (!state.loading && state.error == null && page?.entries?.isEmpty() == true) item {
-            InformationCard(uiText(R.string.ui_history_screen_007), uiText(R.string.ui_history_screen_008))
+            EmptyState(uiText(R.string.ui_history_screen_007), uiText(R.string.ui_history_screen_008))
         }
-        items(page?.entries.orEmpty(), key = { it.id }) { entry ->
-            HistoryEntryCard(entry, ready.catalog, page?.timezone ?: ready.catalog.pharmacy?.timezone ?: "Asia/Damascus",
-                medicationNames = medicationNames, showHijri = showHijri,
-                editMedication = if (ready.requiresUpdate || ready.maintenancePaused) null else ({ id -> vm.navigate("edit-med:${id}") }))
+        val zone = java.time.ZoneId.of(page?.timezone ?: ready.catalog.pharmacy?.timezone ?: "Asia/Damascus")
+        val today = java.time.Instant.now().atZone(zone).toLocalDate()
+        page?.entries.orEmpty().groupBy { (it.editedAt ?: it.observedAt)?.atZone(zone)?.toLocalDate() }.forEach { (day, entries) ->
+            item(key = "day_$day") { SectionHeading(when (day) {
+                today -> uiText(R.string.review_today)
+                today.minusDays(1) -> uiText(R.string.review_yesterday)
+                null -> uiText(R.string.ui_history_components_018)
+                else -> bidi(day.toString())
+            }) }
+            items(entries, key = { it.id }) { entry ->
+                HistoryEntryCard(entry, ready.catalog, zone.id, medicationNames = medicationNames, showHijri = showHijri,
+                    editMedication = if (ready.requiresUpdate || ready.maintenancePaused) null else ({ id -> vm.navigate("edit-med:$id") }))
+            }
         }
         item {
             ActionGroup {
@@ -69,10 +82,9 @@ import java.time.LocalDate
 }
 
 @Composable internal fun HistoryFilters(filter: HistoryFilter, medicationScope: String?, medications: List<HistoryOption>,
-    editors: List<HistoryOption>, apply: (HistoryFilter) -> Unit) {
+    timezone: String, apply: (HistoryFilter) -> Unit) {
     var from by rememberSaveable(filter.from, medicationScope) { mutableStateOf(filter.from?.toString().orEmpty()) }
     var through by rememberSaveable(filter.through, medicationScope) { mutableStateOf(filter.through?.toString().orEmpty()) }
-    var editor by rememberSaveable(filter.editorId, medicationScope) { mutableStateOf(filter.editorId) }
     var medication by rememberSaveable(filter.medicationId, medicationScope) { mutableStateOf(filter.medicationId) }
     var entityType by rememberSaveable(filter.entityType, medicationScope) { mutableStateOf(filter.entityType) }
     val fromDate = historyDate(from)
@@ -80,18 +92,28 @@ import java.time.LocalDate
     val valid = (from.isBlank() || fromDate != null) && (through.isBlank() || throughDate != null) &&
         (fromDate == null || throughDate == null || fromDate <= throughDate)
     GroupedCard(title = uiText(R.string.ui_history_screen_002)) {
+        val today = rememberPresentationTime(timezone).atZone(java.time.ZoneId.of(timezone)).toLocalDate()
+        val ranges = listOf(R.string.review_today to today, R.string.review_7_days to today.minusDays(6),
+            R.string.review_since_sunday to today.with(java.time.temporal.TemporalAdjusters.previousOrSame(java.time.DayOfWeek.SUNDAY)))
+        var custom by rememberSaveable(filter.from, filter.through) { mutableStateOf(ranges.none { it.second == filter.from && filter.through == today }) }
+        WrappingContent {
+            ranges.forEach { (label, start) -> FilterChip(selected = !custom && from == start.toString() && through == today.toString(),
+                onClick = { custom = false; from = start.toString(); through = today.toString() }, label = { Text(uiText(label)) }) }
+            FilterChip(selected = custom, onClick = { custom = true }, label = { Text(uiText(R.string.review_custom)) })
+        }
+        if (custom) {
         GregorianDateField(uiText(R.string.ui_history_screen_011), from, { from = it })
         GregorianDateField(uiText(R.string.ui_history_screen_012), through, { through = it })
+        }
         HistoryFilterPicker(uiText(R.string.logic_history_type), listOf(HistoryOption("availability", uiText(R.string.logic_history_availability)), HistoryOption("medication", uiText(R.string.logic_history_medication)),
             HistoryOption("taxonomy", uiText(R.string.logic_history_taxonomy)), HistoryOption("pharmacy", uiText(R.string.logic_history_pharmacy)), HistoryOption("snapshot", uiText(R.string.logic_history_publication)),
             HistoryOption("maintenance", uiText(R.string.logic_history_maintenance))), entityType) { entityType = it }
-        HistoryFilterPicker(uiText(R.string.ui_history_screen_013), editors, editor) { editor = it }
         if (medicationScope == null) HistoryFilterPicker(uiText(R.string.ui_history_screen_014), medications, medication) { medication = it }
         if (!valid) Text(uiText(R.string.ui_history_screen_015), color = MaterialTheme.colorScheme.error)
         ActionGroup {
-            Button(enabled = valid, onClick = { apply(HistoryFilter(fromDate, throughDate, editor, medicationScope ?: medication, entityType)) }) { Text(uiText(R.string.ui_history_screen_016)) }
+            Button(enabled = valid, onClick = { apply(HistoryFilter(fromDate, throughDate, medicationScope ?: medication, entityType)) }) { Text(uiText(R.string.ui_history_screen_016)) }
             TextButton(onClick = {
-                from = ""; through = ""; editor = null; medication = medicationScope
+                from = ""; through = ""; medication = medicationScope
                 apply(HistoryFilter(medicationId = medicationScope))
             }) { Text(uiText(R.string.ui_history_screen_017)) }
         }

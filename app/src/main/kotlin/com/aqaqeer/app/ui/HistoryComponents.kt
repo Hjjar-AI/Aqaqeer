@@ -34,7 +34,6 @@ import kotlinx.serialization.json.*
     val restoreReview = entry.entityType == "snapshot" && entry.field in setOf("restoreReplacementReviewed", "restoreReconciled")
     val observed = entry.observedAt != null && !publication && !recovery && !restoreReview
     var details by rememberSaveable(entry.id) { mutableStateOf(false) }
-    val actor = entry.editorName?.takeIf(String::isNotBlank) ?: uiText(R.string.ui_history_components_002)
     val time = if (observed) entry.observedAt else entry.editedAt ?: entry.observedAt
     val context = when {
         publication -> uiText(R.string.ui_history_components_003)
@@ -61,15 +60,16 @@ import kotlinx.serialization.json.*
                 val afterStatus = remember(entry.entityType, entry.after) { if (entry.entityType == "availability") historyStatus(entry.after) else null }
                 if (beforeStatus != null && afterStatus != null) WrappingContent {
                     Column { Text(uiText(R.string.ui_pharmacy_admin_screen_035)); StatusBadge(beforeStatus) }
+                    Text("→")
                     Column { Text(uiText(R.string.ui_pharmacy_admin_screen_036)); StatusBadge(afterStatus) }
                 } else {
                     HistoryValueLine(uiText(R.string.ui_pharmacy_admin_screen_035), entry.field, entry.before, catalog)
+                    Text("→")
                     HistoryValueLine(uiText(R.string.ui_pharmacy_admin_screen_036), entry.field, entry.after, catalog)
                 }
             }
         }
-        Text((if (publication) uiText(R.string.ui_history_components_014) else if (observed) uiText(R.string.ui_history_components_015) else uiText(R.string.ui_history_components_016)) + bidi(actor) + " · " +
-            (if (observed) uiText(R.string.ui_history_components_017) else "") +
+        Text((if (observed) uiText(R.string.ui_history_components_017) else "") +
             (time?.let { bidi(MedicationPresentation.timestamp(it, timezone)) } ?: uiText(R.string.ui_history_components_018)),
             style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         time?.let { SecondaryHijriDate(MedicationPresentation.today(it, timezone), showHijri) }
@@ -77,9 +77,8 @@ import kotlinx.serialization.json.*
         TextButton(onClick = { details = !details }) { Text(if (details) uiText(R.string.ui_history_components_020) else uiText(R.string.ui_history_components_021)) }
         if (details) {
             HorizontalDivider()
-            LabeledValue(uiText(R.string.ui_history_components_022), bidi(entry.id))
-            LabeledValue(if (publication || recovery) uiText(R.string.ui_history_components_023) else uiText(R.string.ui_history_components_024), bidi(entry.entityId))
-            entry.editorId?.let { LabeledValue(uiText(R.string.ui_history_components_025), bidi(it)) }
+            CopyableValue(uiText(R.string.ui_history_components_022), entry.id)
+            CopyableValue(if (publication || recovery) uiText(R.string.ui_history_components_023) else uiText(R.string.ui_history_components_024), entry.entityId)
             if (publication) Text(uiText(R.string.ui_history_components_026))
             if (entry.entityType == "maintenance") Text(uiText(R.string.ui_history_components_027))
             if (!publication) Text(uiText(R.string.ui_history_components_028) +
@@ -94,7 +93,7 @@ import kotlinx.serialization.json.*
             if (entry.publishedRevision == null && !publication && !recovery)
                 Text(uiText(R.string.ui_history_components_031))
         }
-        if (medicationId != null) {
+        if (details && medicationId != null) {
             if (medication == null) SupportingText(uiText(R.string.ui_history_components_032))
             else editMedication?.let { edit -> TextButton(onClick = { edit(medication.id) }) { Text(uiText(R.string.ui_history_components_033, bidi(name))) } }
         }

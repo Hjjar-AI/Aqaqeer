@@ -127,7 +127,14 @@ import kotlinx.serialization.json.*
                 if (ready.restorePaused) NavigationCard(uiText(R.string.ui_pharmacy_admin_screen_030), onClick = { vm.navigate("backup") })
                 Text(uiText(R.string.ui_pharmacy_admin_screen_031, MedicationPresentation.displayDigits(ready.pendingCount.toString())), style = MaterialTheme.typography.titleLarge)
                 Text(if (ready.maintenancePaused) uiText(R.string.ui_pharmacy_admin_screen_032) else if (ready.restorePaused) uiText(R.string.ui_pharmacy_admin_screen_033) else uiText(R.string.ui_pharmacy_admin_screen_034))
-                pending.groupBy { it.entityType to it.targetId.substringBefore('/') }.forEach { (_, operations) ->
+                var typeFilter by rememberSaveable { mutableStateOf<String?>(null) }
+                WrappingContent {
+                    FilterChip(typeFilter == null, onClick = { typeFilter = null }, label = { Text(uiText(R.string.review_all) + " (${pending.size})") })
+                    pending.groupBy { it.entityType }.forEach { (type, operations) ->
+                        FilterChip(typeFilter == type, onClick = { typeFilter = type }, label = { Text(entityLabel(type) + " (${operations.size})") })
+                    }
+                }
+                pending.filter { typeFilter == null || it.entityType == typeFilter }.groupBy { it.entityType to it.targetId.substringBefore('/') }.forEach { (_, operations) ->
                     val first = operations.first()
                     val name = catalog.medications.find { it.id == first.targetId.substringBefore('/') }
                         ?.let { MedicationPresentation.identity(it, catalog.formsById[it.formId]?.nameAr) } ?: entityLabel(first.entityType)
@@ -148,7 +155,15 @@ import kotlinx.serialization.json.*
             }
             state.route == "taxonomy" -> TaxonomyEditor(catalog, vm, busy)
             else -> {
+                if (ready.admin && !ready.isDemo) SetupChecklist(ready) { vm.navigate(it) }
+                if (!ready.admin) {
+                    NavigationCard(uiText(R.string.ui_screen_titles_006), { vm.navigate("promote") })
+                    NavigationCard(uiText(R.string.ui_screen_titles_018), { vm.navigate("maintenance") })
+                    NavigationCard(uiText(R.string.ui_screen_titles_007), { vm.navigate("leave") }, destructive = true)
+                    return@FormPage
+                }
                 NavigationCard(uiText(R.string.ui_screen_titles_011), onClick = { vm.navigate("backup") })
+                NavigationCard(uiText(R.string.ui_screen_titles_007), { vm.navigate("leave") }, destructive = true)
                 if (ready.lifecycle == "LOCAL_DRAFT") InformationCard(uiText(R.string.ui_pharmacy_admin_screen_038), uiText(R.string.ui_pharmacy_admin_screen_039))
                 NavigationGroup(uiText(R.string.ui_pharmacy_admin_screen_040)) {
                     NavigationRow(uiText(R.string.ui_screen_titles_015), { vm.openHistory() })
@@ -321,6 +336,7 @@ internal fun reviewValue(field: String, raw: String, catalog: CatalogSnapshot, l
     fun save() {
         submitted = true
         if (scientificError != null || strength.isBlank() || FormGuidance.date(expiry) != null || FormGuidance.threshold(threshold) != null) {
+            if (FormGuidance.threshold(threshold) != null) optionalOpen = true
             scope.launch { formFocus.focusFirstInvalid() }; return
         }
         if (duplicates.isNotEmpty() && !duplicateConfirmed) {
@@ -355,21 +371,21 @@ internal fun reviewValue(field: String, raw: String, catalog: CatalogSnapshot, l
             keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(capitalization = androidx.compose.ui.text.input.KeyboardCapitalization.Words),
             supportingText = uiText(R.string.ui_pharmacy_admin_screen_112), validate = { scientificError })
         FormField(uiText(R.string.ui_pharmacy_admin_screen_113), strength, { strength = it }, submitted = submitted, required = true)
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(UiSpacing.related)) {
-            Box(Modifier.weight(1f)) {
-                ChoicePicker(uiText(R.string.ui_pharmacy_admin_screen_114), c.forms, c.forms.find { it.id == form }, { it.nameAr }) { form = it.id }
-            }
-            Box(Modifier.weight(1f)) {
-                ChoicePicker(uiText(R.string.ui_pharmacy_admin_screen_073), c.categories, c.categories.find { it.id == category }, { it.nameAr }) { category = it.id }
-            }
-        }
+        AdaptivePickers(first = {
+            ChoicePicker(uiText(R.string.ui_pharmacy_admin_screen_114), c.forms, c.forms.find { it.id == form }, { it.nameAr }) { form = it.id }
+        }, second = {
+            ChoicePicker(uiText(R.string.ui_pharmacy_admin_screen_073), c.categories, c.categories.find { it.id == category }, { it.nameAr }) { category = it.id }
+        })
         GregorianDateField(uiText(R.string.ui_pharmacy_admin_screen_071), expiry, { expiry = it }, submitted = submitted)
-        FormField(uiText(R.string.ui_pharmacy_admin_screen_072), threshold, { threshold = MedicationPresentation.westernDigits(it) }, submitted = submitted,
-            required = true, validate = FormGuidance::threshold, ltr = true, imeAction = ImeAction.Done, onDone = { if (!busy) save() })
+
     }
     TextButton(onClick = { optionalOpen = !optionalOpen }) { Text(if (optionalOpen) uiText(R.string.ui_pharmacy_admin_screen_115) else uiText(R.string.ui_pharmacy_admin_screen_116)) }
     Column(Modifier.animateContentSize(tween(180))) {
     if (optionalOpen) {
+    GroupedCard {
+        FormField(uiText(R.string.ui_pharmacy_admin_screen_072), threshold, { threshold = MedicationPresentation.westernDigits(it) }, submitted = submitted,
+            required = true, validate = FormGuidance::threshold, ltr = true, imeAction = ImeAction.Done, onDone = { if (!busy) save() })
+    }
     GroupedCard(title = uiText(R.string.ui_pharmacy_admin_screen_117)) {
         FormField(uiText(R.string.ui_pharmacy_admin_screen_064), ar, { ar = it }, submitted = submitted, required = false)
         FormField(uiText(R.string.ui_pharmacy_admin_screen_062), en, { en = it }, ltr = true, submitted = submitted, required = false)
@@ -388,7 +404,7 @@ internal fun reviewValue(field: String, raw: String, catalog: CatalogSnapshot, l
             supporting = uiText(R.string.ui_pharmacy_admin_screen_121))
         GroupedCard(title = uiText(R.string.ui_pharmacy_admin_screen_122)) {
             CheckChoiceRow(confirmDelete, uiText(R.string.ui_pharmacy_admin_screen_123)) { confirmDelete = it }
-            TextButton(colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error), enabled = !busy && confirmDelete, onClick = { vm.command("home") { vm.admin.delete("medication", id) } }) { Text(uiText(R.string.ui_pharmacy_admin_screen_122)) }
+            DestructiveConfirmButton(enabled = !busy && confirmDelete, onClick = { vm.command("home") { vm.admin.delete("medication", id) } }, label = uiText(R.string.ui_pharmacy_admin_screen_122))
         }
     }
     }
@@ -426,7 +442,7 @@ internal fun reviewValue(field: String, raw: String, catalog: CatalogSnapshot, l
             Text(uiText(R.string.ui_pharmacy_admin_screen_134))
             if (type == "section") FormField(uiText(R.string.ui_pharmacy_admin_screen_135), deleteName, { deleteName = it }, required = true)
             CheckChoiceRow(deleteConfirm, uiText(R.string.ui_pharmacy_admin_screen_136)) { deleteConfirm = it }
-            TextButton(colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error), enabled = !busy && deleteConfirm, onClick = { vm.command { vm.admin.delete(type, id, deleteName); resetForm() } }) { Text(uiText(R.string.ui_pharmacy_admin_screen_137)) }
+            DestructiveConfirmButton(enabled = !busy && deleteConfirm, onClick = { vm.command { vm.admin.delete(type, id, deleteName); resetForm() } }, label = uiText(R.string.ui_pharmacy_admin_screen_137))
         }
     }
 }

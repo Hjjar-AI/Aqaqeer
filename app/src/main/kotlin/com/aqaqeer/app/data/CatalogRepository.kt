@@ -24,7 +24,7 @@ sealed interface CatalogState {
         val admin: Boolean = false, val pendingCount: Int = 0, val uncertain: Boolean = false,
         val restorePaused: Boolean = false, val restoreConnectionConfirmed: Boolean = false, val backupReminderAt: Long? = null, val restoreHasConnection: Boolean = false,
         val hasPublicationConnection: Boolean = false, val maintenancePaused: Boolean = false, val maintenanceRecoveryRequired: Boolean = false,
-        val unpublishedMedicationIds: Set<String> = emptySet()) : CatalogState
+        val unpublishedMedicationIds: Set<String> = emptySet(), val hasBackup: Boolean = false) : CatalogState
     data object RecoveryRequired : CatalogState
 }
 
@@ -175,7 +175,7 @@ class CatalogRepository @Inject constructor(private val factory: DatabaseFactory
             maintenancePaused = maintenance != null || maintenanceRecovery, maintenanceRecoveryRequired = maintenanceRecovery,
             unpublishedMedicationIds = if (authorized) dao.pending().filter {
                 it.entityType in setOf("medication", "availability")
-            }.map { it.targetId.substringBefore('/') }.toSet() else emptySet())
+            }.map { it.targetId.substringBefore('/') }.toSet() else emptySet(), hasBackup = control.lastBackupAt != null)
     }
 
     /** Same initialization/recovery/integrity boundary as observation, without an invalidation flow. */

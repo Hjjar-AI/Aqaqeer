@@ -27,24 +27,20 @@ import com.aqaqeer.app.data.*
         val measurer = androidx.compose.ui.text.rememberTextMeasurer()
         val style = MaterialTheme.typography.titleSmall
         val density = LocalDensity.current
-        val required = remember(active, outCounts, style, density) {
-            active.maxOf { section ->
-                val count = outCounts[section.id] ?: 0
-                val label = section.nameAr + if (count > 0) " ${MedicationPresentation.displayDigits(count.toString())}" else ""
-                with(density) { measurer.measure(androidx.compose.ui.text.AnnotatedString(label), style).size.width.toDp() } + UiSpacing.tabMeasurementAllowance
-            } * active.size
+        val required = remember(active, style, density) {
+            active.maxOf { section -> with(density) {
+                measurer.measure(androidx.compose.ui.text.AnnotatedString(section.nameAr), style).size.width.toDp()
+            } + UiSpacing.tabMeasurementAllowance } * active.size
         }
         val tabs: @Composable () -> Unit = {
             active.forEach { section ->
-                val out = outCounts[section.id] ?: 0
                 Tab(selected = selectedId == section.id, onClick = { selectSection(section.id) },
                     modifier = Modifier.testTag("section_${section.id}").semantics {
-                        contentDescription = section.nameAr + if (out > 0) uiText(R.string.ui_home_screen_001, MedicationPresentation.displayDigits(out.toString())) else ""
+                        contentDescription = section.nameAr
                     }) {
                     Row(Modifier.heightIn(min = UiSpacing.touch).padding(horizontal = UiSpacing.related),
                         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(UiSpacing.hair)) {
                         Text(section.nameAr, style = style)
-                        if (out > 0) Badge { Text(MedicationPresentation.displayDigits(out.toString())) }
                     }
                 }
             }
@@ -58,7 +54,7 @@ import com.aqaqeer.app.data.*
 
 @Composable internal fun HomeSearchControls(query: TextFieldValue, changeQuery: (TextFieldValue) -> Unit,
     searching: Boolean, filters: HomeFilters, visibleCount: Int, totalCount: Int,
-    openFilters: () -> Unit, clearFilters: () -> Unit) {
+    openFilters: () -> Unit, clearFilters: () -> Unit, select: (() -> Unit)? = null) {
     val focus = LocalFocusManager.current
     ContentSection {
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
@@ -73,7 +69,8 @@ import com.aqaqeer.app.data.*
                     IconButton(onClick = { changeQuery(TextFieldValue("")); focus.clearFocus() },
                         modifier = Modifier.testTag("clear_search")) { AppIcon(UiIcon.CLOSE, description = uiText(R.string.ui_home_screen_005)) }
                 }) else null)
-            val filterCount = filters.statuses.size + filters.categoryIds.size
+            select?.let { TextButton(onClick = it) { Text(uiText(R.string.review_select)) } }
+            val filterCount = filters.statuses.size + filters.categoryIds.size + listOf(filters.expiringSoon, filters.unpublishedOnly, filters.fetchedOnly).count { it }
             OutlinedIconButton(onClick = {
                 openFilters()
             },
@@ -85,13 +82,31 @@ import com.aqaqeer.app.data.*
                 }) { AppIcon(UiIcon.FILTER) }
             }
         }
-        if (searching || filters.statuses.isNotEmpty() || filters.categoryIds.isNotEmpty()) {
+        if (searching || filters.statuses.isNotEmpty() || filters.categoryIds.isNotEmpty() || filters.expiringSoon || filters.unpublishedOnly || filters.fetchedOnly) {
             WrappingContent {
                 Text(uiText(R.string.ui_home_screen_006, MedicationPresentation.displayDigits(visibleCount.toString()), MedicationPresentation.displayDigits(totalCount.toString())),
                     style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                if (filters.statuses.isNotEmpty() || filters.categoryIds.isNotEmpty())
+                if (filters.statuses.isNotEmpty() || filters.categoryIds.isNotEmpty() || filters.expiringSoon || filters.unpublishedOnly || filters.fetchedOnly)
                     TextButton(onClick = clearFilters) { Text(uiText(R.string.ui_history_screen_017)) }
             }
         }
     }
+}
+
+@Composable internal fun HomeQuickFilters(filters: HomeFilters, admin: Boolean,
+    toggleStatus: (com.aqaqeer.app.data.AvailabilityStatus) -> Unit, toggleExtra: (String) -> Unit) {
+    WrappingContent {
+        listOf(com.aqaqeer.app.data.AvailabilityStatus.OUT, com.aqaqeer.app.data.AvailabilityStatus.LOW).forEach { status ->
+            FilterChip(status in filters.statuses, onClick = { toggleStatus(status) }, label = { Text(statusLabel(status)) })
+        }
+        ExtraFilterChips(filters, admin, toggleExtra)
+    }
+}
+@Composable internal fun HomeExtraFilters(filters: HomeFilters, admin: Boolean, toggle: (String) -> Unit) {
+    WrappingContent { ExtraFilterChips(filters, admin, toggle) }
+}
+@Composable private fun ExtraFilterChips(filters: HomeFilters, admin: Boolean, toggle: (String) -> Unit) {
+    FilterChip(filters.expiringSoon, onClick = { toggle("expiry") }, label = { Text(uiText(R.string.review_expiry_soon)) })
+    if (admin) FilterChip(filters.unpublishedOnly, onClick = { toggle("unpublished") }, label = { Text(uiText(R.string.review_unpublished)) })
+    FilterChip(filters.fetchedOnly, onClick = { toggle("fetched") }, label = { Text(uiText(R.string.review_whats_new)) })
 }

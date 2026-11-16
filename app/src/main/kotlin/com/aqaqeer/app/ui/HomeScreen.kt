@@ -92,7 +92,7 @@ import java.time.ZoneId
     saveBulk: ((AvailabilitySelection, BulkMedicationChanges, () -> Unit) -> Unit)? = null,
     projection: HomeBrowseResult = HomeBrowseResult(), highlightedMedication: String? = null,
     prefillMedication: (String) -> Unit = {}, onBulkModeChanged: (Boolean) -> Unit = {},
-    onBottomBarsHeightChanged: (Int) -> Unit = {}) {
+    toggleExtraFilter: (String) -> Unit = {}, onBottomBarsHeightChanged: (Int) -> Unit = {}) {
     val catalog = ready.catalog
     val focus = LocalFocusManager.current
     if (catalog.pharmacy == null) {
@@ -127,7 +127,7 @@ import java.time.ZoneId
     val notifyBulk by rememberUpdatedState(onBulkModeChanged)
     DisposableEffect(Unit) { onDispose { notifyModal(false); notifyBulk(false) } }
     if (filtersOpen) HomeFilterSheet(catalog, state.filters, toggleStatus, toggleCategory, clearFilters,
-        state.homePreferences, setGroupingEnabled, setGrouping) { filtersOpen = false }
+        ready.admin && !ready.isDemo, toggleExtraFilter) { filtersOpen = false }
     LaunchedEffect(availabilitySavedId) {
         if (availabilitySavedId != null && editor?.id == availabilitySavedId) {
             editor = null; selectedIds = emptySet(); bulkMode = false; bulkSheetOpen = false
@@ -159,18 +159,10 @@ import java.time.ZoneId
         if (bulkMode && contextValid && editor == null) changeBulkSelection(selectedIds)
     }
     BackHandler(bulkMode && !editorVisible && !filtersOpen && !bulkSheetOpen && canOpenHomeModal()) { exitBulk() }
-    editor?.takeIf { editorVisible }?.let { captured ->
-        AvailabilityEditor(captured, availabilityBusy, availabilityMessage,
-            dismiss = { if (!availabilityInProgress()) editor = null },
-            save = { status -> saveAvailability?.invoke(captured, status) {
-                if (editor == captured) { editor = null; selectedIds = emptySet(); bulkMode = false; bulkSheetOpen = false }
-            } }, current = captured.expected.all { (id, before) ->
-                catalog.medications.any { it.id == id } && catalog.status(id, captured.section.id) == before
-            }, isSaving = availabilityInProgress)
-    }
     val today = MedicationPresentation.today(now, catalog.pharmacy.timezone)
     val projectionReady = projection.catalog == catalog && projection.sectionId == selected?.id &&
-        projection.query == state.appliedQuery && projection.filters == state.filters && projection.preferences == state.homePreferences
+        projection.query == state.appliedQuery && projection.filters == state.filters && projection.preferences == state.homePreferences && projection.fetched == state.fetchedIds &&
+        projection.unpublished == ready.unpublishedMedicationIds && projection.today == today
     val visible = if (projectionReady) projection.visible else emptyList()
     val groups = if (projectionReady) projection.groups else emptyList()
     val searching = MedicationPresentation.normalizedSearch(state.appliedQuery).isNotEmpty()
@@ -185,21 +177,37 @@ import java.time.ZoneId
                 if (editor == null && canOpenHomeModal()) {
                     focus.clearFocus(); notifyModal(true); filtersOpen = true
                 }
-            }, clearFilters = clearFilters)
+            }, clearFilters = clearFilters, select = if (canEdit && saveBulk != null && selected != null && !bulkMode) ({
+                if (contextValid && canOpenHomeModal() && !availabilityInProgress() && !filtersOpen && editor == null) {
+                    focus.clearFocus(); bulkMode = true; changeBulkSelection(emptySet())
+                }
+            }) else null)
+        HomeQuickFilters(state.filters, canEdit, toggleStatus, toggleExtraFilter)
+        if (projectionReady && projection.otherSections.isNotEmpty()) {
+            SupportingText(uiText(R.string.review_elsewhere, projection.otherSections.values.flatten().toSet().size.toString()))
+            WrappingContent {
+                active.filter { it.id in projection.otherSections }.forEach { section ->
+                    AssistChip(onClick = { selectSection(section.id) }, label = { Text(section.nameAr) })
+                }
+            }
+        }
     }
     BoxWithConstraints(Modifier.fillMaxSize()) {
         val compactHeight = maxHeight < 480.dp || LocalDensity.current.fontScale > 1.4f
-        val scrollingSections = compactHeight && !state.homePreferences.sectionsAtBottom
+        val scrollingSections = false
         val keyboardOpen = WindowInsets.ime.getBottom(LocalDensity.current) > 0
         val showBottomBars = state.homePreferences.searchAtBottom || state.homePreferences.sectionsAtBottom && !keyboardOpen
         val reportBottomHeight by rememberUpdatedState(onBottomBarsHeightChanged)
         SideEffect { if (!showBottomBars) reportBottomHeight(0) }
         DisposableEffect(Unit) { onDispose { reportBottomHeight(0) } }
         val gridState = rememberLazyGridState()
+        var collapsedGroups by rememberSaveable(catalog.pharmacy.pharmacyId, selected?.id, state.homePreferences.grouping) { mutableStateOf(emptyList<String>()) }
         LaunchedEffect(highlightedMedication, projectionReady, scrollingSections) {
             if (highlightedMedication != null && projectionReady) {
                 val medicationIndex = visible.indexOfFirst { it.id == highlightedMedication }
                 if (medicationIndex >= 0) {
+                    val containing = groups.firstOrNull { group -> group.medications.any { it.id == highlightedMedication } }?.key
+                    if (containing != null) collapsedGroups = collapsedGroups - containing
                     val leading = (if (scrollingSections) 1 else 0) + (if (bulkMode && canEdit && selected != null) 1 else 0) +
                         (if (editor == null && (availabilityBusy || availabilityMessage != null)) 1 else 0) + (if (selected == null) 1 else 0)
                     val groupedIndex = if (!state.homePreferences.groupingEnabled) medicationIndex else {
@@ -207,7 +215,7 @@ import java.time.ZoneId
                         for (group in groups) {
                             val member = group.medications.indexOfFirst { it.id == highlightedMedication }
                             if (member >= 0) { offset += member + 1; break }
-                            offset += group.medications.size + 1
+                            offset += (if (group.key in collapsedGroups) 0 else group.medications.size) + 1
                         }
                         offset
                     }
@@ -236,31 +244,20 @@ import java.time.ZoneId
         val showAdd = openAddMedication != null && canEdit && !bulkMode && contextValid
         val noticeMaxHeight = maxHeight * if (bulkMode) 0.25f else 0.4f
         Column(Modifier.fillMaxSize()) {
-            if (!state.homePreferences.searchAtBottom || !state.homePreferences.sectionsAtBottom && !compactHeight) {
+            if (!state.homePreferences.searchAtBottom || !state.homePreferences.sectionsAtBottom) {
                 Surface(color = MaterialTheme.colorScheme.background) {
                     ContentSection(modifier = Modifier.padding(horizontal = UiSpacing.page).padding(bottom = UiSpacing.related)) {
-                        if (!state.homePreferences.sectionsAtBottom && !compactHeight) browseHeading()
+                        if (!state.homePreferences.sectionsAtBottom) browseHeading()
                         if (!state.homePreferences.searchAtBottom) searchControls()
                     }
                 }
             }
             if (gridState.canScrollBackward) HorizontalDivider()
-            if (canEdit && selected != null && bulkMode && contextValid) {
-                BulkSelectionBar(selected.nameAr, selectedIds.size, selectionValid, availabilityBusy, cancel = ::exitBulk,
-                    visibleCount = visible.size, selectVisible = { changeBulkSelection(selectedIds + visible.map { it.id }) },
-                    clear = { changeBulkSelection(emptySet()) }) {
-                    ActionGroup {
-                        Button(enabled = selectedIds.isNotEmpty() && selectionValid && !availabilityBusy,
-                            onClick = { focus.clearFocus(); bulkSheetOpen = true }) { Text(uiText(R.string.ui_home_screen_007)) }
-                        TextButton(enabled = !availabilityBusy, onClick = { changeBulkSelection(emptySet()) }) { Text(uiText(R.string.ui_home_screen_008)) }
-                    }
-                }
-            }
             HomeNoticeStrip(ready, state, now, pendingBanner, pageHeader, refresh, publicationBusy, publicationBlockReason,
                 maxHeight = noticeMaxHeight)
             Box(Modifier.weight(1f)) {
                 RefreshContainer(refresh, state.refresh.busy) {
-                    LazyVerticalGrid(columns = GridCells.Fixed(if (state.homePreferences.twoColumns) 2 else 1), state = gridState,
+                    LazyVerticalGrid(columns = if (state.homePreferences.twoColumns) GridCells.Adaptive(160.dp * maxOf(1f, LocalDensity.current.fontScale)) else GridCells.Fixed(1), state = gridState,
                         modifier = Modifier.fillMaxSize().then(sectionSwipe).testTag("home"), contentPadding = PaddingValues(
                             start = UiSpacing.page, end = UiSpacing.page, top = UiSpacing.related,
                             bottom = if (showAdd) UiSpacing.fabClearance else UiSpacing.page),
@@ -273,7 +270,7 @@ import java.time.ZoneId
                         if (editor == null && (availabilityBusy || availabilityMessage != null)) item(span = { GridItemSpan(maxLineSpan) }) {
                             InlineOperationStatus(availabilityBusy, availabilityMessage)
                         }
-                        if (!projectionReady) items(4, key = { "loading_$it" }) { MedicationSkeleton() }
+                        if (!projectionReady) items(4, key = { "loading_$it" }) { MedicationSkeleton(state.homePreferences.layout) }
                         if (selected == null) item(span = { GridItemSpan(maxLineSpan) }) { InformationCard(uiText(R.string.ui_home_screen_010), uiText(R.string.ui_home_screen_011)) }
                         if (projectionReady && visible.isEmpty()) item(span = { GridItemSpan(maxLineSpan) }) {
                             GroupedCard(title = if (catalog.medications.isEmpty()) uiText(R.string.ui_home_screen_012) else uiText(R.string.ui_choice_components_003)) {
@@ -296,6 +293,15 @@ import java.time.ZoneId
                                             focus.clearFocus(); editor = selection(setOf(medication.id)); notifyModal(editor != null)
                                         }
                                     }) else null,
+                                reserveSelectionSpace = canEdit && saveBulk != null,
+                                quickMenuOpen = editorVisible && editor?.medications?.singleOrNull()?.id == medication.id,
+                                dismissQuickMenu = { if (!availabilityInProgress()) editor = null },
+                                chooseStatus = { status ->
+                                    val captured = editor
+                                    if (captured != null && editorCurrent && !availabilityInProgress() && captured.expected.all { (id, before) ->
+                                        catalog.medications.any { it.id == id } && catalog.status(id, captured.section.id) == before
+                                    }) saveAvailability?.invoke(captured, status) { if (editor == captured) editor = null }
+                                },
                                 bulkSelected = if (bulkMode && contextValid && canEdit) medication.id in selectedIds else null,
                                 toggleSelection = { if (!availabilityBusy) changeBulkSelection(if (medication.id in selectedIds)
                                     selectedIds - medication.id else selectedIds + medication.id) },
@@ -312,15 +318,29 @@ import java.time.ZoneId
                             groups.forEach { group ->
                                 stickyHeader(key = group.key) {
                                     Surface(color = MaterialTheme.colorScheme.background) {
-                                        SectionHeading(group.label, Modifier.fillMaxWidth().padding(vertical = UiSpacing.related))
+                                        CollapsibleGroup(group.label, group.key !in collapsedGroups,
+                                            toggle = { collapsedGroups = if (group.key in collapsedGroups) collapsedGroups - group.key else collapsedGroups + group.key }) {}
                                     }
                                 }
-                                items(group.medications, key = { it.id }, itemContent = card)
+                                if (group.key !in collapsedGroups) items(group.medications, key = { it.id }, itemContent = card)
                             }
                         } else items(visible, key = { it.id }, itemContent = card)
                     }
                 }
             }
+            if (canEdit && selected != null && bulkMode && contextValid) {
+                Box(Modifier.fillMaxWidth().padding(horizontal = UiSpacing.page, vertical = UiSpacing.related)) {
+                BulkSelectionBar(selected.nameAr, selectedIds.size, selectionValid, availabilityBusy, cancel = ::exitBulk,
+                    visibleCount = visible.size, selectVisible = { changeBulkSelection(selectedIds + visible.map { it.id }) },
+                    clear = { changeBulkSelection(emptySet()) }) {
+                    ActionGroup {
+                        Button(enabled = selectedIds.isNotEmpty() && selectionValid && !availabilityBusy,
+                            onClick = { focus.clearFocus(); bulkSheetOpen = true }) { Text(uiText(R.string.ui_home_screen_007)) }
+                        TextButton(enabled = !availabilityBusy, onClick = { changeBulkSelection(emptySet()) }) { Text(uiText(R.string.ui_home_screen_008)) }
+                    }
+                }
+            }
+                }
             if (showBottomBars) {
                 Surface(modifier = Modifier.onSizeChanged { reportBottomHeight(it.height) },
                     color = MaterialTheme.colorScheme.background) {
@@ -360,7 +380,7 @@ import java.time.ZoneId
     }
 }
 
-@Composable internal fun DataTimesDialog(ready: CatalogState.Ready, dateAnchor: Instant, dismiss: () -> Unit) {
+@Composable internal fun DataTimesDialog(ready: CatalogState.Ready, dateAnchor: Instant, refresh: (() -> Unit)? = null, busy: Boolean = false, dismiss: () -> Unit) {
     val timezone = ready.catalog.pharmacy?.timezone ?: "Asia/Damascus"
     val now = rememberPresentationTime(timezone)
     val last = ready.lastSuccessfulRefreshAt
@@ -372,14 +392,14 @@ import java.time.ZoneId
                 LabeledValue(uiText(R.string.ui_home_screen_021), ready.publishedAt?.let { bidi(MedicationPresentation.timestamp(it, timezone)) } ?: uiText(R.string.ui_aqaqeer_app_007))
                 LabeledValue(uiText(R.string.ui_home_screen_022), bidi(timezone))
             }
-        }, confirmButton = { TextButton(onClick = dismiss) { Text(uiText(R.string.ui_choice_components_004)) } })
+        }, dismissButton = if (refresh != null) ({ TextButton(enabled = !busy, onClick = refresh) { Text(uiText(R.string.review_refresh_now)) } }) else null,
+        confirmButton = { TextButton(onClick = dismiss) { Text(uiText(R.string.ui_choice_components_004)) } })
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable private fun HomeFilterSheet(catalog: CatalogSnapshot, filters: HomeFilters,
     toggleStatus: (AvailabilityStatus) -> Unit, toggleCategory: (String) -> Unit, clear: () -> Unit,
-    preferences: HomePreferences, setGroupingEnabled: (Boolean) -> Unit,
-    setGrouping: (HomeGrouping) -> Unit, dismiss: () -> Unit) {
+    admin: Boolean, toggleExtraFilter: (String) -> Unit, dismiss: () -> Unit) {
     ModalBottomSheet(onDismissRequest = dismiss, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
         Column(Modifier.fillMaxWidth().heightIn(max = viewportHeight()).padding(UiSpacing.page),
             verticalArrangement = Arrangement.spacedBy(UiSpacing.related)) {
@@ -399,13 +419,7 @@ import java.time.ZoneId
                         modifier = Modifier.testTag("category_${category.id}")) }
                 }
                 FilterSummary(filters, clear)
-                SwitchChoiceRow(preferences.groupingEnabled, uiText(R.string.ui_home_screen_025),
-                    uiText(R.string.ui_home_screen_026), change = setGroupingEnabled)
-                if (preferences.groupingEnabled) PreferenceChoices(uiText(R.string.ui_home_screen_027), HomeGrouping.entries,
-                    preferences.grouping, "grouping", setGrouping) { mode -> when (mode) {
-                        HomeGrouping.SCIENTIFIC_LETTER -> uiText(R.string.ui_home_screen_028)
-                        HomeGrouping.CATEGORY -> uiText(R.string.ui_pharmacy_admin_screen_073)
-                    } }
+                HomeExtraFilters(filters, admin, toggleExtraFilter)
             }
             Button(onClick = dismiss) { Text(uiText(R.string.ui_home_screen_029)) }
         }
@@ -435,10 +449,10 @@ import java.time.ZoneId
 }
 
 @Composable internal fun FilterSummary(filters: HomeFilters, clear: () -> Unit) {
-    if (filters.statuses.isEmpty() && filters.categoryIds.isEmpty()) return
+    if (filters.statuses.isEmpty() && filters.categoryIds.isEmpty() && !filters.expiringSoon && !filters.unpublishedOnly && !filters.fetchedOnly) return
     ActionGroup(Modifier.testTag("filter_summary")) {
         Text(uiText(R.string.ui_home_screen_032, MedicationPresentation.displayDigits(filters.statuses.size.toString()), MedicationPresentation.displayDigits(filters.categoryIds.size.toString())))
-        if (filters.statuses.isNotEmpty() || filters.categoryIds.isNotEmpty())
+        if (filters.statuses.isNotEmpty() || filters.categoryIds.isNotEmpty() || filters.expiringSoon || filters.unpublishedOnly || filters.fetchedOnly)
             TextButton(onClick = clear, modifier = Modifier.testTag("clear_filters")) { Text(uiText(R.string.ui_history_screen_017)) }
     }
 }
@@ -459,7 +473,6 @@ import java.time.ZoneId
         if (ready.admin && !ready.isDemo) {
             if (publicationBusy) add(uiText(R.string.ui_home_screen_040))
             if (ready.uncertain) add(uiText(R.string.ui_home_screen_041))
-            if (ready.pendingCount > 0) add(uiText(R.string.ui_home_screen_042, MedicationPresentation.displayDigits(ready.pendingCount.toString())))
             if (ready.backupReminderAt?.let { clock.toEpochMilli() >= it } == true) add(uiText(R.string.ui_admin_components_021))
             if (ready.lifecycle == "LOCAL_DRAFT") add(uiText(R.string.ui_pharmacy_admin_screen_038))
         }
@@ -484,8 +497,10 @@ import java.time.ZoneId
                     modifier = Modifier.weight(1f), maxLines = 2, overflow = TextOverflow.Ellipsis)
                 RowChevron(down = true)
             }
-            if (!expanded && ready.admin && ready.pendingCount > 0 && !notices.first().endsWith(uiText(R.string.ui_home_screen_044)))
-                Text(uiText(R.string.ui_home_screen_042, MedicationPresentation.displayDigits(ready.pendingCount.toString())), style = MaterialTheme.typography.bodyMedium)
+            if (refresh != null && !ready.isDemo && ready.lifecycle == "SHARED" &&
+                (ready.lastSuccessfulRefreshAt == null || Duration.between(ready.lastSuccessfulRefreshAt, clock) >= Duration.ofHours(24)))
+                NoticeStrip(Notice(uiText(R.string.ui_home_screen_035), NoticeSeverity.WARNING,
+                    uiText(R.string.review_refresh_now), refresh), enabled = !state.refresh.busy)
             if (expanded) Column(Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(UiSpacing.related)) {
                 if (ready.requiresUpdate) InformationCard(uiText(R.string.ui_home_screen_045), uiText(R.string.ui_home_screen_046))
@@ -496,7 +511,7 @@ import java.time.ZoneId
                     else if (Duration.between(ready.lastSuccessfulRefreshAt, clock) >= Duration.ofHours(24))
                         SupportingText(uiText(R.string.ui_home_screen_035))
                 }
-                pendingBanner()
+
                 pageHeader?.invoke()
                 if (ready.isDemo) DemoNotice()
             }
