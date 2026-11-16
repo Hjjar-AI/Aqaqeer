@@ -30,7 +30,6 @@ class RefreshPolicyTest {
         }
         val ahead=snapshot(2,F.otherPharmacyId,F.publishId)
         assertThrows(RefreshException::class.java) { publicationDecision(ahead,base) }
-        Unit
     }
     @Test fun concurrentWaitersShareOneRequestAndCancellationDoesNotCancelTheOther(): Unit = runBlocking {
         val owner=CoroutineScope(SupervisorJob()+Dispatchers.Default)

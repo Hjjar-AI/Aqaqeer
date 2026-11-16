@@ -211,7 +211,6 @@ class EnvelopeReaderTest {
         val payload = reader.snapshot(encoded("aqsnapshot:v1").inputStream(),key)
         payload.close()
         assertThrows(IllegalStateException::class.java) { payload.withUtf8Reader { it.read() } }
-        Unit
     }
     @Test fun fragmentedZeroLengthReadsAndMisreportedAvailableDoNotChangeTheResult(): Unit = runBlocking {
         val input = object : ByteArrayInputStream(encoded("aqsnapshot:v1")) {

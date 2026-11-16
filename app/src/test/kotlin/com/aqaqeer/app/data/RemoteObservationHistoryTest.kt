@@ -46,7 +46,8 @@ class RemoteObservationHistoryTest {
         val event=RemoteObservationHistory.publication(F.otherPharmacyId,snapshot,F.time.plusSeconds(60))
         assertEquals("snapshot",event.entityType); assertEquals("publication",event.field)
         assertEquals(F.time,event.editedAt); assertEquals(F.time.plusSeconds(60),event.observedAt)
-        assertFalse(event.newValue!!.contains("publisher")); assertTrue(event.newValue!!.contains("publishId")); assertNull(event.operationId)
+        val payload = requireNotNull(event.newValue)
+        assertFalse(payload.contains("publisher")); assertTrue(payload.contains("publishId")); assertNull(event.operationId)
     }
 
 }
