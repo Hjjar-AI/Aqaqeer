@@ -10,7 +10,7 @@ import java.util.UUID
 
 /** Demo-only local catalog. Names/forms/strengths: docs/demo-data.md; no clinical instructions. */
 object BuildSeed {
-    const val VERSION = 3
+    const val VERSION = 1
     private const val PHARMACY_ID = "00000000-0000-4000-8000-000000000901"
     private const val CAPSULE_FORM_ID = "00000000-0000-4000-8000-000000000202"
     private fun id(value: String) = UUID.nameUUIDFromBytes("aqaqeer-demo-$value".toByteArray(Charsets.UTF_8)).toString()
@@ -92,12 +92,10 @@ object BuildSeed {
                 note = "سجل عرض محلي. التوفر والصلاحية افتراضيان، ولا يمثلان صيدلية حقيقية أو تعليمات علاجية.",
                 expiryDate = when (index) { 0 -> today.minusDays(7); 1 -> today.plusDays(21); 7 -> null; else -> today.plusMonths(12) })
         }
-        val states = listOf(AvailabilityStatus.AVAILABLE, AvailabilityStatus.LOW, AvailabilityStatus.OUT, AvailabilityStatus.UNKNOWN)
+        val states = listOf(AvailabilityStatus.AVAILABLE, AvailabilityStatus.LOW, AvailabilityStatus.OUT)
         val availability = sections.flatMapIndexed { sectionIndex, section ->
-            medications.mapIndexedNotNull { index, med ->
-                // One missing pair intentionally exercises the normal UNKNOWN presentation.
-                if (sectionIndex == 1 && index == medications.lastIndex) null else
-                    Availability(med.id, section.id, states[(index + sectionIndex) % states.size], time)
+            medications.mapIndexed { index, med ->
+                Availability(med.id, section.id, states[(index + sectionIndex) % states.size], time)
             }
         }
         return seeds.copy(pharmacy = pharmacy, categories = seeds.categories + categories,
