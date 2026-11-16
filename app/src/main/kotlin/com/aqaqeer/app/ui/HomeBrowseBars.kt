@@ -1,6 +1,8 @@
 package com.aqaqeer.app.ui
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
@@ -120,14 +122,28 @@ import com.aqaqeer.app.data.*
 }
 
 @Composable internal fun HomeQuickFilters(filters: HomeFilters, admin: Boolean,
-    toggleStatus: (com.aqaqeer.app.data.AvailabilityStatus) -> Unit, toggleExtra: (String) -> Unit) {
-    WrappingContent {
-        listOf(com.aqaqeer.app.data.AvailabilityStatus.OUT, com.aqaqeer.app.data.AvailabilityStatus.LOW).forEach { status ->
-            FilterChip(status in filters.statuses, onClick = { toggleStatus(status) }, label = { Text(statusLabel(status)) })
-        }
-        ExtraFilterChips(filters, admin, toggleExtra)
+    toggleAvailable: () -> Unit, toggleExtra: (String) -> Unit,
+    hasFetchedChanges: Boolean) {
+    val scroll = rememberScrollState()
+    val showFetched = hasFetchedChanges || filters.fetchedOnly
+    LaunchedEffect(showFetched) {
+        if (showFetched) scroll.animateScrollTo(0)
+    }
+    Row(Modifier.fillMaxWidth().horizontalScroll(scroll).heightIn(min = UiSpacing.touch),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(UiSpacing.hair)) {
+        if (showFetched) HomeQuickFilterChip(filters.fetchedOnly, uiText(R.string.review_whats_new)) { toggleExtra("fetched") }
+        val available = setOf(AvailabilityStatus.AVAILABLE, AvailabilityStatus.LOW)
+        HomeQuickFilterChip(filters.statuses == available, uiText(R.string.review_available_only), toggleAvailable)
+        if (admin) HomeQuickFilterChip(filters.unpublishedOnly, uiText(R.string.review_unpublished)) { toggleExtra("unpublished") }
     }
 }
+
+@Composable private fun HomeQuickFilterChip(selected: Boolean, label: String, toggle: () -> Unit) {
+    FilterChip(selected = selected, onClick = toggle,
+        label = { Text(label, style = MaterialTheme.typography.labelMedium, maxLines = 1, softWrap = false) })
+}
+
 @Composable internal fun HomeExtraFilters(filters: HomeFilters, admin: Boolean, toggle: (String) -> Unit) {
     WrappingContent { ExtraFilterChips(filters, admin, toggle) }
 }

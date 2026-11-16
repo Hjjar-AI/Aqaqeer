@@ -329,6 +329,7 @@ internal fun statusLabel(status: AvailabilityStatus): String = uiText(when (stat
                                 saveBulk = viewModel::saveAvailability, projection = browse, highlightedMedication = highlighted,
                                 prefillMedication = { query -> viewModel.newMedicationName = query; navigate("edit-med:new") },
                                 onBulkModeChanged = { homeBulkActive = it }, toggleExtraFilter = viewModel::toggleExtraFilter,
+                                toggleAvailableFilter = viewModel::toggleAvailableFilter,
                                 onBottomBarsHeightChanged = { homeBottomBarsHeight = it }) }
                             }
                             val detailContent: @Composable () -> Unit = {

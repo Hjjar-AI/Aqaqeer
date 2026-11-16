@@ -5,6 +5,7 @@
     <string name="review_expiry_soon">ينتهي قريباً</string>
     <string name="review_unpublished">غير منشور</string>
     <string name="review_changed">محدّث</string>
+    <string name="review_available_only">المتوفر فقط</string>
     <string name="review_whats_new">ما الجديد</string>
     <string name="review_elsewhere">%1$s نتائج إضافية في أقسام أخرى</string>
     <string name="review_appearance">المظهر</string>

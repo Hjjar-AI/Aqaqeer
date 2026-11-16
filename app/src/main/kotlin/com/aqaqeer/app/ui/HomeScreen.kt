@@ -92,7 +92,7 @@ import java.time.ZoneId
     saveBulk: ((AvailabilitySelection, BulkMedicationChanges, () -> Unit) -> Unit)? = null,
     projection: HomeBrowseResult = HomeBrowseResult(), highlightedMedication: String? = null,
     prefillMedication: (String) -> Unit = {}, onBulkModeChanged: (Boolean) -> Unit = {},
-    toggleExtraFilter: (String) -> Unit = {}, onBottomBarsHeightChanged: (Int) -> Unit = {}) {
+    toggleExtraFilter: (String) -> Unit = {}, onBottomBarsHeightChanged: (Int) -> Unit = {}, toggleAvailableFilter: () -> Unit = {}) {
     val catalog = ready.catalog
     val focus = LocalFocusManager.current
     if (catalog.pharmacy == null) {
@@ -182,7 +182,7 @@ import java.time.ZoneId
                     focus.clearFocus(); bulkMode = true; changeBulkSelection(emptySet())
                 }
             }) else null, compact = state.homePreferences.searchAtBottom)
-        HomeQuickFilters(state.filters, canEdit, toggleStatus, toggleExtraFilter)
+        HomeQuickFilters(state.filters, canEdit, toggleAvailableFilter, toggleExtraFilter, hasFetchedChanges = state.fetchedIds.isNotEmpty())
         if (projectionReady && projection.otherSections.isNotEmpty()) {
             SupportingText(uiText(R.string.review_elsewhere, projection.otherSections.values.flatten().toSet().size.toString()))
             WrappingContent {

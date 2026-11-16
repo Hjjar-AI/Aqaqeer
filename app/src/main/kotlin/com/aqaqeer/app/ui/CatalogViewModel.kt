@@ -592,6 +592,10 @@ class CatalogViewModel @Inject constructor(
         if (value !in MedicationPresentation.editableStatuses) return
         savedState["statuses"] = ArrayList(statuses.value.toSet().let { if (value.name in it) it - value.name else it + value.name })
     }
+    internal fun toggleAvailableFilter() {
+        val available = setOf(AvailabilityStatus.AVAILABLE.name, AvailabilityStatus.LOW.name)
+        savedState["statuses"] = ArrayList(if (statuses.value.toSet() == available) emptySet() else available)
+    }
     fun toggleCategory(id: String) {
         savedState["categories"] = ArrayList(categories.value.toSet().let { if (id in it) it - id else it + id })
     }
