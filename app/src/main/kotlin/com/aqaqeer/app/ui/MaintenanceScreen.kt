@@ -32,7 +32,7 @@ import com.aqaqeer.app.maintenance.*
     if (status.loading) { Box(Modifier.fillMaxSize(), contentAlignment = androidx.compose.ui.Alignment.Center) { CircularProgressIndicator() }; return }
     var choices by remember(j?.id) { mutableStateOf<Map<String, Boolean>>(emptyMap()) }
     fun run(action: suspend () -> Unit) { vm.command(queueOffline = false, action = action) }
-    FormPage {
+    FormPage(showFieldConvention = true) {
         Text(ready.catalog.pharmacy.name, style = MaterialTheme.typography.titleLarge)
         OperationStatus(busy, message, cancel = vm::cancelAdminOperation)
         if (ready.admin && (j == null || j.kind != MaintenanceKind.REPLACEMENT))

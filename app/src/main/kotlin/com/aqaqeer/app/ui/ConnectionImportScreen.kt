@@ -35,7 +35,7 @@ import com.aqaqeer.app.BuildConfig
     val eligible = ready != null && !ready.isDemo && ready.catalog.pharmacy == null
     LazyColumn(Modifier.fillMaxSize().testTag("connection_import"),
         contentPadding = PaddingValues(UiSpacing.page), verticalArrangement = Arrangement.spacedBy(UiSpacing.section)) {
-        if (eligible) item { StepHeader(listOf(uiText(R.string.review_custom), uiText(R.string.review_check_connection), uiText(R.string.review_apply_file)),
+        if (eligible) item { StepHeader(listOf(uiText(R.string.review_select_file), uiText(R.string.review_check_connection), uiText(R.string.review_apply_file)),
             if (state.verification != null) 2 else if (state.pending != null) 1 else 0) }
         if (catalog is CatalogState.Loading || state.loading) {
             item { Box(Modifier.fillMaxWidth(), contentAlignment = androidx.compose.ui.Alignment.Center) { CircularProgressIndicator() } }

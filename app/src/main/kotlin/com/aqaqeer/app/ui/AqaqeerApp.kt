@@ -186,7 +186,11 @@ internal fun statusLabel(status: AvailabilityStatus): String = uiText(when (stat
                                 onClickLabel = uiText(R.string.ui_aqaqeer_app_003)) {
                                 afterDrawer { dataTimesOpen = true }
                             } else Modifier), verticalArrangement = Arrangement.Center) {
-                            Text(title, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                            if (titleMedication != null) {
+                                Text(bidi(MedicationPresentation.scientificName(titleMedication)), fontWeight = FontWeight.Bold,
+                                    maxLines = 1, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.titleLarge, modifier = Modifier.testTag("screen_title"))
+                                Text(bidi(MedicationPresentation.westernDigits(titleMedication.strength)), style = MaterialTheme.typography.labelLarge)
+                            } else Text(title, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis,
                                 style = MaterialTheme.typography.titleLarge, modifier = Modifier.testTag("screen_title"))
                             if (drawerEligible) {
                                 val ready = readyForTitle
@@ -218,9 +222,8 @@ internal fun statusLabel(status: AvailabilityStatus): String = uiText(when (stat
                         AppIcon(UiIcon.BACK, description = uiText(R.string.ui_aqaqeer_app_009))
                     }
                 }, actions = {
-                    if (drawerEligible && readyForTitle.admin && readyForTitle.pendingCount > 0 && !readyForTitle.isDemo) {
-                        TextButton(enabled = publicationBlockedReason(readyForTitle, sharing, adminBusy || sharing.busy) == null,
-                            onClick = { viewModel.publish(reviewOnFailure = true) }) {
+                    if (drawerEligible && readyForTitle.admin && (readyForTitle.pendingCount > 0 || readyForTitle.uncertain || sharing.busy) && !readyForTitle.isDemo) {
+                        TextButton(enabled = !adminBusy, onClick = viewModel::review) {
                             Text(uiText(R.string.ui_aqaqeer_app_011, MedicationPresentation.displayDigits(readyForTitle.pendingCount.toString())))
                         }
                     }
@@ -239,7 +242,7 @@ internal fun statusLabel(status: AvailabilityStatus): String = uiText(when (stat
                                 onClick = { menuOpen = false; viewModel.openHistory(medicationId) })
                         }
                     }
-                }, expandedHeight = if (state.route == "home" && configured) homeBarHeight else TopAppBarDefaults.TopAppBarExpandedHeight,
+                }, expandedHeight = if (state.route == "home" && configured || titleMedication != null) homeBarHeight else TopAppBarDefaults.TopAppBarExpandedHeight,
                     colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background))
             }, snackbarHost = { SnackbarHost(snackbar) },
         ) { insets ->
@@ -411,6 +414,7 @@ internal fun statusLabel(status: AvailabilityStatus): String = uiText(when (stat
         if (ready.isDemo) item { DemoNotice() }
         item {
             GroupedCard {
+                MedicationPresentation.names(medication.genericAr, medication.genericEn, NameDisplay.BOTH).drop(1).forEach { Text(bidi(it.text)) }
                 if (medication.nameAr != null || medication.nameEn != null)
                     Text(uiText(R.string.ui_medication_components_002) + ": " + bidi(MedicationPresentation.names(medication.nameAr, medication.nameEn, NameDisplay.BOTH).joinToString(" · ") { it.text }))
                 LabeledValue(uiText(R.string.ui_pharmacy_admin_screen_074), catalog.formsById[medication.formId]?.nameAr.orEmpty())

@@ -151,7 +151,7 @@ internal data class Notice(val text: String, val severity: NoticeSeverity = Noti
         Triple(R.string.review_check_connection, ready.hasPublicationConnection, "setup"),
         Triple(R.string.review_check_publish, ready.publishedAt != null, "review"),
         Triple(R.string.review_check_backup, ready.hasBackup, "backup"))
-    if (!hidden) GroupedCard(title = uiText(R.string.review_setup_checklist)) {
+    if (!hidden && !ready.requiresUpdate && !ready.maintenancePaused && !ready.restorePaused) GroupedCard(title = uiText(R.string.review_setup_checklist)) {
         tasks.forEach { (label, complete, route) ->
             TextButton(onClick = { navigate(route) }, enabled = !complete) { Text("${if (complete) "✓" else "○"} ${uiText(label)}") }
         }

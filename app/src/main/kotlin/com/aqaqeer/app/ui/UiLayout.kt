@@ -54,13 +54,13 @@ internal val LocalFormFocus = staticCompositionLocalOf<FormFocusController?> { n
 }
 
 /** Screens retain their own fields and operation state; this owns only scrolling and spacing. */
-@Composable internal fun FormPage(modifier: Modifier = Modifier, footer: (@Composable () -> Unit)? = null, focusController: FormFocusController? = null, content: @Composable ColumnScope.() -> Unit) {
+@Composable internal fun FormPage(modifier: Modifier = Modifier, footer: (@Composable () -> Unit)? = null, focusController: FormFocusController? = null, showFieldConvention: Boolean = false, content: @Composable ColumnScope.() -> Unit) {
     val focus = focusController ?: remember { FormFocusController() }
     CompositionLocalProvider(LocalFormFocus provides focus) {
         Column(modifier.fillMaxSize()) {
             Column(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).padding(UiSpacing.page),
                 verticalArrangement = Arrangement.spacedBy(UiSpacing.group)) {
-                SupportingText(uiText(R.string.review_required_convention))
+                if (showFieldConvention) SupportingText(uiText(R.string.review_required_convention))
                 content()
             }
             footer?.let { Surface(shadowElevation = UiSpacing.hair) { Box(Modifier.fillMaxWidth().padding(UiSpacing.related)) { it() } } }

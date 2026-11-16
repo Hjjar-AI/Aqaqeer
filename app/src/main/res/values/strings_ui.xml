@@ -244,7 +244,7 @@
     <string name="ui_aqaqeer_app_028" formatted="false">"تاريخ الانتهاء (ميلادي)"</string>
     <string name="ui_aqaqeer_app_029" formatted="false">"التوافر حسب الأقسام"</string>
     <string name="ui_aqaqeer_app_030" formatted="false">" · قسم مغلق"</string>
-    <string name="ui_aqaqeer_app_031" formatted="false">"وقت التحديث والمحرر غير مسجلين"</string>
+    <string name="ui_aqaqeer_app_031" formatted="false">"وقت التحديث غير مسجل"</string>
     <string name="ui_aqaqeer_app_032" formatted="false">"ملاحظات"</string>
     <string name="ui_aqaqeer_app_033" formatted="false">"المظهر والعرض"</string>
     <string name="ui_aqaqeer_app_034" formatted="false">"المظهر"</string>
@@ -688,7 +688,7 @@
     <string name="ui_history_components_023" formatted="false">"معرّف النشر"</string>
     <string name="ui_history_components_024" formatted="false">"معرّف العنصر"</string>
     <string name="ui_history_components_025" formatted="false">"معرّف المحرر"</string>
-    <string name="ui_history_components_026" formatted="false">"النسبة للناشر تخص حدث النشر فقط؛ لا تثبت مؤلف كل تعديل."</string>
+    <string name="ui_history_components_026" formatted="false">"هذا الحدث يوثّق النشر؛ لا يتتبع أسماء المحررين."</string>
     <string name="ui_history_components_027" formatted="false">"هذا الحدث لا يمثل تعديلاً على الأدوية."</string>
     <string name="ui_history_components_028" formatted="false">"وقت التعديل الأصلي: "</string>
     <string name="ui_history_components_029">"وقت الرصد على هذا الجهاز: %1$s"</string>

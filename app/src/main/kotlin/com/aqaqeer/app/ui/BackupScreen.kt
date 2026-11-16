@@ -38,13 +38,12 @@ import java.time.format.DateTimeFormatter
         else vm.secretCommand(null, p, c) { vm.backups.export(uri, p, c); exportSucceeded = true }
     }
     val pick = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { selected = it }
-    FormPage(Modifier.testTag("backup_screen")) {
-        StepHeader(listOf(uiText(R.string.ui_backup_screen_014), uiText(R.string.ui_backup_screen_016), uiText(R.string.ui_backup_screen_020)),
-            if (ready.restorePaused) 2 else if (selected != null) 1 else 0)
+    FormPage(Modifier.testTag("backup_screen"), showFieldConvention = true) {
         OperationStatus(busy || sharing.busy, message,
             if (exportSucceeded) uiText(R.string.ui_backup_screen_001) else if (restoreSession) sharing.message else null,
             vm::cancelAdminOperation)
         if (ready.restorePaused) {
+            StepHeader(listOf(uiText(R.string.review_select_file), uiText(R.string.ui_backup_screen_016), uiText(R.string.ui_backup_screen_002)), 2)
             InformationCard(uiText(R.string.ui_backup_screen_002), uiText(R.string.ui_backup_screen_003))
             if (!ready.admin) {
                 NavigationCard(uiText(R.string.ui_backup_screen_004), { vm.navigate("promote") })
@@ -75,6 +74,7 @@ import java.time.format.DateTimeFormatter
         }
         if (ready.catalog.pharmacy == null || ready.admin) {
             GroupedCard(title = uiText(R.string.ui_aqaqeer_app_082)) {
+                StepHeader(listOf(uiText(R.string.review_select_file), uiText(R.string.ui_backup_screen_016), uiText(R.string.ui_backup_screen_002)), if (selected != null) 1 else 0)
                 Text(uiText(R.string.ui_backup_screen_013))
                 TextButton(enabled = !busy, onClick = { pick.launch(arrayOf("*/*")) }) { Text(if (selected == null) uiText(R.string.ui_backup_screen_014) else uiText(R.string.ui_backup_screen_015)) }
                 if (selected != null) {
@@ -86,7 +86,7 @@ import java.time.format.DateTimeFormatter
                     }
                     DestructiveConfirmButton(enabled = !busy && restorePassword.isNotEmpty() &&
                         (ready.catalog.pharmacy == null || confirmed && typedName == ready.catalog.pharmacy.name), onClick = {
-                        val uri = selected ?: return@Button; val p = restorePassword.toCharArray(); restorePassword = ""
+                        val uri = selected ?: return@DestructiveConfirmButton; val p = restorePassword.toCharArray(); restorePassword = ""
                         vm.secretCommand("home", p) { vm.backups.restore(uri, p, typedName, confirmed); selected = null }
                     }, label = uiText(R.string.ui_backup_screen_020))
                 }

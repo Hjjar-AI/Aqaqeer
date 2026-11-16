@@ -42,4 +42,5 @@
     <string name="review_apply_file">تطبيق</string>
     <string name="review_in_progress">جارٍ التنفيذ</string>
     <string name="review_changed_help">تغيّر الدواء بعد تحديث البيانات؛ تبقى العلامة خلال الجلسة الحالية والجلسة التالية.</string>
+    <string name="review_select_file">اختيار الملف</string>
 </resources>

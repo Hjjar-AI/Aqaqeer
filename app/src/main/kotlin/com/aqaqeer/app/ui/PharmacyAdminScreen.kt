@@ -46,7 +46,7 @@ import kotlinx.serialization.json.*
         key(catalog.pharmacy?.pharmacyId, targetId) { MedicationEditor(catalog, medication, vm, busy) }
         return
     }
-    FormPage {
+    FormPage(showFieldConvention = state.route in setOf("create", "promote", "setup", "export-connection", "taxonomy")) {
         val formFocus = LocalFormFocus.current
         val formScope = rememberCoroutineScope()
         fun revealInvalid() { formSubmitted = true; formScope.launch { formFocus?.focusFirstInvalid() } }
@@ -355,7 +355,7 @@ internal fun reviewValue(field: String, raw: String, catalog: CatalogSnapshot, l
             vm.medicationSaved(id, old == null)
         }
     }
-    FormPage(focusController = formFocus, footer = {
+    FormPage(focusController = formFocus, showFieldConvention = true, footer = {
         Button(enabled = !busy, onClick = ::save, modifier = Modifier.fillMaxWidth()) { Text(uiText(R.string.ui_pharmacy_admin_screen_109)) }
     }) {
     val message by vm.adminMessage.collectAsStateWithLifecycle()
