@@ -18,7 +18,7 @@ import com.aqaqeer.app.R
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-/** The original artwork stays intact. Bounded sampled decodes are shared by Compose and splash. */
+/** The original artwork stays intact. Bounded sampled decodes are shared by the in-app emblems. */
 internal object BrandAssets {
     private val samples = android.util.LruCache<Int, Bitmap>(3)
     @Synchronized fun bitmap(resources: Resources, sample: Int): Bitmap = samples.get(sample) ?:

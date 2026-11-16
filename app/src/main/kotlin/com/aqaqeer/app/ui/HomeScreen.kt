@@ -97,7 +97,8 @@ import java.time.ZoneId
     saveBulk: ((AvailabilitySelection, BulkMedicationChanges, () -> Unit) -> Unit)? = null,
     projection: HomeBrowseResult = HomeBrowseResult(), highlightedMedication: String? = null,
     prefillMedication: (String) -> Unit = {}, onBulkModeChanged: (Boolean) -> Unit = {},
-    toggleExtraFilter: (String) -> Unit = {}, onBottomBarsHeightChanged: (Int) -> Unit = {}, toggleAvailableFilter: () -> Unit = {}) {
+    toggleExtraFilter: (String) -> Unit = {}, onBottomBarsHeightChanged: (Int) -> Unit = {}, toggleAvailableFilter: () -> Unit = {},
+    editMedication: ((String) -> Unit)? = null) {
     val catalog = ready.catalog
     val focus = LocalFocusManager.current
     val haptics = LocalHapticFeedback.current
@@ -195,19 +196,27 @@ import java.time.ZoneId
         HomeSectionsBar(active, selected?.id, catalog.outCounts, selectSection,
             availableSearchSections = if (projectionReady) projection.availableSearchSections else emptySet())
     }
+    fun openCard(id: String) {
+        if (editor != null || filtersOpen || noticeDialogOpen || !canOpenHomeModal()) return
+        if (canEdit && editMedication != null) {
+            if (!availabilityInProgress() && id in medicationIds) editMedication(id)
+        } else openMedication(id)
+    }
     val searchControls: @Composable () -> Unit = {
         HomeSearchControls(searchText, ::changeSearch, searching, state.filters, visible.size,
             catalog.medications.size, openFilters = {
                 if (editor == null && canOpenHomeModal()) {
                     focus.clearFocus(); notifyModal(true); filtersOpen = true
                 }
-            }, clearFilters = clearFilters, select = if (canEdit && saveBulk != null && selected != null && !bulkMode) ({
-                if (contextValid && canOpenHomeModal() && !availabilityInProgress() && !filtersOpen && editor == null) {
-                    focus.clearFocus(); haptics.performHapticFeedback(HapticFeedbackType.LongPress); bulkMode = true; changeBulkSelection(emptySet())
-                }
-            }) else null, compact = state.homePreferences.searchAtBottom,
+            }, clearFilters = clearFilters, compact = state.homePreferences.searchAtBottom,
             showFetchedChip = !ready.admin && (state.fetchedIds.isNotEmpty() || state.filters.fetchedOnly),
-            toggleFetched = { toggleExtraFilter("fetched") })
+            toggleFetched = { toggleExtraFilter("fetched") },
+            addMedication = if (canEdit && contextValid && !bulkMode) openAddMedication?.let { add -> ({
+                if (editor == null && !filtersOpen && !availabilityInProgress() && canOpenHomeModal()) {
+                    focus.clearFocus(); add()
+                }
+            }) } else null,
+            addEnabled = !availabilityBusy && editor == null && !filtersOpen && !noticeDialogOpen)
     }
     BoxWithConstraints(Modifier.fillMaxSize()) {
         val compactHeight = maxHeight < 480.dp || LocalDensity.current.fontScale > 1.4f
@@ -264,7 +273,6 @@ import java.time.ZoneId
                 }
             }
         }
-        val showAdd = openAddMedication != null && canEdit && !bulkMode && contextValid
         val noticeMaxHeight = maxHeight * if (bulkMode) 0.25f else 0.4f
         Column(Modifier.fillMaxSize()) {
             if (!state.homePreferences.searchAtBottom || !state.homePreferences.sectionsAtBottom) {
@@ -284,7 +292,7 @@ import java.time.ZoneId
                     LazyVerticalGrid(columns = if (state.homePreferences.twoColumns) GridCells.Adaptive(160.dp * maxOf(1f, LocalDensity.current.fontScale)) else GridCells.Fixed(1), state = gridState,
                         modifier = Modifier.fillMaxSize().then(sectionSwipe).testTag("home"), contentPadding = PaddingValues(
                             start = UiSpacing.page, end = UiSpacing.page, top = UiSpacing.related,
-                            bottom = if (showAdd) UiSpacing.fabClearance else UiSpacing.page),
+                            bottom = UiSpacing.page),
                         horizontalArrangement = Arrangement.spacedBy(UiSpacing.related),
                         verticalArrangement = Arrangement.spacedBy(UiSpacing.related)) {
                         if (canEdit && selected != null && bulkMode && contextValid) item(span = { GridItemSpan(maxLineSpan) }) {
@@ -335,7 +343,7 @@ import java.time.ZoneId
                                 bulkSelected = if (bulkMode && contextValid && canEdit) medication.id in selectedIds else null,
                                 toggleSelection = { if (projectionReady && !availabilityBusy) changeBulkSelection(if (medication.id in selectedIds)
                                     selectedIds - medication.id else selectedIds + medication.id) },
-                                onClick = { openMedication(medication.id) }, selectionEnabled = !availabilityBusy && medication.id in medicationIds && (!bulkMode || projectionReady) &&
+                                onClick = { openCard(medication.id) }, selectionEnabled = !availabilityBusy && medication.id in medicationIds && (!bulkMode || projectionReady) &&
                                     (editor == null || editor?.bulk == true || editorSelectionValid),
                                 modifier = Modifier.animateItem(), query = displayQuery, highlighted = medication.id == highlightedMedication,
                                 unpublished = ready.admin && medication.id in ready.unpublishedMedicationIds,
@@ -365,7 +373,7 @@ import java.time.ZoneId
                             items(result.rows, key = { "other_search_${result.section.id}_${it.medication.id}" }) { row ->
                                 MedicationCard(row, result.section.id, state.homePreferences.copy(groupingEnabled = false), today,
                                     onQuickEdit = null, bulkSelected = null, toggleSelection = {},
-                                    onClick = { if (editor == null && !filtersOpen && canOpenHomeModal()) openMedication(row.medication.id) },
+                                    onClick = { openCard(row.medication.id) },
                                     modifier = Modifier.animateItem(), query = displayQuery,
                                     highlighted = row.medication.id == highlightedMedication,
                                     unpublished = ready.admin && row.unpublished)

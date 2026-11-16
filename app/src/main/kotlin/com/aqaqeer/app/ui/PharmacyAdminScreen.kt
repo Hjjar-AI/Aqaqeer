@@ -401,6 +401,9 @@ internal fun reviewValue(field: String, raw: String, catalog: CatalogSnapshot, l
     }) {
     val message by vm.adminMessage.collectAsStateWithLifecycle()
     InlineOperationStatus(busy, message)
+    if (old != null) MedicationAvailabilityControls(c, old, busy, isSaving = { vm.adminBusy.value }) { selection, status ->
+        vm.saveAvailability(selection, BulkMedicationChanges(status = status)) { }
+    }
     if (old == null) SupportingText(uiText(R.string.ui_pharmacy_admin_screen_110))
     if (duplicates.isNotEmpty()) CheckChoiceRow(duplicateConfirmed,
         uiText(R.string.logic_duplicate_confirm), enabled = !busy) { duplicateConfirmed = it }
@@ -440,8 +443,6 @@ internal fun reviewValue(field: String, raw: String, catalog: CatalogSnapshot, l
             listOf(genericAr, genericEn).filter(String::isNotBlank).map(::normalizedName).any { it == candidate }
         } }) Text(uiText(R.string.ui_pharmacy_admin_screen_119))
     if (old != null) {
-        NavigationCard(uiText(R.string.ui_pharmacy_admin_screen_120), onClick = { vm.navigate("med:${id}") },
-            supporting = uiText(R.string.ui_pharmacy_admin_screen_121))
         GroupedCard(title = uiText(R.string.ui_pharmacy_admin_screen_122)) {
             CheckChoiceRow(confirmDelete, uiText(R.string.ui_pharmacy_admin_screen_123)) { confirmDelete = it }
             DestructiveConfirmButton(enabled = !busy && confirmDelete, onClick = { vm.command("home") { vm.admin.delete("medication", id) } }, label = uiText(R.string.ui_pharmacy_admin_screen_122))

@@ -13,6 +13,8 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.aqaqeer.app.data.*
 import kotlinx.serialization.Serializable
@@ -60,3 +62,34 @@ internal val AvailabilitySelectionSaver = Saver<AvailabilitySelection?, String>(
     }.getOrNull() },
 )
 
+
+/** Existing medications expose immediate per-section changes without a details/sheet navigation step. */
+@Composable internal fun MedicationAvailabilityControls(catalog: CatalogSnapshot, medication: Medication,
+    busy: Boolean, isSaving: () -> Boolean, save: (AvailabilitySelection, AvailabilityStatus) -> Unit) {
+    val pharmacyId = catalog.pharmacy?.pharmacyId ?: return
+    GroupedCard(title = uiText(R.string.ui_pharmacy_admin_screen_120)) {
+        SupportingText(uiText(R.string.edit_availability_immediate_hint))
+        if (catalog.sections.isEmpty()) SupportingText(uiText(R.string.edit_availability_no_sections))
+        catalog.sections.forEach { section ->
+            key(section.id) {
+                val current = catalog.status(medication.id, section.id)
+                Text(section.nameAr + if (section.isActive) "" else uiText(R.string.ui_aqaqeer_app_030),
+                    style = MaterialTheme.typography.titleSmall)
+                if (section.isActive) WrappingContent {
+                    if (current == AvailabilityStatus.UNKNOWN) StatusBadge(current)
+                    MedicationPresentation.editableStatuses.forEach { status ->
+                        FilterChip(selected = current == status, enabled = !busy,
+                            onClick = {
+                                if (!isSaving() && status != current) save(
+                                    AvailabilitySelection(pharmacyId, section, listOf(medication),
+                                        mapOf(medication.id to current), bulk = false), status)
+                            }, label = { Text(statusLabel(status)) },
+                            modifier = Modifier.heightIn(min = UiSpacing.touch).semantics {
+                                contentDescription = section.nameAr + " · " + statusLabel(status)
+                            })
+                    }
+                } else StatusBadge(current)
+            }
+        }
+    }
+}

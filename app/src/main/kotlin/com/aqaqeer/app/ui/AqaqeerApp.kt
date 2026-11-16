@@ -147,8 +147,6 @@ internal fun statusLabel(status: AvailabilityStatus): String = uiText(when (stat
     val pharmacyId = readyForTitle?.catalog?.pharmacy?.pharmacyId
     val drawerEligible = homeDestination && configured && readyForTitle != null
     var homeModalOpen by remember { mutableStateOf(false) }
-    var homeBulkActive by remember { mutableStateOf(false) }
-    var homeBottomBarsHeight by remember(pharmacyId, destinationKey(state.route)) { mutableIntStateOf(0) }
     var dataTimesOpen by rememberSaveable(pharmacyId) { mutableStateOf(false) }
     val drawerState = remember(pharmacyId) {
         DrawerState(DrawerValue.Closed, confirmStateChange = { target ->
@@ -194,19 +192,7 @@ internal fun statusLabel(status: AvailabilityStatus): String = uiText(when (stat
                 chooseCategory = { id -> afterDrawer { viewModel.setQuickCategory(id) } },
                 showDataTimes = { afterDrawer { dataTimesOpen = true } }) }
         }) {
-        val canAdd = readyForTitle?.let { it.admin && !it.requiresUpdate && !it.maintenancePaused } == true
         Scaffold(
-            floatingActionButtonPosition = if (dualPane && homeDestination) FabPosition.Start else FabPosition.End,
-            floatingActionButton = {
-                val keyboardOpen = WindowInsets.ime.getBottom(LocalDensity.current) > 0
-                androidx.compose.animation.AnimatedVisibility(visible = homeDestination && canAdd && !homeModalOpen && !homeBulkActive && !dataTimesOpen && !drawerState.isOpen && !keyboardOpen,
-                    modifier = Modifier.padding(bottom = with(LocalDensity.current) { homeBottomBarsHeight.toDp() }),
-                    enter = fadeIn(tween(180)), exit = fadeOut(tween(180))) {
-                    FloatingActionButton(onClick = { if (!viewModel.adminBusy.value) { viewModel.newMedicationName = ""; navigate("edit-med:new") } }) {
-                        AppIcon(UiIcon.ADD, description = uiText(R.string.ui_screen_titles_009))
-                    }
-                }
-            },
             containerColor = MaterialTheme.colorScheme.background,
             topBar = {
                 val homeBarHeight = with(LocalDensity.current) {
@@ -355,9 +341,9 @@ internal fun statusLabel(status: AvailabilityStatus): String = uiText(when (stat
                                 setGroupingEnabled = viewModel::setGroupingEnabled, setGrouping = viewModel::setGrouping,
                                 saveBulk = viewModel::saveAvailability, projection = browse, highlightedMedication = highlighted,
                                 prefillMedication = { query -> viewModel.newMedicationName = query; navigate("edit-med:new") },
-                                onBulkModeChanged = { homeBulkActive = it }, toggleExtraFilter = viewModel::toggleExtraFilter,
+                                toggleExtraFilter = viewModel::toggleExtraFilter,
                                 toggleAvailableFilter = viewModel::toggleAvailableFilter,
-                                onBottomBarsHeightChanged = { homeBottomBarsHeight = it }) }
+                                editMedication = { id -> navigate("edit-med:$id") }) }
                             }
                             val detailContent: @Composable () -> Unit = {
                                 if (medication != null) MedicationScreen(catalogState, medication, now,

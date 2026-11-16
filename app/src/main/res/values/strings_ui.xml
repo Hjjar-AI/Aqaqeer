@@ -775,4 +775,6 @@
     <string name="logic_refresh_current">البيانات محدثة بالفعل</string>
     <string name="logic_retry_after">؛ أعد المحاولة بعد %s ثانية</string>
     <string name="logic_missing_medication">الدواء المحدد لم يعد موجوداً؛ راجع التحديد</string>
+    <string name="edit_availability_immediate_hint">تُحفظ تغييرات التوافر فوراً لكل قسم. زر «حفظ محلياً» يحفظ بيانات الدواء أدناه.</string>
+    <string name="edit_availability_no_sections">لا توجد أقسام لعرض التوافر.</string>
 </resources>
