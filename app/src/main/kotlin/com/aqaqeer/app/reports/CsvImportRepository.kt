@@ -52,7 +52,6 @@ class CsvImportRepository @Inject constructor(private val admin: AdminRepository
                 try {
                     admin.transaction { dao ->
                         val device = admin.guard(dao)
-                        val author = EditorRef(device.id, requireNotNull(device.displayName))
                         var staged = dao.catalog()
                         val stagedIndex = MedicationDuplicates.index(staged.medications).mapValues { it.value.toMutableList() }.toMutableMap()
                         val plans = mutableListOf<CsvRowPlan>()
@@ -83,9 +82,9 @@ class CsvImportRepository @Inject constructor(private val admin: AdminRepository
                                 val expected = MedicationDuplicates.find(plan.medication, baselineIndex).toSet()
                                 if ((duplicates - sessionCreatedIds) != expected) throw CsvProblem("تغير التكرار منذ المعاينة؛ يلزم معاينة جديدة")
                                 if (row.decision.action == CsvAction.CREATE && duplicates.isNotEmpty()) throw CsvProblem("الدواء مكرر؛ اختر إنشاء دواء آخر صراحة")
-                                val next = plan.apply(staged, author, java.time.Instant.EPOCH)
+                                val next = plan.apply(staged, java.time.Instant.EPOCH)
                                 CatalogRules.validate(next)
-                                val changed = CatalogEdits.diff(staged, next, author, java.time.Instant.EPOCH, null).isNotEmpty()
+                                val changed = CatalogEdits.diff(staged, next, java.time.Instant.EPOCH, null).isNotEmpty()
                                 staged.medications.find { it.id == plan.medication.id }?.let { previous ->
                                     MedicationDuplicates.keys(previous).forEach { key -> stagedIndex[key]?.remove(previous.id) }
                                 }
@@ -97,7 +96,7 @@ class CsvImportRepository @Inject constructor(private val admin: AdminRepository
                             catch (_: IllegalArgumentException) { outcomes += outcome(CsvOutcome.FAILED, "قيم غير صالحة؛ تحقق من الحقول والمراجع") }
                         }
                         // All row-level validation finishes before the first write. A storage error rolls back the chunk.
-                        plans.forEach { plan -> admin.editInTransaction(dao) { current, editor, now, _ -> plan.apply(current, editor, now) } }
+                        plans.forEach { plan -> admin.editInTransaction(dao) { current, editor, now, _ -> plan.apply(current, now) } }
                     }
                 } catch (e: CancellationException) { throw e }
                 catch (error: Exception) {

@@ -1,0 +1,45 @@
+package com.aqaqeer.app.data
+
+import android.content.Context
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+
+/** Installation-local presentation state, excluded from explicit catalog backups and shared files. */
+internal object FetchedChanges {
+    private val mutable = MutableStateFlow<Map<String, Set<String>>>(emptyMap())
+    val ids = mutable.asStateFlow()
+    private var active = false
+    private var session = 0L
+    private var preferences: android.content.SharedPreferences? = null
+    private val retained = mutableMapOf<Pair<String, String>, Long>()
+
+    @Synchronized fun beginSession(context: Context) {
+        if (active) return
+        val prefs = context.applicationContext.getSharedPreferences("fetched_changes", Context.MODE_PRIVATE)
+        preferences = prefs
+        session = prefs.getLong("session", 0L) + 1
+        retained.clear()
+        prefs.getStringSet("markers", emptySet()).orEmpty().forEach { line ->
+            val parts = line.split('|')
+            if (parts.size == 3) parts[2].toLongOrNull()?.takeIf { it >= session }?.let {
+                retained[parts[0] to parts[1]] = it
+            }
+        }
+        active = true
+        persist()
+    }
+    @Synchronized fun finishTask() { active = false }
+
+    @Synchronized fun record(context: Context, pharmacyId: String, medications: Set<String>) {
+        if (medications.isEmpty()) return
+        if (preferences == null) beginSession(context)
+        medications.forEach { retained[pharmacyId to it] = session + 1 }
+        persist()
+    }
+    private fun persist() {
+        // Small non-secret state is committed before advertising it to the browse projection.
+        val stored = preferences?.edit()?.putLong("session", session)?.putStringSet("markers",
+            retained.map { (key, expiry) -> "${key.first}|${key.second}|$expiry" }.toSet())?.commit() == true
+        if (stored) mutable.value = retained.keys.groupBy({ it.first }, { it.second }).mapValues { it.value.toSet() }
+    }
+}

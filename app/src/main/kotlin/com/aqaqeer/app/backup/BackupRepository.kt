@@ -86,7 +86,7 @@ class BackupRepository @Inject constructor(@param:ApplicationContext private val
         return store.withCandidate(info.id) { candidate ->
             val s = candidate.copySecrets()
             try { ConnectionWire(1, candidate.pharmacyId, candidate.pharmacyName, s.botToken, s.groupId,
-                Base64.getEncoder().encodeToString(s.snapshotKey), s.keyVersion, candidate.createdAt, candidate.createdBy) }
+                Base64.getEncoder().encodeToString(s.snapshotKey), s.keyVersion, candidate.createdAt) }
             finally { s.snapshotKey.fill(0) }
         }
     }
@@ -244,7 +244,6 @@ class BackupRepository @Inject constructor(@param:ApplicationContext private val
         else require(base == null && h.active == null && state.revision == null && state.publishId == null)
         val ops = dao.pending()
         ops.forEach { op ->
-            require(op.authorName.isNotBlank() && op.authorName == op.authorName.trim())
             op.basePublishId?.let { require(java.util.UUID.fromString(it).toString() == it) }
             require(op.entityType != "pharmacy" || (op.targetId == p.pharmacyId && op.field != "@entity"))
         }
@@ -261,9 +260,9 @@ class BackupRepository @Inject constructor(@param:ApplicationContext private val
             require(attempt.transportPhase in setOf("PREPARED", "UPLOAD_STARTED", "UPLOADED", "WRITE_STARTED"))
         }
         // Validate local-only history metadata one row at a time; large recovery values remain encrypted SQL TEXT.
-        sql.query("SELECT id,operationId,editorId,editedAt,observedAt,publishedRevision FROM history").use { rows ->
-            while (rows.moveToNext()) { check(); for (i in 0..2) if (!rows.isNull(i)) require(java.util.UUID.fromString(rows.getString(i)).toString() == rows.getString(i))
-                for (i in 3..5) if (!rows.isNull(i)) require(rows.getType(i) == android.database.Cursor.FIELD_TYPE_INTEGER)
+        sql.query("SELECT id,operationId,editedAt,observedAt,publishedRevision FROM history").use { rows ->
+            while (rows.moveToNext()) { check(); for (i in 0..1) if (!rows.isNull(i)) require(java.util.UUID.fromString(rows.getString(i)).toString() == rows.getString(i))
+                for (i in 2..4) if (!rows.isNull(i)) require(rows.getType(i) == android.database.Cursor.FIELD_TYPE_INTEGER)
             }
         }
         backupTables.forEach { (table, _) ->
@@ -284,7 +283,7 @@ class BackupRepository @Inject constructor(@param:ApplicationContext private val
             if (wire == null) return null
             val recordStore = PendingConnectionStore(secure, "restore-candidate")
             val key = Base64.getDecoder().decode(wire.snapshotKey)
-            ConnectionCandidate(wire.pharmacyId, wire.pharmacyName, wire.createdAt, wire.createdBy, wire.botToken, wire.groupId, key, wire.keyVersion).use {
+            ConnectionCandidate(wire.pharmacyId, wire.pharmacyName, wire.createdAt, wire.botToken, wire.groupId, key, wire.keyVersion).use {
                 recordStore.retain(it, newId())
             }
             val bytes = requireNotNull(secure.read("restore-candidate"))

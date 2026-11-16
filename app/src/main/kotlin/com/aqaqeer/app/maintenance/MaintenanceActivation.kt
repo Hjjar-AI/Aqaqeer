@@ -15,7 +15,7 @@ internal fun maintenanceCheckpoint(dao: CatalogDao, journal: MaintenanceJournal,
 internal suspend fun recordMaintenanceCheckpoint(dao: CatalogDao, journal: MaintenanceJournal, field: String) {
     val device = requireNotNull(dao.deviceIdentity())
     dao.insertHistory(listOf(HistoryEntry(requireNotNull(journal.checkpointId), null, "maintenance", journal.pharmacyId,
-        requireNotNull(dao.pharmacy()).name, field, null, JsonPrimitive(journal.id).toString(), device.id, device.displayName, Instant.now(), null, null)))
+        requireNotNull(dao.pharmacy()).name, field, null, JsonPrimitive(journal.id).toString(), Instant.now(), null, null)))
 }
 
 /** Only a checkpoint already committed in Room can authorize switching protected credentials. */

@@ -52,7 +52,7 @@ import com.aqaqeer.app.reports.*
         if (session != null) {
             item {
                 GroupedCard(title = uiText(R.string.ui_csv_import_screen_007)) {
-                    Text(uiText(R.string.ui_csv_import_screen_008, MedicationPresentation.easternDigits(session.rows.size.toString())))
+                    Text(uiText(R.string.ui_csv_import_screen_008, MedicationPresentation.displayDigits(session.rows.size.toString())))
                     if (!state.finished) {
                         Text(uiText(R.string.ui_csv_import_screen_009))
                         ActionGroup {
@@ -80,7 +80,7 @@ import com.aqaqeer.app.reports.*
     }
     if (confirm && session != null) AlertDialog(onDismissRequest = { confirm = false },
         title = { Text(uiText(R.string.ui_csv_import_screen_017)) },
-        text = { DialogBody { Text(uiText(R.string.ui_csv_import_screen_018, MedicationPresentation.easternDigits(session.rows.count { it.decision.selected && it.error == null }.toString()), ready.catalog.pharmacy?.name)) } },
+        text = { DialogBody { Text(uiText(R.string.ui_csv_import_screen_018, MedicationPresentation.displayDigits(session.rows.count { it.decision.selected && it.error == null }.toString()), ready.catalog.pharmacy?.name)) } },
         confirmButton = { TextButton(enabled = !busy, onClick = { confirm = false; vm.commitCsv() }) { Text(uiText(R.string.ui_csv_import_screen_019)) } },
         dismissButton = { TextButton(onClick = { confirm = false }) { Text(uiText(R.string.ui_bulk_medication_editor_012)) } })
 }
@@ -90,7 +90,7 @@ import com.aqaqeer.app.reports.*
     var expanded by remember(session.id, row.record.number) { mutableStateOf(false) }
     val decision = row.decision
     GroupedCard {
-        Text(uiText(R.string.ui_csv_import_screen_020, MedicationPresentation.easternDigits(row.record.number.toString())))
+        Text(uiText(R.string.ui_csv_import_screen_020, MedicationPresentation.displayDigits(row.record.number.toString())))
         row.plan?.let { plan -> MedicationSummary(plan.medication, prominent = true,
             form = plan.form?.nameAr ?: session.baseline.forms.find { it.id == plan.medication.formId }?.nameAr) }
             ?: Text(bidi(row.record.cells.take(2).joinToString(" · ").take(512)))

@@ -24,7 +24,6 @@ object DateSerializer : KSerializer<LocalDate> {
 }
 
 @Serializable enum class AvailabilityStatus { AVAILABLE, LOW, OUT, UNKNOWN }
-@Serializable data class EditorRef(val id: String, val name: String)
 @Serializable data class PinVerifier(val salt: String, val iterations: Int, val hash: String)
 
 @Serializable @Entity(tableName = "pharmacy")
@@ -60,7 +59,6 @@ data class Medication(
     val categoryId: String,
     val createdAt: Instant,
     val updatedAt: Instant,
-    val updatedBy: EditorRef,
     val nameAr: String? = null,
     val genericAr: String? = null,
     val genericEn: String? = null,
@@ -77,7 +75,7 @@ data class Medication(
 ], indices = [Index("sectionId")])
 data class Availability(val medicationId: String, val sectionId: String,
                         val status: AvailabilityStatus = AvailabilityStatus.UNKNOWN,
-                        val updatedAt: Instant, val updatedBy: EditorRef)
+                        val updatedAt: Instant)
 
 @Serializable @Entity(tableName = "tombstones", primaryKeys = ["entityType", "entityId", "operationId"])
 data class Tombstone(val entityType: String, val entityId: String, val deletedAt: Instant, val operationId: String)
@@ -87,11 +85,11 @@ data class Tombstone(val entityType: String, val entityId: String, val deletedAt
 data class HistoryEntry(
     @PrimaryKey val id: String, val operationId: String?, val entityType: String, val entityId: String,
     val entityName: String, val field: String, val oldValue: String?, val newValue: String?,
-    val editorId: String?, val editorName: String?, val editedAt: Instant?,
+    val editedAt: Instant?,
     val observedAt: Instant?, val publishedRevision: Long?,
 )
 @Entity(tableName = "device_identity")
-data class DeviceIdentity(@PrimaryKey val id: String, val displayName: String?, val adminMode: Boolean,
+data class DeviceIdentity(@PrimaryKey val id: String, val adminMode: Boolean,
                           val createdAt: Instant, val lastSeenAt: Instant)
 @Entity(tableName = "snapshot_state")
 data class SnapshotState(
@@ -107,7 +105,7 @@ data class SnapshotState(
 data class PendingOperation(
     @PrimaryKey val id: String, val transactionId: String, val entityType: String, val targetId: String,
     val field: String, val baseValueJson: String, val intendedValueJson: String,
-    val authorId: String, val authorName: String, val authoredAt: Instant, val basePublishId: String?,
+    val authoredAt: Instant, val basePublishId: String?,
 )
 @Entity(tableName = "publish_attempts")
 data class PublishAttempt(

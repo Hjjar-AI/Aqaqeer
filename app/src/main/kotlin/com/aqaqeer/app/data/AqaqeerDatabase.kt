@@ -22,8 +22,6 @@ class DbConverters {
     @TypeConverter fun longToInstant(value: Long?): Instant? = value?.let(Instant::ofEpochMilli)
     @TypeConverter fun dateToString(value: LocalDate?): String? = value?.toString()
     @TypeConverter fun stringToDate(value: String?): LocalDate? = value?.let(LocalDate::parse)
-    @TypeConverter fun editorToString(value: EditorRef): String = Json.encodeToString(value)
-    @TypeConverter fun stringToEditor(value: String): EditorRef = Json.decodeFromString(value)
     @TypeConverter fun verifierToString(value: PinVerifier): String = Json.encodeToString(value)
     @TypeConverter fun stringToVerifier(value: String): PinVerifier = Json.decodeFromString(value)
 }

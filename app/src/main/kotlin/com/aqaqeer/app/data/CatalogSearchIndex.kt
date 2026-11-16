@@ -5,11 +5,13 @@ import kotlinx.coroutines.ensureActive
 
 @androidx.compose.runtime.Immutable
 data class MedicationRowUi(val medication: Medication, val form: MedicationForm?, val category: String,
-    val status: AvailabilityStatus, val elsewhere: List<Section>, val unpublished: Boolean)
+    val status: AvailabilityStatus, val elsewhere: List<Section>, val unpublished: Boolean, val fetched: Boolean = false)
 data class HomeBrowseResult(val catalog: CatalogSnapshot? = null, val sectionId: String? = null,
     val query: String = "", val filters: HomeFilters = HomeFilters(), val preferences: HomePreferences = HomePreferences(),
     val visible: List<Medication> = emptyList(), val groups: List<MedicationGroup> = emptyList(),
-    val rows: Map<String, MedicationRowUi> = emptyMap())
+    val rows: Map<String, MedicationRowUi> = emptyMap(),
+    val fetched: Set<String> = emptySet(), val unpublished: Set<String> = emptySet(),
+    val today: java.time.LocalDate? = null, val otherSections: Map<String, Set<String>> = emptyMap())
 
 /** Immutable normalized content; query work never normalizes inside a sort comparator. */
 class CatalogSearchIndex(val catalog: CatalogSnapshot) {
@@ -82,18 +84,28 @@ class CatalogSearchIndex(val catalog: CatalogSnapshot) {
         }.then(alphabetical) else alphabetical)
     }
     suspend fun project(section: String?, query: String, filters: HomeFilters, preferences: HomePreferences,
-        unpublished: Set<String>): HomeBrowseResult {
+        unpublished: Set<String>, fetched: Set<String> = emptySet(),
+        today: java.time.LocalDate = MedicationPresentation.today(java.time.Instant.now(), catalog.pharmacy?.timezone ?: "Asia/Damascus")): HomeBrowseResult {
         currentCoroutineContext().ensureActive()
         val (ordered, scores) = ordered(section, query, filters, preferences.sort)
-        val visible = ordered.map { it.medication }
+        fun extra(med: Medication) = (!filters.expiringSoon || MedicationPresentation.expiry(med, today) == ExpiryState.SOON) &&
+            (!filters.unpublishedOnly || med.id in unpublished) && (!filters.fetchedOnly || med.id in fetched)
+        val visible = ordered.map { it.medication }.filter(::extra)
+        val otherSections = if (query.isBlank() || filters.statuses.isEmpty()) emptyMap() else {
+            val here = visible.map { it.id }.toSet()
+            catalog.sections.filter { it.isActive && it.id != section }.mapNotNull { candidate ->
+                val extraIds = browse(candidate.id, query, filters, preferences.sort).filter(::extra).map { it.id }.toSet() - here
+                if (extraIds.isEmpty()) null else candidate.id to extraIds
+            }.toMap()
+        }
         val groups = if (preferences.groupingEnabled) grouped(visible, preferences.grouping, scores,
             MedicationPresentation.normalizedSearch(query).isNotEmpty()) else emptyList()
         val rows = visible.associate { med ->
             currentCoroutineContext().ensureActive()
             med.id to MedicationRowUi(med, catalog.formsById[med.formId], catalog.categoriesById[med.categoryId]?.nameAr ?: "غير مصنف",
                 section?.let { catalog.status(med.id, it) } ?: AvailabilityStatus.UNKNOWN,
-                MedicationPresentation.availableElsewhere(catalog, med.id, section), med.id in unpublished)
+                MedicationPresentation.availableElsewhere(catalog, med.id, section), med.id in unpublished, med.id in fetched)
         }
-        return HomeBrowseResult(catalog, section, query, filters, preferences, visible, groups, rows)
+        return HomeBrowseResult(catalog, section, query, filters, preferences, visible, groups, rows, fetched, unpublished, today, otherSections)
     }
 }

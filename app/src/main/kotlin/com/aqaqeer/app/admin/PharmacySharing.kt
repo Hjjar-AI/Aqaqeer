@@ -67,7 +67,7 @@ class PharmacySharing @Inject internal constructor(private val admin: AdminRepos
                 if (same) return@transaction
             }
             val key = ByteArray(32).also { SecureRandom().nextBytes(it) }
-            ConnectionCandidate(p.pharmacyId, p.name, Instant.now(), EditorRef(d.id, d.displayName!!), token, group, key, p.keyVersion).use {
+            ConnectionCandidate(p.pharmacyId, p.name, Instant.now(), token, group, key, p.keyVersion).use {
                 staged.retain(it, newId())
             }
         }
@@ -98,13 +98,13 @@ class PharmacySharing @Inject internal constructor(private val admin: AdminRepos
         } finally { mutable.value = mutable.value.copy(busy = false) }
     }
     private data class Local(val catalog: CatalogSnapshot, val state: SnapshotState, val ops: List<PendingOperation>,
-        val attempt: PublishAttempt?, val lifecycle: String, val editor: EditorRef)
+        val attempt: PublishAttempt?, val lifecycle: String)
     private suspend fun local() = admin.transaction { dao ->
         val d = admin.guard(dao)
         val attempts = dao.attempts()
         adminCheck(attempts.size <= 1) { uiText(R.string.publish_multiple_attempts) }
         Local(dao.catalog(), requireNotNull(dao.snapshotState()), dao.pending(), attempts.singleOrNull(),
-            requireNotNull(dao.control()).lifecycle, EditorRef(d.id, d.displayName!!))
+            requireNotNull(dao.control()).lifecycle)
     }
     private suspend fun publishLocked(choices: Map<String, Boolean>, recoverPin: Boolean): Boolean {
         admin.transaction { adminCheck(it.control()?.restorePaused != true) { "راجع النسخة المستعادة أولاً" } }
@@ -212,7 +212,7 @@ class PharmacySharing @Inject internal constructor(private val admin: AdminRepos
                     val candidate = SnapshotCandidate.Supported(
                         SnapshotCompatibility(1, merged.catalog.pharmacy!!.minVersionCode, connection.keyVersion),
                         (live?.revision ?: 0) + 1, newId(), live?.publishId, live?.revision ?: 0,
-                        Instant.now(), initial.editor, merged.catalog)
+                        Instant.now(), merged.catalog)
                     attempt = PublishAttempt(candidate.publishId, live?.confirmedJson(), candidate.confirmedJson(),
                         Json.encodeToString(initial.ops.map { it.id }), "PREPARED")
                     val saved = attempt
@@ -284,10 +284,10 @@ class PharmacySharing @Inject internal constructor(private val admin: AdminRepos
                 // Keep its author/history, and bind the reviewed intention to the verified base.
                 val device = requireNotNull(dao.deviceIdentity())
                 val rebased = CatalogEdits.diff(incoming.catalog, visible.catalog,
-                    EditorRef(device.id, device.displayName!!), Instant.now(), incoming.publishId).map { op ->
+                    Instant.now(), incoming.publishId).map { op ->
                     val prior = remaining.lastOrNull { it.entityType == op.entityType && it.targetId == op.targetId && it.field == op.field }
                     if (prior == null) op else op.copy(id = prior.id, transactionId = prior.transactionId,
-                        authorId = prior.authorId, authorName = prior.authorName, authoredAt = prior.authoredAt)
+                        authoredAt = prior.authoredAt)
                 }
                 dao.deletePending(remaining.map { it.id }); dao.putPending(rebased)
             }
@@ -381,10 +381,10 @@ class PharmacySharing @Inject internal constructor(private val admin: AdminRepos
                     adminCheck(active.info()?.id == info.id && dao.control()?.restorePaused == true &&
                         dao.catalog() == initial.catalog && dao.pending() == initial.ops && dao.snapshotState() == initial.state)
                     adminCheck(requireNotNull(dao.control()).authorizedPinVerifier == verifier)
-                    val changes = CatalogEdits.diff(live.catalog, merged.catalog, initial.editor, Instant.now(), live.publishId).map { op ->
+                    val changes = CatalogEdits.diff(live.catalog, merged.catalog, Instant.now(), live.publishId).map { op ->
                         val prior = if (replaceLive) null else pending.lastOrNull { it.entityType == op.entityType && it.targetId == op.targetId && it.field == op.field }
                         if (prior == null) op else op.copy(id = prior.id, transactionId = prior.transactionId,
-                            authorId = prior.authorId, authorName = prior.authorName, authoredAt = prior.authoredAt)
+                            authoredAt = prior.authoredAt)
                     }
                     if (attempt != null) {
                         dao.insertHistory(listOf(RemoteObservationHistory.recovery(connection.pharmacyId, restoredBase.publishId,
@@ -404,7 +404,7 @@ class PharmacySharing @Inject internal constructor(private val admin: AdminRepos
                         op.entityType, op.targetId, merged.catalog.historyName(op.entityType, op.targetId)
                             ?: live.catalog.historyName(op.entityType, op.targetId) ?: op.entityType,
                         op.field, op.baseValueJson, op.intendedValueJson,
-                        op.authorId, op.authorName, op.authoredAt, null, null) })
+                        op.authoredAt, null, null) })
                     active.retain(connection, info.id)
                     dao.deletePending(initial.ops.map { it.id }); dao.putPending(changes)
                     dao.replace(merged.catalog)
@@ -415,7 +415,7 @@ class PharmacySharing @Inject internal constructor(private val admin: AdminRepos
                     dao.control(requireNotNull(dao.control()).copy(lifecycle = "SHARED", restorePaused = false, reconnectPending = false, observedPinVerifier = verifier))
                     dao.insertHistory(listOf(HistoryEntry(newId(), null, "snapshot", live.publishId,
                         "استعادة نسخة احتياطية", if (replaceLive) "restoreReplacementReviewed" else "restoreReconciled",
-                        restoredBase.publishId, live.publishId, device.id, device.displayName, Instant.now(), read.observedAt, null)))
+                        restoredBase.publishId, live.publishId, Instant.now(), read.observedAt, null)))
                 }
             }
             if (mutable.value.busy) mutable.value = SharingStatus(message = "تمت المصالحة. راجع التعديلات ثم انشر يدوياً عند الحاجة")
@@ -451,7 +451,7 @@ class PharmacySharing @Inject internal constructor(private val admin: AdminRepos
                 val replacement = token.ifBlank { secrets.botToken }
                 adminRequire(replacement.substringBefore(':') == secrets.botToken.substringBefore(':'))
                 adminCheck(setup.validate(replacement, secrets.groupId).title == expectedTitle)
-                ConnectionCandidate(candidate.pharmacyId, candidate.pharmacyName, candidate.createdAt, candidate.createdBy,
+                ConnectionCandidate(candidate.pharmacyId, candidate.pharmacyName, candidate.createdAt,
                     replacement, candidate.groupId, secrets.snapshotKey.copyOf(), candidate.keyVersion).use { updated -> store.retain(updated, info.id) }
                 admin.transaction { dao -> admin.guard(dao); dao.control(requireNotNull(dao.control()).copy(restoreConnectionConfirmed = true)) }
             } finally { secrets.snapshotKey.fill(0) }
@@ -469,7 +469,7 @@ class PharmacySharing @Inject internal constructor(private val admin: AdminRepos
                 try {
                     val p = requireNotNull(state.catalog.pharmacy)
                     val wire = ConnectionWire(1, p.pharmacyId, p.name, secrets.botToken, secrets.groupId,
-                        Base64.getEncoder().encodeToString(secrets.snapshotKey), secrets.keyVersion, Instant.now(), state.editor)
+                        Base64.getEncoder().encodeToString(secrets.snapshotKey), secrets.keyVersion, Instant.now())
                     val bytes = EnvelopeWriter.connection(wire, password)
                     try { (context.contentResolver.openOutputStream(uri, "wt") ?: throw AdminProblem("تعذر فتح الملف")).use { it.write(bytes) } }
                     finally { bytes.fill(0) }

@@ -14,7 +14,7 @@ internal fun publicationDecision(base: SnapshotCandidate.Supported, incoming: Sn
     if (base.publishId == incoming.publishId && base.revision == incoming.revision &&
         base.compatibility == incoming.compatibility && base.parentPublishId == incoming.parentPublishId &&
         base.basedOnRevision == incoming.basedOnRevision && base.publishedAt == incoming.publishedAt &&
-        base.publishedBy == incoming.publishedBy && base.catalog.sameContents(incoming.catalog)) return RefreshOutcome.UNCHANGED
+        base.catalog.sameContents(incoming.catalog)) return RefreshOutcome.UNCHANGED
     if (incoming.revision == base.revision + 1 && incoming.parentPublishId == base.publishId && incoming.publishId != base.publishId)
         return RefreshOutcome.APPLIED
     throw RefreshException(RefreshError.PUBLICATION_RECOVERY)

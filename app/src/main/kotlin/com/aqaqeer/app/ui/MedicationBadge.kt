@@ -35,6 +35,7 @@ import androidx.compose.ui.unit.dp
                 if (!dense && icon != null) AppIcon(icon, modifier = Modifier.size(18.dp))
                 Text(text, style = if (dense) MaterialTheme.typography.labelMedium else MaterialTheme.typography.labelLarge,
                     fontWeight = if (dense) FontWeight.Normal else FontWeight.Bold)
+                if (onClick != null) AppIcon(UiIcon.EDIT, Modifier.size(14.dp))
             }
         }
     }

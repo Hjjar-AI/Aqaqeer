@@ -14,17 +14,16 @@ import java.time.ZoneId
 import javax.inject.Inject
 import javax.inject.Singleton
 
-internal const val UNKNOWN_HISTORY_EDITOR = "unknown"
 internal data class HistoryFilter(val from: LocalDate? = null, val through: LocalDate? = null,
-    val editorId: String? = null, val medicationId: String? = null, val entityType: String? = null)
+    val medicationId: String? = null, val entityType: String? = null)
 internal data class HistoryOption(val id: String, val name: String)
 internal data class HistoryValue(val text: String?, val shortened: Boolean = false)
 internal data class HistoryDisplayEntry(val id: String, val entityType: String, val entityId: String,
     val entityName: String, val field: String, val before: HistoryValue, val after: HistoryValue,
-    val editorId: String?, val editorName: String?, val editedAt: Instant?, val observedAt: Instant?,
+    val editedAt: Instant?, val observedAt: Instant?,
     val publishedRevision: Long?, val valuesHidden: Boolean)
 internal data class HistoryPage(val entries: List<HistoryDisplayEntry>, val hasMore: Boolean,
-    val medications: List<HistoryOption>, val editors: List<HistoryOption>, val timezone: String)
+    val medications: List<HistoryOption>, val timezone: String)
 
 /** SQL character bounds count Unicode code points, not UTF-16 units. */
 internal fun historyPreview(value: String?): HistoryValue {
@@ -48,7 +47,7 @@ class HistoryRepository @Inject constructor(private val factory: DatabaseFactory
     private val optionsLock = Any()
     private var optionsDatabase: AqaqeerDatabase? = null
     private var optionsObserver: androidx.room.InvalidationTracker.Observer? = null
-    private var cachedOptions: Pair<List<HistoryOption>, List<HistoryOption>>? = null
+    private var cachedOptions: List<HistoryOption>? = null
     private val optionsRegistration = kotlinx.coroutines.sync.Mutex()
     private suspend fun observeOptions(database: AqaqeerDatabase) = optionsRegistration.withLock {
         val registration = synchronized(optionsLock) {
@@ -69,8 +68,8 @@ class HistoryRepository @Inject constructor(private val factory: DatabaseFactory
             database.invalidationTracker.addObserver(next)
         }
     }
-    private fun options(dao: CatalogDao): Pair<List<HistoryOption>, List<HistoryOption>> = synchronized(optionsLock) {
-        cachedOptions ?: (medicationOptions(dao) to editorOptions(dao)).also { cachedOptions = it }
+    private fun options(dao: CatalogDao): List<HistoryOption> = synchronized(optionsLock) {
+        cachedOptions ?: medicationOptions(dao).also { cachedOptions = it }
     }
     /** History viewing remains available to authorized admins under compatibility restrictions. */
     internal fun observe(pharmacyId: String, filter: HistoryFilter, page: Int): Flow<HistoryPage> = flow {
@@ -103,10 +102,6 @@ class HistoryRepository @Inject constructor(private val factory: DatabaseFactory
         val zone = ZoneId.of(timezone)
         filter.from?.let { where += "COALESCE(h.editedAt,h.observedAt) >= ?"; args += it.atStartOfDay(zone).toInstant().toEpochMilli() }
         filter.through?.let { where += "COALESCE(h.editedAt,h.observedAt) < ?"; args += it.plusDays(1).atStartOfDay(zone).toInstant().toEpochMilli() }
-        filter.editorId?.let {
-            if (it == UNKNOWN_HISTORY_EDITOR) where += "h.editorId IS NULL"
-            else { where += "h.editorId = ?"; args += it }
-        }
         filter.medicationId?.let {
             where += "((h.entityType='medication' AND h.entityId=?) OR (h.entityType='availability' AND substr(h.entityId,1,instr(h.entityId,'/')-1)=?))"
             args += it; args += it
@@ -123,7 +118,7 @@ class HistoryRepository @Inject constructor(private val factory: DatabaseFactory
         val sql = """SELECT h.id,h.entityType,h.entityId,substr(h.entityName,1,513),h.field,
             CASE WHEN $hidden THEN NULL ELSE substr(h.oldValue,1,513) END,
             CASE WHEN $hidden THEN NULL ELSE substr(h.newValue,1,513) END,
-            h.editorId,substr(h.editorName,1,513),h.editedAt,h.observedAt,h.publishedRevision,$hidden
+            h.editedAt,h.observedAt,h.publishedRevision,$hidden
             FROM history h ${if (where.isEmpty()) "" else "WHERE " + where.joinToString(" AND ")}
             ORDER BY COALESCE(h.editedAt,h.observedAt,-9223372036854775808) DESC,h.id DESC LIMIT 51 OFFSET ?"""
         args += page.toLong() * 50
@@ -133,12 +128,12 @@ class HistoryRepository @Inject constructor(private val factory: DatabaseFactory
                 fun instant(index: Int): Instant? = if (cursor.isNull(index)) null else Instant.ofEpochMilli(cursor.getLong(index))
                 while (cursor.moveToNext()) add(HistoryDisplayEntry(cursor.getString(0), cursor.getString(1), cursor.getString(2),
                     historyPreview(string(3)).let { it.text.orEmpty() + if (it.shortened) "…" else "" }, cursor.getString(4),
-                    historyPreview(string(5)), historyPreview(string(6)), string(7), historyPreview(string(8)).text,
-                    instant(9), instant(10), if (cursor.isNull(11)) null else cursor.getLong(11), cursor.getInt(12) != 0))
+                    historyPreview(string(5)), historyPreview(string(6)),
+                    instant(7), instant(8), if (cursor.isNull(9)) null else cursor.getLong(9), cursor.getInt(10) != 0))
             }
         }
-        val (medications, editors) = options(dao)
-        return HistoryPage(entries.take(50), entries.size > 50, medications, editors, timezone)
+        val medications = options(dao)
+        return HistoryPage(entries.take(50), entries.size > 50, medications, timezone)
     }
 
     private fun medicationOptions(dao: CatalogDao): List<HistoryOption> {
@@ -163,19 +158,4 @@ class HistoryRepository @Inject constructor(private val factory: DatabaseFactory
         return result.map { HistoryOption(it.key, it.value) }.sortedWith(compareBy({ it.name }, { it.id }))
     }
 
-    private fun editorOptions(dao: CatalogDao): List<HistoryOption> {
-        val sql = """SELECT h.editorId,(SELECT substr(n.editorName,1,513) FROM history n WHERE n.editorId=h.editorId AND n.editorName IS NOT NULL
-            ORDER BY COALESCE(n.editedAt,n.observedAt,-9223372036854775808) DESC,n.id DESC LIMIT 1)
-            FROM history h GROUP BY h.editorId"""
-        return dao.backupCursor(SimpleSQLiteQuery(sql)).use { cursor ->
-            buildList {
-                while (cursor.moveToNext()) {
-                    val id = if (cursor.isNull(0)) UNKNOWN_HISTORY_EDITOR else cursor.getString(0)
-                    val name = if (id == UNKNOWN_HISTORY_EDITOR) "محرر غير معروف"
-                        else if (cursor.isNull(1)) "معرّف محرر: $id" else historyPreview(cursor.getString(1)).text.orEmpty()
-                    add(HistoryOption(id, name))
-                }
-            }.sortedWith(compareBy({ it.name }, { it.id }))
-        }
-    }
 }

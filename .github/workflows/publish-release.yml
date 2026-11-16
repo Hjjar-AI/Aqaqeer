@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       version_code:
-        description: "Required integer from 1 to 2099999999, without leading zeros (example format: 42). Must exceed all local release codes and android-build-N reservations, including failed attempts. No default."
+        description: "Required integer from 1 to 2099999999, without leading zeros (example format: 42). Must exceed all local release codes and android-initial-build-N reservations, including failed attempts. No default."
         type: string
         required: true
       publication:

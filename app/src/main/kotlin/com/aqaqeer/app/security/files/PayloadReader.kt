@@ -26,7 +26,7 @@ class PayloadException(val error: PayloadError) : Exception(error.name)
  * The caller owns the result and must close it after activation/cancellation.
  */
 class ConnectionCandidate internal constructor(
-    val pharmacyId: String, val pharmacyName: String, val createdAt: Instant, val createdBy: EditorRef,
+    val pharmacyId: String, val pharmacyName: String, val createdAt: Instant, 
     private val token: String, val groupId: Long, private val key: ByteArray, val keyVersion: Int,
 ) : AutoCloseable {
     private var closed = false
@@ -57,7 +57,7 @@ sealed interface SnapshotCandidate {
     class Supported internal constructor(
         override val compatibility: SnapshotCompatibility, val revision: Long, val publishId: String,
         val parentPublishId: String?, val basedOnRevision: Long, val publishedAt: Instant,
-        val publishedBy: EditorRef, val catalog: CatalogSnapshot,
+        val catalog: CatalogSnapshot,
     ) : SnapshotCandidate {
         override val publication get() = SnapshotPublication(revision, publishId, publishedAt)
     }
@@ -75,11 +75,11 @@ class PayloadReader(private val workspaceBudget: () -> Long = ::availablePayload
                 val wire = decode<ConnectionWire>(payload, check)
                 uuid(wire.pharmacyId)
                 if (expectedPharmacyId != null && wire.pharmacyId != expectedPharmacyId) fail(PayloadError.WRONG_PHARMACY)
-                name(wire.pharmacyName); editor(wire.createdBy)
+                name(wire.pharmacyName)
                 requirePayload(wire.botToken.isNotBlank() && wire.botToken == wire.botToken.trim())
                 requirePayload(wire.groupId < 0 && wire.keyVersion > 0)
                 val key = binary(wire.snapshotKey, 32)
-                ConnectionCandidate(wire.pharmacyId, wire.pharmacyName, wire.createdAt, wire.createdBy,
+                ConnectionCandidate(wire.pharmacyId, wire.pharmacyName, wire.createdAt,
                     wire.botToken, wire.groupId, key, wire.keyVersion).also { candidate = it }
             }
         } catch (error: Throwable) {
@@ -110,7 +110,7 @@ class PayloadReader(private val workspaceBudget: () -> Long = ::availablePayload
             requirePayload(header.publication == SnapshotPublication(wire.revision, wire.publishId, wire.publishedAt))
             requirePayload(pharmacy.schemaVersion == wire.compatibility.schemaVersion &&
                 pharmacy.minVersionCode == wire.compatibility.minVersionCode && pharmacy.keyVersion == wire.compatibility.keyVersion)
-            uuid(wire.publishId); wire.parentPublishId?.let(::uuid); editor(wire.publishedBy)
+            uuid(wire.publishId); wire.parentPublishId?.let(::uuid)
             requirePayload(wire.revision > 0 && wire.basedOnRevision >= 0 && wire.basedOnRevision == wire.revision - 1)
             requirePayload((wire.revision == 1L) == (wire.parentPublishId == null))
             requirePayload(wire.parentPublishId != wire.publishId)
@@ -122,12 +122,11 @@ class PayloadReader(private val workspaceBudget: () -> Long = ::availablePayload
             catalog.categories.forEach { check(); uuid(it.id) }
             catalog.forms.forEach { check(); uuid(it.id) }
             catalog.sections.forEach { check(); uuid(it.id) }
-            catalog.medications.forEach { medication -> check(); uuid(medication.id); editor(medication.updatedBy) }
-            catalog.availability.forEach { availability -> check(); editor(availability.updatedBy) }
+            catalog.medications.forEach { medication -> check(); uuid(medication.id) }
             requirePayload(catalog.tombstones.map { Triple(it.entityType, it.entityId, it.operationId) }.toSet().size == catalog.tombstones.size)
             catalog.tombstones.forEach { check(); uuid(it.entityId); uuid(it.operationId); name(it.entityType) }
             SnapshotCandidate.Supported(wire.compatibility, wire.revision, wire.publishId, wire.parentPublishId,
-                wire.basedOnRevision, wire.publishedAt, wire.publishedBy, catalog)
+                wire.basedOnRevision, wire.publishedAt, catalog)
         }
     }
 
@@ -256,7 +255,6 @@ class PayloadReader(private val workspaceBudget: () -> Long = ::availablePayload
             requirePayload(value.length == 36 && UUID.fromString(value).toString() == value)
         }
         private fun name(value: String) { requirePayload(value.isNotBlank() && value == value.trim()) }
-        private fun editor(value: EditorRef) { uuid(value.id); name(value.name) }
         private fun binary(value: String, length: Int): ByteArray {
             requirePayload(value.length == ((length + 2) / 3) * 4)
             val bytes = Base64.getDecoder().decode(value)
@@ -275,14 +273,14 @@ class PayloadReader(private val workspaceBudget: () -> Long = ::availablePayload
 internal class ConnectionWire(
     val schemaVersion: Int, val pharmacyId: String, val pharmacyName: String,
     val botToken: String, val groupId: Long, val snapshotKey: String, val keyVersion: Int,
-    val createdAt: Instant, val createdBy: EditorRef,
+    val createdAt: Instant, 
 )
 
 @Serializable
 internal class SnapshotWire(
     val compatibility: SnapshotCompatibility, val revision: Long, val publishId: String,
     val parentPublishId: String?, val basedOnRevision: Long, val publishedAt: Instant,
-    val publishedBy: EditorRef, val pharmacy: Pharmacy, val categories: List<Category>,
+    val pharmacy: Pharmacy, val categories: List<Category>,
     val forms: List<MedicationForm>, val sections: List<Section>, val medications: List<Medication>,
     val availability: List<Availability>, val tombstones: List<Tombstone>,
 )
@@ -295,7 +293,7 @@ private fun availablePayloadWorkspace(): Long {
 
 /** Complete supported wire payload as the confirmed base, without connection secrets. */
 internal fun SnapshotCandidate.Supported.confirmedJson(): String = confirmedSnapshotJson.encodeToString(SnapshotWire(
-    compatibility, revision, publishId, parentPublishId, basedOnRevision, publishedAt, publishedBy,
+    compatibility, revision, publishId, parentPublishId, basedOnRevision, publishedAt,
     requireNotNull(catalog.pharmacy), catalog.categories, catalog.forms, catalog.sections,
     catalog.medications, catalog.availability, catalog.tombstones,
 ))

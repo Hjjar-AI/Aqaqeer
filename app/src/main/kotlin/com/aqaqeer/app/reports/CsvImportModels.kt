@@ -11,14 +11,14 @@ internal data class CsvDecision(val action: CsvAction? = null, val targetId: Str
 internal data class CsvFieldChange(val field: String, val before: String, val after: String)
 internal data class CsvRowPlan(val medication: Medication, val category: Category?, val form: MedicationForm?,
     val statuses: Map<String, AvailabilityStatus>) {
-    fun apply(catalog: CatalogSnapshot, author: EditorRef, now: Instant): CatalogSnapshot {
+    fun apply(catalog: CatalogSnapshot, now: Instant): CatalogSnapshot {
         val old = catalog.medications.find { it.id == medication.id }
         val changedPairs = statuses.filter { (section, status) -> catalog.status(medication.id, section) != status }
         return catalog.copy(categories = catalog.categories + listOfNotNull(category), forms = catalog.forms + listOfNotNull(form),
             medications = catalog.medications.filterNot { it.id == medication.id } + medication.copy(
-                createdAt = old?.createdAt ?: now, updatedAt = now, updatedBy = author),
+                createdAt = old?.createdAt ?: now, updatedAt = now),
             availability = catalog.availability.filterNot { it.medicationId == medication.id && it.sectionId in changedPairs } +
-                changedPairs.map { (section, status) -> Availability(medication.id, section, status, now, author) })
+                changedPairs.map { (section, status) -> Availability(medication.id, section, status, now) })
     }
 }
 internal data class CsvPreviewRow(val record: CsvRecord, val decision: CsvDecision, val plan: CsvRowPlan? = null,

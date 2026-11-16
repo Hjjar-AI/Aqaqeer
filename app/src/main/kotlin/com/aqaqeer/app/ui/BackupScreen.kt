@@ -78,7 +78,7 @@ import java.time.format.DateTimeFormatter
                 if (selected != null) {
                     FormField(uiText(R.string.ui_backup_screen_016), restorePassword, { restorePassword = it }, secret = true, required = true)
                     if (ready.catalog.pharmacy != null) {
-                        Text(uiText(R.string.ui_backup_screen_017, MedicationPresentation.easternDigits(ready.pendingCount.toString())))
+                        Text(uiText(R.string.ui_backup_screen_017, MedicationPresentation.displayDigits(ready.pendingCount.toString())))
                         FormField(uiText(R.string.ui_backup_screen_018), typedName, { typedName = it }, required = true)
                         CheckChoiceRow(confirmed, uiText(R.string.ui_backup_screen_019)) { confirmed = it }
                     }

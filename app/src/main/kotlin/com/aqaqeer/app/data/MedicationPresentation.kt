@@ -16,7 +16,8 @@ data class HomePreferences(val sort: HomeSort = HomeSort.SCIENTIFIC_NAME,
     val secondaryHijri: Boolean = false, val groupingEnabled: Boolean = true,
     val grouping: HomeGrouping = HomeGrouping.CATEGORY, val twoColumns: Boolean = true,
     val sectionsAtBottom: Boolean = true, val searchAtBottom: Boolean = true)
-data class HomeFilters(val statuses: Set<AvailabilityStatus> = emptySet(), val categoryIds: Set<String> = emptySet())
+data class HomeFilters(val statuses: Set<AvailabilityStatus> = emptySet(), val categoryIds: Set<String> = emptySet(),
+    val expiringSoon: Boolean = false, val unpublishedOnly: Boolean = false, val fetchedOnly: Boolean = false)
 data class MedicationGroup(val key: String, val label: String, val medications: List<Medication>)
 enum class ExpiryState { EXPIRED, SOON }
 data class DisplayName(val text: String, val english: Boolean)
@@ -110,7 +111,7 @@ object MedicationPresentation {
         if (currentSectionId == null || catalog.status(medId, currentSectionId) != AvailabilityStatus.OUT) emptyList()
         else catalog.sections.filter { it.isActive && it.id != currentSectionId && catalog.status(medId, it.id) == AvailabilityStatus.AVAILABLE }
 
-    fun easternDigits(value: String): String = value.map { if (it in '0'..'9') ('٠'.code + (it - '0')).toChar() else it }.joinToString("")
+    fun displayDigits(value: String): String = westernDigits(value)
     fun westernDigits(value: String): String = value.map { when (it) {
         in '٠'..'٩' -> ('0'.code + (it - '٠')).toChar()
         in '۰'..'۹' -> ('0'.code + (it - '۰')).toChar()

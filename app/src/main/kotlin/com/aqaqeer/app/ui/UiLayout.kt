@@ -1,5 +1,8 @@
 package com.aqaqeer.app.ui
 
+import com.aqaqeer.app.R
+import com.aqaqeer.app.uiText
+
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -56,7 +59,10 @@ internal val LocalFormFocus = staticCompositionLocalOf<FormFocusController?> { n
     CompositionLocalProvider(LocalFormFocus provides focus) {
         Column(modifier.fillMaxSize()) {
             Column(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).padding(UiSpacing.page),
-                verticalArrangement = Arrangement.spacedBy(UiSpacing.section), content = content)
+                verticalArrangement = Arrangement.spacedBy(UiSpacing.group)) {
+                SupportingText(uiText(R.string.review_required_convention))
+                content()
+            }
             footer?.let { Surface(shadowElevation = UiSpacing.hair) { Box(Modifier.fillMaxWidth().padding(UiSpacing.related)) { it() } } }
         }
     }

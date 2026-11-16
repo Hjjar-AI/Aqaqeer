@@ -49,7 +49,7 @@ import com.aqaqeer.app.data.*
             HorizontalDivider()
             if (pharmacy != null) {
                 DrawerGroup(uiText(R.string.ui_home_drawer_002) + if (filters.categoryIds.isNotEmpty())
-                    " (${MedicationPresentation.easternDigits(filters.categoryIds.size.toString())})" else "",
+                    " (${MedicationPresentation.displayDigits(filters.categoryIds.size.toString())})" else "",
                     categoriesOpen, { categoriesOpen = !categoriesOpen }) {
                     if (filters.categoryIds.size > 1) SupportingText(uiText(R.string.ui_home_drawer_003))
                     NavigationDrawerItem(label = { Text(uiText(R.string.ui_home_drawer_004)) }, selected = filters.categoryIds.isEmpty(),
@@ -72,7 +72,7 @@ import com.aqaqeer.app.data.*
                 HorizontalDivider()
                 DrawerGroup(uiText(R.string.ui_home_drawer_006), sharingOpen, { sharingOpen = !sharingOpen }) {
                     DrawerRow(uiText(R.string.ui_screen_titles_004), openReview, enabled = !busy, icon = UiIcon.PUBLISH,
-                        badge = if (ready.pendingCount > 0) MedicationPresentation.easternDigits(ready.pendingCount.toString()) else null)
+                        badge = if (ready.pendingCount > 0) MedicationPresentation.displayDigits(ready.pendingCount.toString()) else null)
                     if (ready.lifecycle == "LOCAL_DRAFT") DrawerRow(uiText(R.string.ui_home_drawer_007), { openRoute("setup") }, enabled = editable && !busy, icon = UiIcon.SETUP)
                     DrawerRow(uiText(R.string.ui_screen_titles_008), { openRoute("export-connection") },
                         enabled = editable && !busy && ready.lifecycle == "SHARED" && !ready.restorePaused, icon = UiIcon.CONNECTION)

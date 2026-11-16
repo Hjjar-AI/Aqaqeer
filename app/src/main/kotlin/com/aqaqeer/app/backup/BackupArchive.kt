@@ -15,12 +15,12 @@ internal val backupTables = linkedMapOf(
     "categories" to "id,nameAr,nameEn,orderIndex,isSystem",
     "forms" to "id,nameAr,nameEn,orderIndex,isSystem",
     "sections" to "id,nameAr,nameEn,orderIndex,isActive",
-    "medications" to "id,nameEn,strength,formId,categoryId,createdAt,updatedAt,updatedBy,nameAr,genericAr,genericEn,brand,note,expiryDate,expirySoonThresholdDays",
-    "availability" to "medicationId,sectionId,status,updatedAt,updatedBy",
+    "medications" to "id,nameEn,strength,formId,categoryId,createdAt,updatedAt,nameAr,genericAr,genericEn,brand,note,expiryDate,expirySoonThresholdDays",
+    "availability" to "medicationId,sectionId,status,updatedAt",
     "tombstones" to "entityType,entityId,deletedAt,operationId",
-    "history" to "id,operationId,entityType,entityId,entityName,field,oldValue,newValue,editorId,editorName,editedAt,observedAt,publishedRevision",
+    "history" to "id,operationId,entityType,entityId,entityName,field,oldValue,newValue,editedAt,observedAt,publishedRevision",
     "snapshot_state" to "slot,publishedAt,confirmedPayloadJson,revision,publishId,pinnedMessageId,documentFileId,documentFileUniqueId,lastSuccessfulSyncAt,requiredSchemaVersion,requiredMinVersionCode",
-    "pending_operations" to "id,transactionId,entityType,targetId,field,baseValueJson,intendedValueJson,authorId,authorName,authoredAt,basePublishId",
+    "pending_operations" to "id,transactionId,entityType,targetId,field,baseValueJson,intendedValueJson,authoredAt,basePublishId",
     "publish_attempts" to "publishId,basePayloadJson,candidatePayloadJson,includedOperationIdsJson,transportPhase,uploadedFileId,uploadedMessageId",
 ).mapValues { it.value.split(',') }
 
@@ -131,15 +131,14 @@ internal object BackupArchive {
     }
 
     private fun readConnection(json: StrictJson): ConnectionWire {
-        val fields = mutableMapOf<String, String>(); var createdBy: EditorRef? = null
+        val fields = mutableMapOf<String, String>()
         json.objectMembers { name -> when (name) {
             "schemaVersion", "groupId", "keyVersion" -> fields[name] = json.number()
             "pharmacyId", "pharmacyName", "botToken", "snapshotKey", "createdAt" -> fields[name] = json.string(8192)
-            "createdBy" -> { val editor = mutableMapOf<String, String>(); json.objectMembers { k -> if (k !in setOf("id", "name")) invalid(); editor[k] = json.string(8192) }; createdBy = EditorRef(editor["id"] ?: invalid(), editor["name"] ?: invalid()) }
             else -> invalid()
         } }
         fun f(name: String) = fields[name] ?: invalid()
-        return ConnectionWire(fields["schemaVersion"]?.toInt() ?: 1, f("pharmacyId"), f("pharmacyName"), f("botToken"), f("groupId").toLong(), f("snapshotKey"), f("keyVersion").toInt(), java.time.Instant.parse(f("createdAt")), createdBy ?: invalid())
+        return ConnectionWire(fields["schemaVersion"]?.toInt() ?: 1, f("pharmacyId"), f("pharmacyName"), f("botToken"), f("groupId").toLong(), f("snapshotKey"), f("keyVersion").toInt(), java.time.Instant.parse(f("createdAt")))
     }
 
     private class CellInput(val db: SupportSQLiteDatabase, val table: String, val row: Long, val column: Int) : java.io.InputStream() {

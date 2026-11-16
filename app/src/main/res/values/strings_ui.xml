@@ -160,11 +160,11 @@
     <string name="ui_pharmacy_admin_screen_081" formatted="false">"شكل محذوف"</string>
     <string name="ui_pharmacy_admin_screen_082" formatted="false">"نعم"</string>
     <string name="ui_pharmacy_admin_screen_083" formatted="false">"لا"</string>
-    <string name="ui_pharmacy_admin_screen_084" formatted="false">"١. إنشاء البوت"</string>
+    <string name="ui_pharmacy_admin_screen_084" formatted="false">"1. إنشاء البوت"</string>
     <string name="ui_pharmacy_admin_screen_085" formatted="false">"أنشئ بوتاً مخصصاً عبر BotFather وأدخل الرمز."</string>
-    <string name="ui_pharmacy_admin_screen_086" formatted="false">"٢. إعداد المجموعة"</string>
+    <string name="ui_pharmacy_admin_screen_086" formatted="false">"2. إعداد المجموعة"</string>
     <string name="ui_pharmacy_admin_screen_087" formatted="false">"أنشئ مجموعة خاصة وأضف البوت مشرفاً بصلاحية إرسال الملفات وتثبيت الرسائل."</string>
-    <string name="ui_pharmacy_admin_screen_088" formatted="false">"٣. اكتشاف المجموعة والتحقق"</string>
+    <string name="ui_pharmacy_admin_screen_088" formatted="false">"3. اكتشاف المجموعة والتحقق"</string>
     <string name="ui_pharmacy_admin_screen_089" formatted="false">"أرسل الأمر التالي داخل المجموعة. استخدم جهازاً واحداً للاكتشاف."</string>
     <string name="ui_pharmacy_admin_screen_090" formatted="false">"اتصال تيليغرام"</string>
     <string name="ui_pharmacy_admin_screen_091" formatted="false">"رمز البوت"</string>
@@ -180,9 +180,9 @@
     <string name="ui_pharmacy_admin_screen_101" formatted="false">"لاحقاً"</string>
     <string name="ui_pharmacy_admin_screen_102" formatted="false">"نشر الآن"</string>
     <string name="ui_pharmacy_admin_screen_103" formatted="false">"لن يُحذف أي webhook قائم. استخدم بوتاً مخصصاً إذا كان البوت مرتبطاً بخدمة أخرى. بعد الحفظ اختر مراجعة التعديلات والنشر؛ يمكنك نشر صيدلية فارغة أيضاً."</string>
-    <string name="ui_pharmacy_admin_screen_104" formatted="false">"يحصل المستورد على صلاحية القراءة. اختر أربعة أرقام على الأقل؛ يفضل توليد ١٦ رقماً عشوائياً؛ تجنب التواريخ والتسلسلات والأرقام المكررة. شارك الملف وكلمته عبر قناتين منفصلتين."</string>
+    <string name="ui_pharmacy_admin_screen_104" formatted="false">"يحصل المستورد على صلاحية القراءة. اختر أربعة أرقام على الأقل؛ يفضل توليد 16 رقماً عشوائياً؛ تجنب التواريخ والتسلسلات والأرقام المكررة. شارك الملف وكلمته عبر قناتين منفصلتين."</string>
     <string name="ui_pharmacy_admin_screen_105" formatted="false">"حماية ملف الاتصال"</string>
-    <string name="ui_pharmacy_admin_screen_106" formatted="false">"كلمة ملف الاتصال — أربعة أرقام على الأقل؛ يفضل توليد ١٦ رقماً عشوائياً"</string>
+    <string name="ui_pharmacy_admin_screen_106" formatted="false">"كلمة ملف الاتصال — أربعة أرقام على الأقل؛ يفضل توليد 16 رقماً عشوائياً"</string>
     <string name="ui_pharmacy_admin_screen_107" formatted="false">"حفظ ملف الاتصال"</string>
     <string name="ui_pharmacy_admin_screen_108" formatted="false">"أدخل اسماً علمياً بالعربية أو الإنجليزية على الأقل"</string>
     <string name="ui_pharmacy_admin_screen_109" formatted="false">"حفظ محلياً"</string>
@@ -375,7 +375,7 @@
     <string name="ui_backup_screen_006" formatted="false">"تشمل البيانات وكل السجل المحلي والتعديلات والاتصال. لا تشمل تفويض الإدارة. احتفظ بالملف وعبارة مروره بأمان؛ لا يمكن استعادة عبارة مرور منسية."</string>
     <string name="ui_backup_screen_007" formatted="false">"تعذر فتح منتقي الملفات؛ حاول مجدداً"</string>
     <string name="ui_backup_screen_008" formatted="false">"اختيار مكان الحفظ"</string>
-    <string name="ui_backup_screen_009" formatted="false">"الحد الأقصى للملف المشفّر ٦٤ ميغابايت (٦٧٬١٠٨٬٨٦٤ بايت). لا تُحذف أجزاء من السجل لتقليل الحجم."</string>
+    <string name="ui_backup_screen_009" formatted="false">"الحد الأقصى للملف المشفّر 64 ميغابايت (67٬108٬864 بايت). لا تُحذف أجزاء من السجل لتقليل الحجم."</string>
     <string name="ui_backup_screen_010" formatted="false">"النسخ متاح؛ الاستعادة متوقفة أثناء الصيانة"</string>
     <string name="ui_backup_screen_011" formatted="false">"أكمل صيانة الاتصال أو ألغها بأمان قبل استبدال بيانات هذا الجهاز."</string>
     <string name="ui_backup_screen_012" formatted="false">"مراجعة صيانة الاتصال"</string>
@@ -554,7 +554,7 @@
     <string name="ui_medication_components_011" formatted="false">"صلاحية قصيرة"</string>
     <string name="ui_connection_import_state_001" formatted="false">"كلمة المرور غير صحيحة أو الملف تالف."</string>
     <string name="ui_connection_import_state_002" formatted="false">"أدخل كلمة مرور الملف: أربعة أرقام على الأقل."</string>
-    <string name="ui_connection_import_state_003" formatted="false">"يتجاوز الملف الحد المسموح: ١٠ ميبيبايت."</string>
+    <string name="ui_connection_import_state_003" formatted="false">"يتجاوز الملف الحد المسموح: 10 ميبيبايت."</string>
     <string name="ui_connection_import_state_004" formatted="false">"لا تكفي الموارد لمعالجة هذا الملف."</string>
     <string name="ui_connection_import_state_005" formatted="false">"تنسيق الملف غير مدعوم. اطلب ملف اتصال متوافقاً من المسؤول."</string>
     <string name="ui_connection_import_state_006" formatted="false">"هذا ليس ملف اتصال صالحاً."</string>
@@ -581,7 +581,7 @@
     <string name="ui_connection_import_state_027" formatted="false">"بيانات وصف النسخة لا تطابق محتواها المحمي. تواصل مع المسؤول."</string>
     <string name="ui_connection_import_state_028" formatted="false">"استجابة تيليغرام أو بيانات النسخة غير صالحة. احتُفظ بالاتصال المعلق."</string>
     <string name="ui_connection_import_state_029" formatted="false">"تعذر توثيق نسخة الصيدلية. قد تكون تالفة أو تغير مفتاحها؛ اطلب ملف اتصال حديثاً."</string>
-    <string name="ui_connection_import_state_030" formatted="false">"تتجاوز النسخة المنشورة الحد المسموح: ١٠ ميبيبايت."</string>
+    <string name="ui_connection_import_state_030" formatted="false">"تتجاوز النسخة المنشورة الحد المسموح: 10 ميبيبايت."</string>
     <string name="ui_connection_import_state_031" formatted="false">"تنسيق النسخة المنشورة غير مدعوم. اطلب إصداراً متوافقاً من التطبيق."</string>
     <string name="ui_connection_import_state_032" formatted="false">"تعذرت قراءة نسخة الصيدلية المحمية. احتُفظ بالاتصال المعلق."</string>
     <string name="ui_connection_import_state_033" formatted="false">"تتطلب النسخة إصداراً متوافقاً أحدث من التطبيق. احتُفظ بالاتصال المعلق دون تفعيل."</string>
@@ -613,7 +613,7 @@
     <string name="ui_catalog_view_model_016" formatted="false">"تعذر استئناف النشر؛ احتُفظ بالعمل."</string>
     <string name="ui_catalog_view_model_017" formatted="false">"تعذر قراءة السجل. تحقق من التفويض ثم حاول مجدداً؛ احتُفظ بالبيانات."</string>
     <string name="ui_brand_assets_001" formatted="false">"شعار عقاقير"</string>
-    <string name="ui_csv_import_screen_001" formatted="false">"UTF-8، حتى ١٠ ميبيبايت و١٠٠٠٠ صف و٦٤ كيبيبايت للخلية. لا تُحفظ بيانات قبل التأكيد. الملف الجديد يستبدل جلسة المعاينة ونتائجها فقط."</string>
+    <string name="ui_csv_import_screen_001" formatted="false">"UTF-8، حتى 10 ميبيبايت و10000 صف و64 كيبيبايت للخلية. لا تُحفظ بيانات قبل التأكيد. الملف الجديد يستبدل جلسة المعاينة ونتائجها فقط."</string>
     <string name="ui_csv_import_screen_002" formatted="false">"اختيار ملف ومعاينته"</string>
     <string name="ui_csv_import_screen_003" formatted="false">"حفظ القالب"</string>
     <string name="ui_csv_import_screen_004" formatted="false">"تقبل أعمدة التوافر AVAILABLE / LOW / OUT / UNKNOWN دون حساسية لحالة الأحرف أو التسميات العربية. تقبل معرّف القسم أو اسمه الواضح. معرّفات القالب الحالي:"</string>
@@ -752,7 +752,7 @@
     <string name="logic_weak_pattern">تجنب التواريخ والتسلسلات والأرقام المكررة</string>
     <string name="logic_password_guidance">يمكن استخدام أربعة أرقام على الأقل؛ كلمة عشوائية أطول تقاوم التخمين بشكل أفضل</string>
     <string name="logic_password_pattern">تجنب التكرار والتسلسلات والتواريخ؛ يفضل توليد كلمة عشوائية</string>
-    <string name="logic_generate_password">توليد ١٦ رقماً عشوائياً</string>
+    <string name="logic_generate_password">توليد 16 رقماً عشوائياً</string>
     <string name="logic_copy_password">نسخ كلمة الملف</string>
     <string name="logic_file_destination_failed">تعذر فتح وجهة الملف؛ أعد المحاولة</string>
     <string name="logic_duplicate_warning">يوجد دواء بالاسم والتركيز والشكل نفسه؛ أكد إنشاء سجل مستقل أو تعديل هذا السجل</string>

@@ -108,7 +108,7 @@ internal fun maintenanceStateDigest(catalog: CatalogSnapshot, state: SnapshotSta
     digest.text(pending.size.toString())
     pending.forEach { op ->
         listOf(op.id, op.transactionId, op.entityType, op.targetId, op.field, op.baseValueJson, op.intendedValueJson,
-            op.authorId, op.authorName, op.authoredAt.toString(), op.basePublishId).forEach { digest.text(it) }
+            op.authoredAt.toString(), op.basePublishId).forEach { digest.text(it) }
     }
     digest.text(attempts.size.toString())
     attempts.forEach { attempt ->

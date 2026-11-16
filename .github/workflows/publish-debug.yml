@@ -221,7 +221,7 @@ jobs:
             printf 'Source commit: %s\nTemporary build-run link: %s\n\n' "$CI_SOURCE_SHA" "$CI_RUN_URL"
             printf 'Reserved APK version code: %s (base version 0.0.%s).\n\n' "$CI_BUILD_CODE" "$CI_BUILD_CODE"
             printf 'Standard: com.aqaqeer.app.debug. Demo: com.aqaqeer.app.demo.debug (fictional sample data).\n\n'
-            printf 'Verified signer/package/version receipts and SHA-256 checksums are attached. Debug and production versions share android-build-N reservations. Existing installations require the same signer; never uninstall or clear pharmacy data to bypass a conflict.\n'
+            printf 'Verified signer/package/version receipts and SHA-256 checksums are attached. Debug and production versions share android-initial-build-N reservations. Existing installations require the same signer; never uninstall or clear pharmacy data to bypass a conflict.\n'
           } > release-notes.md
           gh release create "$tag" release-files/*/* \
             --target "$CI_SOURCE_SHA" --title "Aqaqeer debug 0.0.$CI_BUILD_CODE ($CI_RELEASE_FLAVOR)" \

@@ -16,7 +16,7 @@ internal data class MergeResult(val catalog: CatalogSnapshot, val conflicts: Lis
 internal object CatalogEdits {
     private fun deletionRows(c: CatalogSnapshot, targets: Set<String>): Map<String, JsonObject> =
         rows(c, targets = targets).mapValues { (_, row) ->
-            JsonObject(row - setOf("updatedAt", "updatedBy"))
+            JsonObject(row - setOf("updatedAt"))
         }
 
     /** Include links from both branches: a remote addition or reassignment can change deletion effects. */
@@ -54,18 +54,18 @@ internal object CatalogEdits {
             it.getValue("medicationId").jsonPrimitive.content + "/" + it.getValue("sectionId").jsonPrimitive.content
         }
     }
-    fun diff(before: CatalogSnapshot, after: CatalogSnapshot, author: EditorRef, at: Instant,
+    fun diff(before: CatalogSnapshot, after: CatalogSnapshot, at: Instant,
         baseId: String?, transaction: String = newId()): List<PendingOperation> {
         val a = rows(before, after); val b = rows(after, before)
         return (a.keys + b.keys).flatMap { key ->
             val old = a[key]; val next = b[key]
             val fields = if (old == null || next == null) setOf("@entity") else
-                (old.keys + next.keys) - setOf("updatedAt", "updatedBy", "createdAt")
+                (old.keys + next.keys) - setOf("updatedAt", "createdAt")
             fields.mapNotNull { field ->
                 val x = if (field == "@entity") old ?: JsonNull else old?.get(field) ?: JsonNull
                 val y = if (field == "@entity") next ?: JsonNull else next?.get(field) ?: JsonNull
                 if (x == y) null else PendingOperation(newId(), transaction, key.substringBefore(':'),
-                    key.substringAfter(':'), field, x.toString(), y.toString(), author.id, author.name, at, baseId)
+                    key.substringAfter(':'), field, x.toString(), y.toString(), at, baseId)
             }
         }
     }
@@ -73,7 +73,7 @@ internal object CatalogEdits {
         operations: List<PendingOperation>, choices: Map<String, Boolean> = emptyMap()): MergeResult {
         operations.forEach { op ->
             fun uuid(value: String) { require(UUID.fromString(value).toString() == value) }
-            uuid(op.id); uuid(op.transactionId); uuid(op.authorId)
+            uuid(op.id); uuid(op.transactionId)
             require(op.entityType in setOf("pharmacy", "category", "form", "section", "medication", "availability"))
             val targets = op.targetId.split('/')
             require(targets.size == if (op.entityType == "availability") 2 else 1)
@@ -103,7 +103,7 @@ internal object CatalogEdits {
                     }
                     val changes = (before.keys + after.keys).flatMap { rowKey ->
                         val old = before[rowKey]; val next = after[rowKey]
-                        val fields = if (old == null || next == null) setOf("@entity") else (old.keys + next.keys) - setOf("updatedAt", "updatedBy")
+                        val fields = if (old == null || next == null) setOf("@entity") else (old.keys + next.keys) - setOf("updatedAt")
                         fields.mapNotNull { field ->
                             val a = if (field == "@entity") old else old?.get(field)
                             val b = if (field == "@entity") next else next?.get(field)
@@ -154,12 +154,11 @@ internal object CatalogEdits {
                 accepted += op
             }
         }
-        // Derived metadata never decides business conflicts; use stable accepted-change attribution.
+        // Derived timestamps never decide business conflicts.
         accepted.groupBy { "${it.entityType}:${it.targetId}" }.forEach { (key, ops) ->
             r[key]?.takeIf { "updatedAt" in it }?.let { row ->
-                val winner = ops.maxWith(compareBy({ it.authoredAt }, { it.authorId }, { it.id }))
-                r[key] = JsonObject(row + mapOf("updatedAt" to JsonPrimitive(winner.authoredAt.toString()),
-                    "updatedBy" to editJson.encodeToJsonElement(EditorRef(winner.authorId, winner.authorName))))
+                val winner = ops.maxWith(compareBy({ it.authoredAt }, { it.id }))
+                r[key] = JsonObject(row + mapOf("updatedAt" to JsonPrimitive(winner.authoredAt.toString())))
             }
         }
         // An availability edit cannot disappear because its medication or section was deleted.
@@ -247,10 +246,9 @@ internal object CatalogEdits {
             val form = if (forms.any { f -> f.id == it.formId }) it.formId else CatalogSeeds.OTHER_FORM_ID
             val deletion = accepted.filter { op -> op.field == "@entity" && op.intendedValueJson == "null" &&
                 ((op.entityType == "category" && op.targetId == it.categoryId) || (op.entityType == "form" && op.targetId == it.formId)) }
-                .maxWithOrNull(compareBy({ op -> op.authoredAt }, { op -> op.authorId }, { op -> op.id }))
+                .maxWithOrNull(compareBy({ op -> op.authoredAt }, { op -> op.id }))
             it.copy(categoryId = category, formId = form,
-                updatedAt = deletion?.authoredAt ?: it.updatedAt,
-                updatedBy = deletion?.let { op -> EditorRef(op.authorId, op.authorName) } ?: it.updatedBy)
+                updatedAt = deletion?.authoredAt ?: it.updatedAt)
         }
         val availability = decode("availability") { editJson.decodeFromJsonElement<Availability>(it) }
             .filter { a -> medications.any { it.id == a.medicationId } && sections.any { it.id == a.sectionId } }

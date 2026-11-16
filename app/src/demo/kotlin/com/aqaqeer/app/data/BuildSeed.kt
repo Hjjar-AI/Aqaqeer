@@ -19,7 +19,6 @@ object BuildSeed {
         val seeds = CatalogSeeds.unconfigured()
         val time = Instant.now()
         val today = LocalDate.now(ZoneId.of("Asia/Damascus"))
-        val editor = EditorRef("00000000-0000-4000-8000-000000000900", "فريق العرض التجريبي")
         fun randomBase64(size: Int) = Base64.getEncoder().encodeToString(ByteArray(size).also { SecureRandom().nextBytes(it) })
         val pharmacy = Pharmacy(PHARMACY_ID, "صيدلية الصحة النفسية — عرض تجريبي",
             "Asia/Damascus", PinVerifier(randomBase64(16), 200_000, randomBase64(32)))
@@ -88,7 +87,7 @@ object BuildSeed {
         )
         val medications = rows.mapIndexed { index, row ->
             Medication(id("med-${row.key}"), strength = row.strength, formId = row.form,
-                categoryId = row.category, createdAt = time, updatedAt = time, updatedBy = editor,
+                categoryId = row.category, createdAt = time, updatedAt = time,
                 genericAr = row.ar, genericEn = row.en,
                 note = "سجل عرض محلي. التوفر والصلاحية افتراضيان، ولا يمثلان صيدلية حقيقية أو تعليمات علاجية.",
                 expiryDate = when (index) { 0 -> today.minusDays(7); 1 -> today.plusDays(21); 7 -> null; else -> today.plusMonths(12) })
@@ -98,7 +97,7 @@ object BuildSeed {
             medications.mapIndexedNotNull { index, med ->
                 // One missing pair intentionally exercises the normal UNKNOWN presentation.
                 if (sectionIndex == 1 && index == medications.lastIndex) null else
-                    Availability(med.id, section.id, states[(index + sectionIndex) % states.size], time, editor)
+                    Availability(med.id, section.id, states[(index + sectionIndex) % states.size], time)
             }
         }
         return seeds.copy(pharmacy = pharmacy, categories = seeds.categories + categories,

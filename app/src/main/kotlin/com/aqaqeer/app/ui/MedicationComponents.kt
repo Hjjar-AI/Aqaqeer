@@ -76,8 +76,9 @@ import java.time.LocalDate
     MedicationNameLines(medication.genericAr, medication.genericEn, names, prominent, query, primaryStyle,
         strength = medication.strength, titleTrailing = titleTrailing)
     if (medication.nameAr != null || medication.nameEn != null) {
-        Text(uiText(R.string.ui_medication_components_002), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        MedicationNameLines(medication.nameAr, medication.nameEn, names, secondary = true)
+        val commercial = MedicationPresentation.names(medication.nameAr, medication.nameEn, names).joinToString(" · ") { it.text }
+        Text(uiText(R.string.ui_medication_components_002) + ": " + bidi(commercial),
+            style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
     form?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant) }
 }
@@ -108,7 +109,8 @@ import java.time.LocalDate
     preferences: HomePreferences, today: LocalDate, onQuickEdit: (() -> Unit)?,
     bulkSelected: Boolean?, toggleSelection: () -> Unit, onClick: () -> Unit, modifier: Modifier = Modifier,
     selectionEnabled: Boolean = true, query: String = "", unpublished: Boolean = false,
-    onLongClick: (() -> Unit)? = null, highlighted: Boolean = false) {
+    onLongClick: (() -> Unit)? = null, highlighted: Boolean = false,
+    quickMenuOpen: Boolean = false, dismissQuickMenu: () -> Unit = {}, chooseStatus: (AvailabilityStatus) -> Unit = {}) {
     val medication = row.medication
     val compact = preferences.layout == CardLayout.COMPACT
     val form = row.form
@@ -117,9 +119,11 @@ import java.time.LocalDate
     val edge by animateColorAsState(statusTone(status).edge, tween(180), label = "status edge")
     val unavailableStripe = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.06f)
     val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
-    val pendingMarker: (@Composable () -> Unit)? = if (unpublished) ({
-        Box(Modifier.size(UiSpacing.pendingMarker).background(MaterialTheme.colorScheme.primary, MaterialTheme.shapes.small)
-            .semantics { contentDescription = uiText(R.string.ui_home_screen_044) })
+    val pendingMarker: (@Composable () -> Unit)? = if (unpublished || row.fetched) ({
+        Column {
+            if (unpublished) Text(uiText(R.string.review_unpublished), style = MaterialTheme.typography.labelSmall)
+            if (row.fetched) Text(uiText(R.string.review_changed), style = MaterialTheme.typography.labelSmall)
+        }
     }) else null
     val interaction = if (bulkSelected == null) Modifier.combinedClickable(role = Role.Button, onClick = onClick,
         onLongClick = onLongClick, onLongClickLabel = if (onLongClick != null) uiText(R.string.ui_medication_components_003) else null)
@@ -133,7 +137,7 @@ import java.time.LocalDate
         })
     } else Modifier
     Card(modifier = modifier.fillMaxWidth().clip(MaterialTheme.shapes.medium).then(interaction).then(quickEditAction).testTag("med_${medication.nameEn ?: medication.id}"),
-        border = BorderStroke(1.dp, if (highlighted) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline),
+        border = BorderStroke(1.dp, if (highlighted) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant),
         colors = CardDefaults.cardColors(containerColor = if (bulkSelected == true || highlighted)
             MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface)) {
         Column(Modifier.fillMaxWidth().drawBehind {
@@ -150,12 +154,14 @@ import java.time.LocalDate
             val x = if (rtl) size.width - stroke / 2 else stroke / 2
             drawLine(edge, Offset(x, 0f), Offset(x, size.height), stroke)
         }.padding(if (compact) UiSpacing.related else UiSpacing.section), verticalArrangement = Arrangement.spacedBy(UiSpacing.hair)) {
-            if (bulkSelected != null) Row(verticalAlignment = Alignment.CenterVertically) {
-                Checkbox(checked = bulkSelected, onCheckedChange = null, enabled = selectionEnabled,
-                    modifier = Modifier.then(if (compact) Modifier.size(24.dp) else Modifier)
-                        .testTag("select_${medication.id}").clearAndSetSemantics { })
-                if (!compact) Text(uiText(R.string.ui_medication_components_006), modifier = Modifier.clearAndSetSemantics { }, style = MaterialTheme.typography.labelMedium)
-            }
+            Row(horizontalArrangement = Arrangement.spacedBy(UiSpacing.hair), verticalAlignment = Alignment.Top) {
+                // Fixed slot prevents selection-mode row/width changes for editable cards.
+                if (onLongClick != null || bulkSelected != null) Box(Modifier.size(24.dp)) {
+                    if (bulkSelected != null) Checkbox(checked = bulkSelected, onCheckedChange = null,
+                        enabled = selectionEnabled, modifier = Modifier.size(24.dp).testTag("select_${medication.id}").clearAndSetSemantics { })
+                }
+                form?.let { DosageFormIcon(it) }
+                Column(Modifier.weight(1f)) {
             if (compact) {
                 MedicationNameLines(medication.genericAr, medication.genericEn, preferences.names,
                     prominent = true, query = query, primaryStyle = MaterialTheme.typography.titleMedium, maxLines = 2,
@@ -165,26 +171,37 @@ import java.time.LocalDate
                 MedicationSummary(medication, preferences.names, prominent = true, query = query, titleTrailing = pendingMarker)
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(UiSpacing.hair)) {
                     Text(form?.nameAr ?: uiText(R.string.ui_aqaqeer_app_026), modifier = Modifier.weight(1f, fill = false), style = MaterialTheme.typography.bodyMedium)
-                    form?.let { DosageFormIcon(it) }
+
                 }
             }
-            MedicationBadges(medication, today, sectionId?.let { status }, onQuickEdit, name)
-            if (!compact) LabeledValue(uiText(R.string.ui_pharmacy_admin_screen_073), row.category)
+                }
+            }
+            MedicationBadges(medication, today, sectionId?.let { status }, onQuickEdit, name,
+                quickMenuOpen, dismissQuickMenu, chooseStatus, selectionEnabled)
+
+            if (!compact && !(preferences.groupingEnabled && preferences.grouping == HomeGrouping.CATEGORY)) LabeledValue(uiText(R.string.ui_pharmacy_admin_screen_073), row.category)
             val elsewhere = row.elsewhere
-            if (elsewhere.isNotEmpty()) Text(uiText(R.string.ui_medication_components_007) + elsewhere.joinToString(uiText(R.string.ui_medication_components_008)) { it.nameAr },
-                style = MaterialTheme.typography.bodyMedium, modifier = Modifier.testTag("tip_${medication.id}"))
+            if (elsewhere.isNotEmpty()) Surface(color = MaterialTheme.colorScheme.surfaceVariant, shape = MaterialTheme.shapes.small) {
+                Row(Modifier.fillMaxWidth().padding(UiSpacing.hair).testTag("tip_${medication.id}"),
+                    verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(UiSpacing.hair)) {
+                    AppIcon(UiIcon.INFO)
+                    Text(uiText(R.string.ui_medication_components_007) + elsewhere.joinToString(uiText(R.string.ui_medication_components_008)) { it.nameAr },
+                        style = MaterialTheme.typography.bodyMedium)
+                }
+            }
         }
     }
 }
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable private fun MedicationBadges(medication: Medication, today: LocalDate, status: AvailabilityStatus?,
-    onQuickEdit: (() -> Unit)?, name: String) {
+    onQuickEdit: (() -> Unit)?, name: String, expanded: Boolean, dismiss: () -> Unit,
+    choose: (AvailabilityStatus) -> Unit, enabled: Boolean) {
     if (status == null && MedicationPresentation.expiry(medication, today) == null) return
     FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(UiSpacing.hair),
         verticalArrangement = Arrangement.spacedBy(UiSpacing.hair)) {
         if (status != null) Box(Modifier.align(Alignment.CenterVertically)) {
-            StatusBadge(status, onQuickEdit, uiText(R.string.ui_medication_components_009, name), dense = true)
+            EditableStatusPill(status, onQuickEdit, expanded, dismiss, choose, enabled, dense = true)
         }
         if (MedicationPresentation.expiry(medication, today) != null)
             Box(Modifier.align(Alignment.CenterVertically)) { ExpiryBadge(medication, today, dense = true) }

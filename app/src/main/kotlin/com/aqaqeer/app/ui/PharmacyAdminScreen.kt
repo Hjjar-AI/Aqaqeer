@@ -55,14 +55,14 @@ import kotlinx.serialization.json.*
             state.route == "create" -> {
                 if (catalog.pharmacy != null || ready.isDemo) { Text(uiText(R.string.ui_pharmacy_admin_screen_004)); return@FormPage }
                 var name by rememberSaveable(state.route) { mutableStateOf("") }; var zone by rememberSaveable(state.route) { mutableStateOf("Asia/Damascus") }
-                var editor by rememberSaveable(state.route) { mutableStateOf("") }; var section by rememberSaveable(state.route) { mutableStateOf(uiText(R.string.ui_pharmacy_admin_screen_005)) }
+                var section by rememberSaveable(state.route) { mutableStateOf(uiText(R.string.ui_pharmacy_admin_screen_005)) }
                 var pin by remember { mutableStateOf("") }; var confirm by remember { mutableStateOf("") }
                 var pinEntryVersion by remember { mutableStateOf(0) }
                 val focus = LocalFocusManager.current
                 val creating = busy || vm.adminBusy.value
                 GroupedCard(title = uiText(R.string.ui_pharmacy_admin_screen_006)) {
                     FormField(uiText(R.string.ui_pharmacy_admin_screen_007), name, { name = it }, submitted = formSubmitted, required = true); TimezoneField(zone) { zone = it }
-                    FormField(uiText(R.string.ui_pharmacy_admin_screen_008), editor, { editor = it }, submitted = formSubmitted, required = true); FormField(uiText(R.string.ui_pharmacy_admin_screen_009), section, { section = it }, submitted = formSubmitted, required = true)
+                    FormField(uiText(R.string.ui_pharmacy_admin_screen_009), section, { section = it }, submitted = formSubmitted, required = true)
                     if (creating) SupportingText(uiText(R.string.ui_pharmacy_admin_screen_010))
                     else key(pinEntryVersion) {
                         FormField(uiText(R.string.ui_pharmacy_admin_screen_011), pin, { pin = it }, secret = true, submitted = formSubmitted,
@@ -78,7 +78,7 @@ import kotlinx.serialization.json.*
                 Button(enabled = !creating, onClick = {
                     if (vm.adminBusy.value) return@Button
                     formSubmitted = true
-                    if (name.isBlank() || editor.isBlank() || section.isBlank() || FormGuidance.timezone(zone) != null ||
+                    if (name.isBlank() || section.isBlank() || FormGuidance.timezone(zone) != null ||
                         FormGuidance.pin(pin) != null || FormGuidance.pin(confirm) != null ||
                         pin.map { Character.digit(it, 10) } != confirm.map { Character.digit(it, 10) }) {
                         revealInvalid(); return@Button
@@ -87,19 +87,19 @@ import kotlinx.serialization.json.*
                     formSubmitted = false; pinEntryVersion++
                     focus.clearFocus()
                     pin = ""; confirm = ""
-                    vm.secretCommand("home", a, b) { vm.admin.create(name, zone, editor, section, a, b) }
+                    vm.secretCommand("home", a, b) { vm.admin.create(name, zone, section, a, b) }
                 }) { Text(uiText(R.string.ui_pharmacy_admin_screen_015)) }
             }
             state.route == "promote" -> {
-                var name by rememberSaveable(state.route) { mutableStateOf("") }; var pin by remember { mutableStateOf("") }
+                var pin by remember { mutableStateOf("") }
                 GroupedCard(title = uiText(R.string.ui_pharmacy_admin_screen_016)) {
-                    FormField(uiText(R.string.ui_pharmacy_admin_screen_008), name, { name = it }, submitted = formSubmitted, required = true); FormField(uiText(R.string.ui_pharmacy_admin_screen_017), pin, { pin = it }, secret = true, submitted = formSubmitted, required = true, numericSecret = true, imeAction = ImeAction.Done, validate = FormGuidance::pin)
+                    FormField(uiText(R.string.ui_pharmacy_admin_screen_017), pin, { pin = it }, secret = true, submitted = formSubmitted, required = true, numericSecret = true, imeAction = ImeAction.Done, validate = FormGuidance::pin)
                 }
                 Text(uiText(R.string.ui_pharmacy_admin_screen_018))
                 Button(enabled = !busy, onClick = {
                     formSubmitted = true
-                    if (name.isBlank() || FormGuidance.pin(pin) != null) { revealInvalid(); return@Button }
-                    val p = pin.toCharArray(); pin = ""; vm.secretCommand("home", p) { vm.admin.promote(p, name) }
+                    if (FormGuidance.pin(pin) != null) { revealInvalid(); return@Button }
+                    val p = pin.toCharArray(); pin = ""; vm.secretCommand("home", p) { vm.admin.promote(p) }
                 }) { Text(uiText(R.string.ui_screen_titles_006)) }
             }
             state.route == "leave" -> {
@@ -125,7 +125,7 @@ import kotlinx.serialization.json.*
             state.route == "review" -> {
                 if (ready.maintenancePaused) NavigationCard(uiText(R.string.ui_pharmacy_admin_screen_029), onClick = { vm.navigate("maintenance") })
                 if (ready.restorePaused) NavigationCard(uiText(R.string.ui_pharmacy_admin_screen_030), onClick = { vm.navigate("backup") })
-                Text(uiText(R.string.ui_pharmacy_admin_screen_031, MedicationPresentation.easternDigits(ready.pendingCount.toString())), style = MaterialTheme.typography.titleLarge)
+                Text(uiText(R.string.ui_pharmacy_admin_screen_031, MedicationPresentation.displayDigits(ready.pendingCount.toString())), style = MaterialTheme.typography.titleLarge)
                 Text(if (ready.maintenancePaused) uiText(R.string.ui_pharmacy_admin_screen_032) else if (ready.restorePaused) uiText(R.string.ui_pharmacy_admin_screen_033) else uiText(R.string.ui_pharmacy_admin_screen_034))
                 pending.groupBy { it.entityType to it.targetId.substringBefore('/') }.forEach { (_, operations) ->
                     val first = operations.first()
@@ -314,7 +314,7 @@ internal fun reviewValue(field: String, raw: String, catalog: CatalogSnapshot, l
     var optionalOpen by rememberSaveable(id) { mutableStateOf(false) }
     val scientificError = if (genericAr.isBlank() && genericEn.isBlank()) uiText(R.string.ui_pharmacy_admin_screen_108) else null
     val comparison = Medication(id, en.trim().takeIf(String::isNotEmpty), strength, form, category,
-        Instant.EPOCH, Instant.EPOCH, EditorRef(id, ""), nameAr = ar.trim().takeIf(String::isNotEmpty),
+        Instant.EPOCH, Instant.EPOCH, nameAr = ar.trim().takeIf(String::isNotEmpty),
         genericAr = genericAr.trim().takeIf(String::isNotEmpty), genericEn = genericEn.trim().takeIf(String::isNotEmpty))
     val duplicates = MedicationDuplicates.find(comparison, remember(c.medications) { MedicationDuplicates.index(c.medications) }).toSet()
     var duplicateConfirmed by rememberSaveable(en, ar, genericAr, genericEn, strength, form, duplicates) { mutableStateOf(false) }
@@ -330,7 +330,7 @@ internal fun reviewValue(field: String, raw: String, catalog: CatalogSnapshot, l
         fun optional(s: String) = s.trim().takeIf { it.isNotEmpty() }
         vm.command {
             vm.admin.saveMedication(Medication(id = id, nameEn = optional(en), strength = strength.trim(), formId = form,
-                categoryId = category, createdAt = Instant.now(), updatedAt = Instant.now(), updatedBy = EditorRef(id, ""),
+                categoryId = category, createdAt = Instant.now(), updatedAt = Instant.now(),
                 nameAr = optional(ar), genericAr = optional(genericAr), genericEn = optional(genericEn), brand = optional(brand),
                 note = optional(note), expiryDate = optional(expiry)?.let(LocalDate::parse), expirySoonThresholdDays = threshold.toInt()), expectedPharmacy = c.pharmacy?.pharmacyId, requireExisting = old != null, confirmedDuplicates = if (duplicateConfirmed) duplicates else emptySet())
             vm.newMedicationName = ""

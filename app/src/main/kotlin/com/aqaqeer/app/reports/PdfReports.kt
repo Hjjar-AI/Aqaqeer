@@ -173,7 +173,7 @@ private class A5Report(
         canvas.drawLine(margin, y + 2f, right, y + 2f, rule)
         y += 9f
         canvas.drawLine(margin, 568f, right, 568f, border)
-        draw(layout("عقاقير · صفحة ${MedicationPresentation.easternDigits(pageNumber.toString())}", width, size = 7.5f, centered = true), margin, 571f)
+        draw(layout("عقاقير · صفحة ${MedicationPresentation.displayDigits(pageNumber.toString())}", width, size = 7.5f, centered = true), margin, 571f)
         if (tableActive) tableHeader()
         require(y + 45f < bottom) { "Repeated PDF headings leave no usable row space" }
     }
@@ -198,7 +198,7 @@ private class A5Report(
         y += heading.height + 8f
         val detail = layout("الدواء والتفاصيل", detailWidth, true, 8.5f)
         val sections = snapshot.sections.mapIndexed { index, section ->
-            layout("${MedicationPresentation.easternDigits((index + 1).toString())}\n${short(section.nameAr, 20)}",
+            layout("${MedicationPresentation.displayDigits((index + 1).toString())}\n${short(section.nameAr, 20)}",
                 (sectionWidth - padding * 2).toInt(), true, 7.4f, centered = true)
         }
         val height = max(detail.height, sections.maxOf { it.height }).toFloat() + padding * 2
@@ -222,9 +222,9 @@ private class A5Report(
 
     private fun medication(med: Medication, number: Int) {
         val parts = mutableListOf<PdfPart>()
-        med.genericAr?.let { parts += PdfPart(it, true, 9.4f, "${MedicationPresentation.easternDigits(number.toString())} · ") }
+        med.genericAr?.let { parts += PdfPart(it, true, 9.4f, "${MedicationPresentation.displayDigits(number.toString())} · ") }
         med.genericEn?.let { parts += PdfPart(it, true, 9.4f,
-            if (parts.isEmpty()) "${MedicationPresentation.easternDigits(number.toString())} · " else "", true) }
+            if (parts.isEmpty()) "${MedicationPresentation.displayDigits(number.toString())} · " else "", true) }
         val form = snapshot.forms.first { it.id == med.formId }.nameAr
         if (med.strength.length + form.length < 2048) {
             parts += PdfPart("العيار: ${bidi.unicodeWrap(med.strength)} · الشكل: $form")
@@ -245,7 +245,7 @@ private class A5Report(
         var continued = false
         while (!flow.done) {
             owner.ensureActive()
-            val continuation = if (continued) layout("متابعة الدواء ${MedicationPresentation.easternDigits(number.toString())}", detailWidth, true, 7.4f) else null
+            val continuation = if (continued) layout("متابعة الدواء ${MedicationPresentation.displayDigits(number.toString())}", detailWidth, true, 7.4f) else null
             val prefixHeight = continuation?.height?.toFloat() ?: 0f
             if (bottom - y < minimumHeight + prefixHeight) newPage()
             val portion = flow.take(bottom - y - padding * 2 - prefixHeight)
@@ -290,7 +290,7 @@ private class A5Report(
             plain(listOf(PdfPart(title, true, 10f)))
             snapshot.sections.forEachIndexed { index, section ->
                 plain(listOf(PdfPart(section.nameAr + if (!section.isActive) " (قسم مغلق)" else "", size = 7.8f,
-                    prefix = "القسم ${MedicationPresentation.easternDigits((index + 1).toString())}: ", isolate = true)))
+                    prefix = "القسم ${MedicationPresentation.displayDigits((index + 1).toString())}: ", isolate = true)))
             }
             if (snapshot.medications.isEmpty()) plain(listOf(PdfPart("لا توجد أدوية مطابقة لهذا التقرير")))
             val grouped = snapshot.medications.groupBy { it.categoryId }

@@ -38,6 +38,7 @@ class MainActivity : ComponentActivity() {
         super.attachBaseContext(newBase.createConfigurationContext(configuration))
     }
     override fun onCreate(savedInstanceState: Bundle?) {
+        com.aqaqeer.app.data.FetchedChanges.beginSession(this)
         val (launchTheme, launchAccent) = DisplayPreferences.startupPresentation(this)
         val systemDark = resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_YES
         val dark = themeIsDark(launchTheme, systemDark)
@@ -71,6 +72,7 @@ class MainActivity : ComponentActivity() {
     }
 
     override fun onDestroy() {
+        if (isFinishing) com.aqaqeer.app.data.FetchedChanges.finishTask()
         splashExit?.cancel()
         splashExit = null
         super.onDestroy()

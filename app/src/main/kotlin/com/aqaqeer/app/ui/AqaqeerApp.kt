@@ -225,7 +225,7 @@ internal fun statusLabel(status: AvailabilityStatus): String = uiText(when (stat
                     if (drawerEligible && readyForTitle.admin && readyForTitle.pendingCount > 0 && !readyForTitle.isDemo) {
                         TextButton(enabled = publicationBlockedReason(readyForTitle, sharing, adminBusy || sharing.busy) == null,
                             onClick = { viewModel.publish(reviewOnFailure = true) }) {
-                            Text(uiText(R.string.ui_aqaqeer_app_011, MedicationPresentation.easternDigits(readyForTitle.pendingCount.toString())))
+                            Text(uiText(R.string.ui_aqaqeer_app_011, MedicationPresentation.displayDigits(readyForTitle.pendingCount.toString())))
                         }
                     }
                     val ready = state.catalog as? CatalogState.Ready

@@ -20,7 +20,8 @@ import javax.inject.Singleton
 @Singleton
 class SnapshotRefreshRepository @Inject constructor(private val factory: DatabaseFactory,
     private val secureStore: SecureStore, private val reads: SnapshotReadClient,
-    private val requirements: SnapshotRequirementsStore) {
+    private val requirements: SnapshotRequirementsStore,
+    @dagger.hilt.android.qualifiers.ApplicationContext private val context: android.content.Context) {
     private val active = PendingConnectionStore(secureStore, "active-connection")
     private val flight = RefreshFlight(CoroutineScope(SupervisorJob() + Dispatchers.IO))
     private data class Base(val connectionId: String, val catalog: CatalogSnapshot, val state: SnapshotState,
@@ -143,6 +144,15 @@ class SnapshotRefreshRepository @Inject constructor(private val factory: Databas
                 decision
             }
             rejection?.let { throw RefreshException(it) }
+            if (outcome == RefreshOutcome.APPLIED) {
+                val previous = baseline.catalog.medications.associateBy { it.id }
+                val oldPairs = baseline.catalog.availability.associateBy { it.medicationId to it.sectionId }
+                val changed = incoming.catalog.medications.filter { previous[it.id] != it }.map { it.id }.toSet() +
+                    incoming.catalog.availability.filter { oldPairs[it.medicationId to it.sectionId] != it }.map { it.medicationId }
+                kotlinx.coroutines.withContext(kotlinx.coroutines.NonCancellable) {
+                    FetchedChanges.record(context, requireNotNull(incoming.catalog.pharmacy).pharmacyId, changed.intersect(incoming.catalog.medications.map { it.id }.toSet()))
+                }
+            }
             return outcome
         } finally { lease.close() }
     }
@@ -152,5 +162,5 @@ class SnapshotRefreshRepository @Inject constructor(private val factory: Databas
 }
 
 internal fun SnapshotWire.supported() = SnapshotCandidate.Supported(compatibility, revision, publishId,
-    parentPublishId, basedOnRevision, publishedAt, publishedBy,
+    parentPublishId, basedOnRevision, publishedAt,
     CatalogSnapshot(pharmacy, categories, forms, sections, medications, availability, tombstones))

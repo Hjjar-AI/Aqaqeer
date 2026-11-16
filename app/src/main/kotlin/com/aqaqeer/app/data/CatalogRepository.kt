@@ -104,7 +104,7 @@ class CatalogRepository @Inject constructor(private val factory: DatabaseFactory
             dao.insertSnapshotState(SnapshotState())
             dao.control(LocalControl(lifecycle = if (BuildConfig.IS_DEMO) "SHARED" else "UNCONFIGURED"))
             val now = Instant.now()
-            dao.insertDeviceIdentity(DeviceIdentity(UUID.randomUUID().toString(), null, false, now, now))
+            dao.insertDeviceIdentity(DeviceIdentity(UUID.randomUUID().toString(), false, now, now))
             dao.insertInstallation(InstallationState(seedVersion = BuildSeed.VERSION, isDemo = BuildConfig.IS_DEMO))
         } else {
             check(existing.isDemo == BuildConfig.IS_DEMO) { "Data profile mismatch" }

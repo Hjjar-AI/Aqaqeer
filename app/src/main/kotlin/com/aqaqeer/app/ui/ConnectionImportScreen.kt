@@ -65,7 +65,7 @@ import com.aqaqeer.app.BuildConfig
                         item { Text(uiText(R.string.ui_connection_import_screen_013) + bidi(MedicationPresentation.timestamp(verification.checkedAt, "UTC"))) }
                         item { Text(uiText(R.string.ui_connection_import_screen_014) + bidi(MedicationPresentation.timestamp(verification.publication.publishedAt, "UTC"))) }
                         verification.medicationCount?.let { count -> item {
-                            Text(uiText(R.string.ui_connection_import_screen_015) + MedicationPresentation.easternDigits(count.toString()))
+                            Text(uiText(R.string.ui_connection_import_screen_015) + MedicationPresentation.displayDigits(count.toString()))
                         } }
                     }
                     item { Text(uiText(R.string.ui_connection_import_screen_016)) }

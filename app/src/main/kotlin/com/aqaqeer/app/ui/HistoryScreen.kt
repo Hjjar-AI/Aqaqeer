@@ -42,7 +42,7 @@ import java.time.LocalDate
         item {
             ActionGroup {
                 TextButton(onClick = { filtersOpen = true }) { AppIcon(UiIcon.FILTER); Text(uiText(R.string.ui_history_screen_002)) }
-                Text(uiText(R.string.ui_history_screen_003, MedicationPresentation.easternDigits((state.request.page + 1).toString())))
+                Text(uiText(R.string.ui_history_screen_003, MedicationPresentation.displayDigits((state.request.page + 1).toString())))
             }
             ExpandableInformation(uiText(R.string.ui_history_screen_004), uiText(R.string.ui_history_screen_005))
             InlineOperationStatus(state.loading, state.error)
@@ -60,7 +60,7 @@ import java.time.LocalDate
             ActionGroup {
                 TextButton(enabled = !state.loading && state.request.page > 0,
                     onClick = { vm.historyPage(state.request.page - 1) }) { Text(uiText(R.string.ui_history_screen_009)) }
-                Text(uiText(R.string.ui_history_screen_003, MedicationPresentation.easternDigits((state.request.page + 1).toString())))
+                Text(uiText(R.string.ui_history_screen_003, MedicationPresentation.displayDigits((state.request.page + 1).toString())))
                 TextButton(enabled = !state.loading && page?.hasMore == true,
                     onClick = { vm.historyPage(state.request.page + 1) }) { Text(uiText(R.string.ui_history_screen_010)) }
             }

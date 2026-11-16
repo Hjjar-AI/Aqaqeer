@@ -70,7 +70,7 @@ import com.aqaqeer.app.reports.*
                 item {
                     GroupedCard(title = uiText(R.string.ui_reports_screen_013)) {
                         Text(current.pharmacyName, style = MaterialTheme.typography.titleMedium)
-                        Text(uiText(R.string.ui_reports_screen_014, MedicationPresentation.easternDigits(current.medications.size.toString())))
+                        Text(uiText(R.string.ui_reports_screen_014, MedicationPresentation.displayDigits(current.medications.size.toString())))
                         Text(if (current.request.includeUnpublished) uiText(R.string.ui_reports_screen_015) else uiText(R.string.ui_reports_screen_016))
                         LabeledValue(uiText(R.string.ui_reports_screen_017), bidi(MedicationPresentation.timestamp(current.generatedAt, current.timezone)))
                         ExpandableInformation(uiText(R.string.ui_reports_screen_018), uiText(R.string.ui_reports_screen_019, bidi(current.timezone)) +
@@ -93,7 +93,7 @@ import com.aqaqeer.app.reports.*
         }
         if (current != null) Surface(shadowElevation = UiSpacing.hair) {
             Column(Modifier.fillMaxWidth().padding(UiSpacing.related)) {
-                Text(uiText(R.string.ui_reports_screen_024, MedicationPresentation.easternDigits(current.medications.size.toString())),
+                Text(uiText(R.string.ui_reports_screen_024, MedicationPresentation.displayDigits(current.medications.size.toString())),
                     style = MaterialTheme.typography.labelLarge)
                 ExportButtons(!busy, listOf(uiText(R.string.ui_reports_screen_025) to { export(false) }, uiText(R.string.ui_reports_screen_026) to { export(true) }))
             }

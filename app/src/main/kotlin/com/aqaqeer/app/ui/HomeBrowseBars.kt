@@ -30,7 +30,7 @@ import com.aqaqeer.app.data.*
         val required = remember(active, outCounts, style, density) {
             active.maxOf { section ->
                 val count = outCounts[section.id] ?: 0
-                val label = section.nameAr + if (count > 0) " ${MedicationPresentation.easternDigits(count.toString())}" else ""
+                val label = section.nameAr + if (count > 0) " ${MedicationPresentation.displayDigits(count.toString())}" else ""
                 with(density) { measurer.measure(androidx.compose.ui.text.AnnotatedString(label), style).size.width.toDp() } + UiSpacing.tabMeasurementAllowance
             } * active.size
         }
@@ -39,12 +39,12 @@ import com.aqaqeer.app.data.*
                 val out = outCounts[section.id] ?: 0
                 Tab(selected = selectedId == section.id, onClick = { selectSection(section.id) },
                     modifier = Modifier.testTag("section_${section.id}").semantics {
-                        contentDescription = section.nameAr + if (out > 0) uiText(R.string.ui_home_screen_001, MedicationPresentation.easternDigits(out.toString())) else ""
+                        contentDescription = section.nameAr + if (out > 0) uiText(R.string.ui_home_screen_001, MedicationPresentation.displayDigits(out.toString())) else ""
                     }) {
                     Row(Modifier.heightIn(min = UiSpacing.touch).padding(horizontal = UiSpacing.related),
                         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(UiSpacing.hair)) {
                         Text(section.nameAr, style = style)
-                        if (out > 0) Badge { Text(MedicationPresentation.easternDigits(out.toString())) }
+                        if (out > 0) Badge { Text(MedicationPresentation.displayDigits(out.toString())) }
                     }
                 }
             }
@@ -78,16 +78,16 @@ import com.aqaqeer.app.data.*
                 openFilters()
             },
                 modifier = Modifier.size(UiSpacing.filterButton).semantics {
-                    contentDescription = uiText(R.string.ui_home_screen_002) + if (filterCount > 0) uiText(R.string.ui_home_screen_003, MedicationPresentation.easternDigits(filterCount.toString())) else ""
+                    contentDescription = uiText(R.string.ui_home_screen_002) + if (filterCount > 0) uiText(R.string.ui_home_screen_003, MedicationPresentation.displayDigits(filterCount.toString())) else ""
                 }) {
                 BadgedBox(badge = {
-                    if (filterCount > 0) Badge(Modifier.clearAndSetSemantics { }) { Text(MedicationPresentation.easternDigits(filterCount.toString())) }
+                    if (filterCount > 0) Badge(Modifier.clearAndSetSemantics { }) { Text(MedicationPresentation.displayDigits(filterCount.toString())) }
                 }) { AppIcon(UiIcon.FILTER) }
             }
         }
         if (searching || filters.statuses.isNotEmpty() || filters.categoryIds.isNotEmpty()) {
             WrappingContent {
-                Text(uiText(R.string.ui_home_screen_006, MedicationPresentation.easternDigits(visibleCount.toString()), MedicationPresentation.easternDigits(totalCount.toString())),
+                Text(uiText(R.string.ui_home_screen_006, MedicationPresentation.displayDigits(visibleCount.toString()), MedicationPresentation.displayDigits(totalCount.toString())),
                     style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 if (filters.statuses.isNotEmpty() || filters.categoryIds.isNotEmpty())
                     TextButton(onClick = clearFilters) { Text(uiText(R.string.ui_history_screen_017)) }

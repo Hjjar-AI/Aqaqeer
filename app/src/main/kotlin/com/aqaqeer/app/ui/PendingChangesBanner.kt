@@ -17,7 +17,7 @@ import com.aqaqeer.app.data.MedicationPresentation
     val working = busy || sharing.busy
     val blocked = publicationBlockedReason(ready, sharing, working)
     GroupedCard {
-        Text(uiText(R.string.ui_pending_changes_banner_001, MedicationPresentation.easternDigits(ready.pendingCount.toString())))
+        Text(uiText(R.string.ui_pending_changes_banner_001, MedicationPresentation.displayDigits(ready.pendingCount.toString())))
         if (blocked != null) Text(blocked, style = MaterialTheme.typography.bodyMedium)
         else Text(if (ready.lifecycle == "LOCAL_DRAFT") uiText(R.string.ui_pending_changes_banner_002)
             else uiText(R.string.ui_pending_changes_banner_003), style = MaterialTheme.typography.bodyMedium)

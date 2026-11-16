@@ -8,7 +8,6 @@ import java.util.UUID
 
 internal val clearableCsvFields = listOf("nameAr", "nameEn", "genericAr", "genericEn", "brand", "note", "expiryDate")
 internal object CsvRowPlanner {
-    private val previewAuthor = EditorRef("00000000-0000-4000-8000-000000000099", "معاينة CSV")
     private fun candidate(id: String, baseline: CatalogSnapshot, table: CsvTable, record: CsvRecord, decision: CsvDecision): CsvRowPlan? =
         try { plan(id, baseline, table, record, decision.copy(action = decision.action ?: CsvAction.CREATE)) }
         catch (_: IllegalArgumentException) { null }
@@ -146,7 +145,7 @@ internal object CsvRowPlanner {
         val medication = Medication(old?.id ?: decision.createdId, optional("nameEn", old?.nameEn), MedicationDuplicates.strength(required("strength", old?.strength)),
             foundForm?.id ?: form?.id ?: old?.formId ?: CatalogSeeds.defaultMedicationFormId(catalog.forms),
             foundCategory?.id ?: category?.id ?: old?.categoryId ?: CatalogSeeds.UNCATEGORIZED_ID,
-            old?.createdAt ?: Instant.EPOCH, old?.updatedAt ?: Instant.EPOCH, old?.updatedBy ?: previewAuthor,
+            old?.createdAt ?: Instant.EPOCH, old?.updatedAt ?: Instant.EPOCH,
             nameAr = optional("nameAr", old?.nameAr), genericAr = optional("genericAr", old?.genericAr),
             genericEn = optional("genericEn", old?.genericEn), brand = optional("brand", old?.brand), note = optional("note", old?.note),
             expiryDate = expiry, expirySoonThresholdDays = threshold)

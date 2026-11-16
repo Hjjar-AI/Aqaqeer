@@ -30,7 +30,7 @@ import java.time.Instant
 import javax.inject.Inject
 
 private data class BrowseRequest(val section: String?, val query: String, val filters: HomeFilters,
-    val preferences: HomePreferences, val unpublished: Set<String>)
+    val preferences: HomePreferences, val unpublished: Set<String>, val fetched: Set<String>, val today: java.time.LocalDate)
 internal data class UiFeedback(val message: String, val route: String, val medicationId: String? = null,
     val undo: AvailabilityUndo? = null, val id: String = java.util.UUID.randomUUID().toString())
 
@@ -46,6 +46,7 @@ data class AppUiState(
     val appliedQuery: String = "",
     val filters: HomeFilters = HomeFilters(),
     val refresh: RefreshUiState = RefreshUiState(),
+    val fetchedIds: Set<String> = emptySet(),
     val accent: ThemeAccent = ThemeAccent.GOLD,
     val online: Boolean = true,
 )
@@ -274,8 +275,9 @@ class CatalogViewModel @Inject constructor(
     private val appliedQuery = query.debounce { if (MedicationPresentation.normalizedSearch(it).isEmpty()) 0L else 250L }
     private val statuses = savedState.getStateFlow("statuses", arrayListOf<String>())
     private val categories = savedState.getStateFlow("categories", arrayListOf<String>())
-    private val browsing = combine(query, appliedQuery, statuses, categories) { query, applied, statuses, categories ->
-        Triple(query, applied, HomeFilters(MedicationPresentation.editableStatuses.filter { it.name in statuses }.toSet(), categories.toSet()))
+    private val extraFilters = savedState.getStateFlow("extraFilters", arrayListOf<String>())
+    private val browsing = combine(query, appliedQuery, statuses, categories, extraFilters) { query, applied, statuses, categories, extra ->
+        Triple(query, applied, HomeFilters(MedicationPresentation.editableStatuses.filter { it.name in statuses }.toSet(), categories.toSet(), "expiry" in extra, "unpublished" in extra, "fetched" in extra))
     }
     private val catalogRetry = MutableStateFlow(0)
     internal fun retryProtectedStorage() {
@@ -297,8 +299,12 @@ class CatalogViewModel @Inject constructor(
         AppUiState(catalog, theme, route, snapshot?.sections?.firstOrNull { it.isActive && it.id == selected }?.id
             ?: snapshot?.sections?.firstOrNull { it.isActive }?.id, accent = accent)
     }
-    val state: StateFlow<AppUiState> = combine(base, preferences.home, browsing, refreshState, onlineState) { base, home, browsing, refresh, online ->
-        base.copy(homePreferences = home, query = browsing.first, appliedQuery = browsing.second, filters = browsing.third, refresh = refresh, online = online)
+    private val liveBase = combine(base, FetchedChanges.ids) { base, ids ->
+        val ready = base.catalog as? CatalogState.Ready
+        base.copy(fetchedIds = ids[ready?.catalog?.pharmacy?.pharmacyId].orEmpty())
+    }
+    val state: StateFlow<AppUiState> = combine(liveBase, preferences.home, browsing, refreshState, onlineState) { base, home, browsing, refresh, online ->
+        base.copy(homePreferences = home, query = browsing.first, appliedQuery = browsing.second, filters = browsing.third.copy(unpublishedOnly = browsing.third.unpublishedOnly && (base.catalog as? CatalogState.Ready)?.admin == true), refresh = refresh, online = online)
     }.stateIn(viewModelScope, SharingStarted.Eagerly, DisplayPreferences.startupPresentation(context).let { (theme, accent) ->
         AppUiState(theme = theme, accent = accent)
     })
@@ -329,12 +335,19 @@ class CatalogViewModel @Inject constructor(
     private val searchIndex = state.map { (it.catalog as? CatalogState.Ready)?.catalog }.distinctUntilChanged()
         .mapLatest { catalog -> withContext(kotlinx.coroutines.Dispatchers.Default) { catalog?.let(::CatalogSearchIndex) } }
         .stateIn(viewModelScope, SharingStarted.Eagerly, null)
-    internal val homeBrowse = combine(searchIndex, state.map { current ->
+    private val browseDay = flow {
+        while (true) {
+            emit(Instant.now())
+            delay(30_000)
+        }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(0), Instant.now())
+    internal val homeBrowse = combine(searchIndex, combine(state, browseDay) { current, now -> current to now }.map { (current, now) ->
         BrowseRequest(current.sectionId, current.appliedQuery, current.filters, current.homePreferences,
-            (current.catalog as? CatalogState.Ready)?.unpublishedMedicationIds.orEmpty())
+            (current.catalog as? CatalogState.Ready)?.unpublishedMedicationIds.orEmpty(), current.fetchedIds,
+            MedicationPresentation.today(now, (current.catalog as? CatalogState.Ready)?.catalog?.pharmacy?.timezone ?: "Asia/Damascus"))
     }.distinctUntilChanged()) { index, request -> index to request }.mapLatest { (index, request) ->
         withContext(kotlinx.coroutines.Dispatchers.Default) {
-            index?.project(request.section, request.query, request.filters, request.preferences, request.unpublished) ?: HomeBrowseResult()
+            index?.project(request.section, request.query, request.filters, request.preferences, request.unpublished, request.fetched, request.today) ?: HomeBrowseResult()
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(stopTimeoutMillis = 0, replayExpirationMillis = 0), HomeBrowseResult())
     private val historyRequest = MutableStateFlow(HistoryRequest())
@@ -588,7 +601,11 @@ class CatalogViewModel @Inject constructor(
         if (id != null && ready.catalog.categories.none { it.id == id }) return
         savedState["categories"] = if (id == null) arrayListOf<String>() else arrayListOf(id)
     }
-    fun clearFilters() { savedState["statuses"] = arrayListOf<String>(); savedState["categories"] = arrayListOf<String>() }
+    internal fun toggleExtraFilter(key: String) {
+        val current = extraFilters.value.toSet()
+        savedState["extraFilters"] = ArrayList(if (key in current) current - key else current + key)
+    }
+    fun clearFilters() { savedState["statuses"] = arrayListOf<String>(); savedState["categories"] = arrayListOf<String>(); savedState["extraFilters"] = arrayListOf<String>() }
     fun setSort(value: HomeSort) { viewModelScope.launch { preferences.setSort(value) } }
     fun setGroupingEnabled(value: Boolean) { viewModelScope.launch { preferences.setGroupingEnabled(value) } }
     fun setGrouping(value: HomeGrouping) { viewModelScope.launch { preferences.setGrouping(value) } }

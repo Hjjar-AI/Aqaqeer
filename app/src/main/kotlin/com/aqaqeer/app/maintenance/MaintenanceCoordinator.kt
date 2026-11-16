@@ -177,9 +177,9 @@ class MaintenanceCoordinator @Inject internal constructor(internal val store: Ma
                 val base = requireNotNull(old.state.confirmedPayloadJson).let { Json.decodeFromString<SnapshotWire>(it).supported() }
                 val merged = CatalogEdits.merge(keyVersion(base.catalog), keyVersion(old.catalog), live.catalog, pending, choices)
                 if (merged.conflicts.isNotEmpty()) throw MaintenanceReview(merged.conflicts)
-                val rebased = CatalogEdits.diff(live.catalog, merged.catalog, EditorRef(device.id, requireNotNull(device.displayName)), Instant.now(), live.publishId).map { op ->
+                val rebased = CatalogEdits.diff(live.catalog, merged.catalog, Instant.now(), live.publishId).map { op ->
                     pending.lastOrNull { it.entityType == op.entityType && it.targetId == op.targetId && it.field == op.field }?.let { prior ->
-                        op.copy(id = prior.id, transactionId = prior.transactionId, authorId = prior.authorId, authorName = prior.authorName, authoredAt = prior.authoredAt)
+                        op.copy(id = prior.id, transactionId = prior.transactionId, authoredAt = prior.authoredAt)
                     } ?: op
                 }
                 val finishing = j.copy(phase = MaintenancePhase.COMPLETE, checkpointId = newId())
@@ -324,8 +324,7 @@ class MaintenanceCoordinator @Inject internal constructor(internal val store: Ma
             val secrets = old.copySecrets()
             try {
                 val group = setup.validate(token, secrets.groupId)
-                ConnectionCandidate(old.pharmacyId, old.pharmacyName, Instant.now(), EditorRef(device.id, requireNotNull(device.displayName)),
-                    token, old.groupId, secrets.snapshotKey.copyOf(), old.keyVersion).use { replacement ->
+                ConnectionCandidate(old.pharmacyId, old.pharmacyName, Instant.now(), token, old.groupId, secrets.snapshotKey.copyOf(), old.keyVersion).use { replacement ->
                     val (read, live) = authenticated(replacement)
                     store.connection("transport").retain(replacement, j.id)
                     if (MaintenanceStore.digest(live.confirmedJson()) != j.sourceDigest) {
@@ -336,8 +335,7 @@ class MaintenanceCoordinator @Inject internal constructor(internal val store: Ma
                 sourceUnchanged(j)
                 val key = ByteArray(32).also { SecureRandom().nextBytes(it) }
                 check(old.keyVersion < Int.MAX_VALUE)
-                ConnectionCandidate(old.pharmacyId, old.pharmacyName, Instant.now(), EditorRef(device.id, requireNotNull(device.displayName)),
-                    token, old.groupId, key, old.keyVersion + 1).use { store.connection("candidate").retain(it, j.id) }
+                ConnectionCandidate(old.pharmacyId, old.pharmacyName, Instant.now(), token, old.groupId, key, old.keyVersion + 1).use { store.connection("candidate").retain(it, j.id) }
                 store.write(j.copy(phase = MaintenancePhase.DESTINATION_READY, destinationTitle = group.title,
                     destinationBotId = j.sourceBotId, destinationGroupId = old.groupId, destinationConfirmed = true))
             } finally { secrets.snapshotKey.fill(0) }
@@ -355,8 +353,7 @@ class MaintenanceCoordinator @Inject internal constructor(internal val store: Ma
         val bot = transport.bot(token)
         val pharmacy = requireNotNull(baseline().catalog.pharmacy); check(pharmacy.keyVersion < Int.MAX_VALUE)
         val key = ByteArray(32).also { SecureRandom().nextBytes(it) }
-        ConnectionCandidate(pharmacy.pharmacyId, pharmacy.name, Instant.now(), EditorRef(device.id, requireNotNull(device.displayName)),
-            token, group, key, pharmacy.keyVersion + 1).use { store.connection("candidate").retain(it, j.id) }
+        ConnectionCandidate(pharmacy.pharmacyId, pharmacy.name, Instant.now(), token, group, key, pharmacy.keyVersion + 1).use { store.connection("candidate").retain(it, j.id) }
         store.write(j.copy(phase = MaintenancePhase.DESTINATION_READY, destinationTitle = title,
             destinationBotId = bot.id, destinationGroupId = group, destinationConfirmed = true))
     }
@@ -375,7 +372,7 @@ class MaintenanceCoordinator @Inject internal constructor(internal val store: Ma
                     val catalog = source.catalog.copy(pharmacy = requireNotNull(source.catalog.pharmacy).copy(keyVersion = connection.keyVersion))
                     val candidate = SnapshotCandidate.Supported(SnapshotCompatibility(1, catalog.pharmacy!!.minVersionCode, connection.keyVersion),
                         source.revision + 1, newId(), source.publishId, source.revision, Instant.now(),
-                        EditorRef(device.id, requireNotNull(device.displayName)), catalog)
+                        catalog)
                     val target = setup.validate(secrets.botToken, secrets.groupId)
                     if (j.kind == MaintenanceKind.MIGRATION) check(target.pin == null)
                     stage.payload(j.id, candidate.confirmedJson())

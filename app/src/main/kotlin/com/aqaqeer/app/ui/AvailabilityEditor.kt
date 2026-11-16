@@ -96,7 +96,7 @@ internal val AvailabilitySelectionSaver = Saver<AvailabilitySelection?, String>(
                 } else {
                     val result = requireNotNull(status)
                     val changed = selection.expected.values.count { it != result }
-                    Text(uiText(R.string.ui_bulk_medication_editor_003, MedicationPresentation.easternDigits(changed.toString()), MedicationPresentation.easternDigits(selection.expected.size.toString())))
+                    Text(uiText(R.string.ui_bulk_medication_editor_003, MedicationPresentation.displayDigits(changed.toString()), MedicationPresentation.displayDigits(selection.expected.size.toString())))
                     // Include every selected medication, even when hidden by the Home filters.
                     LazyColumn(Modifier.fillMaxWidth().heightIn(max = viewportHeight() * 0.55f)) {
                     items(selection.expected.keys.toList(), key = { it }) { id ->

@@ -1,6 +1,5 @@
 package com.aqaqeer.app.security.files
 
-import com.aqaqeer.app.data.EditorRef
 import com.aqaqeer.app.security.SecureStore
 import com.aqaqeer.app.security.StorageRecoveryRequired
 import java.io.ByteArrayOutputStream
@@ -11,7 +10,7 @@ import java.util.UUID
 
 /** Display metadata only; no credential, PIN, role, or device identity. */
 data class PendingConnectionInfo(val id: String, val pharmacyId: String, val pharmacyName: String,
-    val createdAt: Instant, val createdBy: EditorRef)
+    val createdAt: Instant)
 
 /** Bounded protected connection record. The default entry holds the pending join;
  * activation uses a separate write-ahead active entry with the same format.
@@ -38,7 +37,7 @@ internal class PendingConnectionStore(private val secureStore: SecureStore,
     internal fun retain(candidate: ConnectionCandidate, id: String): PendingConnectionInfo {
         require(UUID.fromString(id).toString() == id)
         val info = PendingConnectionInfo(id, candidate.pharmacyId,
-            candidate.pharmacyName, candidate.createdAt, candidate.createdBy)
+            candidate.pharmacyName, candidate.createdAt)
         val secrets = candidate.copySecrets()
         val buffer = SecretBuffer()
         try {
@@ -49,7 +48,7 @@ internal class PendingConnectionStore(private val secureStore: SecureStore,
                     data.writeUTF(value)
                 }
                 text(info.id); text(info.pharmacyId); text(info.pharmacyName)
-                text(info.createdAt.toString()); text(info.createdBy.id); text(info.createdBy.name)
+                text(info.createdAt.toString())
                 text(secrets.botToken); data.writeLong(secrets.groupId)
                 data.writeInt(secrets.keyVersion); data.write(secrets.snapshotKey)
             }
@@ -90,13 +89,13 @@ internal class PendingConnectionStore(private val secureStore: SecureStore,
                         fun uuid(): String = text().also { require(UUID.fromString(it).toString() == it) }
                         fun name(): String = text().also { require(it.isNotBlank() && it == it.trim()) }
                         val id = uuid(); val pharmacyId = uuid(); val pharmacyName = name()
-                        val createdAt = Instant.parse(text()); val editor = EditorRef(uuid(), name())
+                        val createdAt = Instant.parse(text())
                         val token = name(); val groupId = data.readLong(); val keyVersion = data.readInt()
                         require(groupId < 0 && keyVersion > 0)
                         val snapshotKey = ByteArray(32).also { key = it; data.readFully(it) }
                         require(data.available() == 0)
-                        Record(PendingConnectionInfo(id, pharmacyId, pharmacyName, createdAt, editor),
-                            ConnectionCandidate(pharmacyId, pharmacyName, createdAt, editor, token, groupId, snapshotKey, keyVersion))
+                        Record(PendingConnectionInfo(id, pharmacyId, pharmacyName, createdAt),
+                            ConnectionCandidate(pharmacyId, pharmacyName, createdAt, token, groupId, snapshotKey, keyVersion))
                     }
                     else -> throw StorageRecoveryRequired()
                 }

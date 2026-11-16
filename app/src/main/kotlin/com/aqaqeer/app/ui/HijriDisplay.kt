@@ -33,7 +33,8 @@ internal object HijriDisplay {
             remaining -= length
             month++
         }
-        return String.format(Locale.ROOT, "%04d-%02d-%02d", year, month, remaining + 1)
+        val months = listOf("محرم", "صفر", "ربيع الأول", "ربيع الآخر", "جمادى الأولى", "جمادى الآخرة", "رجب", "شعبان", "رمضان", "شوال", "ذو القعدة", "ذو الحجة")
+        return "${remaining + 1} ${months[month - 1]} $year"
     }
 }
 

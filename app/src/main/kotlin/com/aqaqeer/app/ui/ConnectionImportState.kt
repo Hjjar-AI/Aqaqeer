@@ -62,7 +62,7 @@ internal fun connectionVerificationMessage(error: Exception): String = when (err
         SnapshotReadError.RESPONSE_TOO_LARGE -> uiText(R.string.ui_connection_import_state_022)
         SnapshotReadError.RESOURCE_LIMIT -> uiText(R.string.ui_connection_import_state_023)
         SnapshotReadError.RATE_LIMITED -> uiText(R.string.ui_connection_import_state_024) +
-            if (error.retryAfterSeconds > 0) uiText(R.string.logic_retry_after, MedicationPresentation.easternDigits(error.retryAfterSeconds.toString())) else ""
+            if (error.retryAfterSeconds > 0) uiText(R.string.logic_retry_after, MedicationPresentation.displayDigits(error.retryAfterSeconds.toString())) else ""
         SnapshotReadError.NETWORK -> uiText(R.string.ui_connection_import_state_025)
         SnapshotReadError.CHANGED_DURING_READ -> uiText(R.string.ui_connection_import_state_026)
         SnapshotReadError.CAPTION_MISMATCH -> uiText(R.string.ui_connection_import_state_027)

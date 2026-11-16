@@ -37,21 +37,20 @@ import com.aqaqeer.app.data.CatalogSnapshot
     errorText: String? = null, submitted: Boolean = false, validate: ((String) -> String?)? = null,
     tag: String = label, keyboardOptions: androidx.compose.foundation.text.KeyboardOptions? = null,
     numericSecret: Boolean = false, ltr: Boolean = false, singleLine: Boolean = true,
-    imeAction: ImeAction = if (singleLine) ImeAction.Next else ImeAction.Default, onDone: (() -> Unit)? = null) {
+    imeAction: ImeAction = if (singleLine) ImeAction.Next else ImeAction.Default, onDone: (() -> Unit)? = null, trailingContent: (@Composable () -> Unit)? = null) {
     val focus = LocalFocusManager.current
     var focusedOnce by remember(label) { mutableStateOf(false) }
     var touched by remember(label) { mutableStateOf(false) }
     // Visibility is intentionally never saved across recreation.
     var visible by remember(label) { mutableStateOf(false) }
-    if (secret && numericSecret && FormGuidance.simpleNumericPattern(value))
-        SupportingText(uiText(R.string.logic_weak_pattern))
+    val weakPin = secret && numericSecret && FormGuidance.simpleNumericPattern(value)
     val validationError = errorText ?: if (required == true && (if (secret) value.isEmpty() else value.isBlank()))
         uiText(R.string.ui_admin_components_001) else validate?.invoke(value)
     val error = validationError.takeIf { touched || submitted }
     val shortLabel = label.substringBefore(" — ").substringBefore(" YYYY-MM-DD")
     val rule = label.removePrefix(shortLabel).trim().trimStart('—').trim().takeIf { it.isNotBlank() }
     val hint = listOfNotNull(supportingText ?: rule,
-        when (required) { true -> uiText(R.string.ui_admin_components_002); false -> uiText(R.string.ui_admin_components_003); null -> null }).distinct().joinToString(" · ").takeIf { it.isNotBlank() }
+        if (required == false) uiText(R.string.ui_admin_components_003) else null).distinct().joinToString(" · ").takeIf { it.isNotBlank() }
     val focusRequester = remember { FocusRequester() }
     val reveal = remember { BringIntoViewRequester() }
     val focusController = LocalFormFocus.current
@@ -65,7 +64,9 @@ import com.aqaqeer.app.data.CatalogSnapshot
         minLines = if (singleLine) 1 else 3, maxLines = if (singleLine) 1 else 8,
         textStyle = LocalTextStyle.current.copy(textDirection = if (ltr || numericSecret) TextDirection.Ltr else TextDirection.ContentOrRtl),
         isError = error != null,
-        supportingText = if (error != null || hint != null) ({ Text(error ?: hint.orEmpty()) }) else null,
+        supportingText = if (error != null || hint != null || weakPin) ({
+            Column { (error ?: hint)?.let { Text(it) }; if (weakPin) Text(uiText(R.string.logic_weak_pattern)) }
+        }) else null,
         keyboardOptions = (keyboardOptions ?: if (secret) androidx.compose.foundation.text.KeyboardOptions(
             keyboardType = if (numericSecret) androidx.compose.ui.text.input.KeyboardType.NumberPassword else androidx.compose.ui.text.input.KeyboardType.Password,
             autoCorrectEnabled = false) else androidx.compose.foundation.text.KeyboardOptions.Default).copy(imeAction = imeAction),
@@ -74,7 +75,7 @@ import com.aqaqeer.app.data.CatalogSnapshot
         visualTransformation = if (secret && !visible) PasswordVisualTransformation() else VisualTransformation.None,
         trailingIcon = if (secret) ({ IconButton(onClick = { visible = !visible }) {
             AppIcon(UiIcon.VISIBILITY, description = if (visible) uiText(R.string.ui_admin_components_004, shortLabel) else uiText(R.string.ui_admin_components_005, shortLabel))
-        } }) else null,
+        } }) else trailingContent,
         modifier = modifier.fillMaxWidth().testTag(tag).bringIntoViewRequester(reveal).focusRequester(focusRequester).onFocusChanged {
             if (it.isFocused) focusedOnce = true else if (focusedOnce) touched = true
         })
@@ -117,7 +118,7 @@ import com.aqaqeer.app.data.CatalogSnapshot
 @Composable internal fun NavigationCard(label: String, onClick: () -> Unit, modifier: Modifier = Modifier,
     enabled: Boolean = true, supporting: String? = null, destructive: Boolean = false) {
     Surface(modifier.fillMaxWidth(), shape = MaterialTheme.shapes.medium,
-        color = if (destructive) MaterialTheme.colorScheme.errorContainer else MaterialTheme.colorScheme.surface,
+        color = MaterialTheme.colorScheme.surface,
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)) {
         Box(Modifier.padding(horizontal = UiSpacing.section)) {
             NavigationRow(label, onClick, enabled = enabled, supporting = supporting, destructive = destructive)
@@ -139,8 +140,8 @@ import com.aqaqeer.app.data.CatalogSnapshot
             LinearProgressIndicator(Modifier.fillMaxWidth())
             cancel?.let { TextButton(onClick = it) { Text(uiText(R.string.ui_admin_components_006)) } }
         }
-        error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
-        message?.let { Text(it) }
+        error?.let { NoticeStrip(Notice(it, NoticeSeverity.ERROR)) }
+        message?.let { NoticeStrip(Notice(it)) }
     }
 }
 
@@ -158,8 +159,8 @@ import com.aqaqeer.app.data.CatalogSnapshot
             val restoreParent = conflict.key.startsWith("parent:")
             val restoreReference = conflict.key.startsWith("reference:")
             Text(if (deletion) uiText(R.string.ui_admin_components_008) else uiText(R.string.ui_admin_components_009))
-            Text(uiText(R.string.ui_admin_components_010, reviewValue(conflict.field, conflict.mine, catalog)))
-            Text(uiText(R.string.ui_admin_components_011, reviewValue(conflict.field, conflict.theirs, catalog)))
+            AdaptivePickers(first = { Text(uiText(R.string.ui_admin_components_010, reviewValue(conflict.field, conflict.mine, catalog))) },
+                second = { Text(uiText(R.string.ui_admin_components_011, reviewValue(conflict.field, conflict.theirs, catalog))) })
             ExpandableInformation(uiText(R.string.ui_admin_components_012), reviewValue(conflict.field, conflict.base, catalog))
             RadioChoiceRows(listOf(true, false), choices[conflict.key],
                 { choose(choices + (conflict.key to it)) },

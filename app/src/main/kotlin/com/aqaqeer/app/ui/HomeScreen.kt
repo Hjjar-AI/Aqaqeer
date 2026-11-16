@@ -437,7 +437,7 @@ import java.time.ZoneId
 @Composable internal fun FilterSummary(filters: HomeFilters, clear: () -> Unit) {
     if (filters.statuses.isEmpty() && filters.categoryIds.isEmpty()) return
     ActionGroup(Modifier.testTag("filter_summary")) {
-        Text(uiText(R.string.ui_home_screen_032, MedicationPresentation.easternDigits(filters.statuses.size.toString()), MedicationPresentation.easternDigits(filters.categoryIds.size.toString())))
+        Text(uiText(R.string.ui_home_screen_032, MedicationPresentation.displayDigits(filters.statuses.size.toString()), MedicationPresentation.displayDigits(filters.categoryIds.size.toString())))
         if (filters.statuses.isNotEmpty() || filters.categoryIds.isNotEmpty())
             TextButton(onClick = clear, modifier = Modifier.testTag("clear_filters")) { Text(uiText(R.string.ui_history_screen_017)) }
     }
@@ -459,7 +459,7 @@ import java.time.ZoneId
         if (ready.admin && !ready.isDemo) {
             if (publicationBusy) add(uiText(R.string.ui_home_screen_040))
             if (ready.uncertain) add(uiText(R.string.ui_home_screen_041))
-            if (ready.pendingCount > 0) add(uiText(R.string.ui_home_screen_042, MedicationPresentation.easternDigits(ready.pendingCount.toString())))
+            if (ready.pendingCount > 0) add(uiText(R.string.ui_home_screen_042, MedicationPresentation.displayDigits(ready.pendingCount.toString())))
             if (ready.backupReminderAt?.let { clock.toEpochMilli() >= it } == true) add(uiText(R.string.ui_admin_components_021))
             if (ready.lifecycle == "LOCAL_DRAFT") add(uiText(R.string.ui_pharmacy_admin_screen_038))
         }
@@ -480,12 +480,12 @@ import java.time.ZoneId
         Column(Modifier.padding(horizontal = UiSpacing.page, vertical = UiSpacing.hair)) {
             TextButton(onClick = { expanded = !expanded }, modifier = Modifier.fillMaxWidth()) {
                 AppIcon(if (ready.requiresUpdate || state.refresh.error != null) UiIcon.WARNING else UiIcon.INFO)
-                Text(notices.first() + if (notices.size > 1) uiText(R.string.ui_home_screen_043, MedicationPresentation.easternDigits(notices.size.toString())) else "",
+                Text(notices.first() + if (notices.size > 1) uiText(R.string.ui_home_screen_043, MedicationPresentation.displayDigits(notices.size.toString())) else "",
                     modifier = Modifier.weight(1f), maxLines = 2, overflow = TextOverflow.Ellipsis)
                 RowChevron(down = true)
             }
             if (!expanded && ready.admin && ready.pendingCount > 0 && !notices.first().endsWith(uiText(R.string.ui_home_screen_044)))
-                Text(uiText(R.string.ui_home_screen_042, MedicationPresentation.easternDigits(ready.pendingCount.toString())), style = MaterialTheme.typography.bodyMedium)
+                Text(uiText(R.string.ui_home_screen_042, MedicationPresentation.displayDigits(ready.pendingCount.toString())), style = MaterialTheme.typography.bodyMedium)
             if (expanded) Column(Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(UiSpacing.related)) {
                 if (ready.requiresUpdate) InformationCard(uiText(R.string.ui_home_screen_045), uiText(R.string.ui_home_screen_046))
@@ -509,8 +509,8 @@ internal fun relativeTime(at: Instant, now: Instant): String {
     return when {
         seconds < 0 -> uiText(R.string.ui_home_screen_047)
         seconds < 60 -> uiText(R.string.ui_home_screen_048)
-        seconds < 3600 -> uiText(R.string.ui_home_screen_049, MedicationPresentation.easternDigits((seconds / 60).toString()))
-        seconds < 86400 -> uiText(R.string.ui_home_screen_050, MedicationPresentation.easternDigits((seconds / 3600).toString()))
-        else -> uiText(R.string.ui_home_screen_051, MedicationPresentation.easternDigits((seconds / 86400).toString()))
+        seconds < 3600 -> uiText(R.string.ui_home_screen_049, MedicationPresentation.displayDigits((seconds / 60).toString()))
+        seconds < 86400 -> uiText(R.string.ui_home_screen_050, MedicationPresentation.displayDigits((seconds / 3600).toString()))
+        else -> uiText(R.string.ui_home_screen_051, MedicationPresentation.displayDigits((seconds / 86400).toString()))
     }
 }

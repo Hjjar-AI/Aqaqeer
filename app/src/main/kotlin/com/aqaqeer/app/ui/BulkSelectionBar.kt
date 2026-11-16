@@ -18,7 +18,7 @@ import com.aqaqeer.app.data.MedicationPresentation
         shape = MaterialTheme.shapes.medium, modifier = Modifier.fillMaxWidth().testTag("bulk_selection_bar")) {
         ContentSection(modifier = Modifier.padding(UiSpacing.related)) {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                Text(uiText(R.string.ui_bulk_selection_bar_001, MedicationPresentation.easternDigits(count.toString()), section), Modifier.weight(1f))
+                Text(uiText(R.string.ui_bulk_selection_bar_001, MedicationPresentation.displayDigits(count.toString()), section), Modifier.weight(1f))
                 TextButton(enabled = !busy && visibleCount > 0, onClick = selectVisible) { Text(uiText(R.string.ui_bulk_selection_bar_002)) }
                 IconButton(enabled = !busy, onClick = cancel) { AppIcon(UiIcon.CLOSE, description = uiText(R.string.ui_bulk_selection_bar_003)) }
             }

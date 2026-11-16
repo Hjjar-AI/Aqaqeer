@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="review_refresh_now">تحديث الآن</string>
+    <string name="review_select">تحديد</string>
+    <string name="review_expiry_soon">ينتهي قريباً</string>
+    <string name="review_unpublished">غير منشور</string>
+    <string name="review_changed">محدّث</string>
+    <string name="review_whats_new">ما الجديد</string>
+    <string name="review_elsewhere">%1$s نتائج إضافية في أقسام أخرى</string>
+    <string name="review_appearance">المظهر</string>
+    <string name="review_list_display">عرض القائمة</string>
+    <string name="review_dates_placement">التواريخ ومواضع الأشرطة</string>
+    <string name="review_adaptive_columns">أعمدة تلقائية</string>
+    <string name="review_adaptive_columns_help">يتكيف عدد الأعمدة مع العرض وحجم الخط</string>
+    <string name="review_required_convention">الحقول غير المعلّمة مطلوبة؛ الحقول الاختيارية مميزة.</string>
+    <string name="review_copy">نسخ</string>
+    <string name="review_copied">تم النسخ</string>
+    <string name="review_sensitive">تنبيه: إجراء حساس</string>
+    <string name="review_today">اليوم</string>
+    <string name="review_yesterday">أمس</string>
+    <string name="review_7_days">7 أيام</string>
+    <string name="review_since_sunday">منذ بداية الأسبوع</string>
+    <string name="review_custom">مخصص</string>
+    <string name="review_all">الكل</string>
+    <string name="review_setup_checklist">خطوات إعداد الإدارة</string>
+    <string name="review_check_catalog">إضافة الأدوية</string>
+    <string name="review_check_connection">إعداد الاتصال</string>
+    <string name="review_check_publish">نشر البيانات</string>
+    <string name="review_check_backup">إنشاء نسخة احتياطية</string>
+    <string name="review_hide_checklist">إخفاء القائمة المكتملة</string>
+    <string name="review_legend">دليل الحالات والعلامات</string>
+    <string name="review_legend_body">متوفر: الدواء متاح. توفر محدود: المخزون محدود. غير متوفر: يظهر مع خطوط خلفية. غير معروف: لم تُسجّل حالة. غير منشور: توجد تعديلات محلية. محدّث: تغير الدواء بعد جلب البيانات.</string>
+    <string name="review_local">محلي</string>
+    <string name="review_remote">منشور</string>
+    <string name="review_exact_time">التاريخ والوقت</string>
+    <string name="review_technical_details">التفاصيل التقنية</string>
+    <string name="review_publication_summary">ملخص التعديلات</string>
+    <string name="review_preview">معاينة</string>
+    <string name="review_restore_step">مراجعة الاستعادة</string>
+    <string name="review_choose_file">اختيار الملف</string>
+    <string name="review_validate_file">التحقق والمراجعة</string>
+    <string name="review_apply_file">تطبيق</string>
+    <string name="review_in_progress">جارٍ التنفيذ</string>
+</resources>

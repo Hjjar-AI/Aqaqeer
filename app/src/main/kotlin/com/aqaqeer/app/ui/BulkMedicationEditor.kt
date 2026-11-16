@@ -62,7 +62,7 @@ private data class BulkFieldOption(val value: String?, val label: String)
             if (formId != null || categoryId != null) SupportingText(uiText(R.string.ui_bulk_medication_editor_002))
         } else {
             val count = selection.medications.count(::changed)
-            Text(uiText(R.string.ui_bulk_medication_editor_003, MedicationPresentation.easternDigits(count.toString()), MedicationPresentation.easternDigits(selection.expected.size.toString())))
+            Text(uiText(R.string.ui_bulk_medication_editor_003, MedicationPresentation.displayDigits(count.toString()), MedicationPresentation.displayDigits(selection.expected.size.toString())))
             LazyColumn(Modifier.fillMaxWidth().heightIn(max = viewportHeight() * 0.55f)) {
             items(selection.expected.keys.toList(), key = { it }) { id ->
                 val med = selectedMedications[id]

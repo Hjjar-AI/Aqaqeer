@@ -43,12 +43,12 @@ def main():
     if not re.fullmatch(r'[1-9][0-9]*', value) or not 1 <= int(value) <= 2_099_999_999:
         raise ValueError('Choose a positive version code below 2100000000.')
     if codes and int(value) <= max(codes):
-        raise ValueError('Version must exceed every android-build-N reservation, including failed or unpublished attempts.')
-    api(f'repos/{repository}/git/refs', {'ref': f'refs/tags/android-build-{value}',
+        raise ValueError('Version must exceed every android-initial-build-N reservation, including failed or unpublished attempts.')
+    api(f'repos/{repository}/git/refs', {'ref': f'refs/tags/android-initial-build-{value}',
                                        'sha': os.environ['GITHUB_SHA']})
     with open(os.environ['GITHUB_OUTPUT'], 'a') as output:
         output.write(f'code={value}\n')
-    print(f'Reserved android-build-{value}. Preserve this tag even if packaging/publication fails.')
+    print(f'Reserved android-initial-build-{value}. Preserve this tag even if packaging/publication fails.')
 
 
 if __name__ == '__main__':
