@@ -101,7 +101,8 @@ import java.time.ZoneId
         }
         return
     }
-    val active = catalog.sections.filter { it.isActive }
+    val active = remember(catalog.sections) { catalog.sections.filter { it.isActive } }
+    val medicationIds = remember(catalog.medications) { catalog.medications.mapTo(HashSet()) { it.id } }
     val selected = active.firstOrNull { it.id == state.sectionId } ?: active.firstOrNull()
     val canEdit = ready.admin && !ready.requiresUpdate && !ready.maintenancePaused && saveAvailability != null
     var bulkMode by rememberSaveable(catalog.pharmacy.pharmacyId, selected?.id, canEdit) { mutableStateOf(false) }
@@ -135,7 +136,7 @@ import java.time.ZoneId
         }
     }
     // Never silently shrink a confirmed selection when a refresh deletes a target.
-    val selectionValid = selectedIds.all { id -> catalog.medications.any { it.id == id } }
+    val selectionValid = selectedIds.all { id -> id in medicationIds }
     fun selection(ids: Set<String>): AvailabilitySelection? = selected?.let { section ->
         AvailabilitySelection(catalog.pharmacy.pharmacyId, section, catalog.medications.filter { it.id in ids },
             ids.associateWith { catalog.status(it, section.id) }, bulkMode,
@@ -165,10 +166,22 @@ import java.time.ZoneId
         projection.query == state.appliedQuery && projection.filters == state.filters && projection.preferences == state.homePreferences && projection.fetched == state.fetchedIds &&
         projection.unpublished == ready.unpublishedMedicationIds && projection.today == today &&
         projection.readerStockOnly == !ready.admin
-    val visible = if (projectionReady) projection.visible else emptyList()
-    val groups = if (projectionReady) projection.groups else emptyList()
-    val otherSectionResults = if (projectionReady && !bulkMode) projection.otherSectionResults else emptyList()
-    val searching = MedicationPresentation.normalizedSearch(state.appliedQuery).isNotEmpty()
+    // Retain complete display rows only inside the same browsing/access context.
+    // Bulk selection and availability markers still require an independently checked fresh projection.
+    var lastComplete by remember(catalog.pharmacy.pharmacyId, selected?.id,
+        state.homePreferences.grouping, state.homePreferences.groupingEnabled, !ready.admin) {
+        mutableStateOf<HomeBrowseResult?>(null)
+    }
+    SideEffect { if (projectionReady) lastComplete = projection }
+    val displayed = if (projectionReady) projection else lastComplete
+    val visible = displayed?.visible.orEmpty()
+    val groups = displayed?.groups.orEmpty()
+    val otherSectionResults = if (!bulkMode) displayed?.otherSectionResults.orEmpty() else emptyList()
+    val displayQuery = displayed?.query.orEmpty()
+    val searching = MedicationPresentation.normalizedSearch(displayQuery).isNotEmpty()
+    val editorSelectionValid = editor?.let { captured -> captured.expected.all { (id, before) ->
+        id in medicationIds && catalog.status(id, captured.section.id) == before
+    } } == true
     var searchText by rememberSaveable(catalog.pharmacy.pharmacyId, stateSaver = TextFieldValue.Saver) { mutableStateOf(TextFieldValue(state.query)) }
     fun changeSearch(value: TextFieldValue) { searchText = value; setQuery(value.text) }
     val browseHeading: @Composable () -> Unit = {
@@ -275,9 +288,9 @@ import java.time.ZoneId
                         if (editor == null && (availabilityBusy || availabilityMessage != null)) item(span = { GridItemSpan(maxLineSpan) }) {
                             InlineOperationStatus(availabilityBusy, availabilityMessage)
                         }
-                        if (!projectionReady) items(4, key = { "loading_$it" }) { MedicationSkeleton(state.homePreferences.layout) }
+                        if (displayed == null) items(4, key = { "loading_$it" }) { MedicationSkeleton(state.homePreferences.layout) }
                         if (selected == null) item(span = { GridItemSpan(maxLineSpan) }) { InformationCard(uiText(R.string.ui_home_screen_010), uiText(R.string.ui_home_screen_011)) }
-                        if (projectionReady && searching && selected != null)
+                        if (displayed != null && searching && selected != null)
                             item(key = "current_search_section_${selected.id}", span = { GridItemSpan(maxLineSpan) }) {
                                 ContentSection {
                                     SectionHeading(selected.nameAr)
@@ -285,7 +298,7 @@ import java.time.ZoneId
                                         SupportingText(uiText(R.string.review_no_results_in_section))
                                 }
                             }
-                        if (projectionReady && visible.isEmpty() && otherSectionResults.isEmpty()) item(span = { GridItemSpan(maxLineSpan) }) {
+                        if (displayed != null && visible.isEmpty() && otherSectionResults.isEmpty()) item(span = { GridItemSpan(maxLineSpan) }) {
                             GroupedCard(title = if (catalog.medications.isEmpty()) uiText(R.string.ui_home_screen_012) else uiText(R.string.ui_choice_components_003)) {
                                 EmptyCapsule(Modifier.size(96.dp).align(Alignment.CenterHorizontally))
                                 if (catalog.medications.isEmpty()) {
@@ -299,8 +312,8 @@ import java.time.ZoneId
                             }
                         }
                         val card: @Composable LazyGridItemScope.(Medication) -> Unit = { medication ->
-                            MedicationCard(projection.rows.getValue(medication.id), selected?.id, state.homePreferences, today,
-                                onQuickEdit = if (canEdit && !bulkMode && selected != null && !availabilityBusy)
+                            MedicationCard(requireNotNull(displayed).rows.getValue(medication.id), selected?.id, state.homePreferences, today,
+                                onQuickEdit = if (canEdit && !bulkMode && selected != null && !availabilityBusy && medication.id in medicationIds)
                                     ({
                                         if (!filtersOpen && editor == null && canOpenHomeModal() && !availabilityInProgress()) {
                                             focus.clearFocus(); editor = selection(setOf(medication.id)); notifyModal(editor != null)
@@ -312,17 +325,17 @@ import java.time.ZoneId
                                 chooseStatus = { status ->
                                     val captured = editor
                                     if (captured != null && editorCurrent && !availabilityInProgress() && captured.expected.all { (id, before) ->
-                                        catalog.medications.any { it.id == id } && catalog.status(id, captured.section.id) == before
+                                        id in medicationIds && catalog.status(id, captured.section.id) == before
                                     }) saveAvailability?.invoke(captured, status) { if (editor == captured) editor = null }
                                 },
                                 bulkSelected = if (bulkMode && contextValid && canEdit) medication.id in selectedIds else null,
-                                toggleSelection = { if (!availabilityBusy) changeBulkSelection(if (medication.id in selectedIds)
+                                toggleSelection = { if (projectionReady && !availabilityBusy) changeBulkSelection(if (medication.id in selectedIds)
                                     selectedIds - medication.id else selectedIds + medication.id) },
-                                onClick = { openMedication(medication.id) }, selectionEnabled = !availabilityBusy && (editor == null || editor?.bulk == true ||
-                                    editor?.expected?.all { (id, before) -> catalog.medications.any { it.id == id } && catalog.status(id, editor!!.section.id) == before } == true),
-                                modifier = Modifier.animateItem(), query = state.appliedQuery, highlighted = medication.id == highlightedMedication,
+                                onClick = { openMedication(medication.id) }, selectionEnabled = !availabilityBusy && medication.id in medicationIds && (!bulkMode || projectionReady) &&
+                                    (editor == null || editor?.bulk == true || editorSelectionValid),
+                                modifier = Modifier.animateItem(), query = displayQuery, highlighted = medication.id == highlightedMedication,
                                 unpublished = ready.admin && medication.id in ready.unpublishedMedicationIds,
-                                onLongClick = if (canEdit && saveBulk != null && selected != null && !bulkMode && !availabilityBusy) ({
+                                onLongClick = if (canEdit && saveBulk != null && selected != null && !bulkMode && !availabilityBusy && medication.id in medicationIds) ({
                                     if (contextValid && editor == null && !filtersOpen && !availabilityInProgress() && canOpenHomeModal()) {
                                         focus.clearFocus(); bulkMode = true; changeBulkSelection(setOf(medication.id))
                                     }
@@ -349,7 +362,7 @@ import java.time.ZoneId
                                 MedicationCard(row, result.section.id, state.homePreferences.copy(groupingEnabled = false), today,
                                     onQuickEdit = null, bulkSelected = null, toggleSelection = {},
                                     onClick = { if (editor == null && !filtersOpen && canOpenHomeModal()) openMedication(row.medication.id) },
-                                    modifier = Modifier.animateItem(), query = state.appliedQuery,
+                                    modifier = Modifier.animateItem(), query = displayQuery,
                                     highlighted = row.medication.id == highlightedMedication,
                                     unpublished = ready.admin && row.unpublished)
                             }
@@ -360,7 +373,8 @@ import java.time.ZoneId
             if (canEdit && selected != null && bulkMode && contextValid) {
                 Box(Modifier.fillMaxWidth().padding(horizontal = UiSpacing.page, vertical = UiSpacing.related)) {
                 BulkSelectionBar(selected.nameAr, selectedIds.size, selectionValid, availabilityBusy, cancel = ::exitBulk,
-                    visibleCount = visible.size, selectVisible = { changeBulkSelection(selectedIds + visible.map { it.id }) },
+                    visibleCount = if (projectionReady) projection.visible.size else 0,
+                    selectVisible = { if (projectionReady) changeBulkSelection(selectedIds + projection.visible.map { it.id }) },
                     clear = { changeBulkSelection(emptySet()) }) {
                     ActionGroup {
                         Button(enabled = selectedIds.isNotEmpty() && selectionValid && !availabilityBusy,

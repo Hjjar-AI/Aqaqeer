@@ -6,6 +6,9 @@ import com.aqaqeer.app.R
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.material3.*
 import androidx.compose.ui.Modifier
 import androidx.compose.animation.animateContentSize
@@ -44,6 +47,67 @@ import kotlinx.serialization.json.*
         val medication = catalog.medications.find { it.id == targetId }
         if (targetId != "new" && medication == null) { FormPage { Text(uiText(R.string.ui_pharmacy_admin_screen_003)) }; return }
         key(catalog.pharmacy?.pharmacyId, targetId) { MedicationEditor(catalog, medication, vm, busy) }
+        return
+    }
+    if (state.route == "review" && ready.admin) {
+        val configuration = LocalConfiguration.current
+        var typeFilter by rememberSaveable(catalog.pharmacy?.pharmacyId) { mutableStateOf<String?>(null) }
+        var choices by remember(catalog.pharmacy?.pharmacyId) { mutableStateOf<Map<String, Boolean>>(emptyMap()) }
+        val types = remember(pending) { pending.groupBy { it.entityType } }
+        val grouped = remember(pending) { pending.groupBy { it.entityType to it.targetId.substringBefore('/') } }
+        val visibleGroups = remember(grouped, typeFilter) {
+            grouped.entries.filter { typeFilter == null || it.key.first == typeFilter }
+        }
+        val medicationsById = remember(catalog.medications) { catalog.medications.associateBy { it.id } }
+        LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(UiSpacing.page),
+            verticalArrangement = Arrangement.spacedBy(UiSpacing.group)) {
+            item(key = "review_header") {
+                Column(verticalArrangement = Arrangement.spacedBy(UiSpacing.group)) {
+                    OperationStatus(busy || sharing.busy, message, sharing.message)
+                    if (ready.maintenancePaused) NavigationCard(uiText(R.string.ui_pharmacy_admin_screen_029), onClick = { vm.navigate("maintenance") })
+                    if (ready.restorePaused) NavigationCard(uiText(R.string.ui_pharmacy_admin_screen_030), onClick = { vm.navigate("backup") })
+                    Text(uiText(R.string.ui_pharmacy_admin_screen_031, MedicationPresentation.displayDigits(ready.pendingCount.toString())), style = MaterialTheme.typography.titleLarge)
+                    Text(if (ready.maintenancePaused) uiText(R.string.ui_pharmacy_admin_screen_032) else if (ready.restorePaused) uiText(R.string.ui_pharmacy_admin_screen_033) else uiText(R.string.ui_pharmacy_admin_screen_034))
+                    WrappingContent {
+                        FilterChip(typeFilter == null, onClick = { typeFilter = null }, label = { Text(uiText(R.string.review_all) + " (${pending.size})") })
+                        types.forEach { (type, operations) ->
+                            FilterChip(typeFilter == type, onClick = { typeFilter = type }, label = { Text(entityLabel(type) + " (${operations.size})") })
+                        }
+                    }
+                }
+            }
+            items(visibleGroups, key = { "pending_${it.key.first.length}:${it.key.first}${it.key.second}" }) { group ->
+                val operations = group.value
+                val first = operations.first()
+                val name = medicationsById[group.key.second]
+                    ?.let { MedicationPresentation.identity(it, catalog.formsById[it.formId]?.nameAr) } ?: entityLabel(first.entityType)
+                GroupedCard(title = name) {
+                    operations.forEach { op ->
+                        key(op.id) {
+                            val before = remember(op.field, op.baseValueJson, catalog, configuration) {
+                                reviewValue(op.field, op.baseValueJson, catalog)
+                            }
+                            val after = remember(op.field, op.intendedValueJson, catalog, configuration) {
+                                reviewValue(op.field, op.intendedValueJson, catalog)
+                            }
+                            Text(fieldLabel(op.field, op.entityType), style = MaterialTheme.typography.titleSmall)
+                            LabeledValue(uiText(R.string.ui_pharmacy_admin_screen_035), before)
+                            LabeledValue(uiText(R.string.ui_pharmacy_admin_screen_036), after)
+                        }
+                    }
+                }
+            }
+            item(key = "review_actions") {
+                Column(verticalArrangement = Arrangement.spacedBy(UiSpacing.group)) {
+                    if (ready.isDemo) SupportingText(uiText(R.string.review_demo_local_only))
+                    ConflictChoices(sharing.conflicts, choices, catalog) { choices = it }
+                    Button(enabled = !ready.isDemo && (ready.pendingCount > 0 || ready.uncertain || ready.lifecycle == "LOCAL_DRAFT") && !busy && !sharing.busy && !ready.requiresUpdate && !ready.restorePaused && !ready.maintenancePaused, onClick = { vm.publish(choices) }) { Text(uiText(R.string.ui_pharmacy_admin_screen_037)) }
+                    if (!ready.isDemo && ready.lifecycle == "SHARED") PinRecoveryAction(
+                        enabled = !busy && !sharing.busy && !ready.requiresUpdate && !ready.restorePaused && !ready.maintenancePaused,
+                        recover = { vm.publish(choices, recoverPin = true) })
+                }
+            }
+        }
         return
     }
     FormPage(showFieldConvention = state.route in setOf("create", "promote", "setup", "export-connection", "taxonomy")) {
@@ -130,38 +194,6 @@ import kotlinx.serialization.json.*
             ready.isDemo && state.route !in setOf("taxonomy", "review") -> Text(uiText(R.string.review_demo_local_only))
             state.route == "setup" -> TelegramSetup(vm, busy, catalog.medications.isEmpty())
             state.route == "export-connection" -> ConnectionExport(vm, ready.lifecycle == "SHARED", busy)
-            state.route == "review" -> {
-                if (ready.maintenancePaused) NavigationCard(uiText(R.string.ui_pharmacy_admin_screen_029), onClick = { vm.navigate("maintenance") })
-                if (ready.restorePaused) NavigationCard(uiText(R.string.ui_pharmacy_admin_screen_030), onClick = { vm.navigate("backup") })
-                Text(uiText(R.string.ui_pharmacy_admin_screen_031, MedicationPresentation.displayDigits(ready.pendingCount.toString())), style = MaterialTheme.typography.titleLarge)
-                Text(if (ready.maintenancePaused) uiText(R.string.ui_pharmacy_admin_screen_032) else if (ready.restorePaused) uiText(R.string.ui_pharmacy_admin_screen_033) else uiText(R.string.ui_pharmacy_admin_screen_034))
-                var typeFilter by rememberSaveable { mutableStateOf<String?>(null) }
-                WrappingContent {
-                    FilterChip(typeFilter == null, onClick = { typeFilter = null }, label = { Text(uiText(R.string.review_all) + " (${pending.size})") })
-                    pending.groupBy { it.entityType }.forEach { (type, operations) ->
-                        FilterChip(typeFilter == type, onClick = { typeFilter = type }, label = { Text(entityLabel(type) + " (${operations.size})") })
-                    }
-                }
-                pending.filter { typeFilter == null || it.entityType == typeFilter }.groupBy { it.entityType to it.targetId.substringBefore('/') }.forEach { (_, operations) ->
-                    val first = operations.first()
-                    val name = catalog.medications.find { it.id == first.targetId.substringBefore('/') }
-                        ?.let { MedicationPresentation.identity(it, catalog.formsById[it.formId]?.nameAr) } ?: entityLabel(first.entityType)
-                    GroupedCard(title = name) {
-                        operations.forEach { op ->
-                            Text(fieldLabel(op.field, op.entityType), style = MaterialTheme.typography.titleSmall)
-                            LabeledValue(uiText(R.string.ui_pharmacy_admin_screen_035), reviewValue(op.field, op.baseValueJson, catalog))
-                            LabeledValue(uiText(R.string.ui_pharmacy_admin_screen_036), reviewValue(op.field, op.intendedValueJson, catalog))
-                        }
-                    }
-                }
-                if (ready.isDemo) SupportingText(uiText(R.string.review_demo_local_only))
-                var choices by remember { mutableStateOf<Map<String, Boolean>>(emptyMap()) }
-                ConflictChoices(sharing.conflicts, choices, catalog) { choices = it }
-                Button(enabled = !ready.isDemo && (ready.pendingCount > 0 || ready.uncertain || ready.lifecycle == "LOCAL_DRAFT") && !busy && !sharing.busy && !ready.requiresUpdate && !ready.restorePaused && !ready.maintenancePaused, onClick = { vm.publish(choices) }) { Text(uiText(R.string.ui_pharmacy_admin_screen_037)) }
-                if (!ready.isDemo && ready.lifecycle == "SHARED") PinRecoveryAction(
-                    enabled = !busy && !sharing.busy && !ready.requiresUpdate && !ready.restorePaused && !ready.maintenancePaused,
-                    recover = { vm.publish(choices, recoverPin = true) })
-            }
             state.route == "taxonomy" -> TaxonomyEditor(catalog, vm, busy)
             else -> {
                 if (ready.admin && !ready.isDemo) SetupChecklist(ready) { vm.navigate(it) }

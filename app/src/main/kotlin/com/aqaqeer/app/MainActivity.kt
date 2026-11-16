@@ -9,6 +9,11 @@ import android.content.res.Configuration
 import android.graphics.drawable.ColorDrawable
 import android.view.ViewGroup
 import androidx.core.view.WindowCompat
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
+import com.aqaqeer.app.ui.BrandAssets
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -60,12 +65,24 @@ class MainActivity : ComponentActivity() {
             isAppearanceLightStatusBars = !dark
             isAppearanceLightNavigationBars = !dark
         }
+        // Start the shared decode while the database initializes; never decode in the exit callback.
+        val splashBitmap = lifecycleScope.async(Dispatchers.IO) { BrandAssets.bitmap(resources, 2) }
         // Local database readiness only; never a timer, network call, or PIN lock.
         splash.setKeepOnScreenCondition { viewModel.state.value.catalog is CatalogState.Loading }
         splash.setOnExitAnimationListener { provider ->
-            val state = viewModel.state.value
-            val background = appColorScheme(state.theme, state.accent, systemDark).background.toArgb()
-            splashExit = animateSplashExit(provider, window.decorView as ViewGroup, background)
+            lifecycleScope.launch {
+                var handedOff = false
+                try {
+                    val bitmap = splashBitmap.await()
+                    val state = viewModel.state.value
+                    val background = appColorScheme(state.theme, state.accent, systemDark).background.toArgb()
+                    splashExit = animateSplashExit(provider, window.decorView as ViewGroup, background, bitmap)
+                    handedOff = true
+                } finally {
+                    // Also release the native splash if destruction cancels the pending hand-off.
+                    if (!handedOff) provider.remove()
+                }
+            }
         }
         setContent { AqaqeerApp(viewModel) }
         if (savedInstanceState == null) receiveConnectionIntent(intent)

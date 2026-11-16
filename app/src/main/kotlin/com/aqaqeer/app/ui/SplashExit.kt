@@ -5,6 +5,7 @@ import android.animation.AnimatorListenerAdapter
 import android.animation.AnimatorSet
 import android.animation.ObjectAnimator
 import android.animation.ValueAnimator
+import android.graphics.Bitmap
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
@@ -12,10 +13,9 @@ import android.view.animation.PathInterpolator
 import android.widget.FrameLayout
 import android.widget.ImageView
 import androidx.core.splashscreen.SplashScreenViewProvider
-import com.aqaqeer.app.R
 
 /** A native-splash exit transition; never holds startup for a timer or a network request. */
-internal fun animateSplashExit(provider: SplashScreenViewProvider, decor: ViewGroup, background: Int): Animator? {
+internal fun animateSplashExit(provider: SplashScreenViewProvider, decor: ViewGroup, background: Int, bitmap: Bitmap): Animator? {
     if (!ValueAnimator.areAnimatorsEnabled()) {
         provider.remove()
         return null
@@ -40,7 +40,7 @@ internal fun animateSplashExit(provider: SplashScreenViewProvider, decor: ViewGr
     // Match the native 17%-inset bitmap and its position exactly before enlarging it.
     val initialScale = if (icon.width > 0) (icon.width * 0.66f / edge).coerceAtMost(1f) else 1f
     val emblem = ImageView(decor.context).apply {
-        setImageBitmap(BrandAssets.bitmap(resources, 2))
+        setImageBitmap(bitmap)
         scaleType = ImageView.ScaleType.FIT_CENTER
         scaleX = initialScale
         scaleY = initialScale
