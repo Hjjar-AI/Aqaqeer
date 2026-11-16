@@ -311,7 +311,7 @@ Light mode uses white card surfaces and near-white app backgrounds with a very l
 
 Settings includes a separate installation-local «أسود» AMOLED mode alongside system/light/dark. AMOLED always uses dark foreground/status/accent variants and pure #000000 content backgrounds and neutral surfaces, including cards, sheets, dialogs and snackbars; suppress tonal surface tint so elevation cannot lift black to gray. Retain readable foregrounds/outlines and semantic colored badges/selection controls. Existing stored modes and default system behavior remain. Crimson uses cool ruby accents/rose-neutral surfaces and matching tertiary roles, clearly separate from gold’s amber palette.
 
-Design: Material 3 with deep-gold light accent #7A5A12, warm near-white surfaces and gold selection; dark accent #E8C66D on ink surfaces. Gold is the default primary accent. Settings offers five one-word Arabic color choices: ذهبي، أزرق، أخضر، وردي، قرمزي.
+Design: Material 3 with deep-gold light accent #7A5A12, warm near-white surfaces and gold selection; dark accent #E8C66D on ink surfaces. Gold is the default primary accent. Settings offers five one-word Arabic color choices: ذهبي، أزرق، أخضر، أرجواني، قرمزي.
 
 Save the selected primary accent installation-locally, independently of system/light/dark/AMOLED mode; apply it immediately and restore across restart. Missing/unknown values fall back to gold. Each choice supplies matching light/dark primary and secondary selection colors, foregrounds, containers, inverse-primary and tint colors.
 
@@ -403,6 +403,8 @@ Restoring never restores admin authorization; require the PIN corresponding to t
 ### Maintenance presentation
 
 Maintenance starts with all task accordions closed and allows one open at a time. Technical identities start collapsed; sensitive tasks are labeled. Named step indicators derive from actual setup/import/restore/maintenance states.
+
+### Connection issuance and rotation
 
 Issue connection file: admin-only, after first confirmed publication; require a numeric file password of at least four digits, offer secure generation of 16 random digits with an explicit copy action, validate inline and show guidance to avoid dates, repetition and sequences (file and password via separate channels). Existing valid numeric passwords remain usable; reissuing does not strengthen or revoke earlier copies.
 
