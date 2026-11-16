@@ -7,14 +7,14 @@ import org.junit.Test
 import java.time.LocalDate
 
 class HomeInitialFiltersTest {
-    private val day = LocalDate.of(2026, 11, 9)
-    private val seed = F.catalog()
-    private val first = seed.sections.single().id
-    private val second = Section(F.otherPharmacyId, "آخر")
-    private val a = seed.medications.single().copy(genericEn = "Needle A", expiryDate = day.plusDays(60))
-    private val b = a.copy(id = F.installationId, genericEn = "Needle B", categoryId = "other", expiryDate = day.minusDays(1))
-    private val c = a.copy(id = F.publishId, genericEn = "Needle C", expiryDate = day.plusDays(61))
-    private val catalog = seed.copy(categories = seed.categories + Category("other", "آخر"),
+    private val day: LocalDate = LocalDate.of(2026, 11, 9)
+    private val seed: CatalogSnapshot = F.catalog()
+    private val first: String = seed.sections.single().id
+    private val second: Section = Section(F.otherPharmacyId, "آخر")
+    private val a: Medication = seed.medications.single().copy(genericEn = "Needle A", expiryDate = day.plusDays(60))
+    private val b: Medication = a.copy(id = F.installationId, genericEn = "Needle B", categoryId = "other", expiryDate = day.minusDays(1))
+    private val c: Medication = a.copy(id = F.publishId, genericEn = "Needle C", expiryDate = day.plusDays(61))
+    private val catalog: CatalogSnapshot = seed.copy(categories = seed.categories + Category("other", "آخر"),
         sections = seed.sections + second, medications = listOf(a, b, c), availability = listOf(
             Availability(a.id, first, AvailabilityStatus.OUT, F.time),
             Availability(b.id, first, AvailabilityStatus.LOW, F.time),
@@ -23,7 +23,7 @@ class HomeInitialFiltersTest {
             Availability(b.id, second.id, AvailabilityStatus.AVAILABLE, F.time),
             Availability(c.id, second.id, AvailabilityStatus.LOW, F.time)))
     private suspend fun project(filters: HomeFilters, query: String = "Needle", at: LocalDate = day,
-        section: String = first) = CatalogSearchIndex(catalog).project(section, query, filters, HomePreferences(),
+        section: String = first): HomeBrowseResult = CatalogSearchIndex(catalog).project(section, query, filters, HomePreferences(),
             unpublished = setOf(a.id, b.id), fetched = setOf(a.id, c.id), today = at)
 
     @Test fun statusesUseOrWhileCategoriesExpiryUnpublishedAndFetchedUseAnd(): Unit = runBlocking {
