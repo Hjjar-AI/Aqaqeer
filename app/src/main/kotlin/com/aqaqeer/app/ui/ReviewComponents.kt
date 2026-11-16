@@ -13,20 +13,21 @@ import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.*
 import kotlinx.coroutines.launch
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.aqaqeer.app.R
 import com.aqaqeer.app.uiText
 
 /** Screen-owned expansion lets drawers, accordions and settings use different policies. */
 @Composable internal fun CollapsibleGroup(title: String, expanded: Boolean, toggle: () -> Unit,
-    modifier: Modifier = Modifier, content: @Composable ColumnScope.() -> Unit) {
+    modifier: Modifier = Modifier, contentSpacing: Dp = UiSpacing.related, content: @Composable ColumnScope.() -> Unit) {
     Column(modifier.fillMaxWidth().animateContentSize()) {
         TextButton(onClick = toggle, modifier = Modifier.fillMaxWidth().heightIn(min = UiSpacing.touch)
             .semantics { stateDescription = uiText(if (expanded) R.string.ui_home_drawer_010 else R.string.ui_home_drawer_011) }) {
             Text(title, Modifier.weight(1f))
             Text(if (expanded) "▴" else "▾")
         }
-        if (expanded) ContentSection(content = content)
+        if (expanded) ContentSection(spacing = contentSpacing, content = content)
     }
 }
 

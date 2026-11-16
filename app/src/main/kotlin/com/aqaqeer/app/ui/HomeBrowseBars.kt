@@ -1,5 +1,6 @@
 package com.aqaqeer.app.ui
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -50,10 +51,14 @@ import com.aqaqeer.app.data.*
                 }
             }
         }
-        if (required <= maxWidth) PrimaryTabRow(selectedTabIndex = active.indexOfFirst { it.id == selectedId }.coerceAtLeast(0),
-            containerColor = MaterialTheme.colorScheme.background, tabs = tabs)
-        else PrimaryScrollableTabRow(selectedTabIndex = active.indexOfFirst { it.id == selectedId }.coerceAtLeast(0), edgePadding = 0.dp,
-            containerColor = MaterialTheme.colorScheme.background, tabs = tabs)
+        Surface(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp),
+            color = MaterialTheme.colorScheme.background,
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)) {
+            if (required <= maxWidth) PrimaryTabRow(selectedTabIndex = active.indexOfFirst { it.id == selectedId }.coerceAtLeast(0),
+                containerColor = MaterialTheme.colorScheme.background, divider = {}, tabs = tabs)
+            else PrimaryScrollableTabRow(selectedTabIndex = active.indexOfFirst { it.id == selectedId }.coerceAtLeast(0), edgePadding = 0.dp,
+                containerColor = MaterialTheme.colorScheme.background, divider = {}, tabs = tabs)
+        }
     }
 }
 
