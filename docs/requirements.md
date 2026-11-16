@@ -321,7 +321,7 @@ Keep the five hues clearly separated: amber gold, cyan blue, emerald green, mage
 
 Statuses retain independent green/amber/red/neutral tones, icons and labels; expiry reuses amber/red. Medication cards use a status-colored edge and tonal fill; major groups use 24 dp spacing. Action-blocking text is at least 14 sp.
 
-Small status/list transitions respect system animation scaling. Loading uses static skeletons; empty states retain reset/add actions and a faint emblem.
+Small status/list transitions respect system animation scaling. Do not show skeleton placeholder cards. Initial catalog loading uses a simple progress indicator with the existing loading label; Home preserves its completed result during recomputation and otherwise waits for actual rows without placeholder cards. Empty states retain reset/add actions and a faint emblem.
 
 ### Shared components and previews
 

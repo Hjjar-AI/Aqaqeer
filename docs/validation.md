@@ -28,6 +28,10 @@ Standard assembled in **1m 19s** (42 actionable tasks: 33 executed, 9 cached); d
 
 This establishes debug compilation/resource processing/packaging and successful signing/publication jobs for the recorded source. No test or lint tasks ran. No APK was downloaded/installed during review; artifact byte equality, update installation, production signing, Android UI/gesture/accessibility behavior and performance remain unverified. Logs/review with retained hashes are inventoried under `hostedBuild43967349302` in the local evidence manifest (ignored, may be absent in fresh checkouts). No workflow was dispatched or rerun, no local build was started, and production sources were not changed by this review.
 
+## Skeleton placeholder removal — 2026-11-17
+
+At the user’s request, removed Home’s four projection placeholders and the shared MedicationSkeleton composable. Initial catalog loading retains its existing text with a circular progress indicator. Completed Home results still remain visible during same-context recomputation; an initial/changed context waits for actual results without skeletons, and empty-state content remains gated on a completed result. Reviewed production references, Kotlin delimiters, changed-document links and whitespace. No tests were inspected/authored/run; no builds, compilation, lint, workflows or device actions occurred. The successful hosted build at `e9dadd4` predates this change; compilation and visible loading behavior remain unverified.
+
 ## Current verification checkpoint — 2026-11-16
 
 Evidence applies to the recorded source revision and environment. A later source change or a selected check does not inherit an earlier pass automatically.

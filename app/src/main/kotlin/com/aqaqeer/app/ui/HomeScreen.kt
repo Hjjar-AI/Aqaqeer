@@ -301,7 +301,6 @@ import java.time.ZoneId
                         if (editor == null && (availabilityBusy || availabilityMessage != null)) item(span = { GridItemSpan(maxLineSpan) }) {
                             InlineOperationStatus(availabilityBusy, availabilityMessage)
                         }
-                        if (displayed == null) items(4, key = { "loading_$it" }) { MedicationSkeleton(state.homePreferences.layout) }
                         if (selected == null) item(span = { GridItemSpan(maxLineSpan) }) { InformationCard(uiText(R.string.ui_home_screen_010), uiText(R.string.ui_home_screen_011)) }
                         if (displayed != null && searching && selected != null)
                             item(key = "current_search_section_${selected.id}", span = { GridItemSpan(maxLineSpan) }) {

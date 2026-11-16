@@ -582,20 +582,7 @@ internal fun statusLabel(status: AvailabilityStatus): String = uiText(when (stat
 @Composable private fun LoadingScreen() {
     Column(Modifier.fillMaxSize().padding(UiSpacing.page), verticalArrangement = Arrangement.spacedBy(UiSpacing.section)) {
         Text(uiText(R.string.ui_aqaqeer_app_084), style = MaterialTheme.typography.bodyMedium)
-        repeat(4) { MedicationSkeleton() }
-    }
-}
-
-/** Static placeholder shared by startup and the Home projection. */
-@Composable internal fun MedicationSkeleton(layout: CardLayout = CardLayout.COMPACT) {
-    Surface(Modifier.fillMaxWidth().clearAndSetSemantics { }, color = MaterialTheme.colorScheme.surfaceVariant, shape = MaterialTheme.shapes.medium) {
-        Column(Modifier.padding(UiSpacing.section), verticalArrangement = Arrangement.spacedBy(UiSpacing.related)) {
-            repeat(if (layout == CardLayout.COMPACT) 3 else 6) { index ->
-                Surface(Modifier.fillMaxWidth(if (index == 0) .85f else .6f).height(if (index == 0) 24.dp else 16.dp),
-                    color = MaterialTheme.colorScheme.outlineVariant, shape = MaterialTheme.shapes.small) {}
-            }
-            Spacer(Modifier.height(UiSpacing.touch))
-        }
+        CircularProgressIndicator()
     }
 }
 
