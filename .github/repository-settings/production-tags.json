@@ -4,10 +4,21 @@
   "enforcement": "active",
   "conditions": {
     "ref_name": {
-      "include": ["refs/tags/android-build-*", "refs/tags/v0.0.*"],
+      "include": [
+        "refs/tags/android-build-*",
+        "refs/tags/android-initial-build-*",
+        "refs/tags/v0.0.*"
+      ],
       "exclude": []
     }
   },
-  "rules": [{"type": "update"}, {"type": "deletion"}],
+  "rules": [
+    {
+      "type": "update"
+    },
+    {
+      "type": "deletion"
+    }
+  ],
   "bypass_actors": []
 }

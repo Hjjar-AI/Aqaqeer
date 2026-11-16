@@ -147,10 +147,11 @@ class SnapshotRefreshRepository @Inject constructor(private val factory: Databas
             if (outcome == RefreshOutcome.APPLIED && incoming != null) {
                 val previous = baseline.catalog.medications.associateBy { it.id }
                 val oldPairs = baseline.catalog.availability.associateBy { it.medicationId to it.sectionId }
+                val newPairs = incoming.catalog.availability.associateBy { it.medicationId to it.sectionId }
                 val changed = incoming.catalog.medications.filter { medication ->
                     previous[medication.id]?.let { old -> medication.copy(updatedAt = old.updatedAt) != old } ?: true
                 }.map { it.id }.toSet() +
-                    incoming.catalog.availability.filter { oldPairs[it.medicationId to it.sectionId]?.status != it.status }.map { it.medicationId }
+                    (oldPairs.keys + newPairs.keys).filter { oldPairs[it]?.status != newPairs[it]?.status }.map { it.first }
                 kotlinx.coroutines.withContext(kotlinx.coroutines.NonCancellable) {
                     FetchedChanges.record(context, requireNotNull(incoming.catalog.pharmacy).pharmacyId, changed.intersect(incoming.catalog.medications.map { it.id }.toSet()))
                 }

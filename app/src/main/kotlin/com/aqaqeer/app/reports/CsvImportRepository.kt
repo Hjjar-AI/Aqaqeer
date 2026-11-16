@@ -96,7 +96,7 @@ class CsvImportRepository @Inject constructor(private val admin: AdminRepository
                             catch (_: IllegalArgumentException) { outcomes += outcome(CsvOutcome.FAILED, "قيم غير صالحة؛ تحقق من الحقول والمراجع") }
                         }
                         // All row-level validation finishes before the first write. A storage error rolls back the chunk.
-                        plans.forEach { plan -> admin.editInTransaction(dao) { current, editor, now, _ -> plan.apply(current, now) } }
+                        plans.forEach { plan -> admin.editInTransaction(dao) { current, _, now, _ -> plan.apply(current, now) } }
                     }
                 } catch (e: CancellationException) { throw e }
                 catch (error: Exception) {

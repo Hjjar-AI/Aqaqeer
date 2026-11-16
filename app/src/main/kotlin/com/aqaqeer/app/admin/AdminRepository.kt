@@ -205,7 +205,7 @@ class AdminRepository @Inject constructor(private val factory: DatabaseFactory,
         }
         dao.applyChanges(before, next)
     }
-    suspend fun saveMedication(value: Medication, expectedPharmacy: String? = null, requireExisting: Boolean = false, confirmedDuplicates: Set<String> = emptySet()) = edit { c, author, now, _ ->
+    suspend fun saveMedication(value: Medication, expectedPharmacy: String? = null, requireExisting: Boolean = false, confirmedDuplicates: Set<String> = emptySet()) = edit { c, _, now, _ ->
         if (expectedPharmacy != null) adminCheck(c.pharmacy?.pharmacyId == expectedPharmacy)
         val old = c.medications.firstOrNull { it.id == value.id }
         val normalized = value.copy(strength = MedicationDuplicates.strength(value.strength))
@@ -223,7 +223,7 @@ class AdminRepository @Inject constructor(private val factory: DatabaseFactory,
 
     /** One section and one edit transaction; stale previews fail before any rows change. */
     suspend fun bulkAvailability(medications: Set<String>, section: String, status: AvailabilityStatus,
-        expected: Map<String, AvailabilityStatus>? = null, expectedPharmacy: String? = null) = edit { c, author, now, _ ->
+        expected: Map<String, AvailabilityStatus>? = null, expectedPharmacy: String? = null) = edit { c, _, now, _ ->
         if (expectedPharmacy != null) adminCheck(c.pharmacy?.pharmacyId == expectedPharmacy)
         adminRequire(medications.isNotEmpty())
         adminRequire(c.sections.any { it.id == section })
@@ -241,7 +241,7 @@ class AdminRepository @Inject constructor(private val factory: DatabaseFactory,
     suspend fun bulkMedicationChanges(medications: Set<String>, section: String, changes: BulkMedicationChanges,
         expected: Map<String, BulkMedicationExpected>, expectedPharmacy: String): AvailabilityUndo? {
         var receipt: AvailabilityUndo? = null
-        edit { c, author, now, _ ->
+        edit { c, _, now, _ ->
         adminCheck(c.pharmacy?.pharmacyId == expectedPharmacy)
         adminRequire(medications.isNotEmpty() && expected.keys == medications && !changes.isEmpty)
         adminRequire(c.sections.any { it.id == section && it.isActive }) { "القسم لم يعد نشطاً" }
@@ -280,7 +280,7 @@ class AdminRepository @Inject constructor(private val factory: DatabaseFactory,
         return receipt
     }
 
-    suspend fun undoAvailability(receipt: AvailabilityUndo) = edit { c, author, now, _ ->
+    suspend fun undoAvailability(receipt: AvailabilityUndo) = edit { c, _, now, _ ->
         adminCheck(c.pharmacy?.pharmacyId == receipt.pharmacyId)
         adminCheck(c.sections.any { it.id == receipt.sectionId && it.isActive })
         val live = c.medications.associateBy { it.id }
@@ -333,7 +333,7 @@ class AdminRepository @Inject constructor(private val factory: DatabaseFactory,
         }
     }
 
-    suspend fun delete(type: String, id: String, typedName: String = "") = edit { c, author, now, tx ->
+    suspend fun delete(type: String, id: String, typedName: String = "") = edit { c, _, now, tx ->
         val exists = when (type) {
             "medication" -> c.medications.any { it.id == id }
             "category" -> c.categories.any { it.id == id }

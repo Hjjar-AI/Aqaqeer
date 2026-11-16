@@ -2,6 +2,19 @@
 
 [Requirements](requirements.md) define acceptance; [architecture](architecture.md) describes implementation; [validation](validation.md) records results. This plan grants no execution authorization.
 
+## Initial attribution-free baseline — 2026-11-16
+
+Approved production changes cover initial-v1 attribution-free storage/files, timestamp/operation-ID merge ordering, fresh APK numbering, Home/cards/detail/filter/selection changes, two-session fetched markers, Settings/navigation, forms, Maintenance, History and source previews. [Validation](validation.md#initial-attribution-free-baseline--2026-11-16) records source checks and limits. Earlier results below predate this baseline and do not validate it. Existing test-authoring authorizations do not extend to this batch.
+
+| ID / priority | Dependency | Remaining work / acceptance |
+| --- | --- | --- |
+| I1 / P1 — Generated schema | Separate compilation/KSP authorization | Regenerate and review the initial Room version-1 export from current models. The retained export is historical; do not handwrite its identity hash. |
+| I2 / P1 — Compilation and format acceptance | Separate authorization; I1 | Establish Kotlin/Compose compilation, fresh initialization, non-destructive rejection of incompatible data/files, attribution-free round trips and deterministic timestamp/operation-ID ties. No conversions are in scope. |
+| I3 / P1 — UI/session acceptance | Separate authorization; I2 | All four search/tab placements, large text, narrow/wide layouts, stable selection, role restrictions, refresh failures/no-change fetches, marker accumulation/refresh and current-plus-next session lifetime, task/process versus rotation/backgrounding, Sunday/midnight boundaries. Check History, menus, forms, disclosures and previews. |
+| I4 / P1 — Reservation acceptance | Separate packaging/hosted authorization | Next local and fresh hosted reservations yield code 1 / 0.0.1, then increment monotonically with locking. Preserve old tags and live publication/key/installation identities. No packaging or remote reservation was performed. |
+
+No test inspection/work, Gradle/build/compilation/lint, workflow dispatch, device/live access or migrations are authorized for this batch. Existing independent stops remain in force.
+
 ## Baseline and current stop
 
 Core administration, sharing/recovery, search/grouping, demo and presentation workflows are implemented. Current builds/packaging, selected hosted CI, demo initialization/refresh and browsing checks are [user-reported complete](validation.md#user-reported-completion--2026-11-13); do not repeat them without a relevant change or new request.
@@ -32,7 +45,7 @@ Current implementation and verified selections are recorded in [validation](vali
 | --- | --- | --- |
 | **R1 / P1 — Admin workflow** | Domain commands | Beyond the passed bulk/Undo/stale-target cases: hidden selections/full preview, role/busy/modal/context races, saved editor/navigation drafts and completion restoration. Check clipboard/setup feedback, View/snackbar targeting and admin sheets/dialogs/keyboard/detail panes; automated accessibility semantics remain separate from selected Home presentation checks. |
 | **R2 / P2 — Imports/reports** | R1; shared transactions | Beyond the passed CSV/report cases: remaining clear/retry/provider/resource interactions and the full A5 layout matrix below. |
-| **R3 / P2 — Sharing/security/recovery** | Reconciliation; V1 | Merge taxonomy-name/section-count choices and rename/retry, preserved ordering, empty shared publish/reconnect versus draft bootstrap, uncertain-attempt recovery, rejected-snapshot PIN preservation, cooldown/reconnect timing, large-ID acknowledgment, cancellation, new/legacy connection passwords and boot/process/clock-aware PIN delays. Preserve pending bases, attribution and identity. |
+| **R3 / P2 — Sharing/security/recovery** | Reconciliation; V1 | Merge taxonomy-name/section-count choices and rename/retry, preserved ordering, empty shared publish/reconnect versus draft bootstrap, uncertain-attempt recovery, rejected-snapshot PIN preservation, cooldown/reconnect timing, large-ID acknowledgment, cancellation, new/legacy connection passwords and boot/process/clock-aware PIN delays. Preserve pending bases, change timestamps and operational identity. |
 | **R4 / P3 — Storage/time/presentation** | R1 details/history | Fresh initialization, database lease/reset concurrency/cancellation, protected-cache invalidation on successful/failed writes, exact publication-time persistence, restore/leave recovery and safe rejection of unsupported development files. Check pharmacy midnight/resume/clock changes, missing/future/24-hour refresh boundaries, validated connectivity, startup/saved-theme splash and optional civil Hijri alongside authoritative Gregorian dates. |
 | **R5 / P3 — Release readiness** | R1–R4; V1 | Production signing/update continuity, resources/native libraries and retained process/Keystore/resource/automated-accessibility checks. Debug signing/artifact evidence is retained; production signing and installed-update continuity remain unverified. |
 | **PERF / P3 — Performance tooling** | Stable startup/Home flows; compatible pins | Implement the planned configuration/scenarios below; no generation, benchmark or measurement run is authorized. |

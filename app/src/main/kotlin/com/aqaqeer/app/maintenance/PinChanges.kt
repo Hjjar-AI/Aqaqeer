@@ -73,8 +73,8 @@ class PinChanges @Inject constructor(private val admin: AdminRepository, private
                 adminRequire(!PinSecurity.matches(next, baseline.first.adminPinVerifier)) { "اختر رمزاً جديداً مختلفاً عن رمز الإدارة الحالي" }
                 val record = PinChangeJournal(newId(), baseline.first.pharmacyId, baseline.second.id, baseline.first.adminPinVerifier, verifier)
                 store.encode("pin-change", record)
-                admin.edit(pinIntent = record.id) { catalog, author, _, _ ->
-                    adminCheck(catalog.pharmacy == baseline.first && author.id == baseline.second.id)
+                admin.edit(pinIntent = record.id) { catalog, installation, _, _ ->
+                    adminCheck(catalog.pharmacy == baseline.first && installation.id == baseline.second.id)
                     catalog.copy(pharmacy = baseline.first.copy(adminPinVerifier = verifier))
                 }
             }

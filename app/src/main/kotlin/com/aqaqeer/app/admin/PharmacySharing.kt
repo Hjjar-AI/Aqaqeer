@@ -281,7 +281,7 @@ class PharmacySharing @Inject internal constructor(private val admin: AdminRepos
             dao.deletePending(included.toList()); dao.deleteAttempt(attempt.publishId)
             if (choices.isNotEmpty() && remaining.isNotEmpty()) {
                 // Explicit review can reconcile an edit made while the candidate was uploading.
-                // Keep its author/history, and bind the reviewed intention to the verified base.
+                // Keep its timestamp/history, and bind the reviewed intention to the verified base.
                 val device = requireNotNull(dao.deviceIdentity())
                 val rebased = CatalogEdits.diff(incoming.catalog, visible.catalog,
                     Instant.now(), incoming.publishId).map { op ->
