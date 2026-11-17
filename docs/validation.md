@@ -2,6 +2,10 @@
 
 [Requirements](requirements.md) define acceptance; [plan](plan.md) owns remaining work. The evidence manifest (local-only: `../local/verification/manifest.json`) retains original results, public hashes and provenance. Ignored evidence may be absent in fresh checkouts. Source checks, compilation, runtime results and human acceptance remain distinct.
 
+## Working instructions follow-up — 2026-11-17
+
+Clarified narrow test/reference authorization in the root instructions, added resource-rename preservation/reference checks to the Android instructions, and added branding-local rules for cumulative artwork edits, fixed orientation versus animation, actual output inspection, selected/master resource synchronization and dated provenance. These instructions add no build, test, lint or device authorization. Documentation-only repository integrity/link and whitespace checks passed; no production code or assets changed.
+
 ## Softer gold artwork — 2026-11-17
 
 Used built-in imagegen to soften the heavy outline/finish while retaining rich warm gold, then applied the user's successive refinements: complementary fixed teal bonds in the right ring, bolder split lines in the four round tablet dots, a teal tablet-colour trial with a requested 10% enlargement, followed by a requested 5% reduction from that trial. The exact [edit prompts](../assets/branding/launcher-tablets-prompt.txt) are retained with [provenance](../assets/branding/launcher-revision.md). Percentages describe generation targets, not a measured pixel-exact resize. Visually reviewed the final arrangement; restored a square canvas after a rectangular intermediate output. The selected result is a 1254 × 1254 RGBA PNG with alpha 0–255 and fully transparent corners. Generated edits are not pixel-preserving.
