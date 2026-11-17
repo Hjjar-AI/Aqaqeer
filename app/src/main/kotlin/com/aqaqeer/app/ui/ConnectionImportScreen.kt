@@ -50,7 +50,7 @@ import com.aqaqeer.app.BuildConfig
             state.error?.let { message -> item { OperationStatus(false, message) } }
             pickerError?.let { message -> item { OperationStatus(false, message) } }
             if (!state.storageReady) {
-                item { Button(onClick = retryStorage, enabled = !state.busy) { Text(uiText(R.string.ui_connection_import_screen_007)) } }
+                item { AppButton(onClick = retryStorage, enabled = !state.busy) { Text(uiText(R.string.ui_connection_import_screen_007)) } }
             } else {
                 val pending = state.pending
                 if (pending != null) {
@@ -71,19 +71,19 @@ import com.aqaqeer.app.BuildConfig
                         } }
                     }
                     item { Text(uiText(R.string.ui_connection_import_screen_016)) }
-                    item { Button(onClick = { verify(pending.id) }, enabled = !state.busy,
+                    item { AppButton(onClick = { verify(pending.id) }, enabled = !state.busy,
                         modifier = Modifier.testTag("verify_pending_connection")) {
                         Text(if (verification == null) uiText(R.string.ui_connection_import_screen_017) else uiText(R.string.ui_connection_import_screen_018))
                     } }
                     item { Text(uiText(R.string.ui_connection_import_screen_019)) }
-                    item { Button(onClick = { activate(pending.id) }, enabled = !state.busy && !requiresUpdate,
+                    item { AppButton(onClick = { activate(pending.id) }, enabled = !state.busy && !requiresUpdate,
                         modifier = Modifier.testTag("activate_pending_connection")) {
                         Text(uiText(R.string.ui_connection_import_screen_020))
                     } }
-                    item { TextButton(colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error), onClick = { confirmDiscard = true }, enabled = !state.busy) { Text(uiText(R.string.ui_connection_import_screen_021)) } }
+                    item { AppButton(variant = AppButtonVariant.QUIET, colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error), onClick = { confirmDiscard = true }, enabled = !state.busy) { Text(uiText(R.string.ui_connection_import_screen_021)) } }
                 } else if (!state.busy) {
                     item {
-                        Button(onClick = {
+                        AppButton(onClick = {
                             focus.clearFocus(); pickerError = null
                             try { picker.launch(arrayOf("*/*")) }
                             catch (_: android.content.ActivityNotFoundException) { pickerError = uiText(R.string.ui_connection_import_screen_022) }
@@ -100,7 +100,7 @@ import com.aqaqeer.app.BuildConfig
                                     required = true, tag = "connection_password",
                                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
                                     validate = { if (it.length >= 4 && it.all { c -> Character.digit(c, 10) in 0..9 }) null else uiText(R.string.ui_connection_import_screen_029) })
-                                Button(onClick = {
+                                AppButton(onClick = {
                                     val owned = password.toCharArray()
                                     password = ""; focus.clearFocus(); stage(owned)
                                 }, enabled = password.isNotEmpty(), modifier = Modifier.testTag("stage_connection")) {
@@ -122,10 +122,10 @@ import com.aqaqeer.app.BuildConfig
     }
     if (confirmDiscard && state.pending != null) {
         val pending = state.pending
-        AlertDialog(onDismissRequest = { if (!state.busy) confirmDiscard = false },
+        AppDialog(onDismissRequest = { if (!state.busy) confirmDiscard = false },
             title = { Text(uiText(R.string.ui_connection_import_screen_035)) },
             text = { DialogBody { Text(uiText(R.string.ui_connection_import_screen_036, pending.pharmacyName)) } },
-            confirmButton = { TextButton(colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error), onClick = { confirmDiscard = false; discard(pending.id) }, enabled = !state.busy) { Text(uiText(R.string.ui_connection_import_screen_037)) } },
-            dismissButton = { TextButton(onClick = { confirmDiscard = false }, enabled = !state.busy) { Text(uiText(R.string.ui_connection_import_screen_038)) } })
+            confirmButton = { AppButton(variant = AppButtonVariant.QUIET, colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error), onClick = { confirmDiscard = false; discard(pending.id) }, enabled = !state.busy) { Text(uiText(R.string.ui_connection_import_screen_037)) } },
+            dismissButton = { AppButton(variant = AppButtonVariant.QUIET, onClick = { confirmDiscard = false }, enabled = !state.busy) { Text(uiText(R.string.ui_connection_import_screen_038)) } })
     }
 }

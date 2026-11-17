@@ -56,7 +56,7 @@ import java.time.format.DateTimeFormatter
             GroupedCard(title = uiText(R.string.ui_backup_screen_005)) {
                 Text(uiText(R.string.ui_backup_screen_006))
                 BackupPassphraseFields(password, confirmation, { password = it }, { confirmation = it })
-                Button(enabled = !busy && password.codePointCount(0, password.length) >= 8 && password == confirmation, onClick = {
+                AppButton(enabled = !busy && password.codePointCount(0, password.length) >= 8 && password == confirmation, onClick = {
                     exportSucceeded = false
                     secrets.clear(); secrets.password = password.toCharArray(); secrets.confirmation = confirmation.toCharArray(); password = ""; confirmation = ""
                     val time = ZonedDateTime.now(ZoneId.of(ready.catalog.pharmacy?.timezone ?: "Asia/Damascus"))
@@ -76,7 +76,7 @@ import java.time.format.DateTimeFormatter
             GroupedCard(title = uiText(R.string.ui_aqaqeer_app_082)) {
                 StepHeader(listOf(uiText(R.string.review_select_file), uiText(R.string.ui_backup_screen_016), uiText(R.string.ui_backup_screen_002)), if (selected != null) 1 else 0)
                 Text(uiText(R.string.ui_backup_screen_013))
-                TextButton(enabled = !busy, onClick = { pick.launch(arrayOf("*/*")) }) { Text(if (selected == null) uiText(R.string.ui_backup_screen_014) else uiText(R.string.ui_backup_screen_015)) }
+                AppButton(variant = AppButtonVariant.QUIET, enabled = !busy, onClick = { pick.launch(arrayOf("*/*")) }) { Text(if (selected == null) uiText(R.string.ui_backup_screen_014) else uiText(R.string.ui_backup_screen_015)) }
                 if (selected != null) {
                     FormField(uiText(R.string.ui_backup_screen_016), restorePassword, { restorePassword = it }, secret = true, required = true)
                     if (ready.catalog.pharmacy != null) {
@@ -102,14 +102,14 @@ import java.time.format.DateTimeFormatter
     if (ready.restoreHasConnection) RestoreConnectionCheck(ready.restoreConnectionConfirmed, vm, busy)
     ConflictChoices(sharing.conflicts, choices, ready.catalog) { choices = it }
     if (ready.lifecycle == "LOCAL_DRAFT") {
-        Button(enabled = !busy && (!ready.restoreHasConnection || ready.restoreConnectionConfirmed),
+        AppButton(enabled = !busy && (!ready.restoreHasConnection || ready.restoreConnectionConfirmed),
             onClick = { vm.command(queueOffline = false) { vm.sharing.reconcileRestore(false, "", choices) } }) { Text(uiText(R.string.ui_backup_screen_022)) }
         return
     }
     GroupedCard(title = uiText(R.string.ui_pharmacy_admin_screen_059)) {
         CheckChoiceRow(replace, uiText(R.string.ui_backup_screen_023)) { replace = it; choices = emptyMap() }
         if (replace) FormField(uiText(R.string.ui_backup_screen_024), typedName, { typedName = it }, required = true)
-        Button(enabled = !busy && ready.restoreConnectionConfirmed && (!replace || typedName == ready.catalog.pharmacy?.name), onClick = {
+        AppButton(enabled = !busy && ready.restoreConnectionConfirmed && (!replace || typedName == ready.catalog.pharmacy?.name), onClick = {
             vm.command(queueOffline = false) { vm.sharing.reconcileRestore(replace, typedName, choices) }
         }) { Text(uiText(R.string.ui_backup_screen_025)) }
     }
@@ -120,10 +120,10 @@ import java.time.format.DateTimeFormatter
     GroupedCard(title = uiText(R.string.ui_backup_screen_026)) {
         FormField(uiText(R.string.ui_backup_screen_027), token, { token = it }, secret = true, required = false)
         Text(uiText(R.string.ui_backup_screen_028))
-        TextButton(enabled = !busy, onClick = { vm.command { title = vm.sharing.inspectRestoredConnection(token) } }) { Text(uiText(R.string.ui_backup_screen_029)) }
+        AppButton(variant = AppButtonVariant.QUIET, enabled = !busy, onClick = { vm.command { title = vm.sharing.inspectRestoredConnection(token) } }) { Text(uiText(R.string.ui_backup_screen_029)) }
         title?.let { name ->
             LabeledValue(uiText(R.string.ui_backup_screen_030), name)
-            Button(enabled = !busy, onClick = { vm.command { vm.sharing.confirmRestoredConnection(token, name); token = ""; title = null } }) { Text(uiText(R.string.ui_backup_screen_031)) }
+            AppButton(enabled = !busy, onClick = { vm.command { vm.sharing.confirmRestoredConnection(token, name); token = ""; title = null } }) { Text(uiText(R.string.ui_backup_screen_031)) }
         }
         Text(if (confirmed) uiText(R.string.ui_backup_screen_032) else uiText(R.string.ui_backup_screen_033))
     }

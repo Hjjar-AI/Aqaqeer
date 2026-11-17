@@ -43,7 +43,7 @@ private data class BulkFieldOption(val value: String?, val label: String)
     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(UiSpacing.hair)) {
         if (!preview) {
             WrappingContent {
-                statuses.forEach { option -> FilterChip(selected = option.value == statusName, enabled = !busy,
+                statuses.forEach { option -> AppChip(selected = option.value == statusName, enabled = !busy,
                     onClick = { if (!savingNow()) statusName = option.value }, label = { Text(option.label) }) }
             }
             AdaptivePickers(first = {
@@ -86,14 +86,14 @@ private data class BulkFieldOption(val value: String?, val label: String)
             color = MaterialTheme.colorScheme.error)
         InlineOperationStatus(busy, message)
         ActionGroup {
-            Button(enabled = fieldsValid && contextValid && !busy, onClick = {
+            AppButton(enabled = fieldsValid && contextValid && !busy, onClick = {
                 if (!savingNow() && fieldsValid && contextValid) {
                     if (preview) save(changes) else preview = true
                 }
             }) { Text(if (preview) uiText(R.string.ui_pharmacy_admin_screen_109) else uiText(R.string.ui_bulk_medication_editor_010)) }
-            if (preview) TextButton(enabled = !busy,
+            if (preview) AppButton(variant = AppButtonVariant.QUIET, enabled = !busy,
                 onClick = { if (!savingNow()) preview = false }) { Text(uiText(R.string.ui_bulk_medication_editor_011)) }
-            TextButton(enabled = !busy, onClick = { if (!savingNow()) dismiss() }) { Text(uiText(R.string.ui_bulk_medication_editor_012)) }
+            AppButton(variant = AppButtonVariant.QUIET, enabled = !busy, onClick = { if (!savingNow()) dismiss() }) { Text(uiText(R.string.ui_bulk_medication_editor_012)) }
         }
     }
 }

@@ -20,20 +20,20 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
 internal object UiSpacing {
-    val hair = 4.dp
-    val badgeHorizontal = 10.dp
-    val page = 16.dp
-    val section = 12.dp
-    val related = 8.dp
-    val group = 24.dp
-    val pendingMarker = 8.dp
-    val filterButton = 48.dp
-    val fabClearance = 96.dp
-    val tabMeasurementAllowance = 48.dp
-    val touch = 48.dp
-    val listDetailBreakpoint = 840.dp
-    val contentWidth = listDetailBreakpoint
-    val formWidth = 640.dp
+    val hair = Space.xs
+    val badgeHorizontal = Size.badgePadding
+    val page = Space.lg
+    val section = Space.md
+    val related = Space.sm
+    val group = Space.xl
+    val pendingMarker = Space.sm
+    val filterButton = Size.touchMin
+    val fabClearance = Size.illustrationLarge
+    val tabMeasurementAllowance = Size.touchMin
+    val touch = Size.touchMin
+    val listDetailBreakpoint = LayoutTokens.expandedWidth
+    val contentWidth = LayoutTokens.contentMaxWidth
+    val formWidth = LayoutTokens.formMaxWidth
 }
 
 internal class FormFocusTarget(val invalid: () -> Boolean, val focus: () -> Unit, val reveal: suspend () -> Unit)

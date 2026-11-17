@@ -56,7 +56,7 @@ import com.aqaqeer.app.data.*
                     }) {
                     Row(Modifier.heightIn(min = UiSpacing.touch).padding(horizontal = UiSpacing.related),
                         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(UiSpacing.hair)) {
-                        Box(Modifier.size(16.dp)) { if (searchMatch) AppIcon(UiIcon.SEARCH, Modifier.fillMaxSize()) }
+                        Box(Modifier.size(Space.lg)) { if (searchMatch) AppIcon(UiIcon.SEARCH, Modifier.fillMaxSize()) }
                         Text(section.nameAr, style = style, fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium)
                     }
                 }
@@ -64,10 +64,10 @@ import com.aqaqeer.app.data.*
         }
         Surface(modifier = Modifier.fillMaxWidth(), shape = MaterialTheme.shapes.large,
             color = MaterialTheme.colorScheme.background,
-            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)) {
+            border = BorderStroke(AppStroke.hairline, MaterialTheme.colorScheme.outlineVariant)) {
             if (required <= maxWidth) PrimaryTabRow(selectedTabIndex = active.indexOfFirst { it.id == selectedId }.coerceAtLeast(0),
                 containerColor = MaterialTheme.colorScheme.background, divider = {}, tabs = tabs)
-            else PrimaryScrollableTabRow(selectedTabIndex = active.indexOfFirst { it.id == selectedId }.coerceAtLeast(0), edgePadding = 0.dp,
+            else PrimaryScrollableTabRow(selectedTabIndex = active.indexOfFirst { it.id == selectedId }.coerceAtLeast(0), edgePadding = Space.none,
                 containerColor = MaterialTheme.colorScheme.background, divider = {}, tabs = tabs)
         }
     }
@@ -151,13 +151,13 @@ import com.aqaqeer.app.data.*
             if (showSummary) Text(uiText(R.string.ui_home_screen_006,
                 MedicationPresentation.displayDigits(visibleCount.toString()), MedicationPresentation.displayDigits(totalCount.toString())),
                 style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            if (hasFilters) TextButton(onClick = clearFilters) { Text(uiText(R.string.ui_history_screen_017)) }
+            if (hasFilters) AppButton(variant = AppButtonVariant.QUIET, onClick = clearFilters) { Text(uiText(R.string.ui_history_screen_017)) }
         }
     }
 }
 
 @Composable private fun CompactFilterChip(selected: Boolean, label: String, toggle: () -> Unit) {
-    FilterChip(selected = selected, onClick = toggle,
+    AppChip(selected = selected, onClick = toggle,
         label = { Text(label, style = MaterialTheme.typography.labelMedium, maxLines = 1, softWrap = false) })
 }
 
@@ -165,7 +165,7 @@ import com.aqaqeer.app.data.*
     WrappingContent { ExtraFilterChips(filters, admin, toggle) }
 }
 @Composable private fun ExtraFilterChips(filters: HomeFilters, admin: Boolean, toggle: (String) -> Unit) {
-    FilterChip(filters.expiringSoon, onClick = { toggle("expiry") }, label = { Text(uiText(R.string.review_expiry_soon)) })
-    if (admin) FilterChip(filters.unpublishedOnly, onClick = { toggle("unpublished") }, label = { Text(uiText(R.string.review_unpublished)) })
-    FilterChip(filters.fetchedOnly, onClick = { toggle("fetched") }, label = { Text(uiText(R.string.review_whats_new)) })
+    AppChip(filters.expiringSoon, onClick = { toggle("expiry") }, label = { Text(uiText(R.string.review_expiry_soon)) })
+    if (admin) AppChip(filters.unpublishedOnly, onClick = { toggle("unpublished") }, label = { Text(uiText(R.string.review_unpublished)) })
+    AppChip(filters.fetchedOnly, onClick = { toggle("fetched") }, label = { Text(uiText(R.string.review_whats_new)) })
 }

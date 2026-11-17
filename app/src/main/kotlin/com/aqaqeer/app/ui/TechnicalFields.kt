@@ -30,17 +30,17 @@ import java.time.ZoneOffset
         }
         val offsets = remember(zones) { val now = Instant.now(); zones.associateWith { ZoneId.of(it).rules.getOffset(now).id } }
         val visible = remember(query, zones) { zones.filter { it.contains(query.trim(), ignoreCase = true) || city(it).contains(query.trim(), ignoreCase = true) } }
-        AlertDialog(onDismissRequest = { open = false }, title = { Text(uiText(R.string.ui_technical_fields_002)) }, text = {
+        AppDialog(onDismissRequest = { open = false }, title = { Text(uiText(R.string.ui_technical_fields_002)) }, text = {
             Column(verticalArrangement = Arrangement.spacedBy(UiSpacing.related)) {
                 FormField(uiText(R.string.ui_technical_fields_003), query, { query = it }, ltr = true)
                 LazyColumn(Modifier.heightIn(max = viewportHeight(0.45f))) {
                     items(visible, key = { it }) { zone ->
-                        TextButton(onClick = { change(zone); open = false }, modifier = Modifier.fillMaxWidth()) { Column { Text(city(zone)); SupportingText(bidi("${zone} · UTC${offsets.getValue(zone).let { if (it == "Z") "+00:00" else it }}")) } }
+                        AppButton(variant = AppButtonVariant.QUIET, onClick = { change(zone); open = false }, modifier = Modifier.fillMaxWidth()) { Column { Text(city(zone)); SupportingText(bidi("${zone} · UTC${offsets.getValue(zone).let { if (it == "Z") "+00:00" else it }}")) } }
                     }
                 }
                 if (visible.isEmpty()) Text(uiText(R.string.ui_technical_fields_004))
             }
-        }, confirmButton = { TextButton(onClick = { open = false }) { Text(uiText(R.string.ui_choice_components_004)) } })
+        }, confirmButton = { AppButton(variant = AppButtonVariant.QUIET, onClick = { open = false }) { Text(uiText(R.string.ui_choice_components_004)) } })
     }
 }
 
@@ -59,11 +59,11 @@ import java.time.ZoneOffset
         val initial = remember(value) { runCatching { LocalDate.parse(value.trim()).also { require(it.year in 1..9999) }.atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli() }.getOrNull() }
         val picker = rememberDatePickerState(initialSelectedDateMillis = initial, yearRange = 1..9999)
         DatePickerDialog(onDismissRequest = { open = false }, confirmButton = {
-            TextButton(enabled = picker.selectedDateMillis != null, onClick = {
+            AppButton(variant = AppButtonVariant.QUIET, enabled = picker.selectedDateMillis != null, onClick = {
                 picker.selectedDateMillis?.let { change(Instant.ofEpochMilli(it).atZone(ZoneOffset.UTC).toLocalDate().toString()) }
                 open = false
             }) { Text(uiText(R.string.ui_technical_fields_007)) }
-        }, dismissButton = { TextButton(onClick = { open = false }) { Text(uiText(R.string.ui_bulk_medication_editor_012)) } }) {
+        }, dismissButton = { AppButton(variant = AppButtonVariant.QUIET, onClick = { open = false }) { Text(uiText(R.string.ui_bulk_medication_editor_012)) } }) {
             DatePicker(picker, title = { Text(uiText(R.string.ui_technical_fields_008), modifier = Modifier.padding(UiSpacing.page)) })
         }
     }

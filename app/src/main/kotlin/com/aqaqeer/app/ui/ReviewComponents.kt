@@ -25,7 +25,7 @@ import com.aqaqeer.app.uiText
 @Composable internal fun CollapsibleGroup(title: String, expanded: Boolean, toggle: () -> Unit,
     modifier: Modifier = Modifier, contentSpacing: Dp = UiSpacing.related, content: @Composable ColumnScope.() -> Unit) {
     Column(modifier.fillMaxWidth().animateContentSize()) {
-        TextButton(onClick = toggle, modifier = Modifier.fillMaxWidth().heightIn(min = UiSpacing.touch)
+        AppButton(variant = AppButtonVariant.QUIET, onClick = toggle, modifier = Modifier.fillMaxWidth().heightIn(min = UiSpacing.touch)
             .semantics { stateDescription = uiText(if (expanded) R.string.ui_home_drawer_010 else R.string.ui_home_drawer_011) }) {
             Text(title, Modifier.weight(1f))
             ExpansionChevron(expanded)
@@ -52,7 +52,7 @@ internal data class Notice(val text: String, val severity: NoticeSeverity = Noti
                 Text(notice.text, Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
             }
             if (notice.actionLabel != null && notice.action != null)
-                TextButton(enabled = enabled, onClick = notice.action) { Text(notice.actionLabel) }
+                AppButton(variant = AppButtonVariant.QUIET, enabled = enabled, onClick = notice.action) { Text(notice.actionLabel) }
         }
     }
 }
@@ -61,13 +61,13 @@ internal data class Notice(val text: String, val severity: NoticeSeverity = Noti
     require(steps.isNotEmpty() && current in steps.indices)
     Column(verticalArrangement = Arrangement.spacedBy(UiSpacing.hair)) {
         Text("${current + 1} / ${steps.size} · ${steps[current]}", style = MaterialTheme.typography.titleMedium)
-        val compactHeight = viewportHeight(1f) < 480.dp || LocalDensity.current.fontScale > 1.4f
+        val compactHeight = LocalLayoutMetrics.current.compact(viewportHeight(1f))
         if (compactHeight) {
             Row(Modifier.semantics {
                 contentDescription = steps.mapIndexed { index, label -> "${index + 1}. $label" }.joinToString("; ")
             }, horizontalArrangement = Arrangement.spacedBy(UiSpacing.related)) {
                 steps.forEachIndexed { index, _ ->
-                    Box(Modifier.size(8.dp).background(
+                    Box(Modifier.size(Space.sm).background(
                         if (index <= current) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant,
                         CircleShape))
                 }
@@ -80,7 +80,7 @@ internal data class Notice(val text: String, val severity: NoticeSeverity = Noti
 
 @Composable internal fun AdaptivePickers(first: @Composable () -> Unit, second: @Composable () -> Unit) {
     BoxWithConstraints {
-        if (maxWidth < 480.dp * LocalDensity.current.fontScale) Column(verticalArrangement = Arrangement.spacedBy(UiSpacing.related)) {
+        if (maxWidth < LayoutTokens.compactHeight * LocalDensity.current.fontScale) Column(verticalArrangement = Arrangement.spacedBy(UiSpacing.related)) {
             first(); second()
         } else Row(horizontalArrangement = Arrangement.spacedBy(UiSpacing.related)) {
             Box(Modifier.weight(1f)) { first() }; Box(Modifier.weight(1f)) { second() }
@@ -89,10 +89,10 @@ internal data class Notice(val text: String, val severity: NoticeSeverity = Noti
 }
 
 @Composable internal fun EmptyState(title: String, body: String? = null, actions: (@Composable () -> Unit)? = null) {
-    val compactHeight = viewportHeight(1f) < 480.dp || LocalDensity.current.fontScale > 1.4f
+    val compactHeight = LocalLayoutMetrics.current.compact(viewportHeight(1f))
     Column(Modifier.fillMaxWidth().padding(if (compactHeight) UiSpacing.section else UiSpacing.group), horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(UiSpacing.section)) {
-        EmptyCapsule(Modifier.size(if (compactHeight) 64.dp else 96.dp))
+        EmptyCapsule(Modifier.size(if (compactHeight) Size.illustrationSmall else Size.illustrationLarge))
         Text(title, style = MaterialTheme.typography.titleMedium)
         body?.let { SupportingText(it) }
         actions?.invoke()
@@ -105,7 +105,7 @@ internal data class Notice(val text: String, val severity: NoticeSeverity = Noti
     var copied by remember(value) { mutableStateOf(false) }
     Row(verticalAlignment = Alignment.CenterVertically) {
         Column(Modifier.weight(1f)) { SupportingText(label); Text(bidi(value)) }
-        TextButton(onClick = { scope.launch {
+        AppButton(variant = AppButtonVariant.QUIET, onClick = { scope.launch {
             clipboard.setClipEntry(ClipEntry(ClipData.newPlainText(label, value)))
             copied = true
         } }) {
@@ -115,8 +115,7 @@ internal data class Notice(val text: String, val severity: NoticeSeverity = Noti
 }
 
 @Composable internal fun DestructiveConfirmButton(enabled: Boolean = true, onClick: () -> Unit, label: String) {
-    Button(onClick = onClick, enabled = enabled, colors = ButtonDefaults.buttonColors(
-        containerColor = MaterialTheme.colorScheme.error, contentColor = MaterialTheme.colorScheme.onError)) { Text(label) }
+    AppButton(onClick = onClick, enabled = enabled, variant = AppButtonVariant.DESTRUCTIVE) { Text(label) }
 }
 
 /** Anchored menu; the screen freezes and validates its selection when opening it. */
@@ -138,10 +137,10 @@ internal data class Notice(val text: String, val severity: NoticeSeverity = Noti
     var expanded by rememberSaveable(title) { mutableStateOf(initiallyExpanded) }
     GroupedCard {
         Column(Modifier.fillMaxWidth().animateContentSize()) {
-            TextButton(onClick = { expanded = !expanded },
+            AppButton(variant = AppButtonVariant.QUIET, onClick = { expanded = !expanded },
                 modifier = Modifier.fillMaxWidth().heightIn(min = UiSpacing.touch).semantics {
                     stateDescription = uiText(if (expanded) R.string.ui_home_drawer_010 else R.string.ui_home_drawer_011)
-                }, contentPadding = PaddingValues(0.dp), shape = MaterialTheme.shapes.medium) {
+                }, contentPadding = PaddingValues(Space.none), shape = MaterialTheme.shapes.medium) {
                 Text(title, Modifier.weight(1f).semantics { heading() }, style = MaterialTheme.typography.titleMedium)
                 ExpansionChevron(expanded)
             }
@@ -160,7 +159,7 @@ internal data class Notice(val text: String, val severity: NoticeSeverity = Noti
         RadioChoiceRows(choices, selected, select, label, choiceModifier = choiceModifier) { choice ->
             Row(verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(UiSpacing.related)) {
-                swatch?.let { Box(Modifier.size(16.dp).background(it(choice), CircleShape)) }
+                swatch?.let { Box(Modifier.size(Space.lg).background(it(choice), CircleShape)) }
                 Text(label(choice), Modifier.weight(1f))
             }
         }
@@ -176,17 +175,17 @@ internal data class Notice(val text: String, val severity: NoticeSeverity = Noti
 }
 @Composable private fun LayoutChoice(layout: com.aqaqeer.app.data.CardLayout, selected: com.aqaqeer.app.data.CardLayout,
     change: (com.aqaqeer.app.data.CardLayout) -> Unit) {
-    FilterChip(selected == layout, onClick = { change(layout) }, modifier = Modifier.fillMaxWidth(), shape = MaterialTheme.shapes.medium, label = {
+    AppChip(selected == layout, onClick = { change(layout) }, modifier = Modifier.fillMaxWidth(), shape = MaterialTheme.shapes.medium, label = {
         Column { Text(uiText(if (layout == com.aqaqeer.app.data.CardLayout.COMPACT) R.string.ui_aqaqeer_app_051 else R.string.ui_aqaqeer_app_052))
             repeat(if (layout == com.aqaqeer.app.data.CardLayout.COMPACT) 2 else 4) {
-                HorizontalDivider(Modifier.width(72.dp).padding(vertical = 2.dp))
+                HorizontalDivider(Modifier.width(Size.drawerOutside).padding(vertical = AppStroke.emphasis))
             }
         }
     })
 }
 @Composable internal fun MedicationLayoutPreview(layout: com.aqaqeer.app.data.CardLayout) {
     Surface(modifier = Modifier.fillMaxWidth(), shape = MaterialTheme.shapes.medium,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant), color = MaterialTheme.colorScheme.surface) {
+        border = BorderStroke(AppStroke.hairline, MaterialTheme.colorScheme.outlineVariant), color = MaterialTheme.colorScheme.surface) {
         Column(Modifier.padding(UiSpacing.section), verticalArrangement = Arrangement.spacedBy(UiSpacing.hair)) {
             Text(uiText(R.string.ui_aqaqeer_app_053), style = MaterialTheme.typography.labelMedium)
             Text(uiText(R.string.ui_aqaqeer_app_054), style = if (layout == com.aqaqeer.app.data.CardLayout.COMPACT) MaterialTheme.typography.titleSmall else MaterialTheme.typography.titleLarge)
@@ -208,9 +207,9 @@ internal data class Notice(val text: String, val severity: NoticeSeverity = Noti
         Triple(R.string.review_check_backup, ready.hasBackup, "backup"))
     if (!hidden && !ready.requiresUpdate && !ready.maintenancePaused && !ready.restorePaused) GroupedCard(title = uiText(R.string.review_setup_checklist)) {
         tasks.forEach { (label, complete, route) ->
-            TextButton(onClick = { navigate(route) }, enabled = !complete) { Text("${if (complete) "✓" else "○"} ${uiText(label)}") }
+            AppButton(variant = AppButtonVariant.QUIET, onClick = { navigate(route) }, enabled = !complete) { Text("${if (complete) "✓" else "○"} ${uiText(label)}") }
         }
-        if (tasks.all { it.second }) TextButton(onClick = { prefs.edit().putBoolean(pharmacy, true).apply(); hidden = true }) {
+        if (tasks.all { it.second }) AppButton(variant = AppButtonVariant.QUIET, onClick = { prefs.edit().putBoolean(pharmacy, true).apply(); hidden = true }) {
             Text(uiText(R.string.review_hide_checklist))
         }
     }

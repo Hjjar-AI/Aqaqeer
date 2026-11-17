@@ -60,7 +60,11 @@ internal fun statusLabel(status: AvailabilityStatus): String = uiText(when (stat
 @Composable fun AqaqeerApp(viewModel: CatalogViewModel) {
     val state by viewModel.shellState.collectAsStateWithLifecycle()
     AqaqeerTheme(state.theme, accent = state.accent) {
-        AppContent(state, viewModel)
+        ProvideLayoutMetrics {
+            CompositionLocalProvider(LocalNoticeScope provides ((state.catalog as? CatalogState.Ready)?.catalog?.pharmacy?.pharmacyId ?: "unconfigured")) {
+                AppContent(state, viewModel)
+            }
+        }
     }
 }
 
@@ -113,7 +117,8 @@ internal fun statusLabel(status: AvailabilityStatus): String = uiText(when (stat
         val message = feedback?.takeIf { it.route == state.route } ?: return@LaunchedEffect
         val result = snackbar.showSnackbar(message.message, actionLabel = when {
             message.undo != null -> uiText(R.string.ui_aqaqeer_app_001); message.medicationId != null -> uiText(R.string.ui_aqaqeer_app_002); else -> null
-        })
+        }, withDismissAction = true, duration = if (message.undo != null || message.medicationId != null)
+            SnackbarDuration.Long else SnackbarDuration.Short)
         if (result == SnackbarResult.ActionPerformed && viewModel.state.value.route == message.route) {
             message.undo?.let(viewModel::undo)
             message.medicationId?.let { navigate("med:${it}") }
@@ -201,7 +206,7 @@ internal fun statusLabel(status: AvailabilityStatus): String = uiText(when (stat
                 }.coerceAtLeast(UiSpacing.touch)
                 TopAppBar(title = {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(UiSpacing.related)) {
-                        if (homeDestination && configured) BrandEmblem(Modifier.size(32.dp), description = null)
+                        if (homeDestination && configured) BrandEmblem(Modifier.size(Space.xxl), description = null)
                         Column(Modifier.weight(1f).then(if (drawerEligible) Modifier
                             .heightIn(min = UiSpacing.touch)
                             .clickable(enabled = !homeModalOpen && !dataTimesOpen,
@@ -245,7 +250,7 @@ internal fun statusLabel(status: AvailabilityStatus): String = uiText(when (stat
                     }
                 }, actions = {
                     if (drawerEligible && readyForTitle.admin && (readyForTitle.pendingCount > 0 || readyForTitle.uncertain || sharing.busy)) {
-                        TextButton(enabled = !adminBusy, onClick = viewModel::review) {
+                        AppButton(variant = AppButtonVariant.QUIET, enabled = !adminBusy, onClick = viewModel::review) {
                             Text(uiText(R.string.ui_aqaqeer_app_011, MedicationPresentation.displayDigits(readyForTitle.pendingCount.toString())))
                         }
                     }
@@ -263,7 +268,7 @@ internal fun statusLabel(status: AvailabilityStatus): String = uiText(when (stat
                     scaleY = scaleX
                     alpha = 1f - 0.12f * backProgress
                 }, contentKey = { destinationKey(it.route) }, label = "route",
-                    transitionSpec = { fadeIn(tween(180)) togetherWith fadeOut(tween(180)) }) { displayed ->
+                    transitionSpec = { fadeIn(tween(Motion.standard)) togetherWith fadeOut(tween(Motion.standard)) }) { displayed ->
                 val destinationContent: @Composable () -> Unit = {
                 val state = displayed
                 if (state.catalog is CatalogState.RecoveryRequired && state.route !in setOf("settings", "about")) {
@@ -290,9 +295,9 @@ internal fun statusLabel(status: AvailabilityStatus): String = uiText(when (stat
                             context.startActivity(Intent(Intent.ACTION_SENDTO,
                                 "mailto:hjjarmhmmdali@gmail.com".toUri()))
                         } catch (_: ActivityNotFoundException) {
-                            scope.launch { snackbar.showSnackbar(uiText(R.string.ui_aqaqeer_app_015)) }
+                            scope.launch { snackbar.showSnackbar(uiText(R.string.ui_aqaqeer_app_015), withDismissAction = true, duration = SnackbarDuration.Short) }
                         } catch (_: SecurityException) {
-                            scope.launch { snackbar.showSnackbar(uiText(R.string.ui_aqaqeer_app_016)) }
+                            scope.launch { snackbar.showSnackbar(uiText(R.string.ui_aqaqeer_app_016), withDismissAction = true, duration = SnackbarDuration.Short) }
                         }
                     }
                     "create", "admin", "setup", "review", "taxonomy", "promote", "leave", "export-connection" -> PharmacyAdminScreen(state, viewModel)
@@ -517,7 +522,7 @@ internal fun statusLabel(status: AvailabilityStatus): String = uiText(when (stat
 @Composable private fun AboutScreen(contact: () -> Unit) {
     LazyColumn(Modifier.fillMaxSize().testTag("about"), contentPadding = PaddingValues(UiSpacing.page),
         verticalArrangement = Arrangement.spacedBy(UiSpacing.section), horizontalAlignment = Alignment.CenterHorizontally) {
-        item { BrandEmblem(Modifier.size(160.dp)) }
+        item { BrandEmblem(Modifier.size(Size.emblemLarge)) }
         item { ExpandableInformation(uiText(R.string.review_legend), uiText(R.string.review_legend_body) + "\n" + uiText(R.string.review_changed) + ": " + uiText(R.string.review_changed_help)) }
         item {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -533,7 +538,7 @@ internal fun statusLabel(status: AvailabilityStatus): String = uiText(when (stat
                 Text(uiText(R.string.ui_aqaqeer_app_072), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
                 Text(bidi("hjjarmhmmdali@gmail.com"), fontFamily = FontFamily.SansSerif,
                     modifier = Modifier.testTag("developer_email"))
-                OutlinedButton(onClick = contact, modifier = Modifier.testTag("email_contact")) { Text(uiText(R.string.ui_aqaqeer_app_073)) }
+                AppButton(variant = AppButtonVariant.SECONDARY, onClick = contact, modifier = Modifier.testTag("email_contact")) { Text(uiText(R.string.ui_aqaqeer_app_073)) }
             }
         }
         item { InformationCard(uiText(R.string.ui_aqaqeer_app_074), uiText(R.string.ui_aqaqeer_app_075)) }
@@ -541,26 +546,26 @@ internal fun statusLabel(status: AvailabilityStatus): String = uiText(when (stat
 }
 
 @Composable internal fun WelcomeScreen(openSettings: () -> Unit, openConnection: (() -> Unit)? = null, openCreate: (() -> Unit)? = null, openRestore: (() -> Unit)? = null) {
-    val compactHeight = viewportHeight(1f) < 640.dp || LocalDensity.current.fontScale > 1.4f
+    val compactHeight = LocalLayoutMetrics.current.compact(viewportHeight(1f), LayoutTokens.welcomeCompactHeight)
     Column(Modifier.fillMaxWidth().padding(vertical = UiSpacing.section), horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(UiSpacing.section)) {
         Text(uiText(R.string.ui_aqaqeer_app_076), style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
-        BrandEmblem(Modifier.size(if (compactHeight) 120.dp else 160.dp))
+        BrandEmblem(Modifier.size(if (compactHeight) Size.emblemCompact else Size.emblemLarge))
         openConnection?.let { action ->
             GroupedCard(title = uiText(R.string.ui_aqaqeer_app_077)) {
                 Text(uiText(R.string.ui_aqaqeer_app_078))
-                Button(onClick = action) { Text(uiText(R.string.ui_aqaqeer_app_079)) }
+                AppButton(onClick = action) { Text(uiText(R.string.ui_aqaqeer_app_079)) }
             }
         }
         openCreate?.let { action ->
             GroupedCard(title = uiText(R.string.ui_aqaqeer_app_080)) {
                 Text(uiText(R.string.ui_aqaqeer_app_081))
-                OutlinedButton(onClick = action, modifier = Modifier.testTag("create_pharmacy")) { Text(uiText(R.string.ui_screen_titles_001)) }
+                AppButton(variant = AppButtonVariant.SECONDARY, onClick = action, modifier = Modifier.testTag("create_pharmacy")) { Text(uiText(R.string.ui_screen_titles_001)) }
             }
         }
         ActionGroup {
-            openRestore?.let { action -> TextButton(onClick = action) { Text(uiText(R.string.ui_aqaqeer_app_082)) } }
-            TextButton(onClick = openSettings) { Text(uiText(R.string.ui_aqaqeer_app_083)) }
+            openRestore?.let { action -> AppButton(variant = AppButtonVariant.QUIET, onClick = action) { Text(uiText(R.string.ui_aqaqeer_app_082)) } }
+            AppButton(variant = AppButtonVariant.QUIET, onClick = openSettings) { Text(uiText(R.string.ui_aqaqeer_app_083)) }
         }
     }
 }
@@ -577,7 +582,7 @@ internal fun statusLabel(status: AvailabilityStatus): String = uiText(when (stat
         Text(uiText(R.string.ui_aqaqeer_app_085), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
         SectionHeading(uiText(R.string.ui_aqaqeer_app_086))
         Text(uiText(R.string.ui_aqaqeer_app_087))
-        Button(onClick = retry) { Text(uiText(R.string.ui_history_screen_006)) }
+        AppButton(onClick = retry) { Text(uiText(R.string.ui_history_screen_006)) }
         Text(uiText(R.string.ui_aqaqeer_app_088))
         NavigationCard(uiText(R.string.ui_aqaqeer_app_089), openSettings)
     }

@@ -60,7 +60,7 @@ import com.aqaqeer.app.reports.*
                         if (preset == ReportPreset.OUT && !allSections) ChoicePicker(uiText(R.string.ui_reports_screen_008), ready.catalog.sections,
                             ready.catalog.sections.find { it.id == section }, { it.nameAr }, enabled = !busy, itemKey = { it.id }) { section = it.id }
                         CheckChoiceRow(unpublished, uiText(R.string.ui_reports_screen_009), enabled = !busy) { unpublished = it }
-                        Button(enabled = !busy, onClick = { vm.prepareReport(request) }) { Text(uiText(R.string.ui_reports_screen_010)) }
+                        AppButton(enabled = !busy, onClick = { vm.prepareReport(request) }) { Text(uiText(R.string.ui_reports_screen_010)) }
                         ExpandableInformation(uiText(R.string.ui_reports_screen_011),
                             uiText(R.string.ui_reports_screen_012))
                     }
@@ -87,7 +87,7 @@ import com.aqaqeer.app.reports.*
                     }
                 }
                 if (current.medications.size > 5) item {
-                    TextButton(onClick = { showAll = !showAll }) { Text(if (showAll) uiText(R.string.ui_reports_screen_022) else uiText(R.string.ui_reports_screen_023)) }
+                    AppButton(variant = AppButtonVariant.QUIET, onClick = { showAll = !showAll }) { Text(if (showAll) uiText(R.string.ui_reports_screen_022) else uiText(R.string.ui_reports_screen_023)) }
                 }
             }
         }

@@ -84,13 +84,13 @@ import com.aqaqeer.app.data.CatalogSnapshot
 @Composable internal fun GroupedCard(modifier: Modifier = Modifier, title: String? = null,
     spacing: Dp = UiSpacing.related,
     content: @Composable ColumnScope.() -> Unit) {
-    Card(modifier.fillMaxWidth(), border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
+    AppCard(modifier.fillMaxWidth(), shape = CardDefaults.shape) {
         ContentSection(title = title, modifier = Modifier.padding(UiSpacing.section), spacing = spacing, content = content)
     }
 }
 
 @Composable internal fun NavigationGroup(title: String, content: @Composable ColumnScope.() -> Unit) {
-    GroupedCard(title = title, spacing = 0.dp, content = content)
+    GroupedCard(title = title, spacing = Space.none, content = content)
 }
 
 @Composable internal fun SupportingText(text: String) {
@@ -119,7 +119,7 @@ import com.aqaqeer.app.data.CatalogSnapshot
     enabled: Boolean = true, supporting: String? = null, destructive: Boolean = false) {
     Surface(modifier.fillMaxWidth(), shape = MaterialTheme.shapes.medium,
         color = MaterialTheme.colorScheme.surface,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)) {
+        border = BorderStroke(AppStroke.hairline, MaterialTheme.colorScheme.outline)) {
         Box(Modifier.padding(horizontal = UiSpacing.section)) {
             NavigationRow(label, onClick, enabled = enabled, supporting = supporting, destructive = destructive)
         }
@@ -138,7 +138,7 @@ import com.aqaqeer.app.data.CatalogSnapshot
         verticalArrangement = Arrangement.spacedBy(UiSpacing.related)) {
         if (busy) {
             LinearProgressIndicator(Modifier.fillMaxWidth())
-            cancel?.let { TextButton(onClick = it) { Text(uiText(R.string.ui_admin_components_006)) } }
+            cancel?.let { AppButton(variant = AppButtonVariant.QUIET, onClick = it) { Text(uiText(R.string.ui_admin_components_006)) } }
         }
         error?.let { NoticeStrip(Notice(it, NoticeSeverity.ERROR)) }
         message?.let { NoticeStrip(Notice(it)) }
@@ -188,8 +188,8 @@ import com.aqaqeer.app.data.CatalogSnapshot
     GroupedCard(title = uiText(R.string.ui_admin_components_021)) {
         SupportingText(uiText(R.string.ui_admin_components_022))
         ActionGroup {
-            Button(onClick = export) { Text(uiText(R.string.ui_admin_components_023)) }
-            TextButton(onClick = dismiss) { Text(uiText(R.string.ui_admin_components_024)) }
+            AppButton(onClick = export) { Text(uiText(R.string.ui_admin_components_023)) }
+            AppButton(variant = AppButtonVariant.QUIET, onClick = dismiss) { Text(uiText(R.string.ui_admin_components_024)) }
         }
     }
 }
@@ -197,7 +197,7 @@ import com.aqaqeer.app.data.CatalogSnapshot
 /** Shared actions, with each caller retaining its own picker and workflow. */
 @Composable internal fun ExportButtons(enabled: Boolean, actions: List<Pair<String, () -> Unit>>) {
     ActionGroup {
-        actions.forEach { (label, action) -> Button(enabled = enabled, onClick = action) { Text(label) } }
+        actions.forEach { (label, action) -> AppButton(enabled = enabled, onClick = action) { Text(label) } }
     }
 }
 

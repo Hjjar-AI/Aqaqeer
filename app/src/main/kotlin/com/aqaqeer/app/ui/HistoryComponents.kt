@@ -44,7 +44,7 @@ import kotlinx.serialization.json.*
         entry.editedAt != null -> uiText(R.string.ui_history_components_008)
         else -> uiText(R.string.ui_history_components_009)
     }
-    GroupedCard(modifier = Modifier.animateContentSize(tween(180))) {
+    GroupedCard(modifier = Modifier.animateContentSize(tween(Motion.standard))) {
         Text(bidi(name), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
         Text(context + if (publication || recovery) "" else " · ${fieldLabel(entry.field, entry.entityType)}")
         if (entry.entityType == "availability") {
@@ -74,7 +74,7 @@ import kotlinx.serialization.json.*
             style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         time?.let { SecondaryHijriDate(MedicationPresentation.today(it, timezone), showHijri) }
         if (observed) SupportingText(uiText(R.string.ui_history_components_019))
-        TextButton(onClick = { details = !details }) { Text(if (details) uiText(R.string.ui_history_components_020) else uiText(R.string.ui_history_components_021)) }
+        AppButton(variant = AppButtonVariant.QUIET, onClick = { details = !details }) { Text(if (details) uiText(R.string.ui_history_components_020) else uiText(R.string.ui_history_components_021)) }
         if (details) {
             HorizontalDivider()
             CopyableValue(uiText(R.string.ui_history_components_022), entry.id)
@@ -95,7 +95,7 @@ import kotlinx.serialization.json.*
         }
         if (details && medicationId != null) {
             if (medication == null) SupportingText(uiText(R.string.ui_history_components_032))
-            else editMedication?.let { edit -> TextButton(onClick = { edit(medication.id) }) { Text(uiText(R.string.ui_history_components_033, bidi(name))) } }
+            else editMedication?.let { edit -> AppButton(variant = AppButtonVariant.QUIET, onClick = { edit(medication.id) }) { Text(uiText(R.string.ui_history_components_033, bidi(name))) } }
         }
     }
 }

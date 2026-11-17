@@ -38,12 +38,12 @@ import com.aqaqeer.app.data.*
     var categoriesOpen by rememberSaveable(pharmacy?.pharmacyId) { mutableStateOf(true) }
     var catalogOpen by rememberSaveable(pharmacy?.pharmacyId) { mutableStateOf(false) }
     var applicationOpen by rememberSaveable(pharmacy?.pharmacyId) { mutableStateOf(false) }
-    val drawerWidth = with(LocalDensity.current) { (LocalWindowInfo.current.containerSize.width.toDp() - 72.dp).coerceIn(1.dp, 320.dp) }
+    val drawerWidth = with(LocalDensity.current) { (LocalWindowInfo.current.containerSize.width.toDp() - Size.drawerOutside).coerceIn(AppStroke.hairline, Size.drawerMax) }
     ModalDrawerSheet(modifier = Modifier.requiredWidth(drawerWidth)) {
         Column(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).padding(UiSpacing.related),
             verticalArrangement = Arrangement.spacedBy(UiSpacing.hair)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(UiSpacing.related)) {
-                BrandEmblem(Modifier.size(40.dp), description = null)
+                BrandEmblem(Modifier.size(Size.avatarM), description = null)
                 Text(pharmacy?.name ?: uiText(R.string.ui_screen_titles_020), Modifier.weight(1f).semantics { heading() },
                     style = MaterialTheme.typography.titleMedium)
             }
@@ -74,11 +74,11 @@ import com.aqaqeer.app.data.*
 @Composable private fun DrawerGroup(title: String, expanded: Boolean, toggle: () -> Unit,
     icon: UiIcon, content: @Composable ColumnScope.() -> Unit) {
     Column(Modifier.fillMaxWidth().animateContentSize()) {
-        OutlinedButton(onClick = toggle,
+        AppButton(variant = AppButtonVariant.SECONDARY, onClick = toggle,
             modifier = Modifier.fillMaxWidth().heightIn(min = UiSpacing.touch).semantics {
                 stateDescription = uiText(if (expanded) R.string.ui_home_drawer_010 else R.string.ui_home_drawer_011)
             }, shape = MaterialTheme.shapes.medium,
-            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+            border = BorderStroke(AppStroke.hairline, MaterialTheme.colorScheme.outlineVariant),
             colors = ButtonDefaults.outlinedButtonColors(
                 containerColor = if (expanded) MaterialTheme.colorScheme.surfaceVariant else Color.Transparent,
                 contentColor = MaterialTheme.colorScheme.onSurface),
@@ -90,7 +90,7 @@ import com.aqaqeer.app.data.*
                 ExpansionChevron(expanded)
             }
         }
-        if (expanded) ContentSection(spacing = 0.dp, content = content)
+        if (expanded) ContentSection(spacing = Space.none, content = content)
     }
 }
 

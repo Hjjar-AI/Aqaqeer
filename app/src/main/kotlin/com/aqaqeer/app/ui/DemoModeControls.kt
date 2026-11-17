@@ -13,12 +13,12 @@ import com.aqaqeer.app.uiText
         RadioChoiceRows(listOf(false, true), admin, change,
             label = { uiText(if (it) R.string.review_demo_admin else R.string.review_demo_reader) })
         SupportingText(uiText(R.string.review_demo_edit_help))
-        OutlinedButton(onClick = { confirmReset = true }, colors = ButtonDefaults.outlinedButtonColors(
+        AppButton(variant = AppButtonVariant.SECONDARY, onClick = { confirmReset = true }, colors = ButtonDefaults.outlinedButtonColors(
             contentColor = MaterialTheme.colorScheme.error)) { Text(uiText(R.string.review_demo_reset)) }
     }
-    if (confirmReset) AlertDialog(onDismissRequest = { confirmReset = false },
+    if (confirmReset) AppDialog(onDismissRequest = { confirmReset = false },
         title = { Text(uiText(R.string.review_demo_reset)) },
         text = { Text(uiText(R.string.review_demo_reset_help)) },
         confirmButton = { DestructiveConfirmButton(true, { confirmReset = false; reset() }, uiText(R.string.review_demo_reset)) },
-        dismissButton = { TextButton(onClick = { confirmReset = false }) { Text(uiText(R.string.ui_choice_components_004)) } })
+        dismissButton = { AppButton(variant = AppButtonVariant.QUIET, onClick = { confirmReset = false }) { Text(uiText(R.string.ui_choice_components_004)) } })
 }

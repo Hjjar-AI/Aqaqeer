@@ -86,7 +86,7 @@ internal val InitialAvailabilitySaver = Saver<Map<String, AvailabilityStatus>, A
                 }
             }
         }
-        if (choices.isNotEmpty()) TextButton(enabled = !busy, onClick = reset) {
+        if (choices.isNotEmpty()) AppButton(variant = AppButtonVariant.QUIET, enabled = !busy, onClick = reset) {
             Text(uiText(R.string.new_availability_reset))
         }
     }
@@ -119,7 +119,7 @@ internal val InitialAvailabilitySaver = Saver<Map<String, AvailabilityStatus>, A
     if (section.isActive) WrappingContent {
         if (current == AvailabilityStatus.UNKNOWN) StatusBadge(current)
         MedicationPresentation.editableStatuses.forEach { status ->
-            FilterChip(selected = current == status, enabled = !busy,
+            AppChip(selected = current == status, enabled = !busy,
                 onClick = { choose(status) }, label = { Text(statusLabel(status)) },
                 modifier = Modifier.heightIn(min = UiSpacing.touch).semantics {
                     contentDescription = section.nameAr + " · " + statusLabel(status)

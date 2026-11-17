@@ -69,9 +69,9 @@ import kotlinx.serialization.json.*
                     Text(uiText(R.string.ui_pharmacy_admin_screen_031, MedicationPresentation.displayDigits(ready.pendingCount.toString())), style = MaterialTheme.typography.titleLarge)
                     Text(if (ready.maintenancePaused) uiText(R.string.ui_pharmacy_admin_screen_032) else if (ready.restorePaused) uiText(R.string.ui_pharmacy_admin_screen_033) else uiText(R.string.ui_pharmacy_admin_screen_034))
                     WrappingContent {
-                        FilterChip(typeFilter == null, onClick = { typeFilter = null }, label = { Text(uiText(R.string.review_all) + " (${pending.size})") })
+                        AppChip(typeFilter == null, onClick = { typeFilter = null }, label = { Text(uiText(R.string.review_all) + " (${pending.size})") })
                         types.forEach { (type, operations) ->
-                            FilterChip(typeFilter == type, onClick = { typeFilter = type }, label = { Text(entityLabel(type) + " (${operations.size})") })
+                            AppChip(typeFilter == type, onClick = { typeFilter = type }, label = { Text(entityLabel(type) + " (${operations.size})") })
                         }
                     }
                 }
@@ -101,7 +101,7 @@ import kotlinx.serialization.json.*
                 Column(verticalArrangement = Arrangement.spacedBy(UiSpacing.group)) {
                     if (ready.isDemo) SupportingText(uiText(R.string.review_demo_local_only))
                     ConflictChoices(sharing.conflicts, choices, catalog) { choices = it }
-                    Button(enabled = !ready.isDemo && (ready.pendingCount > 0 || ready.uncertain || ready.lifecycle == "LOCAL_DRAFT") && !busy && !sharing.busy && !ready.requiresUpdate && !ready.restorePaused && !ready.maintenancePaused, onClick = { vm.publish(choices) }) { Text(uiText(R.string.ui_pharmacy_admin_screen_037)) }
+                    AppButton(enabled = !ready.isDemo && (ready.pendingCount > 0 || ready.uncertain || ready.lifecycle == "LOCAL_DRAFT") && !busy && !sharing.busy && !ready.requiresUpdate && !ready.restorePaused && !ready.maintenancePaused, onClick = { vm.publish(choices) }) { Text(uiText(R.string.ui_pharmacy_admin_screen_037)) }
                     if (!ready.isDemo && ready.lifecycle == "SHARED") PinRecoveryAction(
                         enabled = !busy && !sharing.busy && !ready.requiresUpdate && !ready.restorePaused && !ready.maintenancePaused,
                         recover = { vm.publish(choices, recoverPin = true) })
@@ -139,13 +139,13 @@ import kotlinx.serialization.json.*
                     }
                 }
                 Text(uiText(R.string.ui_pharmacy_admin_screen_014))
-                Button(enabled = !creating, onClick = {
-                    if (vm.adminBusy.value) return@Button
+                AppButton(enabled = !creating, onClick = {
+                    if (vm.adminBusy.value) return@AppButton
                     formSubmitted = true
                     if (name.isBlank() || section.isBlank() || FormGuidance.timezone(zone) != null ||
                         FormGuidance.pin(pin) != null || FormGuidance.pin(confirm) != null ||
                         pin.map { Character.digit(it, 10) } != confirm.map { Character.digit(it, 10) }) {
-                        revealInvalid(); return@Button
+                        revealInvalid(); return@AppButton
                     }
                     val a = pin.toCharArray(); val b = confirm.toCharArray()
                     formSubmitted = false; pinEntryVersion++
@@ -160,9 +160,9 @@ import kotlinx.serialization.json.*
                     FormField(uiText(R.string.ui_pharmacy_admin_screen_017), pin, { pin = it }, secret = true, submitted = formSubmitted, required = true, numericSecret = true, imeAction = ImeAction.Done, validate = FormGuidance::pin)
                 }
                 Text(uiText(R.string.ui_pharmacy_admin_screen_018))
-                Button(enabled = !busy, onClick = {
+                AppButton(enabled = !busy, onClick = {
                     formSubmitted = true
-                    if (FormGuidance.pin(pin) != null) { revealInvalid(); return@Button }
+                    if (FormGuidance.pin(pin) != null) { revealInvalid(); return@AppButton }
                     val p = pin.toCharArray(); pin = ""; vm.secretCommand("home", p) { vm.admin.promote(p) }
                 }) { Text(uiText(R.string.ui_screen_titles_006)) }
             }
@@ -174,9 +174,9 @@ import kotlinx.serialization.json.*
                         validate = { if (it == catalog.pharmacy?.name) null else uiText(R.string.ui_pharmacy_admin_screen_022) })
                     CheckChoiceRow(confirmedLeave, uiText(R.string.ui_pharmacy_admin_screen_023)) { confirmedLeave = it }
                     if (ready.uncertain) NoticeStrip(Notice(uiText(R.string.ui_pharmacy_admin_screen_025), NoticeSeverity.WARNING))
-                    Button(colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error, contentColor = MaterialTheme.colorScheme.onError), enabled = confirmedLeave && !busy, onClick = {
+                    AppButton(colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error, contentColor = MaterialTheme.colorScheme.onError), enabled = confirmedLeave && !busy, onClick = {
                         formSubmitted = true
-                        if (ready.admin && leaveName != catalog.pharmacy?.name) { revealInvalid(); return@Button }
+                        if (ready.admin && leaveName != catalog.pharmacy?.name) { revealInvalid(); return@AppButton }
                         vm.command("home") { vm.admin.leave(leaveName, true) }
                     }) { Text(uiText(R.string.ui_pharmacy_admin_screen_024)) }
                 }
@@ -288,23 +288,23 @@ internal fun reviewValue(field: String, raw: String, catalog: CatalogSnapshot, l
     GroupedCard(title = uiText(R.string.ui_pharmacy_admin_screen_090)) {
         FormField(uiText(R.string.ui_pharmacy_admin_screen_091), token, { token = it }, secret = true, required = true)
         SelectionContainer { Text(bidi("/aqsetup ${challenge}")) }
-        OutlinedButton(onClick = { clipboard.setPrimaryClip(android.content.ClipData.newPlainText("Aqaqeer", "/aqsetup ${challenge}")) }) { Text(uiText(R.string.ui_pharmacy_admin_screen_092)) }
-        Button(enabled = !busy && token.isNotBlank(), onClick = { vm.command { found = vm.sharing.discover(token, challenge) } }) { Text(uiText(R.string.ui_pharmacy_admin_screen_093)) }
+        AppButton(variant = AppButtonVariant.SECONDARY, onClick = { clipboard.setPrimaryClip(android.content.ClipData.newPlainText("Aqaqeer", "/aqsetup ${challenge}")) }) { Text(uiText(R.string.ui_pharmacy_admin_screen_092)) }
+        AppButton(enabled = !busy && token.isNotBlank(), onClick = { vm.command { found = vm.sharing.discover(token, challenge) } }) { Text(uiText(R.string.ui_pharmacy_admin_screen_093)) }
         if (found.isNotEmpty()) RadioChoiceRows(found, found.find { it.first.toString() == group },
             { group = it.first.toString() }, { it.second })
         FormField(uiText(R.string.ui_pharmacy_admin_screen_094), group, { group = groupIdInput(it) }, required = true, validate = FormGuidance::group,
             supportingText = uiText(R.string.ui_pharmacy_admin_screen_095), ltr = true, imeAction = ImeAction.Done)
-        Button(enabled = !busy && group.toLongOrNull()?.let { it < 0 } == true, onClick = { vm.command { title = vm.sharing.inspectSetup(token, group.toLong()) } }) { Text(uiText(R.string.ui_pharmacy_admin_screen_096)) }
+        AppButton(enabled = !busy && group.toLongOrNull()?.let { it < 0 } == true, onClick = { vm.command { title = vm.sharing.inspectSetup(token, group.toLong()) } }) { Text(uiText(R.string.ui_pharmacy_admin_screen_096)) }
         title?.let { name ->
             Text(uiText(R.string.ui_pharmacy_admin_screen_097, name))
-            Button(enabled = !busy, onClick = { vm.command { vm.sharing.saveSetup(token, group.toLong(), name); token = ""; if (empty) offerEmptyPublication = true else vm.navigate("admin") } }) { Text(uiText(R.string.ui_pharmacy_admin_screen_098)) }
+            AppButton(enabled = !busy, onClick = { vm.command { vm.sharing.saveSetup(token, group.toLong(), name); token = ""; if (empty) offerEmptyPublication = true else vm.navigate("admin") } }) { Text(uiText(R.string.ui_pharmacy_admin_screen_098)) }
         }
     }
-    if (offerEmptyPublication) AlertDialog(onDismissRequest = { offerEmptyPublication = false; vm.navigate("admin") },
+    if (offerEmptyPublication) AppDialog(onDismissRequest = { offerEmptyPublication = false; vm.navigate("admin") },
         title = { Text(uiText(R.string.ui_pharmacy_admin_screen_099)) },
         text = { DialogBody { Text(uiText(R.string.ui_pharmacy_admin_screen_100)) } },
-        confirmButton = { TextButton(onClick = { offerEmptyPublication = false; vm.navigate("admin") }) { Text(uiText(R.string.ui_pharmacy_admin_screen_101)) } },
-        dismissButton = { TextButton(onClick = { offerEmptyPublication = false; vm.navigate("review"); vm.publish() }) { Text(uiText(R.string.ui_pharmacy_admin_screen_102)) } })
+        confirmButton = { AppButton(variant = AppButtonVariant.QUIET, onClick = { offerEmptyPublication = false; vm.navigate("admin") }) { Text(uiText(R.string.ui_pharmacy_admin_screen_101)) } },
+        dismissButton = { AppButton(variant = AppButtonVariant.QUIET, onClick = { offerEmptyPublication = false; vm.navigate("review"); vm.publish() }) { Text(uiText(R.string.ui_pharmacy_admin_screen_102)) } })
     SupportingText(uiText(R.string.pin_group_guidance))
     ExpandableInformation(uiText(R.string.ui_screen_titles_003), uiText(R.string.ui_pharmacy_admin_screen_103))
 }
@@ -312,7 +312,7 @@ internal fun reviewValue(field: String, raw: String, catalog: CatalogSnapshot, l
 @Composable private fun PinRecoveryAction(enabled: Boolean, recover: () -> Unit) {
     GroupedCard(title = uiText(R.string.pin_recovery_title)) {
         SupportingText(uiText(R.string.pin_recovery_help))
-        TextButton(enabled = enabled, onClick = recover) { Text(uiText(R.string.pin_recovery_title)) }
+        AppButton(variant = AppButtonVariant.QUIET, enabled = enabled, onClick = recover) { Text(uiText(R.string.pin_recovery_title)) }
     }
 }
 
@@ -333,12 +333,12 @@ internal fun reviewValue(field: String, raw: String, catalog: CatalogSnapshot, l
         SupportingText(uiText(R.string.logic_password_guidance))
         if (FormGuidance.simpleNumericPattern(password)) SupportingText(uiText(R.string.logic_password_pattern))
         ActionGroup {
-            TextButton(enabled = !busy && outgoing == null, onClick = {
+            AppButton(variant = AppButtonVariant.QUIET, enabled = !busy && outgoing == null, onClick = {
                 val random = java.security.SecureRandom()
                 password = buildString { repeat(16) { append(('0'.code + random.nextInt(10)).toChar()) } }
                 generated = true
             }) { Text(uiText(R.string.logic_generate_password)) }
-            if (generated && password.isNotEmpty()) TextButton(enabled = !busy, onClick = {
+            if (generated && password.isNotEmpty()) AppButton(variant = AppButtonVariant.QUIET, enabled = !busy, onClick = {
                 val clip = android.content.ClipData.newPlainText("Aqaqeer", password)
                 if (android.os.Build.VERSION.SDK_INT >= 33) clip.description.extras = android.os.PersistableBundle().apply {
                     putBoolean(android.content.ClipDescription.EXTRA_IS_SENSITIVE, true)
@@ -346,7 +346,7 @@ internal fun reviewValue(field: String, raw: String, catalog: CatalogSnapshot, l
                 clipboard.setPrimaryClip(clip)
             }) { Text(uiText(R.string.logic_copy_password)) }
         }
-        Button(enabled = shared && !busy && outgoing == null && FormGuidance.pin(password) == null, onClick = {
+        AppButton(enabled = shared && !busy && outgoing == null && FormGuidance.pin(password) == null, onClick = {
             outgoing = password.toCharArray(); password = ""; generated = false
             try { launcher.launch("pharmacy.aqz") } catch (_: Exception) {
                 outgoing?.fill('\u0000'); outgoing = null
@@ -402,7 +402,7 @@ internal fun reviewValue(field: String, raw: String, catalog: CatalogSnapshot, l
         }
     }
     FormPage(focusController = formFocus, showFieldConvention = true, footer = {
-        Button(enabled = !busy, onClick = ::save, modifier = Modifier.fillMaxWidth()) { Text(uiText(R.string.ui_pharmacy_admin_screen_109)) }
+        AppButton(enabled = !busy, onClick = ::save, modifier = Modifier.fillMaxWidth()) { Text(uiText(R.string.ui_pharmacy_admin_screen_109)) }
     }) {
     val message by vm.adminMessage.collectAsStateWithLifecycle()
     InlineOperationStatus(busy, message)
@@ -482,11 +482,11 @@ internal fun reviewValue(field: String, raw: String, catalog: CatalogSnapshot, l
         }, { row -> row.ar + when { row.protected -> uiText(R.string.ui_pharmacy_admin_screen_126); !row.active -> uiText(R.string.ui_pharmacy_admin_screen_127); else -> "" } },
             choiceEnabled = { !it.protected })
     }
-    TextButton(onClick = ::resetForm) { Text(uiText(R.string.ui_pharmacy_admin_screen_128)) }
+    AppButton(variant = AppButtonVariant.QUIET, onClick = ::resetForm) { Text(uiText(R.string.ui_pharmacy_admin_screen_128)) }
     GroupedCard(title = uiText(R.string.ui_pharmacy_admin_screen_129)) {
         FormField(uiText(R.string.ui_pharmacy_admin_screen_065), name, { name = it }, required = true); FormField(uiText(R.string.ui_pharmacy_admin_screen_130), english, { english = it }, required = false)
         if (type == "section") CheckChoiceRow(active, uiText(R.string.ui_pharmacy_admin_screen_131)) { active = it }
-        Button(enabled = !busy && name.isNotBlank(), onClick = { vm.command { vm.admin.saveTaxonomy(type, selected, name, english, active); resetForm() } }) { Text(uiText(R.string.ui_pharmacy_admin_screen_132)) }
+        AppButton(enabled = !busy && name.isNotBlank(), onClick = { vm.command { vm.admin.saveTaxonomy(type, selected, name, english, active); resetForm() } }) { Text(uiText(R.string.ui_pharmacy_admin_screen_132)) }
     }
     selected?.let { id ->
         GroupedCard(title = uiText(R.string.ui_pharmacy_admin_screen_133)) {

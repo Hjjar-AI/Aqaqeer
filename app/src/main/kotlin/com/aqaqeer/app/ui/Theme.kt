@@ -36,10 +36,10 @@ private val ArabicFont = FontFamily(
 )
 private val BaseTypography = Typography()
 internal object AppShapeTokens {
-    val small = RoundedCornerShape(8.dp)
-    val medium = RoundedCornerShape(12.dp)
-    val large = RoundedCornerShape(16.dp)
-    val search = RoundedCornerShape(24.dp)
+    val small = RoundedCornerShape(Space.sm)
+    val medium = RoundedCornerShape(Space.md)
+    val large = RoundedCornerShape(Space.lg)
+    val search = RoundedCornerShape(Space.xl)
 }
 private val AppShapes = Shapes(
     small = AppShapeTokens.small,

@@ -23,8 +23,8 @@ import com.aqaqeer.app.data.MedicationPresentation
             else uiText(R.string.ui_pending_changes_banner_003), style = MaterialTheme.typography.bodyMedium)
         sharing.message?.let { Text(it, style = MaterialTheme.typography.bodyMedium) }
         ActionGroup {
-            TextButton(enabled = !working, onClick = review) { Text(uiText(R.string.ui_pending_changes_banner_004)) }
-            Button(enabled = blocked == null, onClick = publish) {
+            AppButton(variant = AppButtonVariant.QUIET, enabled = !working, onClick = review) { Text(uiText(R.string.ui_pending_changes_banner_004)) }
+            AppButton(enabled = blocked == null, onClick = publish) {
                 AppIcon(UiIcon.PUBLISH)
                 Spacer(Modifier.width(UiSpacing.hair))
                 Text(uiText(R.string.ui_pending_changes_banner_005))

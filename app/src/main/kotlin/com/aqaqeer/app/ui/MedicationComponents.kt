@@ -1,5 +1,7 @@
 package com.aqaqeer.app.ui
 
+import androidx.compose.runtime.SideEffect
+
 import com.aqaqeer.app.uiText
 import com.aqaqeer.app.R
 
@@ -120,7 +122,7 @@ import java.time.LocalDate
     val formName = form?.nameAr ?: uiText(R.string.ui_aqaqeer_app_026)
     val name = remember(medication, formName) { MedicationPresentation.identity(medication, formName) }
     val status = row.status
-    val edge by animateColorAsState(statusTone(status).edge, tween(180), label = "status edge")
+    val edge by animateColorAsState(statusTone(status).edge, tween(Motion.standard), label = "status edge")
     val unavailableStripe = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.06f)
     val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
     val pendingMarker: (@Composable () -> Unit)? = if (unpublished || row.fetched) ({
@@ -140,21 +142,23 @@ import java.time.LocalDate
             onQuickEdit(); true
         })
     } else Modifier
-    Card(modifier = modifier.fillMaxWidth().clip(MaterialTheme.shapes.medium).then(interaction).then(quickEditAction).testTag("med_${medication.nameEn ?: medication.id}"),
-        border = BorderStroke(1.dp, if (highlighted) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant),
-        colors = CardDefaults.cardColors(containerColor = if (bulkSelected == true || highlighted)
-            MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface)) {
+    AppCard(modifier = modifier.fillMaxWidth().clip(MaterialTheme.shapes.medium).then(interaction).then(quickEditAction).testTag("med_${medication.nameEn ?: medication.id}"),
+        emphasis = when {
+            highlighted -> AppCardEmphasis.HIGHLIGHTED
+            bulkSelected == true -> AppCardEmphasis.SELECTED
+            else -> AppCardEmphasis.DEFAULT
+        }) {
         Column(Modifier.fillMaxWidth().drawWithCache {
             val stripes = Path().apply {
-                val spacing = 16.dp.toPx()
+                val spacing = Space.lg.toPx()
                 var x = -size.height
                 while (x < size.width) {
                     moveTo(x, 0f); lineTo(x + size.height, size.height)
                     x += spacing
                 }
             }
-            val stripeStroke = Stroke(2.dp.toPx())
-            val stroke = 4.dp.toPx()
+            val stripeStroke = Stroke(AppStroke.emphasis.toPx())
+            val stroke = Space.xs.toPx()
             val x = if (rtl) size.width - stroke / 2 else stroke / 2
             onDrawBehind {
                 if (status == AvailabilityStatus.OUT) drawPath(stripes, unavailableStripe, style = stripeStroke)
@@ -163,9 +167,9 @@ import java.time.LocalDate
         }.padding(if (compact) UiSpacing.related else UiSpacing.section), verticalArrangement = Arrangement.spacedBy(UiSpacing.hair)) {
             Row(horizontalArrangement = Arrangement.spacedBy(UiSpacing.hair), verticalAlignment = Alignment.Top) {
                 // Fixed slot prevents selection-mode row/width changes for editable cards.
-                if (reserveSelectionSpace || bulkSelected != null) Box(Modifier.size(24.dp)) {
+                if (reserveSelectionSpace || bulkSelected != null) Box(Modifier.size(Space.xl)) {
                     if (bulkSelected != null) Checkbox(checked = bulkSelected, onCheckedChange = null,
-                        enabled = selectionEnabled, modifier = Modifier.size(24.dp).testTag("select_${medication.id}").clearAndSetSemantics { })
+                        enabled = selectionEnabled, modifier = Modifier.size(Space.xl).testTag("select_${medication.id}").clearAndSetSemantics { })
                 }
                 form?.let { DosageFormIcon(it) }
                 Column(Modifier.weight(1f)) {
@@ -188,12 +192,18 @@ import java.time.LocalDate
 
             if (!compact && !(preferences.groupingEnabled && preferences.grouping == HomeGrouping.CATEGORY)) LabeledValue(uiText(R.string.ui_pharmacy_admin_screen_073), row.category)
             val elsewhere = row.elsewhere
-            if (elsewhere.isNotEmpty()) Surface(color = MaterialTheme.colorScheme.surfaceVariant, shape = MaterialTheme.shapes.small) {
+            val tipIdentity = listOf(LocalNoticeScope.current, "availability-tip", medication.id, sectionId.orEmpty())
+            val tipContent = elsewhere.flatMap { listOf(it.id, it.nameAr) }
+            SideEffect { UiSession.reconcile(tipIdentity, if (elsewhere.isEmpty()) emptyMap() else mapOf(tipIdentity to tipContent)) }
+            if (elsewhere.isNotEmpty() && !UiSession.isDismissed(tipIdentity, tipContent)) Surface(color = MaterialTheme.colorScheme.surfaceVariant, shape = MaterialTheme.shapes.small) {
                 Row(Modifier.fillMaxWidth().padding(UiSpacing.hair).testTag("tip_${medication.id}"),
                     verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(UiSpacing.hair)) {
                     AppIcon(UiIcon.INFO)
                     Text(uiText(R.string.ui_medication_components_007) + elsewhere.joinToString(uiText(R.string.ui_medication_components_008)) { it.nameAr },
-                        style = MaterialTheme.typography.bodyMedium)
+                        style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
+                    IconButton(onClick = { UiSession.dismiss(tipIdentity, tipContent) }) {
+                        AppIcon(UiIcon.CLOSE, description = uiText(R.string.notice_dismiss))
+                    }
                 }
             }
         }

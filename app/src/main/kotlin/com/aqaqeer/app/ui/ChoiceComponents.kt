@@ -83,9 +83,9 @@ import androidx.compose.ui.unit.dp
         Text(title, style = MaterialTheme.typography.titleSmall)
         WrappingContent(Modifier.selectableGroup()) {
             choices.forEach { choice ->
-                FilterChip(selected = choice == selected, onClick = { select(choice) }, label = {
+                AppChip(selected = choice == selected, onClick = { select(choice) }, label = {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(UiSpacing.related)) {
-                        swatch?.let { Box(Modifier.size(12.dp).background(it(choice), androidx.compose.foundation.shape.CircleShape)) }
+                        swatch?.let { Box(Modifier.size(Space.md).background(it(choice), androidx.compose.foundation.shape.CircleShape)) }
                         Text(label(choice))
                     }
                 },
@@ -120,7 +120,7 @@ import androidx.compose.ui.unit.dp
                 val normalized = MedicationPresentation.normalizedSearch(query)
                 labeled.filter { it.third.contains(normalized) }
             }
-            AlertDialog(onDismissRequest = { expanded = false }, title = { Text(label) }, text = {
+            AppDialog(onDismissRequest = { expanded = false }, title = { Text(label) }, text = {
                 BoxWithConstraints(Modifier.fillMaxWidth()) {
                     // Dialog constraints already reflect IME resizing; do not subtract it twice.
                     Column(Modifier.heightIn(max = minOf(maxHeight, viewportHeight(0.65f))),
@@ -128,7 +128,7 @@ import androidx.compose.ui.unit.dp
                         if (values.size > 8) FormField(uiText(R.string.ui_choice_components_002), query, { query = it })
                         LazyColumn(Modifier.fillMaxWidth().weight(1f, fill = false)) {
                             items(visible, key = { itemKey(it.first) }) { (value, text, _) ->
-                                TextButton(onClick = { choose(value); expanded = false }, modifier = Modifier.fillMaxWidth()) {
+                                AppButton(variant = AppButtonVariant.QUIET, onClick = { choose(value); expanded = false }, modifier = Modifier.fillMaxWidth()) {
                                     Text(text, modifier = Modifier.weight(1f))
                                     if (value == selected) AppIcon(UiIcon.CHECK)
                                 }
@@ -137,14 +137,14 @@ import androidx.compose.ui.unit.dp
                         if (visible.isEmpty()) Text(uiText(R.string.ui_choice_components_003))
                     }
                 }
-            }, confirmButton = { TextButton(onClick = { expanded = false }) { Text(uiText(R.string.ui_choice_components_004)) } })
+            }, confirmButton = { AppButton(variant = AppButtonVariant.QUIET, onClick = { expanded = false }) { Text(uiText(R.string.ui_choice_components_004)) } })
         }
     }
 }
 
 /** A decorative disclosure indicator; the owning control exposes its expanded state. */
 @Composable internal fun ExpansionChevron(expanded: Boolean) {
-    val rotation by animateFloatAsState(if (expanded) 180f else 0f, tween(180), label = "disclosure")
+    val rotation by animateFloatAsState(if (expanded) 180f else 0f, tween(Motion.standard), label = "disclosure")
     Box(Modifier.graphicsLayer { rotationZ = rotation }) { RowChevron(down = true) }
 }
 
@@ -152,7 +152,7 @@ import androidx.compose.ui.unit.dp
 @Composable internal fun RowChevron(down: Boolean = false) {
     val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
     val color = MaterialTheme.colorScheme.onSurfaceVariant
-    Canvas(Modifier.size(20.dp)) {
+    Canvas(Modifier.size(Size.iconControl)) {
         val a: Offset; val b: Offset; val c: Offset
         if (down) {
             a = Offset(size.width * .25f, size.height * .4f)
@@ -165,7 +165,7 @@ import androidx.compose.ui.unit.dp
             b = Offset(size.width * end, size.height * .5f)
             c = Offset(size.width * start, size.height * .75f)
         }
-        drawLine(color, a, b, strokeWidth = 2.dp.toPx())
-        drawLine(color, b, c, strokeWidth = 2.dp.toPx())
+        drawLine(color, a, b, strokeWidth = AppStroke.emphasis.toPx())
+        drawLine(color, b, c, strokeWidth = AppStroke.emphasis.toPx())
     }
 }

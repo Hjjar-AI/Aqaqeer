@@ -40,10 +40,10 @@ import com.aqaqeer.app.reports.*
                 Text(uiText(R.string.ui_csv_import_screen_001))
                 InlineOperationStatus(busy, message, cancel = vm::cancelAdminOperation)
                 ActionGroup {
-                    Button(enabled = !busy, onClick = {
+                    AppButton(enabled = !busy, onClick = {
                         try { pick.launch(arrayOf("*/*")) } catch (_: Exception) { vm.adminMessage.value = uiText(R.string.ui_maintenance_screen_044) }
                     }) { Text(uiText(R.string.ui_csv_import_screen_002)) }
-                    TextButton(enabled = !busy, onClick = { export(CsvSaveKind.TEMPLATE) }) { Text(uiText(R.string.ui_csv_import_screen_003)) }
+                    AppButton(variant = AppButtonVariant.QUIET, enabled = !busy, onClick = { export(CsvSaveKind.TEMPLATE) }) { Text(uiText(R.string.ui_csv_import_screen_003)) }
                 }
                 Text(uiText(R.string.ui_csv_import_screen_004))
                 ready.catalog.sections.forEach { Text("${it.nameAr}: ${bidi("section:${it.id}")}") }
@@ -58,17 +58,17 @@ import com.aqaqeer.app.reports.*
                     if (!state.finished) {
                         Text(uiText(R.string.ui_csv_import_screen_009))
                         ActionGroup {
-                            TextButton(enabled = !busy, onClick = { vm.chooseCsvDuplicates(true) }) { Text(uiText(R.string.logic_csv_update_matches)) }
-                            TextButton(enabled = !busy, onClick = { vm.chooseCsvDuplicates(false) }) { Text(uiText(R.string.logic_csv_skip_duplicates)) }
+                            AppButton(variant = AppButtonVariant.QUIET, enabled = !busy, onClick = { vm.chooseCsvDuplicates(true) }) { Text(uiText(R.string.logic_csv_update_matches)) }
+                            AppButton(variant = AppButtonVariant.QUIET, enabled = !busy, onClick = { vm.chooseCsvDuplicates(false) }) { Text(uiText(R.string.logic_csv_skip_duplicates)) }
                         }
-                        TextButton(enabled = !busy, onClick = vm::selectValidCsv) { Text(uiText(R.string.ui_csv_import_screen_010)) }
-                        Button(enabled = !busy && session.rows.isNotEmpty(), onClick = { confirm = true }) {
+                        AppButton(variant = AppButtonVariant.QUIET, enabled = !busy, onClick = vm::selectValidCsv) { Text(uiText(R.string.ui_csv_import_screen_010)) }
+                        AppButton(enabled = !busy && session.rows.isNotEmpty(), onClick = { confirm = true }) {
                             Text(if (session.rows.any { it.decision.selected && it.error == null }) uiText(R.string.ui_csv_import_screen_011) else uiText(R.string.ui_csv_import_screen_012))
                         }
                     } else {
                         Text(uiText(R.string.ui_csv_import_screen_013))
                         ExportButtons(!busy, listOf(uiText(R.string.ui_csv_import_screen_014) to { export(CsvSaveKind.RESULTS) }))
-                        TextButton(enabled = !busy && state.results.values.any { it.outcome == CsvOutcome.FAILED }, onClick = { export(CsvSaveKind.RETRY) }) { Text(uiText(R.string.ui_csv_import_screen_015)) }
+                        AppButton(variant = AppButtonVariant.QUIET, enabled = !busy && state.results.values.any { it.outcome == CsvOutcome.FAILED }, onClick = { export(CsvSaveKind.RETRY) }) { Text(uiText(R.string.ui_csv_import_screen_015)) }
                         Text(uiText(R.string.ui_csv_import_screen_016))
                     }
                 }
@@ -80,11 +80,11 @@ import com.aqaqeer.app.reports.*
             }
         }
     }
-    if (confirm && session != null) AlertDialog(onDismissRequest = { confirm = false },
+    if (confirm && session != null) AppDialog(onDismissRequest = { confirm = false },
         title = { Text(uiText(R.string.ui_csv_import_screen_017)) },
         text = { DialogBody { Text(uiText(R.string.ui_csv_import_screen_018, MedicationPresentation.displayDigits(session.rows.count { it.decision.selected && it.error == null }.toString()), ready.catalog.pharmacy?.name)) } },
-        confirmButton = { TextButton(enabled = !busy, onClick = { confirm = false; vm.commitCsv() }) { Text(uiText(R.string.ui_csv_import_screen_019)) } },
-        dismissButton = { TextButton(onClick = { confirm = false }) { Text(uiText(R.string.ui_bulk_medication_editor_012)) } })
+        confirmButton = { AppButton(variant = AppButtonVariant.QUIET, enabled = !busy, onClick = { confirm = false; vm.commitCsv() }) { Text(uiText(R.string.ui_csv_import_screen_019)) } },
+        dismissButton = { AppButton(variant = AppButtonVariant.QUIET, onClick = { confirm = false }) { Text(uiText(R.string.ui_bulk_medication_editor_012)) } })
 }
 
 @Composable private fun CsvPreviewCard(row: CsvPreviewRow, session: CsvImportSession, result: CsvRowResult?, locked: Boolean, busy: Boolean,
@@ -105,7 +105,7 @@ import com.aqaqeer.app.reports.*
                     ((row.plan.category == null && row.plan.form == null) || decision.approveTaxonomy)) {
                 change(decision.copy(selected = it))
             }
-            if (row.duplicates.size == 1) TextButton(enabled = !busy, onClick = {
+            if (row.duplicates.size == 1) AppButton(variant = AppButtonVariant.QUIET, enabled = !busy, onClick = {
                 change(decision.copy(action = CsvAction.UPDATE, targetId = row.duplicates.single(), selected = false))
             }) { Text(uiText(R.string.logic_csv_update_match)) }
             ChoicePicker(uiText(R.string.ui_csv_import_screen_023), CsvAction.entries, decision.action, ::csvActionLabel, enabled = !busy, itemKey = { it.name }) { change(decision.copy(action = it, selected = false)) }
@@ -119,7 +119,7 @@ import com.aqaqeer.app.reports.*
                 }
             }
         }
-        TextButton(onClick = { expanded = !expanded }) { Text(if (expanded) uiText(R.string.ui_csv_import_screen_026) else uiText(R.string.ui_csv_import_screen_027)) }
+        AppButton(variant = AppButtonVariant.QUIET, onClick = { expanded = !expanded }) { Text(if (expanded) uiText(R.string.ui_csv_import_screen_026) else uiText(R.string.ui_csv_import_screen_027)) }
         if (expanded) {
             session.table.headers.zip(row.record.cells).forEach { (header, value) ->
                 LabeledValue(bidi(header), bidi(historyPreview(value).let { it.text.orEmpty() + if (it.shortened) uiText(R.string.ui_csv_import_screen_028) else "" }))

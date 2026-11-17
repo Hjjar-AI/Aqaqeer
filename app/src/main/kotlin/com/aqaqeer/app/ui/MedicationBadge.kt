@@ -17,8 +17,8 @@ import androidx.compose.ui.unit.dp
 @Composable internal fun MedicationBadge(text: String, tone: StatusTone, modifier: Modifier = Modifier,
     dense: Boolean = false, icon: UiIcon? = null, onClick: (() -> Unit)? = null,
     actionDescription: String = text, actionLabel: String = text) {
-    val container by animateColorAsState(tone.container, tween(180), label = "badge container")
-    val content by animateColorAsState(tone.content, tween(180), label = "badge content")
+    val container by animateColorAsState(tone.container, tween(Motion.standard), label = "badge container")
+    val content by animateColorAsState(tone.content, tween(Motion.standard), label = "badge content")
     val interaction = if (onClick == null) Modifier else Modifier
         .sizeIn(minWidth = UiSpacing.touch, minHeight = UiSpacing.touch)
         .clickable(role = Role.Button, onClickLabel = actionLabel, onClick = onClick)
@@ -32,10 +32,10 @@ import androidx.compose.ui.unit.dp
             Row(Modifier.padding(horizontal = if (dense) UiSpacing.hair else UiSpacing.badgeHorizontal,
                 vertical = UiSpacing.hair), verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(UiSpacing.hair)) {
-                if (!dense && icon != null) AppIcon(icon, modifier = Modifier.size(18.dp))
+                if (!dense && icon != null) AppIcon(icon, modifier = Modifier.size(Size.iconM))
                 Text(text, style = if (dense) MaterialTheme.typography.labelMedium else MaterialTheme.typography.labelLarge,
                     fontWeight = if (dense) FontWeight.Normal else FontWeight.Bold)
-                if (onClick != null) AppIcon(UiIcon.EDIT, Modifier.size(14.dp))
+                if (onClick != null) AppIcon(UiIcon.EDIT, Modifier.size(Size.iconS))
             }
         }
     }

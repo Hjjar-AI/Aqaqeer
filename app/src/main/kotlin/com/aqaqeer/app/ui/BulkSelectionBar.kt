@@ -19,7 +19,7 @@ import com.aqaqeer.app.data.MedicationPresentation
         ContentSection(modifier = Modifier.padding(UiSpacing.related)) {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Text(uiText(R.string.ui_bulk_selection_bar_001, MedicationPresentation.displayDigits(count.toString()), section), Modifier.weight(1f))
-                TextButton(enabled = !busy && visibleCount > 0, onClick = selectVisible) { Text(uiText(R.string.ui_bulk_selection_bar_002)) }
+                AppButton(variant = AppButtonVariant.QUIET, enabled = !busy && visibleCount > 0, onClick = selectVisible) { Text(uiText(R.string.ui_bulk_selection_bar_002)) }
                 IconButton(enabled = !busy, onClick = cancel) { AppIcon(UiIcon.CLOSE, description = uiText(R.string.ui_bulk_selection_bar_003)) }
             }
             if (!valid) Text(uiText(R.string.ui_bulk_selection_bar_004), color = MaterialTheme.colorScheme.error)

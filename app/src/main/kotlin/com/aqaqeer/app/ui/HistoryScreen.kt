@@ -42,7 +42,7 @@ import java.time.LocalDate
         item {
             ActionGroup {
                 val activeFilter = state.request.filter.let { it.from != null || it.through != null || it.entityType != null || (medicationId == null && it.medicationId != null) }
-                TextButton(onClick = { filtersOpen = true }, colors = ButtonDefaults.textButtonColors(
+                AppButton(variant = AppButtonVariant.QUIET, onClick = { filtersOpen = true }, colors = ButtonDefaults.textButtonColors(
                     containerColor = if (activeFilter) MaterialTheme.colorScheme.primaryContainer else androidx.compose.ui.graphics.Color.Transparent)) {
                     AppIcon(UiIcon.FILTER); Text(uiText(R.string.ui_history_screen_002) + if (activeFilter) " ●" else "")
                 }
@@ -50,7 +50,7 @@ import java.time.LocalDate
             }
             ExpandableInformation(uiText(R.string.ui_history_screen_004), uiText(R.string.ui_history_screen_005))
             InlineOperationStatus(state.loading, state.error)
-            if (state.error != null) TextButton(onClick = vm::retryHistory) { Text(uiText(R.string.ui_history_screen_006)) }
+            if (state.error != null) AppButton(variant = AppButtonVariant.QUIET, onClick = vm::retryHistory) { Text(uiText(R.string.ui_history_screen_006)) }
         }
         if (!state.loading && state.error == null && page?.entries?.isEmpty() == true) item {
             EmptyState(uiText(R.string.ui_history_screen_007), uiText(R.string.ui_history_screen_008))
@@ -71,10 +71,10 @@ import java.time.LocalDate
         }
         item {
             ActionGroup {
-                TextButton(enabled = !state.loading && state.request.page > 0,
+                AppButton(variant = AppButtonVariant.QUIET, enabled = !state.loading && state.request.page > 0,
                     onClick = { vm.historyPage(state.request.page - 1) }) { Text(uiText(R.string.ui_history_screen_009)) }
                 Text(uiText(R.string.ui_history_screen_003, MedicationPresentation.displayDigits((state.request.page + 1).toString())))
-                TextButton(enabled = !state.loading && page?.hasMore == true,
+                AppButton(variant = AppButtonVariant.QUIET, enabled = !state.loading && page?.hasMore == true,
                     onClick = { vm.historyPage(state.request.page + 1) }) { Text(uiText(R.string.ui_history_screen_010)) }
             }
         }
@@ -97,9 +97,9 @@ import java.time.LocalDate
             R.string.review_since_sunday to today.with(java.time.temporal.TemporalAdjusters.previousOrSame(java.time.DayOfWeek.SUNDAY)))
         var custom by rememberSaveable(filter.from, filter.through) { mutableStateOf(ranges.none { it.second == filter.from && filter.through == today }) }
         WrappingContent {
-            ranges.forEach { (label, start) -> FilterChip(selected = !custom && from == start.toString() && through == today.toString(),
+            ranges.forEach { (label, start) -> AppChip(selected = !custom && from == start.toString() && through == today.toString(),
                 onClick = { custom = false; from = start.toString(); through = today.toString() }, label = { Text(uiText(label)) }) }
-            FilterChip(selected = custom, onClick = { custom = true }, label = { Text(uiText(R.string.review_custom)) })
+            AppChip(selected = custom, onClick = { custom = true }, label = { Text(uiText(R.string.review_custom)) })
         }
         if (custom) {
         GregorianDateField(uiText(R.string.ui_history_screen_011), from, { from = it })
@@ -111,8 +111,8 @@ import java.time.LocalDate
         if (medicationScope == null) HistoryFilterPicker(uiText(R.string.ui_history_screen_014), medications, medication) { medication = it }
         if (!valid) Text(uiText(R.string.ui_history_screen_015), color = MaterialTheme.colorScheme.error)
         ActionGroup {
-            Button(enabled = valid, onClick = { apply(HistoryFilter(fromDate, throughDate, medicationScope ?: medication, entityType)) }) { Text(uiText(R.string.ui_history_screen_016)) }
-            TextButton(onClick = {
+            AppButton(enabled = valid, onClick = { apply(HistoryFilter(fromDate, throughDate, medicationScope ?: medication, entityType)) }) { Text(uiText(R.string.ui_history_screen_016)) }
+            AppButton(variant = AppButtonVariant.QUIET, onClick = {
                 from = ""; through = ""; medication = medicationScope
                 apply(HistoryFilter(medicationId = medicationScope))
             }) { Text(uiText(R.string.ui_history_screen_017)) }

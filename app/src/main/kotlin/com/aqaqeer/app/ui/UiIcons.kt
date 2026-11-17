@@ -61,5 +61,5 @@ internal enum class UiIcon(val resource: Int, val intrinsicColors: Boolean = fal
         12 -> UiIcon.FORM_SPRAY
         else -> UiIcon.FORM_FORM
     }
-    AppIcon(icon, modifier = Modifier.size(24.dp))
+    AppIcon(icon, modifier = Modifier.size(Space.xl))
 }
