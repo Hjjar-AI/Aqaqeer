@@ -41,6 +41,7 @@ import java.time.LocalDate
 @Composable internal fun MedicationNameLines(ar: String?, en: String?, mode: NameDisplay, prominent: Boolean = false,
     query: String = "", primaryStyle: TextStyle = MaterialTheme.typography.titleLarge, maxLines: Int = Int.MAX_VALUE,
     secondary: Boolean = false, strength: String? = null, titleTrailing: (@Composable () -> Unit)? = null) {
+    val uiText = rememberUiText()
     val separateStrength = strength != null && maxLines != Int.MAX_VALUE
     val names = remember(ar, en, mode) { MedicationPresentation.names(ar, en, mode) }
     names.forEachIndexed { index, name ->
@@ -78,6 +79,7 @@ import java.time.LocalDate
 @Composable internal fun MedicationSummary(medication: Medication, names: NameDisplay = NameDisplay.BOTH,
     prominent: Boolean = false, form: String? = null, query: String = "",
     primaryStyle: TextStyle = MaterialTheme.typography.titleLarge, titleTrailing: (@Composable () -> Unit)? = null) {
+    val uiText = rememberUiText()
     MedicationNameLines(medication.genericAr, medication.genericEn, names, prominent, query, primaryStyle,
         strength = medication.strength, titleTrailing = titleTrailing)
     if (medication.nameAr != null || medication.nameEn != null) {
@@ -99,15 +101,10 @@ import java.time.LocalDate
 
 @Composable internal fun StatusBadge(status: AvailabilityStatus, onClick: (() -> Unit)? = null, editLabel: String? = null,
     dense: Boolean = false) {
-    val tone = statusTone(status)
-    val symbol = when (status) {
-        AvailabilityStatus.AVAILABLE -> UiIcon.CHECK
-        AvailabilityStatus.LOW -> UiIcon.WARNING
-        AvailabilityStatus.OUT -> UiIcon.CLOSE
-        AvailabilityStatus.UNKNOWN -> UiIcon.UNKNOWN
-    }
-    MedicationBadge(statusLabel(status), tone, dense = dense, icon = symbol, onClick = onClick,
-        actionDescription = "${statusLabel(status)} · ${editLabel.orEmpty()}", actionLabel = uiText(R.string.ui_pharmacy_admin_screen_120))
+    val uiText = rememberUiText()
+    val presentation = availabilityBadge(status)
+    MedicationBadge(presentation.text, presentation.tone, dense = dense, icon = presentation.icon, onClick = onClick,
+        actionDescription = "${presentation.text} · ${editLabel.orEmpty()}", actionLabel = uiText(R.string.ui_pharmacy_admin_screen_120))
 }
 
 @Composable internal fun MedicationCard(row: MedicationRowUi, sectionId: String?,
@@ -116,6 +113,7 @@ import java.time.LocalDate
     selectionEnabled: Boolean = true, query: String = "", unpublished: Boolean = false,
     onLongClick: (() -> Unit)? = null, highlighted: Boolean = false,
     reserveSelectionSpace: Boolean = false, quickMenuOpen: Boolean = false, dismissQuickMenu: () -> Unit = {}, chooseStatus: (AvailabilityStatus) -> Unit = {}) {
+    val uiText = rememberUiText()
     val medication = row.medication
     val compact = preferences.layout == CardLayout.COMPACT
     val form = row.form
@@ -127,15 +125,15 @@ import java.time.LocalDate
     val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
     val pendingMarker: (@Composable () -> Unit)? = if (unpublished || row.fetched) ({
         Column {
-            if (unpublished) Text(uiText(R.string.review_unpublished), style = MaterialTheme.typography.labelSmall)
-            if (row.fetched) Text(uiText(R.string.review_changed), style = MaterialTheme.typography.labelSmall)
+            if (unpublished) Text(changeBadge(fetched = false).text, style = MaterialTheme.typography.labelSmall)
+            if (row.fetched) Text(changeBadge(fetched = true).text, style = MaterialTheme.typography.labelSmall)
         }
     }) else null
     val interaction = if (bulkSelected == null) Modifier.combinedClickable(role = Role.Button, onClick = onClick,
         onLongClick = onLongClick, hapticFeedbackEnabled = false, onLongClickLabel = if (onLongClick != null) uiText(R.string.ui_medication_components_003) else null)
         else Modifier.toggleable(value = bulkSelected, enabled = selectionEnabled, role = Role.Checkbox,
             onValueChange = { toggleSelection() }).semantics {
-                contentDescription = uiText(R.string.ui_medication_components_004, name, statusLabel(status)) + if (unpublished) uiText(R.string.ui_medication_components_005) else ""
+                contentDescription = uiText(R.string.ui_medication_components_004, name, statusLabel(status, text = uiText)) + if (unpublished) uiText(R.string.ui_medication_components_005) else ""
             }
     val quickEditAction = if (bulkSelected == null && onQuickEdit != null) Modifier.semantics {
         customActions = listOf(CustomAccessibilityAction(uiText(R.string.ui_pharmacy_admin_screen_120)) {
@@ -232,8 +230,7 @@ import java.time.LocalDate
 }
 
 @Composable private fun ExpiryBadge(expiry: ExpiryState, dense: Boolean, modifier: Modifier) {
-    val expired = expiry == ExpiryState.EXPIRED
-    val tone = if (expired) LocalStatusColors.current.out else LocalStatusColors.current.low
-    MedicationBadge(if (expired) uiText(R.string.ui_medication_components_010) else uiText(R.string.ui_medication_components_011), tone, dense = dense,
-        icon = UiIcon.WARNING, modifier = modifier)
+    val uiText = rememberUiText()
+    val presentation = expiryBadge(expiry)
+    MedicationBadge(presentation.text, presentation.tone, dense = dense, icon = presentation.icon, modifier = modifier)
 }

@@ -8,6 +8,7 @@ import com.aqaqeer.app.R
 import com.aqaqeer.app.uiText
 
 @Composable internal fun DemoModeControls(admin: Boolean, change: (Boolean) -> Unit, reset: () -> Unit) {
+    val uiText = rememberUiText()
     var confirmReset by rememberSaveable { mutableStateOf(false) }
     SettingsGroup(uiText(R.string.review_demo_mode), initiallyExpanded = true) {
         RadioChoiceRows(listOf(false, true), admin, change,

@@ -50,12 +50,15 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.collect
 
 internal fun bidi(value: String): String = BidiFormatter.getInstance(true).unicodeWrap(value)
-internal fun statusLabel(status: AvailabilityStatus): String = uiText(when (status) {
+internal fun statusLabel(status: AvailabilityStatus, text: UiText? = null): String = run {
+    val uiText = text ?: UiText(com.aqaqeer.app.AppStrings.resources)
+    uiText(when (status) {
     AvailabilityStatus.AVAILABLE -> R.string.status_available
     AvailabilityStatus.LOW -> R.string.status_low
     AvailabilityStatus.OUT -> R.string.status_out
     AvailabilityStatus.UNKNOWN -> R.string.status_unknown
 })
+}
 
 @Composable fun AqaqeerApp(viewModel: CatalogViewModel) {
     val state by viewModel.shellState.collectAsStateWithLifecycle()
@@ -70,6 +73,7 @@ internal fun statusLabel(status: AvailabilityStatus): String = uiText(when (stat
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable private fun AppContent(state: AppUiState, viewModel: CatalogViewModel) = BoxWithConstraints(Modifier.fillMaxSize()) {
+    val uiText = rememberUiText()
     val density = LocalDensity.current
     val direction = LocalLayoutDirection.current
     val contentInsets = ScaffoldDefaults.contentWindowInsets
@@ -126,8 +130,8 @@ internal fun statusLabel(status: AvailabilityStatus): String = uiText(when (stat
         ?.let { id -> readyForTitle?.catalog?.medications?.find { it.id == id } }
     val title = when {
         titleMedication != null && !dualPane -> bidi(MedicationPresentation.identity(titleMedication))
-        homeDestination -> readyForTitle?.catalog?.pharmacy?.name ?: screenTitle(state.destination)
-        else -> screenTitle(state.destination)
+        homeDestination -> readyForTitle?.catalog?.pharmacy?.name ?: uiText(screenTitleResource(state.destination))
+        else -> uiText(screenTitleResource(state.destination))
     }
     val medicationActions: @Composable (CatalogState.Ready, Medication) -> Unit = { ready, medication ->
         val editable = ready.admin && !ready.requiresUpdate && !ready.maintenancePaused
@@ -420,6 +424,7 @@ internal fun statusLabel(status: AvailabilityStatus): String = uiText(when (stat
 }
 
 @Composable internal fun DemoNotice() {
+    val uiText = rememberUiText()
     Surface(color = MaterialTheme.colorScheme.secondaryContainer, shape = MaterialTheme.shapes.medium) {
         Column(Modifier.fillMaxWidth().padding(horizontal = UiSpacing.page, vertical = UiSpacing.related)) {
             Text(uiText(R.string.ui_aqaqeer_app_024), fontWeight = FontWeight.Bold,
@@ -431,6 +436,7 @@ internal fun statusLabel(status: AvailabilityStatus): String = uiText(when (stat
 
 @Composable private fun MedicationScreen(ready: CatalogState.Ready, medication: Medication, now: java.time.Instant, showHijri: Boolean,
     pageHeader: (@Composable () -> Unit)?, vm: CatalogViewModel) {
+    val uiText = rememberUiText()
     val catalog = ready.catalog
     var editor by rememberSaveable(catalog.pharmacy?.pharmacyId, medication.id, stateSaver = AvailabilitySelectionSaver) { mutableStateOf<AvailabilitySelection?>(null) }
     val busy by vm.adminBusy.collectAsStateWithLifecycle()
@@ -446,7 +452,7 @@ internal fun statusLabel(status: AvailabilityStatus): String = uiText(when (stat
             WrappingContent {
                 catalog.sections.forEachIndexed { index, section ->
                     AssistChip(onClick = { scope.launch { listState.animateScrollToItem(index + 1) } }, label = {
-                        Text(section.nameAr + " · " + statusLabel(catalog.status(medication.id, section.id)))
+                        Text(section.nameAr + " · " + statusLabel(catalog.status(medication.id, section.id), text = uiText))
                     })
                 }
             }
@@ -465,7 +471,7 @@ internal fun statusLabel(status: AvailabilityStatus): String = uiText(when (stat
                     choose = { status -> if (current && !vm.adminBusy.value) vm.saveAvailability(captured, BulkMedicationChanges(status = status)) { if (editor == captured) editor = null } })
                 if (record == null) SupportingText(uiText(R.string.ui_aqaqeer_app_031))
                 else {
-                    SupportingText(relativeTime(record.updatedAt, now))
+                    SupportingText(relativeTime(record.updatedAt, now, text = uiText))
                     CollapsibleGroup(uiText(R.string.ui_history_components_021), expanded, { expanded = !expanded }) {
                         SupportingText(bidi(MedicationPresentation.timestamp(record.updatedAt, catalog.pharmacy?.timezone ?: "Asia/Damascus")))
                     }
@@ -497,6 +503,7 @@ internal fun statusLabel(status: AvailabilityStatus): String = uiText(when (stat
     demo: Boolean = false,
     demoAdmin: Boolean = false,
     actions: SettingsActions) {
+    val uiText = rememberUiText()
     val setTheme = actions.setTheme
     val setSort = actions.setSort
     val setLayout = actions.setLayout
@@ -563,6 +570,7 @@ internal fun statusLabel(status: AvailabilityStatus): String = uiText(when (stat
 }
 
 @Composable private fun AboutScreen(contact: () -> Unit) {
+    val uiText = rememberUiText()
     LazyColumn(Modifier.fillMaxSize().testTag("about"), contentPadding = PaddingValues(UiSpacing.page),
         verticalArrangement = Arrangement.spacedBy(UiSpacing.section), horizontalAlignment = Alignment.CenterHorizontally) {
         item { BrandEmblem(Modifier.size(Size.emblemLarge)) }
@@ -589,6 +597,7 @@ internal fun statusLabel(status: AvailabilityStatus): String = uiText(when (stat
 }
 
 @Composable internal fun WelcomeScreen(openSettings: () -> Unit, openConnection: (() -> Unit)? = null, openCreate: (() -> Unit)? = null, openRestore: (() -> Unit)? = null) {
+    val uiText = rememberUiText()
     val compactHeight = LocalLayoutMetrics.current.compact(viewportHeight(1f), LayoutTokens.welcomeCompactHeight)
     Column(Modifier.fillMaxWidth().padding(vertical = UiSpacing.section), horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(UiSpacing.section)) {
@@ -614,6 +623,7 @@ internal fun statusLabel(status: AvailabilityStatus): String = uiText(when (stat
 }
 
 @Composable private fun LoadingScreen() {
+    val uiText = rememberUiText()
     Column(Modifier.fillMaxSize().padding(UiSpacing.page), verticalArrangement = Arrangement.spacedBy(UiSpacing.section)) {
         Text(uiText(R.string.ui_aqaqeer_app_084), style = MaterialTheme.typography.bodyMedium)
         CircularProgressIndicator()
@@ -621,6 +631,7 @@ internal fun statusLabel(status: AvailabilityStatus): String = uiText(when (stat
 }
 
 @Composable private fun RecoveryScreen(retry: () -> Unit, openSettings: () -> Unit) {
+    val uiText = rememberUiText()
     FormPage {
         Text(uiText(R.string.ui_aqaqeer_app_085), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
         SectionHeading(uiText(R.string.ui_aqaqeer_app_086))

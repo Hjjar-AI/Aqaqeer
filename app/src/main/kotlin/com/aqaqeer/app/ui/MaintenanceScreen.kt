@@ -16,6 +16,7 @@ import com.aqaqeer.app.data.*
 import com.aqaqeer.app.maintenance.*
 
 @Composable internal fun MaintenanceScreen(ready: CatalogState.Ready?, vm: CatalogViewModel) {
+    val uiText = rememberUiText()
     if (ready == null || ready.isDemo || ready.catalog.pharmacy == null) {
         InformationCard(uiText(R.string.ui_maintenance_screen_001), uiText(R.string.ui_maintenance_screen_002))
         return
@@ -150,6 +151,7 @@ import com.aqaqeer.app.maintenance.*
 }
 
 @Composable private fun ReplacementFileFields(vm: CatalogViewModel, busy: Boolean) {
+    val uiText = rememberUiText()
     var selected by remember { mutableStateOf<android.net.Uri?>(null) }
     var password by remember { mutableStateOf("") }
     val picker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { selected = it }
@@ -166,6 +168,7 @@ import com.aqaqeer.app.maintenance.*
 }
 
 @Composable private fun PinChangeFields(vm: CatalogViewModel, busy: Boolean) {
+    val uiText = rememberUiText()
     var current by remember { mutableStateOf("") }; var next by remember { mutableStateOf("") }; var confirmation by remember { mutableStateOf("") }
     GroupedCard(title = uiText(R.string.ui_maintenance_screen_048)) {
         SecretField(uiText(R.string.ui_maintenance_screen_049), current, { current = it }, required = true, numericSecret = true, validate = FormGuidance::pin)
@@ -181,11 +184,13 @@ import com.aqaqeer.app.maintenance.*
 }
 
 @Composable private fun AuthorizationNeeded(vm: CatalogViewModel, busy: Boolean) {
+    val uiText = rememberUiText()
     Text(uiText(R.string.ui_maintenance_screen_054))
     NavigationCard(uiText(R.string.ui_maintenance_screen_055), { vm.navigate(Route.Promote) }, enabled = !busy)
 }
 
 @Composable internal fun MaintenanceIdentity(label: String, title: String?, bot: Long?, group: Long?, publication: String?, time: String?) {
+    val uiText = rememberUiText()
     var expanded by rememberSaveable(label, publication) { mutableStateOf(false) }
     CollapsibleGroup(label, expanded, { expanded = !expanded }) {
         title?.let { Text(it) }
@@ -197,6 +202,7 @@ import com.aqaqeer.app.maintenance.*
 }
 
 @Composable private fun MaintenanceBackupFields(j: MaintenanceJournal, vm: CatalogViewModel, busy: Boolean) {
+    val uiText = rememberUiText()
     var password by remember(j.id) { mutableStateOf("") }; var confirmation by remember(j.id) { mutableStateOf("") }
     var flow by remember { mutableStateOf<String?>(null) }
     val secrets = remember { BackupExportSecrets() }
@@ -220,6 +226,7 @@ import com.aqaqeer.app.maintenance.*
 }
 
 @Composable private fun DestinationFields(j: MaintenanceJournal, vm: CatalogViewModel, busy: Boolean) {
+    val uiText = rememberUiText()
     var token by remember(j.id) { mutableStateOf("") }; var group by remember(j.id) { mutableStateOf("") }
     var title by remember(token, group) { mutableStateOf<String?>(null) }
     GroupedCard(title = uiText(R.string.ui_maintenance_screen_064)) {

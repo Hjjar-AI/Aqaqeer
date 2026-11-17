@@ -14,6 +14,7 @@ import com.aqaqeer.app.data.MedicationPresentation
 @Composable internal fun BulkSelectionBar(section: String, count: Int, valid: Boolean, busy: Boolean,
     cancel: () -> Unit, visibleCount: Int = 0,
     selectVisible: () -> Unit = {}, clear: () -> Unit = {}, content: @Composable () -> Unit = {}) {
+    val uiText = rememberUiText()
     Surface(color = MaterialTheme.colorScheme.primaryContainer, contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
         shape = MaterialTheme.shapes.medium, modifier = Modifier.fillMaxWidth().testTag("bulk_selection_bar")) {
         ContentSection(modifier = Modifier.padding(UiSpacing.related)) {

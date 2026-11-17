@@ -24,6 +24,7 @@ import com.aqaqeer.app.BuildConfig
     select: (android.net.Uri) -> Unit, stage: (CharArray) -> Unit, cancel: () -> Unit,
     discard: (String) -> Unit, retryStorage: () -> Unit, verify: (String) -> Unit,
     activate: (String) -> Unit) {
+    val uiText = rememberUiText()
     val focus = LocalFocusManager.current
     var password by remember(state.selectedUri) { mutableStateOf("") }
     var confirmDiscard by remember(state.pending?.id) { mutableStateOf(false) }

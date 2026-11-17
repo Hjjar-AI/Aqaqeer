@@ -36,8 +36,8 @@ internal enum class UiIcon(val resource: Int, val intrinsicColors: Boolean = fal
     PUBLISH(R.drawable.ic_publish), ADD(R.drawable.ic_add), CALENDAR(R.drawable.ic_calendar),
 }
 
-@Composable internal fun AppIcon(icon: UiIcon, modifier: Modifier = Modifier, description: String? = null) {
-    Icon(painterResource(icon.resource), contentDescription = description, modifier = modifier,
+@Composable internal fun AppIcon(icon: UiIcon, modifier: Modifier = Modifier, description: String? = null, size: androidx.compose.ui.unit.Dp? = null) {
+    Icon(painterResource(icon.resource), contentDescription = description, modifier = if (size == null) modifier else modifier.size(size),
         tint = if (icon.intrinsicColors) Color.Unspecified else LocalContentColor.current)
 }
 
@@ -61,5 +61,5 @@ internal enum class UiIcon(val resource: Int, val intrinsicColors: Boolean = fal
         12 -> UiIcon.FORM_SPRAY
         else -> UiIcon.FORM_FORM
     }
-    AppIcon(icon, modifier = Modifier.size(Space.xl))
+    AppIcon(icon, size = Size.iconL)
 }

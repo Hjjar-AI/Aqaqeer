@@ -24,6 +24,7 @@ import com.aqaqeer.app.uiText
 /** Screen-owned expansion lets drawers, accordions and settings use different policies. */
 @Composable internal fun CollapsibleGroup(title: String, expanded: Boolean, toggle: () -> Unit,
     modifier: Modifier = Modifier, contentSpacing: Dp = UiSpacing.related, content: @Composable ColumnScope.() -> Unit) {
+    val uiText = rememberUiText()
     Column(modifier.fillMaxWidth().animateContentSize()) {
         AppButton(variant = AppButtonVariant.QUIET, onClick = toggle, modifier = Modifier.fillMaxWidth().heightIn(min = UiSpacing.touch)
             .semantics { stateDescription = uiText(if (expanded) R.string.ui_home_drawer_010 else R.string.ui_home_drawer_011) }) {
@@ -100,6 +101,7 @@ internal data class Notice(val text: String, val severity: NoticeSeverity = Noti
 }
 
 @Composable internal fun CopyableValue(label: String, value: String) {
+    val uiText = rememberUiText()
     val clipboard = LocalClipboard.current
     val scope = rememberCoroutineScope()
     var copied by remember(value) { mutableStateOf(false) }
@@ -122,11 +124,12 @@ internal data class Notice(val text: String, val severity: NoticeSeverity = Noti
 @Composable internal fun EditableStatusPill(status: com.aqaqeer.app.data.AvailabilityStatus,
     onOpen: (() -> Unit)?, expanded: Boolean, dismiss: () -> Unit,
     choose: (com.aqaqeer.app.data.AvailabilityStatus) -> Unit, enabled: Boolean = true, dense: Boolean = false) {
+    val uiText = rememberUiText()
     Box(Modifier.heightIn(min = UiSpacing.touch), contentAlignment = Alignment.Center) {
         StatusBadge(status, if (enabled) onOpen else null, dense = dense)
         DropdownMenu(expanded = expanded, onDismissRequest = dismiss) {
             com.aqaqeer.app.data.MedicationPresentation.editableStatuses.forEach { candidate ->
-                DropdownMenuItem(text = { Text(statusLabel(candidate)) }, enabled = enabled && candidate != status,
+                DropdownMenuItem(text = { Text(statusLabel(candidate, text = uiText)) }, enabled = enabled && candidate != status,
                     onClick = { choose(candidate) }, trailingIcon = if (candidate == status) ({ AppIcon(UiIcon.CHECK) }) else null)
             }
         }
@@ -134,6 +137,7 @@ internal data class Notice(val text: String, val severity: NoticeSeverity = Noti
 }
 
 @Composable internal fun SettingsGroup(title: String, initiallyExpanded: Boolean = false, content: @Composable ColumnScope.() -> Unit) {
+    val uiText = rememberUiText()
     var expanded by rememberSaveable(title) { mutableStateOf(initiallyExpanded) }
     GroupedCard {
         Column(Modifier.fillMaxWidth().animateContentSize()) {
@@ -167,6 +171,7 @@ internal data class Notice(val text: String, val severity: NoticeSeverity = Noti
 }
 
 @Composable internal fun CardLayoutPicker(selected: com.aqaqeer.app.data.CardLayout, change: (com.aqaqeer.app.data.CardLayout) -> Unit) {
+    val uiText = rememberUiText()
     ContentSection {
         Text(uiText(R.string.ui_aqaqeer_app_050), Modifier.semantics { heading() }, style = MaterialTheme.typography.titleSmall)
         AdaptivePickers(first = { LayoutChoice(com.aqaqeer.app.data.CardLayout.COMPACT, selected, change) },
@@ -175,6 +180,7 @@ internal data class Notice(val text: String, val severity: NoticeSeverity = Noti
 }
 @Composable private fun LayoutChoice(layout: com.aqaqeer.app.data.CardLayout, selected: com.aqaqeer.app.data.CardLayout,
     change: (com.aqaqeer.app.data.CardLayout) -> Unit) {
+    val uiText = rememberUiText()
     AppChip(selected == layout, onClick = { change(layout) }, modifier = Modifier.fillMaxWidth(), shape = MaterialTheme.shapes.medium, label = {
         Column { Text(uiText(if (layout == com.aqaqeer.app.data.CardLayout.COMPACT) R.string.ui_aqaqeer_app_051 else R.string.ui_aqaqeer_app_052))
             repeat(if (layout == com.aqaqeer.app.data.CardLayout.COMPACT) 2 else 4) {
@@ -184,6 +190,7 @@ internal data class Notice(val text: String, val severity: NoticeSeverity = Noti
     })
 }
 @Composable internal fun MedicationLayoutPreview(layout: com.aqaqeer.app.data.CardLayout) {
+    val uiText = rememberUiText()
     Surface(modifier = Modifier.fillMaxWidth(), shape = MaterialTheme.shapes.medium,
         border = BorderStroke(AppStroke.hairline, MaterialTheme.colorScheme.outlineVariant), color = MaterialTheme.colorScheme.surface) {
         Column(Modifier.padding(UiSpacing.section), verticalArrangement = Arrangement.spacedBy(UiSpacing.hair)) {
@@ -196,6 +203,7 @@ internal data class Notice(val text: String, val severity: NoticeSeverity = Noti
 }
 
 @Composable internal fun SetupChecklist(ready: com.aqaqeer.app.data.CatalogState.Ready, navigate: (Route) -> Unit) {
+    val uiText = rememberUiText()
     val context = androidx.compose.ui.platform.LocalContext.current
     val pharmacy = ready.catalog.pharmacy?.pharmacyId ?: return
     val prefs = remember { context.getSharedPreferences("setup_checklist", android.content.Context.MODE_PRIVATE) }

@@ -33,6 +33,7 @@ import com.aqaqeer.app.data.*
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable internal fun HomeSectionsBar(active: List<Section>, selectedId: String?,
     outCounts: Map<String, Int>, selectSection: (String) -> Unit, availableSearchSections: Set<String> = emptySet()) {
+    val uiText = rememberUiText()
     if (active.isNotEmpty()) BoxWithConstraints(Modifier.fillMaxWidth()) {
         val measurer = androidx.compose.ui.text.rememberTextMeasurer()
         val style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold)
@@ -79,6 +80,7 @@ import com.aqaqeer.app.data.*
     openFilters: () -> Unit, clearFilters: () -> Unit, compact: Boolean = false,
     showFetchedChip: Boolean = false, toggleFetched: () -> Unit = {},
     addMedication: (() -> Unit)? = null, addEnabled: Boolean = true) {
+    val uiText = rememberUiText()
     val focus = LocalFocusManager.current
     val searchShape = AppShapeTokens.search
     val hasFilters = filters.statuses.isNotEmpty() || filters.categoryIds.isNotEmpty() ||
@@ -165,6 +167,7 @@ import com.aqaqeer.app.data.*
     WrappingContent { ExtraFilterChips(filters, admin, toggle) }
 }
 @Composable private fun ExtraFilterChips(filters: HomeFilters, admin: Boolean, toggle: (String) -> Unit) {
+    val uiText = rememberUiText()
     AppChip(filters.expiringSoon, onClick = { toggle("expiry") }, label = { Text(uiText(R.string.review_expiry_soon)) })
     if (admin) AppChip(filters.unpublishedOnly, onClick = { toggle("unpublished") }, label = { Text(uiText(R.string.review_unpublished)) })
     AppChip(filters.fetchedOnly, onClick = { toggle("fetched") }, label = { Text(uiText(R.string.review_whats_new)) })

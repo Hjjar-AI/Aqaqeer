@@ -38,6 +38,7 @@ import com.aqaqeer.app.data.CatalogSnapshot
     tag: String = label, keyboardOptions: androidx.compose.foundation.text.KeyboardOptions? = null,
     numericSecret: Boolean = false, ltr: Boolean = false, singleLine: Boolean = true,
     imeAction: ImeAction = if (singleLine) ImeAction.Next else ImeAction.Default, onDone: (() -> Unit)? = null, trailingContent: (@Composable () -> Unit)? = null, rule: String? = null) {
+    val uiText = rememberUiText()
     val focus = LocalFocusManager.current
     var focusedOnce by rememberSaveable(tag) { mutableStateOf(false) }
     var touched by rememberSaveable(tag) { mutableStateOf(false) }
@@ -133,6 +134,7 @@ import com.aqaqeer.app.data.CatalogSnapshot
 
 @Composable internal fun InlineOperationStatus(busy: Boolean, error: String?, message: String? = null,
     cancel: (() -> Unit)? = null) {
+    val uiText = rememberUiText()
     if (busy || error != null || message != null) Column(Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(UiSpacing.related)) {
         if (busy) {
@@ -146,6 +148,7 @@ import com.aqaqeer.app.data.CatalogSnapshot
 
 @Composable internal fun ConflictChoices(conflicts: List<EditConflict>, choices: Map<String, Boolean>,
     catalog: CatalogSnapshot, choose: (Map<String, Boolean>) -> Unit) {
+    val uiText = rememberUiText()
     conflicts.forEach { conflict ->
         if (conflict.key.startsWith("missing:")) {
             RetainedPinRecoveryChoice(conflict, choices[conflict.key] == true) {
@@ -158,9 +161,9 @@ import com.aqaqeer.app.data.CatalogSnapshot
             val restoreParent = conflict.key.startsWith("parent:")
             val restoreReference = conflict.key.startsWith("reference:")
             Text(if (deletion) uiText(R.string.ui_admin_components_008) else uiText(R.string.ui_admin_components_009))
-            AdaptivePickers(first = { Text(uiText(R.string.ui_admin_components_010, reviewValue(conflict.field, conflict.mine, catalog))) },
-                second = { Text(uiText(R.string.ui_admin_components_011, reviewValue(conflict.field, conflict.theirs, catalog))) })
-            ExpandableInformation(uiText(R.string.ui_admin_components_012), reviewValue(conflict.field, conflict.base, catalog))
+            AdaptivePickers(first = { Text(uiText(R.string.ui_admin_components_010, reviewValue(conflict.field, conflict.mine, catalog, text = uiText))) },
+                second = { Text(uiText(R.string.ui_admin_components_011, reviewValue(conflict.field, conflict.theirs, catalog, text = uiText))) })
+            ExpandableInformation(uiText(R.string.ui_admin_components_012), reviewValue(conflict.field, conflict.base, catalog, text = uiText))
             RadioChoiceRows(listOf(true, false), choices[conflict.key],
                 { choose(choices + (conflict.key to it)) },
                 { mine -> when {
@@ -175,6 +178,7 @@ import com.aqaqeer.app.data.CatalogSnapshot
 
 @Composable private fun RetainedPinRecoveryChoice(conflict: EditConflict, confirmed: Boolean,
     confirm: (Boolean) -> Unit) {
+    val uiText = rememberUiText()
     GroupedCard(title = uiText(R.string.pin_recovery_title)) {
         LabeledValue(uiText(R.string.pin_recovery_retained), bidi(conflict.base))
         Text(conflict.theirs)
@@ -184,6 +188,7 @@ import com.aqaqeer.app.data.CatalogSnapshot
 }
 
 @Composable internal fun BackupReminderCard(export: () -> Unit, dismiss: () -> Unit) {
+    val uiText = rememberUiText()
     GroupedCard(title = uiText(R.string.ui_admin_components_021)) {
         SupportingText(uiText(R.string.ui_admin_components_022))
         ActionGroup {
@@ -209,6 +214,7 @@ internal class BackupExportSecrets {
 
 @Composable internal fun BackupPassphraseFields(password: String, confirmation: String, setPassword: (String) -> Unit,
     setConfirmation: (String) -> Unit) {
+    val uiText = rememberUiText()
     SecretField(uiText(R.string.ui_admin_components_025), password, setPassword, required = true, supportingText = uiText(R.string.ui_admin_components_026), validate = { if (it.codePointCount(0, it.length) >= 8) null else uiText(R.string.ui_admin_components_027) })
     SecretField(uiText(R.string.ui_admin_components_028), confirmation, setConfirmation, required = true, imeAction = ImeAction.Done, validate = { if (it == password) null else uiText(R.string.ui_admin_components_029) })
 }

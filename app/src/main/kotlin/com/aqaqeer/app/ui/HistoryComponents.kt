@@ -16,6 +16,7 @@ import kotlinx.serialization.json.*
 
 @Composable internal fun HistoryEntryCard(entry: HistoryDisplayEntry, catalog: CatalogSnapshot, timezone: String,
     medicationNames: Map<String, String>, editMedication: ((String) -> Unit)?, showHijri: Boolean = false) {
+    val uiText = rememberUiText()
     val recordBeforeName = remember(entry.before, catalog.forms) { historyRecordName(entry.before, catalog.forms) }
     val recordAfterName = remember(entry.after, catalog.forms) { historyRecordName(entry.after, catalog.forms) }
     val medicationId = when (entry.entityType) {
@@ -101,6 +102,7 @@ import kotlinx.serialization.json.*
 }
 
 @Composable private fun HistoryValueLine(label: String, field: String, preview: HistoryValue, catalog: CatalogSnapshot) {
+    val uiText = rememberUiText()
     val raw = preview.text
     val element = remember(raw) { raw?.let { runCatching { Json.parseToJsonElement(it) }.getOrNull() } }
     val text = when {
@@ -109,11 +111,11 @@ import kotlinx.serialization.json.*
         element is JsonObject -> {
             val name = remember(preview, catalog.forms) { historyRecordName(preview, catalog.forms) }
             name ?: (element["status"] as? JsonPrimitive)?.contentOrNull?.let {
-                runCatching { statusLabel(AvailabilityStatus.valueOf(it)) }.getOrNull()
+                runCatching { statusLabel(AvailabilityStatus.valueOf(it), text = uiText) }.getOrNull()
             } ?: uiText(R.string.ui_history_components_035)
         }
         field in setOf("@entity", "record") -> uiText(R.string.ui_history_components_035)
-        element is JsonPrimitive -> reviewValue(field, raw, catalog, limit = 512)
+        element is JsonPrimitive -> reviewValue(field, raw, catalog, limit = 512, text = uiText)
         else -> raw
     }
     val display = historyPreview(text)

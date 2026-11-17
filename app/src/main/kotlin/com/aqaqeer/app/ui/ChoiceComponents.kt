@@ -98,6 +98,7 @@ import androidx.compose.ui.unit.dp
 
 @Composable internal fun <T> ChoicePicker(label: String, values: List<T>, selected: T?, name: (T) -> String,
     enabled: Boolean = true, itemKey: (T) -> String = { it.toString() }, choose: (T) -> Unit) {
+    val uiText = rememberUiText()
     var expanded by remember { mutableStateOf(false) }
     Box(Modifier.fillMaxWidth()) {
         Surface(shape = MaterialTheme.shapes.small, color = MaterialTheme.colorScheme.surfaceVariant,

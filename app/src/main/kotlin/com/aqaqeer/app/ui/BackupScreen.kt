@@ -20,6 +20,7 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
 @Composable internal fun BackupScreen(state: AppUiState, vm: CatalogViewModel) {
+    val uiText = rememberUiText()
     val ready = state.catalog as? CatalogState.Ready ?: return
     if (ready.isDemo) return
     val busy by vm.adminBusy.collectAsStateWithLifecycle()
@@ -96,6 +97,7 @@ import java.time.format.DateTimeFormatter
 }
 
 @Composable private fun RestoreReview(ready: CatalogState.Ready, vm: CatalogViewModel, busy: Boolean) {
+    val uiText = rememberUiText()
     val sharing by vm.sharing.status.collectAsStateWithLifecycle()
     var replace by remember { mutableStateOf(false) }; var typedName by remember { mutableStateOf("") }
     var choices by remember { mutableStateOf<Map<String, Boolean>>(emptyMap()) }
@@ -116,6 +118,7 @@ import java.time.format.DateTimeFormatter
 }
 
 @Composable private fun RestoreConnectionCheck(confirmed: Boolean, vm: CatalogViewModel, busy: Boolean) {
+    val uiText = rememberUiText()
     var token by remember { mutableStateOf("") }; var title by remember(token) { mutableStateOf<String?>(null) }
     GroupedCard(title = uiText(R.string.ui_backup_screen_026)) {
         SecretField(uiText(R.string.ui_backup_screen_027_label), token, { token = it }, required = false, rule = uiText(R.string.ui_backup_screen_027_rule), tag = uiText(R.string.ui_backup_screen_027))

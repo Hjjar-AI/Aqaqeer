@@ -13,6 +13,7 @@ import com.aqaqeer.app.data.MedicationPresentation
 
 @Composable internal fun PendingChangesBanner(ready: CatalogState.Ready, sharing: SharingStatus, busy: Boolean,
     review: () -> Unit, publish: () -> Unit) {
+    val uiText = rememberUiText()
     if (!ready.admin || ready.isDemo || (ready.pendingCount == 0 && !ready.uncertain && !sharing.busy)) return
     val working = busy || sharing.busy
     val blocked = publicationBlockedReason(ready, sharing, working)

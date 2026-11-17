@@ -18,6 +18,7 @@ import java.time.ZoneId
 import java.time.ZoneOffset
 
 @Composable internal fun TimezoneField(value: String, change: (String) -> Unit) {
+    val uiText = rememberUiText()
     var open by rememberSaveable { mutableStateOf(false) }
     fun city(zone: String): String = android.icu.text.TimeZoneNames.getInstance(java.util.Locale.forLanguageTag("ar"))
         .getExemplarLocationName(zone) ?: zone.substringAfterLast('/').replace('_', ' ')
@@ -47,6 +48,7 @@ import java.time.ZoneOffset
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable internal fun GregorianDateField(label: String, value: String, change: (String) -> Unit,
     submitted: Boolean = false, required: Boolean = false, tag: String = label) {
+    val uiText = rememberUiText()
     var open by rememberSaveable(label) { mutableStateOf(false) }
     FormField(label, value, { change(MedicationPresentation.westernDigits(it)) }, supportingText = uiText(R.string.ui_technical_fields_005), required = required, submitted = submitted, validate = FormGuidance::date, tag = tag, ltr = true, trailingContent = {
             IconButton(onClick = { open = true }) {

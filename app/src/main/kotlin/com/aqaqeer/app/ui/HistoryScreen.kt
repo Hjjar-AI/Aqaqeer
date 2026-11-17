@@ -18,6 +18,7 @@ import java.time.LocalDate
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable internal fun HistoryScreen(ready: CatalogState.Ready?, medicationId: String?, vm: CatalogViewModel, showHijri: Boolean = false) {
+    val uiText = rememberUiText()
     if (ready == null || !ready.admin) {
         FormPage { InformationCard(uiText(R.string.ui_screen_titles_015), uiText(R.string.ui_history_screen_001)) }
         return
@@ -83,6 +84,7 @@ import java.time.LocalDate
 
 @Composable internal fun HistoryFilters(filter: HistoryFilter, medicationScope: String?, medications: List<HistoryOption>,
     timezone: String, apply: (HistoryFilter) -> Unit) {
+    val uiText = rememberUiText()
     var from by rememberSaveable(filter.from, medicationScope) { mutableStateOf(filter.from?.toString().orEmpty()) }
     var through by rememberSaveable(filter.through, medicationScope) { mutableStateOf(filter.through?.toString().orEmpty()) }
     var medication by rememberSaveable(filter.medicationId, medicationScope) { mutableStateOf(filter.medicationId) }
@@ -121,6 +123,7 @@ import java.time.LocalDate
 }
 
 @Composable private fun HistoryFilterPicker(label: String, values: List<HistoryOption>, selectedId: String?, choose: (String?) -> Unit) {
+    val uiText = rememberUiText()
     val all = HistoryOption("", uiText(R.string.ui_history_screen_018))
     val selected = if (selectedId == null) all else values.find { it.id == selectedId } ?: HistoryOption(selectedId, uiText(R.string.ui_history_screen_019, selectedId))
     ChoicePicker(label, listOf(all) + values, selected, {

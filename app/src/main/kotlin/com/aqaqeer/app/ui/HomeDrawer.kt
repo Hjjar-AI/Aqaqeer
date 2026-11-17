@@ -29,6 +29,7 @@ import com.aqaqeer.app.data.*
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable internal fun HomeDrawer(ready: CatalogState.Ready?, filters: HomeFilters, busy: Boolean,
     openRoute: (Route) -> Unit, chooseCategory: (String?) -> Unit, showDataTimes: () -> Unit) {
+    val uiText = rememberUiText()
     val pharmacy = ready?.catalog?.pharmacy
     val categories = ready?.catalog?.categories.orEmpty()
     val drawerCategories = remember(categories) {
@@ -73,6 +74,7 @@ import com.aqaqeer.app.data.*
 /** Drawer disclosure headings use the same icon language and corners as navigation rows. */
 @Composable private fun DrawerGroup(title: String, expanded: Boolean, toggle: () -> Unit,
     icon: UiIcon, content: @Composable ColumnScope.() -> Unit) {
+    val uiText = rememberUiText()
     Column(Modifier.fillMaxWidth().animateContentSize()) {
         AppButton(variant = AppButtonVariant.SECONDARY, onClick = toggle,
             modifier = Modifier.fillMaxWidth().heightIn(min = UiSpacing.touch).semantics {

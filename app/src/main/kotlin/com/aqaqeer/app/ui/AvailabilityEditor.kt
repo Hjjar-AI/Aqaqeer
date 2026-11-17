@@ -75,6 +75,7 @@ internal val InitialAvailabilitySaver = Saver<Map<String, AvailabilityStatus>, A
 @Composable internal fun NewMedicationAvailabilityControls(catalog: CatalogSnapshot,
     choices: Map<String, AvailabilityStatus>, busy: Boolean, reset: () -> Unit,
     change: (String, AvailabilityStatus) -> Unit) {
+    val uiText = rememberUiText()
     GroupedCard(title = uiText(R.string.new_availability_title)) {
         SupportingText(uiText(R.string.new_availability_hint))
         if (catalog.sections.isEmpty()) SupportingText(uiText(R.string.edit_availability_no_sections))
@@ -95,6 +96,7 @@ internal val InitialAvailabilitySaver = Saver<Map<String, AvailabilityStatus>, A
 /** Existing medications expose immediate per-section changes without a details/sheet navigation step. */
 @Composable internal fun MedicationAvailabilityControls(catalog: CatalogSnapshot, medication: Medication,
     busy: Boolean, isSaving: () -> Boolean, save: (AvailabilitySelection, AvailabilityStatus) -> Unit) {
+    val uiText = rememberUiText()
     val pharmacyId = catalog.pharmacy?.pharmacyId ?: return
     GroupedCard(title = uiText(R.string.ui_pharmacy_admin_screen_120)) {
         SupportingText(uiText(R.string.edit_availability_immediate_hint))
@@ -114,15 +116,16 @@ internal val InitialAvailabilitySaver = Saver<Map<String, AvailabilityStatus>, A
 
 @Composable private fun SectionAvailabilityChoices(section: Section, current: AvailabilityStatus,
     busy: Boolean, choose: (AvailabilityStatus) -> Unit) {
+    val uiText = rememberUiText()
     Text(section.nameAr + if (section.isActive) "" else uiText(R.string.ui_aqaqeer_app_030),
         style = MaterialTheme.typography.titleSmall)
     if (section.isActive) WrappingContent {
         if (current == AvailabilityStatus.UNKNOWN) StatusBadge(current)
         MedicationPresentation.editableStatuses.forEach { status ->
             AppChip(selected = current == status, enabled = !busy,
-                onClick = { choose(status) }, label = { Text(statusLabel(status)) },
+                onClick = { choose(status) }, label = { Text(statusLabel(status, text = uiText)) },
                 modifier = Modifier.heightIn(min = UiSpacing.touch).semantics {
-                    contentDescription = section.nameAr + " · " + statusLabel(status)
+                    contentDescription = section.nameAr + " · " + statusLabel(status, text = uiText)
                 })
         }
     } else StatusBadge(current)

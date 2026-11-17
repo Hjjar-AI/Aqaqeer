@@ -17,6 +17,7 @@ import com.aqaqeer.app.data.*
 import com.aqaqeer.app.reports.*
 
 @Composable internal fun ReportsScreen(ready: CatalogState.Ready?, vm: CatalogViewModel) {
+    val uiText = rememberUiText()
     if (ready == null || !ready.admin || ready.isDemo || ready.requiresUpdate) {
         FormPage { InformationCard(uiText(R.string.ui_screen_titles_017), uiText(R.string.ui_reports_screen_001)) }
         return

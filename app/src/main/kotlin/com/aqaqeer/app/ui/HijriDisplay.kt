@@ -39,6 +39,7 @@ internal object HijriDisplay {
 }
 
 @Composable internal fun SecondaryHijriDate(gregorian: LocalDate, enabled: Boolean) {
+    val uiText = rememberUiText()
     if (!enabled) return
     val date = HijriDisplay.date(gregorian)
     Text(if (date == null) uiText(R.string.ui_hijri_display_001)

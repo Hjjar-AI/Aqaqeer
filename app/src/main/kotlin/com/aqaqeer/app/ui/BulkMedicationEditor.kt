@@ -17,6 +17,7 @@ private data class BulkFieldOption(val value: String?, val label: String)
 @Composable internal fun BulkMedicationEditor(selection: AvailabilitySelection, catalog: CatalogSnapshot,
     busy: Boolean, message: String?, dismiss: () -> Unit, save: (BulkMedicationChanges) -> Unit,
     current: (BulkMedicationChanges) -> Boolean, isSaving: () -> Boolean = { busy }) {
+    val uiText = rememberUiText()
     val selectedMedications = remember(selection.medications) { selection.medications.associateBy { it.id } }
     var statusName by rememberSaveable(selection.id) { mutableStateOf<String?>(null) }
     var formId by rememberSaveable(selection.id) { mutableStateOf<String?>(null) }
@@ -37,7 +38,7 @@ private data class BulkFieldOption(val value: String?, val label: String)
             (changes.formId != null && med.formId != changes.formId) ||
             (changes.categoryId != null && med.categoryId != changes.categoryId)
     val unchanged = BulkFieldOption(null, uiText(R.string.ui_bulk_medication_editor_001))
-    val statuses = listOf(unchanged) + MedicationPresentation.editableStatuses.map { BulkFieldOption(it.name, statusLabel(it)) }
+    val statuses = listOf(unchanged) + MedicationPresentation.editableStatuses.map { BulkFieldOption(it.name, statusLabel(it, text = uiText)) }
     val forms = listOf(unchanged) + catalog.forms.map { BulkFieldOption(it.id, it.nameAr) }
     val categories = listOf(unchanged) + catalog.categories.map { BulkFieldOption(it.id, it.nameAr) }
     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(UiSpacing.hair)) {
@@ -67,7 +68,7 @@ private data class BulkFieldOption(val value: String?, val label: String)
                 HorizontalDivider()
                 MedicationSummary(med, prominent = true, form = selection.formNames[med.formId])
                 changes.status?.let { result ->
-                    Text(uiText(R.string.ui_bulk_medication_editor_004, statusLabel(selection.expected.getValue(med.id)), statusLabel(result)))
+                    Text(uiText(R.string.ui_bulk_medication_editor_004, statusLabel(selection.expected.getValue(med.id), text = uiText), statusLabel(result, text = uiText)))
                 }
                 changes.formId?.let { target ->
                     Text(uiText(R.string.ui_bulk_medication_editor_006, selection.formNames[med.formId] ?: uiText(R.string.ui_bulk_medication_editor_005), catalog.forms.find { it.id == target }?.nameAr ?: uiText(R.string.ui_bulk_medication_editor_005)))

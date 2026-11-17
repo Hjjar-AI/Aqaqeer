@@ -29,6 +29,7 @@ import java.util.UUID
 import kotlinx.serialization.json.*
 
 @Composable internal fun PharmacyAdminScreen(state: AppUiState, vm: CatalogViewModel) {
+    val uiText = rememberUiText()
     val ready = state.catalog as? CatalogState.Ready ?: return
     val busy by vm.adminBusy.collectAsStateWithLifecycle()
     val message by vm.adminMessage.collectAsStateWithLifecycle()
@@ -71,7 +72,7 @@ import kotlinx.serialization.json.*
                     WrappingContent {
                         AppChip(typeFilter == null, onClick = { typeFilter = null }, label = { Text(uiText(R.string.review_all) + " (${pending.size})") })
                         types.forEach { (type, operations) ->
-                            AppChip(typeFilter == type, onClick = { typeFilter = type }, label = { Text(entityLabel(type) + " (${operations.size})") })
+                            AppChip(typeFilter == type, onClick = { typeFilter = type }, label = { Text(entityLabel(type, text = uiText) + " (${operations.size})") })
                         }
                     }
                 }
@@ -80,17 +81,17 @@ import kotlinx.serialization.json.*
                 val operations = group.value
                 val first = operations.first()
                 val name = medicationsById[group.key.second]
-                    ?.let { MedicationPresentation.identity(it, catalog.formsById[it.formId]?.nameAr) } ?: entityLabel(first.entityType)
+                    ?.let { MedicationPresentation.identity(it, catalog.formsById[it.formId]?.nameAr) } ?: entityLabel(first.entityType, text = uiText)
                 GroupedCard(title = name) {
                     operations.forEach { op ->
                         key(op.id) {
                             val before = remember(op.field, op.baseValueJson, catalog, configuration) {
-                                reviewValue(op.field, op.baseValueJson, catalog)
+                                reviewValue(op.field, op.baseValueJson, catalog, text = uiText)
                             }
                             val after = remember(op.field, op.intendedValueJson, catalog, configuration) {
-                                reviewValue(op.field, op.intendedValueJson, catalog)
+                                reviewValue(op.field, op.intendedValueJson, catalog, text = uiText)
                             }
-                            Text(fieldLabel(op.field, op.entityType), style = MaterialTheme.typography.titleSmall)
+                            Text(fieldLabel(op.field, op.entityType, text = uiText), style = MaterialTheme.typography.titleSmall)
                             LabeledValue(uiText(R.string.ui_pharmacy_admin_screen_035), before)
                             LabeledValue(uiText(R.string.ui_pharmacy_admin_screen_036), after)
                         }
@@ -239,8 +240,12 @@ import kotlinx.serialization.json.*
     }
 }
 
-private fun entityLabel(type: String) = when (type) { "medication" -> uiText(R.string.ui_pharmacy_admin_screen_049); "availability" -> uiText(R.string.ui_pharmacy_admin_screen_050); "category" -> uiText(R.string.ui_pharmacy_admin_screen_051); "form" -> uiText(R.string.ui_pharmacy_admin_screen_052); "section" -> uiText(R.string.ui_pharmacy_admin_screen_053); else -> uiText(R.string.ui_pharmacy_admin_screen_054) }
-internal fun fieldLabel(field: String, entityType: String? = null) = when(field) {
+private fun entityLabel(type: String, text: UiText? = null) = run {
+    val uiText = text ?: UiText(com.aqaqeer.app.AppStrings.resources)
+    when (type) { "medication" -> uiText(R.string.ui_pharmacy_admin_screen_049); "availability" -> uiText(R.string.ui_pharmacy_admin_screen_050); "category" -> uiText(R.string.ui_pharmacy_admin_screen_051); "form" -> uiText(R.string.ui_pharmacy_admin_screen_052); "section" -> uiText(R.string.ui_pharmacy_admin_screen_053); else -> uiText(R.string.ui_pharmacy_admin_screen_054) }
+internal fun fieldLabel(field: String, entityType: String? = null, text: UiText? = null) = run {
+    val uiText = text ?: UiText(com.aqaqeer.app.AppStrings.resources)
+    when(field) {
     "connectionActivated" -> uiText(R.string.ui_pharmacy_admin_screen_055); "maintenanceFinished" -> uiText(R.string.ui_pharmacy_admin_screen_056)
     "record" -> uiText(R.string.ui_pharmacy_admin_screen_057); "adminPinVerifier" -> uiText(R.string.ui_pharmacy_admin_screen_058)
     "restoreReconciled" -> uiText(R.string.ui_pharmacy_admin_screen_059); "restoreReplacementReviewed" -> uiText(R.string.ui_pharmacy_admin_screen_060)
@@ -251,23 +256,27 @@ internal fun fieldLabel(field: String, entityType: String? = null) = when(field)
     "expirySoonThresholdDays" -> uiText(R.string.ui_pharmacy_admin_screen_072); "categoryId" -> uiText(R.string.ui_pharmacy_admin_screen_073); "formId" -> uiText(R.string.ui_pharmacy_admin_screen_074)
     "isActive" -> uiText(R.string.ui_pharmacy_admin_screen_075); "orderIndex" -> uiText(R.string.ui_pharmacy_admin_screen_076); else -> field
 }
-internal fun reviewValue(field: String, raw: String, catalog: CatalogSnapshot, limit: Int = 500): String {
+internal fun reviewValue(field: String, raw: String, catalog: CatalogSnapshot, limit: Int = 500, text: UiText? = null): String {
+    val uiText = text ?: UiText(com.aqaqeer.app.AppStrings.resources)
     if (field == uiText(R.string.ui_admin_components_007)) return raw
     val element = runCatching { Json.parseToJsonElement(raw) }.getOrNull()
     if (element == JsonNull) return if (field == "@entity") uiText(R.string.ui_pharmacy_admin_screen_077) else uiText(R.string.ui_pharmacy_admin_screen_078)
     if (element is JsonObject) return MedicationPresentation.recordIdentity(element, catalog.forms) ?: uiText(R.string.ui_pharmacy_admin_screen_079)
     val value = (element as? JsonPrimitive)?.contentOrNull ?: raw
     return when (field) {
-        "status" -> runCatching { statusLabel(AvailabilityStatus.valueOf(value)) }.getOrDefault(value)
+        "status" -> runCatching { statusLabel(AvailabilityStatus.valueOf(value), text = uiText) }.getOrDefault(value)
         "categoryId" -> catalog.categories.find { it.id == value }?.nameAr ?: uiText(R.string.ui_pharmacy_admin_screen_080)
         "formId" -> catalog.forms.find { it.id == value }?.nameAr ?: uiText(R.string.ui_pharmacy_admin_screen_081)
         "isActive" -> if (value == "true") uiText(R.string.ui_pharmacy_admin_screen_082) else uiText(R.string.ui_pharmacy_admin_screen_083)
         else -> value.take(limit)
     }
 }
+}
+}
 
 
 @Composable private fun TelegramSetup(vm: CatalogViewModel, busy: Boolean, empty: Boolean) {
+    val uiText = rememberUiText()
     var token by remember { mutableStateOf("") }; var group by remember { mutableStateOf("") }
     var title by remember(token, group) { mutableStateOf<String?>(null) }
     var found by remember { mutableStateOf<List<Pair<Long, String>>>(emptyList()) }
@@ -306,6 +315,7 @@ internal fun reviewValue(field: String, raw: String, catalog: CatalogSnapshot, l
 }
 
 @Composable private fun PinRecoveryAction(enabled: Boolean, recover: () -> Unit) {
+    val uiText = rememberUiText()
     GroupedCard(title = uiText(R.string.pin_recovery_title)) {
         SupportingText(uiText(R.string.pin_recovery_help))
         AppButton(variant = AppButtonVariant.QUIET, enabled = enabled, onClick = recover) { Text(uiText(R.string.pin_recovery_title)) }
@@ -313,6 +323,7 @@ internal fun reviewValue(field: String, raw: String, catalog: CatalogSnapshot, l
 }
 
 @Composable private fun ConnectionExport(vm: CatalogViewModel, shared: Boolean, busy: Boolean) {
+    val uiText = rememberUiText()
     var password by remember { mutableStateOf("") }
     var outgoing by remember { mutableStateOf<CharArray?>(null) }
     var generated by remember { mutableStateOf(false) }
@@ -352,6 +363,7 @@ internal fun reviewValue(field: String, raw: String, catalog: CatalogSnapshot, l
 }
 
 @Composable private fun MedicationEditor(c: CatalogSnapshot, old: Medication?, vm: CatalogViewModel, busy: Boolean) {
+    val uiText = rememberUiText()
     val id = rememberSaveable(c.pharmacy?.pharmacyId, old?.id) { old?.id ?: UUID.randomUUID().toString() }
     var en by rememberSaveable(c.pharmacy?.pharmacyId, old?.id) { mutableStateOf(old?.nameEn ?: "") }; var ar by rememberSaveable(c.pharmacy?.pharmacyId, old?.id) { mutableStateOf(old?.nameAr ?: "") }
     var strength by rememberSaveable(c.pharmacy?.pharmacyId, old?.id) { mutableStateOf(old?.strength ?: "") }; var genericAr by rememberSaveable(c.pharmacy?.pharmacyId, old?.id) { mutableStateOf(old?.genericAr ?: vm.newMedicationName.takeUnless { it.any { ch -> ch in 'A'..'Z' || ch in 'a'..'z' } }.orEmpty()) }
@@ -453,6 +465,7 @@ internal fun reviewValue(field: String, raw: String, catalog: CatalogSnapshot, l
 }
 
 @Composable private fun TaxonomyEditor(c: CatalogSnapshot, vm: CatalogViewModel, busy: Boolean) {
+    val uiText = rememberUiText()
     var type by remember { mutableStateOf("section") }; var selected by remember(type) { mutableStateOf<String?>(null) }
     var name by remember { mutableStateOf("") }; var english by remember { mutableStateOf("") }
     var active by remember { mutableStateOf(true) }; var deleteName by remember { mutableStateOf("") }

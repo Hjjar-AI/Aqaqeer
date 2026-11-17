@@ -16,6 +16,7 @@ import com.aqaqeer.app.data.*
 import com.aqaqeer.app.reports.*
 
 @Composable internal fun CsvImportScreen(ready: CatalogState.Ready?, vm: CatalogViewModel) {
+    val uiText = rememberUiText()
     if (ready == null || !ready.admin || ready.isDemo || ready.requiresUpdate) {
         InformationCard(uiText(R.string.ui_screen_titles_016), uiText(R.string.ui_reports_screen_001))
         return
@@ -89,6 +90,7 @@ import com.aqaqeer.app.reports.*
 
 @Composable private fun CsvPreviewCard(row: CsvPreviewRow, session: CsvImportSession, result: CsvRowResult?, locked: Boolean, busy: Boolean,
     change: (CsvDecision) -> Unit) {
+    val uiText = rememberUiText()
     var expanded by remember(session.id, row.record.number) { mutableStateOf(false) }
     val decision = row.decision
     GroupedCard {
@@ -128,7 +130,7 @@ import com.aqaqeer.app.reports.*
             FieldChangeRows(row.changes, session.baseline)
             if (!locked && decision.action == CsvAction.UPDATE) clearableCsvFields.forEach { field ->
                 CheckChoiceRow(field in decision.clear,
-                    uiText(R.string.ui_csv_import_screen_030) + fieldLabel(field), enabled = !busy) { clear ->
+                    uiText(R.string.ui_csv_import_screen_030) + fieldLabel(field, text = uiText), enabled = !busy) { clear ->
                     change(decision.copy(clear = if (clear) decision.clear + field else decision.clear - field, selected = false))
                 }
             }
@@ -144,11 +146,12 @@ private fun csvOutcomeLabel(outcome: CsvOutcome): String = when (outcome) {
 }
 
 @Composable internal fun FieldChangeRows(changes: List<CsvFieldChange>, catalog: CatalogSnapshot) {
+    val uiText = rememberUiText()
     changes.forEach { value ->
         val section = value.field.removePrefix("section:").takeIf { value.field.startsWith("section:") }
-        val label = if (section == null) fieldLabel(value.field) else uiText(R.string.ui_csv_import_screen_038) + (catalog.sections.find { it.id == section }?.nameAr ?: section)
+        val label = if (section == null) fieldLabel(value.field, text = uiText) else uiText(R.string.ui_csv_import_screen_038) + (catalog.sections.find { it.id == section }?.nameAr ?: section)
         Text(label, style = MaterialTheme.typography.labelLarge)
-        Text(uiText(R.string.ui_csv_import_screen_039, bidi(reviewValue(if (section == null) value.field else "status", value.before, catalog))))
-        Text(uiText(R.string.ui_csv_import_screen_040, bidi(reviewValue(if (section == null) value.field else "status", value.after, catalog))))
+        Text(uiText(R.string.ui_csv_import_screen_039, bidi(reviewValue(if (section == null) value.field else "status", value.before, catalog, text = uiText))))
+        Text(uiText(R.string.ui_csv_import_screen_040, bidi(reviewValue(if (section == null) value.field else "status", value.after, catalog, text = uiText))))
     }
 }

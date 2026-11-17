@@ -32,10 +32,10 @@ import androidx.compose.ui.unit.dp
             Row(Modifier.padding(horizontal = if (dense) UiSpacing.hair else UiSpacing.badgeHorizontal,
                 vertical = UiSpacing.hair), verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(UiSpacing.hair)) {
-                if (!dense && icon != null) AppIcon(icon, modifier = Modifier.size(Size.iconM))
+                if (!dense && icon != null) AppIcon(icon, size = Size.iconM)
                 Text(text, style = if (dense) MaterialTheme.typography.labelMedium else MaterialTheme.typography.labelLarge,
                     fontWeight = if (dense) FontWeight.Normal else FontWeight.Bold)
-                if (onClick != null) AppIcon(UiIcon.EDIT, Modifier.size(Size.iconS))
+                if (onClick != null) AppIcon(UiIcon.EDIT, size = Size.iconS)
             }
         }
     }
