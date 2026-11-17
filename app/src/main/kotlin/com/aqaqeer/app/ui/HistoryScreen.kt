@@ -19,7 +19,7 @@ import java.time.LocalDate
 @Composable internal fun HistoryScreen(ready: CatalogState.Ready?, medicationId: String?, vm: CatalogViewModel, showHijri: Boolean = false) {
     val uiText = rememberUiText()
     if (ready == null || !ready.admin) {
-        FormPage { InformationCard(uiText(R.string.ui_screen_titles_015), uiText(R.string.ui_history_screen_001)) }
+        FormPage { InformationCard(uiText(R.string.navigation_history_title), uiText(R.string.history_admin_required_message)) }
         return
     }
     val observed by vm.history.collectAsStateWithLifecycle()
@@ -44,16 +44,16 @@ import java.time.LocalDate
                 val activeFilter = state.request.filter.let { it.from != null || it.through != null || it.entityType != null || (medicationId == null && it.medicationId != null) }
                 AppButton(variant = AppButtonVariant.QUIET, onClick = { filtersOpen = true }, colors = ButtonDefaults.textButtonColors(
                     containerColor = if (activeFilter) MaterialTheme.colorScheme.primaryContainer else androidx.compose.ui.graphics.Color.Transparent)) {
-                    AppIcon(UiIcon.FILTER); Text(uiText(R.string.ui_history_screen_002) + if (activeFilter) " ●" else "")
+                    AppIcon(UiIcon.FILTER); Text(uiText(R.string.history_filter_title) + if (activeFilter) " ●" else "")
                 }
-                Text(uiText(R.string.ui_history_screen_003, MedicationPresentation.displayDigits((state.request.page + 1).toString())))
+                Text(uiText(R.string.history_page_format, MedicationPresentation.displayDigits((state.request.page + 1).toString())))
             }
-            ExpandableInformation(uiText(R.string.ui_history_screen_004), uiText(R.string.ui_history_screen_005))
+            ExpandableInformation(uiText(R.string.history_local_history_title), uiText(R.string.history_local_history_help))
             InlineOperationStatus(state.loading, state.error)
-            if (state.error != null) AppButton(variant = AppButtonVariant.QUIET, onClick = vm::retryHistory) { Text(uiText(R.string.ui_history_screen_006)) }
+            if (state.error != null) AppButton(variant = AppButtonVariant.QUIET, onClick = vm::retryHistory) { Text(uiText(R.string.history_retry_action)) }
         }
         if (!state.loading && state.error == null && page?.entries?.isEmpty() == true) item {
-            EmptyState(uiText(R.string.ui_history_screen_007), uiText(R.string.ui_history_screen_008))
+            EmptyState(uiText(R.string.history_empty_title), uiText(R.string.history_empty_help))
         }
         val zone = java.time.ZoneId.of(page?.timezone ?: ready.catalog.pharmacy?.timezone ?: "Asia/Damascus")
         val today = java.time.Instant.now().atZone(zone).toLocalDate()
@@ -61,7 +61,7 @@ import java.time.LocalDate
             item(key = "day_$day") { SectionHeading(when (day) {
                 today -> uiText(R.string.review_today)
                 today.minusDays(1) -> uiText(R.string.review_yesterday)
-                null -> uiText(R.string.ui_history_components_018)
+                null -> uiText(R.string.history_unknown_time_label)
                 else -> bidi(day.toString())
             }) }
             items(entries, key = { it.id }) { entry ->
@@ -72,10 +72,10 @@ import java.time.LocalDate
         item {
             ActionGroup {
                 AppButton(variant = AppButtonVariant.QUIET, enabled = !state.loading && state.request.page > 0,
-                    onClick = { vm.historyPage(state.request.page - 1) }) { Text(uiText(R.string.ui_history_screen_009)) }
-                Text(uiText(R.string.ui_history_screen_003, MedicationPresentation.displayDigits((state.request.page + 1).toString())))
+                    onClick = { vm.historyPage(state.request.page - 1) }) { Text(uiText(R.string.history_newer_action)) }
+                Text(uiText(R.string.history_page_format, MedicationPresentation.displayDigits((state.request.page + 1).toString())))
                 AppButton(variant = AppButtonVariant.QUIET, enabled = !state.loading && page?.hasMore == true,
-                    onClick = { vm.historyPage(state.request.page + 1) }) { Text(uiText(R.string.ui_history_screen_010)) }
+                    onClick = { vm.historyPage(state.request.page + 1) }) { Text(uiText(R.string.history_older_action)) }
             }
         }
     }
@@ -92,7 +92,7 @@ import java.time.LocalDate
     val throughDate = historyDate(through)
     val valid = (from.isBlank() || fromDate != null) && (through.isBlank() || throughDate != null) &&
         (fromDate == null || throughDate == null || fromDate <= throughDate)
-    GroupedCard(title = uiText(R.string.ui_history_screen_002)) {
+    GroupedCard(title = uiText(R.string.history_filter_title)) {
         val today = rememberPresentationTime(timezone).atZone(java.time.ZoneId.of(timezone)).toLocalDate()
         val ranges = listOf(R.string.review_today to today, R.string.review_7_days to today.minusDays(6),
             R.string.review_since_sunday to today.with(java.time.temporal.TemporalAdjusters.previousOrSame(java.time.DayOfWeek.SUNDAY)))
@@ -103,28 +103,28 @@ import java.time.LocalDate
             AppChip(selected = custom, onClick = { custom = true }, label = { Text(uiText(R.string.review_custom)) })
         }
         if (custom) {
-        GregorianDateField(uiText(R.string.ui_history_screen_011), from, { from = it })
-        GregorianDateField(uiText(R.string.ui_history_screen_012), through, { through = it })
+        GregorianDateField(uiText(R.string.history_date_from_label), from, { from = it })
+        GregorianDateField(uiText(R.string.history_date_through_label), through, { through = it })
         }
         HistoryFilterPicker(uiText(R.string.logic_history_type), listOf(HistoryOption("availability", uiText(R.string.logic_history_availability)), HistoryOption("medication", uiText(R.string.logic_history_medication)),
             HistoryOption("taxonomy", uiText(R.string.logic_history_taxonomy)), HistoryOption("pharmacy", uiText(R.string.logic_history_pharmacy)), HistoryOption("snapshot", uiText(R.string.logic_history_publication)),
             HistoryOption("maintenance", uiText(R.string.logic_history_maintenance))), entityType) { entityType = it }
-        if (medicationScope == null) HistoryFilterPicker(uiText(R.string.ui_history_screen_014), medications, medication) { medication = it }
-        if (!valid) Text(uiText(R.string.ui_history_screen_015), color = MaterialTheme.colorScheme.error)
+        if (medicationScope == null) HistoryFilterPicker(uiText(R.string.history_medication_filter_label), medications, medication) { medication = it }
+        if (!valid) Text(uiText(R.string.history_date_range_error), color = MaterialTheme.colorScheme.error)
         ActionGroup {
-            AppButton(enabled = valid, onClick = { apply(HistoryFilter(fromDate, throughDate, medicationScope ?: medication, entityType)) }) { Text(uiText(R.string.ui_history_screen_016)) }
+            AppButton(enabled = valid, onClick = { apply(HistoryFilter(fromDate, throughDate, medicationScope ?: medication, entityType)) }) { Text(uiText(R.string.history_apply_filters_action)) }
             AppButton(variant = AppButtonVariant.QUIET, onClick = {
                 from = ""; through = ""; medication = medicationScope
                 apply(HistoryFilter(medicationId = medicationScope))
-            }) { Text(uiText(R.string.ui_history_screen_017)) }
+            }) { Text(uiText(R.string.history_clear_filters_action)) }
         }
     }
 }
 
 @Composable private fun HistoryFilterPicker(label: String, values: List<HistoryOption>, selectedId: String?, choose: (String?) -> Unit) {
     val uiText = rememberUiText()
-    val all = HistoryOption("", uiText(R.string.ui_history_screen_018))
-    val selected = if (selectedId == null) all else values.find { it.id == selectedId } ?: HistoryOption(selectedId, uiText(R.string.ui_history_screen_019, selectedId))
+    val all = HistoryOption("", uiText(R.string.history_all_filter_label))
+    val selected = if (selectedId == null) all else values.find { it.id == selectedId } ?: HistoryOption(selectedId, uiText(R.string.history_identifier_format, selectedId))
     ChoicePicker(label, listOf(all) + values, selected, {
         if (it.id.isEmpty()) it.name else "${bidi(it.name)} · ${bidi(it.id)}"
     }, itemKey = { it.id }) { choose(it.id.takeIf(String::isNotEmpty)) }

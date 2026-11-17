@@ -41,58 +41,58 @@ import java.time.format.DateTimeFormatter
     val pick = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { selected = it }
     FormPage(Modifier.testTag("backup_screen"), showFieldConvention = true) {
         OperationStatus(busy || sharing.busy, message,
-            if (exportSucceeded) uiText(R.string.ui_backup_screen_001) else if (restoreSession) sharing.message else null,
+            if (exportSucceeded) uiText(R.string.backup_export_success_message) else if (restoreSession) sharing.message else null,
             vm::cancelAdminOperation)
         if (ready.restorePaused) {
-            StepHeader(listOf(uiText(R.string.review_select_file), uiText(R.string.ui_backup_screen_016), uiText(R.string.ui_backup_screen_002)), 2)
-            InformationCard(uiText(R.string.ui_backup_screen_002), uiText(R.string.ui_backup_screen_003))
+            StepHeader(listOf(uiText(R.string.review_select_file), uiText(R.string.backup_restore_passphrase_label), uiText(R.string.backup_restore_paused_title)), 2)
+            InformationCard(uiText(R.string.backup_restore_paused_title), uiText(R.string.backup_restore_admin_reconciliation_help))
             if (!ready.admin) {
-                NavigationCard(uiText(R.string.ui_backup_screen_004), { vm.navigate(Route.Promote) })
+                NavigationCard(uiText(R.string.backup_authorize_admin_action), { vm.navigate(Route.Promote) })
                 return@FormPage
             }
             RestoreReview(ready, vm, busy || sharing.busy)
             Spacer(Modifier.height(UiSpacing.group))
         }
         if (ready.admin) {
-            GroupedCard(title = uiText(R.string.ui_backup_screen_005)) {
-                Text(uiText(R.string.ui_backup_screen_006))
+            GroupedCard(title = uiText(R.string.backup_export_heading)) {
+                Text(uiText(R.string.backup_export_contents_help))
                 BackupPassphraseFields(password, confirmation, { password = it }, { confirmation = it })
                 AppButton(enabled = !busy && password.codePointCount(0, password.length) >= 8 && password == confirmation, onClick = {
                     exportSucceeded = false
                     secrets.clear(); secrets.password = password.toCharArray(); secrets.confirmation = confirmation.toCharArray(); password = ""; confirmation = ""
                     val time = ZonedDateTime.now(ZoneId.of(ready.catalog.pharmacy?.timezone ?: "Asia/Damascus"))
                     try { export.launch("aqaqeer-backup-${time.format(DateTimeFormatter.ofPattern("yyyy-MM-dd-HHmm"))}.aqbak") }
-                    catch (_: Exception) { secrets.clear(); vm.adminMessage.value = uiText(R.string.ui_backup_screen_007) }
-                }) { Text(uiText(R.string.ui_backup_screen_008)) }
-                SupportingText(uiText(R.string.ui_backup_screen_009))
+                    catch (_: Exception) { secrets.clear(); vm.adminMessage.value = uiText(R.string.backup_file_picker_failed_message) }
+                }) { Text(uiText(R.string.backup_choose_export_destination_action)) }
+                SupportingText(uiText(R.string.backup_file_size_limit_help))
             }
             Spacer(Modifier.height(UiSpacing.group))
         }
         if (ready.maintenancePaused) {
-            InformationCard(uiText(R.string.ui_backup_screen_010), uiText(R.string.ui_backup_screen_011))
-            NavigationCard(uiText(R.string.ui_backup_screen_012), { vm.navigate(Route.Maintenance) })
+            InformationCard(uiText(R.string.backup_restore_maintenance_blocked_title), uiText(R.string.backup_restore_maintenance_blocked_help))
+            NavigationCard(uiText(R.string.backup_review_maintenance_action), { vm.navigate(Route.Maintenance) })
             return@FormPage
         }
         if (ready.catalog.pharmacy == null || ready.admin) {
-            GroupedCard(title = uiText(R.string.ui_aqaqeer_app_082)) {
-                StepHeader(listOf(uiText(R.string.review_select_file), uiText(R.string.ui_backup_screen_016), uiText(R.string.ui_backup_screen_002)), if (selected != null) 1 else 0)
-                Text(uiText(R.string.ui_backup_screen_013))
-                AppButton(variant = AppButtonVariant.QUIET, enabled = !busy, onClick = { pick.launch(arrayOf("*/*")) }) { Text(if (selected == null) uiText(R.string.ui_backup_screen_014) else uiText(R.string.ui_backup_screen_015)) }
+            GroupedCard(title = uiText(R.string.backup_restore_welcome_action)) {
+                StepHeader(listOf(uiText(R.string.review_select_file), uiText(R.string.backup_restore_passphrase_label), uiText(R.string.backup_restore_paused_title)), if (selected != null) 1 else 0)
+                Text(uiText(R.string.backup_restore_validation_help))
+                AppButton(variant = AppButtonVariant.QUIET, enabled = !busy, onClick = { pick.launch(arrayOf("*/*")) }) { Text(if (selected == null) uiText(R.string.backup_choose_restore_file_action) else uiText(R.string.backup_change_restore_file_action)) }
                 if (selected != null) {
-                    SecretField(uiText(R.string.ui_backup_screen_016), restorePassword, { restorePassword = it }, required = true)
+                    SecretField(uiText(R.string.backup_restore_passphrase_label), restorePassword, { restorePassword = it }, required = true)
                     if (ready.catalog.pharmacy != null) {
-                        Text(uiText(R.string.ui_backup_screen_017, MedicationPresentation.displayDigits(ready.pendingCount.toString())))
-                        FormField(uiText(R.string.ui_backup_screen_018), typedName, { typedName = it }, required = true)
-                        CheckChoiceRow(confirmed, uiText(R.string.ui_backup_screen_019)) { confirmed = it }
+                        Text(uiText(R.string.backup_replace_local_data_warning_format, MedicationPresentation.displayDigits(ready.pendingCount.toString())))
+                        FormField(uiText(R.string.backup_current_pharmacy_confirmation_label), typedName, { typedName = it }, required = true)
+                        CheckChoiceRow(confirmed, uiText(R.string.backup_replace_local_data_acknowledgement_label)) { confirmed = it }
                     }
                     DestructiveConfirmButton(enabled = !busy && restorePassword.isNotEmpty() &&
                         (ready.catalog.pharmacy == null || confirmed && typedName == ready.catalog.pharmacy.name), onClick = {
                         val uri = selected ?: return@DestructiveConfirmButton; val p = restorePassword.toCharArray(); restorePassword = ""
                         vm.secretCommand(Route.Home, p) { vm.backups.restore(uri, p, typedName, confirmed); selected = null }
-                    }, label = uiText(R.string.ui_backup_screen_020))
+                    }, label = uiText(R.string.backup_validate_restore_action))
                 }
             }
-        } else Text(uiText(R.string.ui_backup_screen_021))
+        } else Text(uiText(R.string.backup_restore_admin_only_message))
     }
 }
 
@@ -105,29 +105,29 @@ import java.time.format.DateTimeFormatter
     ConflictChoices(sharing.conflicts, choices, ready.catalog) { choices = it }
     if (ready.lifecycle == "LOCAL_DRAFT") {
         AppButton(enabled = !busy && (!ready.restoreHasConnection || ready.restoreConnectionConfirmed),
-            onClick = { vm.command(queueOffline = false) { vm.sharing.reconcileRestore(false, "", choices) } }) { Text(uiText(R.string.ui_backup_screen_022)) }
+            onClick = { vm.command(queueOffline = false) { vm.sharing.reconcileRestore(false, "", choices) } }) { Text(uiText(R.string.backup_continue_local_draft_action)) }
         return
     }
-    GroupedCard(title = uiText(R.string.ui_pharmacy_admin_screen_059)) {
-        CheckChoiceRow(replace, uiText(R.string.ui_backup_screen_023)) { replace = it; choices = emptyMap() }
-        if (replace) FormField(uiText(R.string.ui_backup_screen_024), typedName, { typedName = it }, required = true)
+    GroupedCard(title = uiText(R.string.history_restore_reconciled_label)) {
+        CheckChoiceRow(replace, uiText(R.string.backup_replace_published_contents_label)) { replace = it; choices = emptyMap() }
+        if (replace) FormField(uiText(R.string.backup_restored_pharmacy_confirmation_label), typedName, { typedName = it }, required = true)
         AppButton(enabled = !busy && ready.restoreConnectionConfirmed && (!replace || typedName == ready.catalog.pharmacy?.name), onClick = {
             vm.command(queueOffline = false) { vm.sharing.reconcileRestore(replace, typedName, choices) }
-        }) { Text(uiText(R.string.ui_backup_screen_025)) }
+        }) { Text(uiText(R.string.backup_inspect_reconciliation_action)) }
     }
 }
 
 @Composable private fun RestoreConnectionCheck(confirmed: Boolean, vm: CatalogViewModel, busy: Boolean) {
     val uiText = rememberUiText()
     var token by remember { mutableStateOf("") }; var title by remember(token) { mutableStateOf<String?>(null) }
-    GroupedCard(title = uiText(R.string.ui_backup_screen_026)) {
-        SecretField(uiText(R.string.ui_backup_screen_027_label), token, { token = it }, required = false, rule = uiText(R.string.ui_backup_screen_027_rule), tag = uiText(R.string.ui_backup_screen_027))
-        Text(uiText(R.string.ui_backup_screen_028))
-        AppButton(variant = AppButtonVariant.QUIET, enabled = !busy, onClick = { vm.command { title = vm.sharing.inspectRestoredConnection(token) } }) { Text(uiText(R.string.ui_backup_screen_029)) }
+    GroupedCard(title = uiText(R.string.backup_confirm_restored_connection_title)) {
+        SecretField(uiText(R.string.backup_replacement_bot_token_label), token, { token = it }, required = false, rule = uiText(R.string.backup_replacement_bot_token_rule), tag = uiText(R.string.backup_replacement_bot_token_label_with_guidance))
+        Text(uiText(R.string.backup_replacement_bot_token_help))
+        AppButton(variant = AppButtonVariant.QUIET, enabled = !busy, onClick = { vm.command { title = vm.sharing.inspectRestoredConnection(token) } }) { Text(uiText(R.string.backup_verify_connection_group_action)) }
         title?.let { name ->
-            LabeledValue(uiText(R.string.ui_backup_screen_030), name)
-            AppButton(enabled = !busy, onClick = { vm.command { vm.sharing.confirmRestoredConnection(token, name); token = ""; title = null } }) { Text(uiText(R.string.ui_backup_screen_031)) }
+            LabeledValue(uiText(R.string.backup_confirm_group_title), name)
+            AppButton(enabled = !busy, onClick = { vm.command { vm.sharing.confirmRestoredConnection(token, name); token = ""; title = null } }) { Text(uiText(R.string.backup_confirm_correct_group_action)) }
         }
-        Text(if (confirmed) uiText(R.string.ui_backup_screen_032) else uiText(R.string.ui_backup_screen_033))
+        Text(if (confirmed) uiText(R.string.backup_group_confirmed_message) else uiText(R.string.backup_connection_unconfirmed_message))
     }
 }

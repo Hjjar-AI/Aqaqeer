@@ -91,14 +91,14 @@ import com.aqaqeer.app.data.*
         if (query.text.isNotEmpty()) IconButton(
             onClick = { changeQuery(TextFieldValue("")); focus.clearFocus() },
             modifier = Modifier.testTag("clear_search")) {
-            AppIcon(UiIcon.CLOSE, description = uiText(R.string.ui_home_screen_005))
+            AppIcon(UiIcon.CLOSE, description = uiText(R.string.home_clear_search_description))
         } else AppIcon(UiIcon.SEARCH)
     }
     // Filters stay last; the optional What’s new chip sits immediately before them.
     val filterAction: @Composable () -> Unit = {
         IconButton(onClick = openFilters, modifier = Modifier.size(UiSpacing.filterButton).semantics {
-            contentDescription = uiText(R.string.ui_home_screen_002) +
-                if (filterCount > 0) uiText(R.string.ui_home_screen_003, MedicationPresentation.displayDigits(filterCount.toString())) else ""
+            contentDescription = uiText(R.string.home_filters_action) +
+                if (filterCount > 0) uiText(R.string.home_selected_count_suffix, MedicationPresentation.displayDigits(filterCount.toString())) else ""
         }) {
             BadgedBox(badge = {
                 if (filterCount > 0) Badge(Modifier.clearAndSetSemantics { }) {
@@ -128,7 +128,7 @@ import com.aqaqeer.app.data.*
                     decorationBox = { innerTextField ->
                         OutlinedTextFieldDefaults.DecorationBox(value = query.text, innerTextField = innerTextField,
                             enabled = true, singleLine = true, visualTransformation = VisualTransformation.None,
-                            interactionSource = interaction, placeholder = { Text(uiText(R.string.ui_home_screen_004)) },
+                            interactionSource = interaction, placeholder = { Text(uiText(R.string.home_search_placeholder)) },
                             leadingIcon = leadingAction, trailingIcon = trailingActions,
                             contentPadding = PaddingValues(horizontal = UiSpacing.section, vertical = UiSpacing.related),
                             container = {
@@ -139,20 +139,20 @@ import com.aqaqeer.app.data.*
             } else OutlinedTextField(value = query, onValueChange = changeQuery, singleLine = true, shape = searchShape,
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search, autoCorrectEnabled = false, capitalization = KeyboardCapitalization.None),
                 keyboardActions = KeyboardActions(onSearch = { focus.clearFocus() }),
-                placeholder = { Text(uiText(R.string.ui_home_screen_004)) },
+                placeholder = { Text(uiText(R.string.home_search_placeholder)) },
                 modifier = Modifier.weight(1f).testTag("search"), leadingIcon = leadingAction, trailingIcon = trailingActions)
             addMedication?.let { add ->
                 FilledIconButton(onClick = add, enabled = addEnabled,
                     modifier = Modifier.size(UiSpacing.touch), shape = MaterialTheme.shapes.medium) {
-                    AppIcon(UiIcon.ADD, description = uiText(R.string.ui_screen_titles_009))
+                    AppIcon(UiIcon.ADD, description = uiText(R.string.navigation_add_medication_title))
                 }
             }
         }
         if (showSummary) WrappingContent {
-            if (showSummary) Text(uiText(R.string.ui_home_screen_006,
+            if (showSummary) Text(uiText(R.string.home_results_count_format,
                 MedicationPresentation.displayDigits(visibleCount.toString()), MedicationPresentation.displayDigits(totalCount.toString())),
                 style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            if (hasFilters) AppButton(variant = AppButtonVariant.QUIET, onClick = clearFilters) { Text(uiText(R.string.ui_history_screen_017)) }
+            if (hasFilters) AppButton(variant = AppButtonVariant.QUIET, onClick = clearFilters) { Text(uiText(R.string.history_clear_filters_action)) }
         }
     }
 }

@@ -56,7 +56,7 @@ import java.time.LocalDate
             if (name.english) append('\u2069')
         } }
         val line: @Composable (Modifier) -> Unit = { modifier ->
-            Text(text, modifier = modifier.then(if (secondary) Modifier.semantics { contentDescription = uiText(R.string.ui_medication_components_001, name.text) } else Modifier),
+            Text(text, modifier = modifier.then(if (secondary) Modifier.semantics { contentDescription = uiText(R.string.catalog_trade_name_description_format, name.text) } else Modifier),
                 fontFamily = if (name.english) FontFamily.SansSerif else MedicationHeadingFont,
                 style = (if (prominent && index == 0) primaryStyle else if (secondary) MaterialTheme.typography.bodySmall else MaterialTheme.typography.bodyMedium)
                     .copy(textDirection = if (name.english) TextDirection.Ltr else TextDirection.ContentOrRtl),
@@ -83,7 +83,7 @@ import java.time.LocalDate
         strength = medication.strength, titleTrailing = titleTrailing)
     if (medication.nameAr != null || medication.nameEn != null) {
         val commercial = MedicationPresentation.names(medication.nameAr, medication.nameEn, names).joinToString(" · ") { it.text }
-        Text(uiText(R.string.ui_medication_components_002) + ": " + bidi(commercial),
+        Text(uiText(R.string.catalog_trade_name_heading) + ": " + bidi(commercial),
             style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
     form?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant) }
@@ -103,7 +103,7 @@ import java.time.LocalDate
     val uiText = rememberUiText()
     val presentation = availabilityBadge(status)
     MedicationBadge(presentation.text, presentation.tone, dense = dense, icon = presentation.icon, onClick = onClick,
-        actionDescription = "${presentation.text} · ${editLabel.orEmpty()}", actionLabel = uiText(R.string.ui_pharmacy_admin_screen_120))
+        actionDescription = "${presentation.text} · ${editLabel.orEmpty()}", actionLabel = uiText(R.string.availability_edit_action))
 }
 
 @Composable internal fun MedicationCard(row: MedicationRowUi, sectionId: String?,
@@ -116,7 +116,7 @@ import java.time.LocalDate
     val medication = row.medication
     val compact = preferences.layout == CardLayout.COMPACT
     val form = row.form
-    val formName = form?.nameAr ?: uiText(R.string.ui_aqaqeer_app_026)
+    val formName = form?.nameAr ?: uiText(R.string.catalog_unknown_dosage_form_label)
     val name = remember(medication, formName) { MedicationPresentation.identity(medication, formName) }
     val status = row.status
     val edge by animateColorAsState(statusTone(status).edge, tween(Motion.standard), label = "status edge")
@@ -129,13 +129,13 @@ import java.time.LocalDate
         }
     }) else null
     val interaction = if (bulkSelected == null) Modifier.combinedClickable(role = Role.Button, onClick = onClick,
-        onLongClick = onLongClick, hapticFeedbackEnabled = false, onLongClickLabel = if (onLongClick != null) uiText(R.string.ui_medication_components_003) else null)
+        onLongClick = onLongClick, hapticFeedbackEnabled = false, onLongClickLabel = if (onLongClick != null) uiText(R.string.availability_bulk_select_description) else null)
         else Modifier.toggleable(value = bulkSelected, enabled = selectionEnabled, role = Role.Checkbox,
             onValueChange = { toggleSelection() }).semantics {
-                contentDescription = uiText(R.string.ui_medication_components_004, name, statusLabel(status, text = uiText)) + if (unpublished) uiText(R.string.ui_medication_components_005) else ""
+                contentDescription = uiText(R.string.availability_medication_selection_description_format, name, statusLabel(status, text = uiText)) + if (unpublished) uiText(R.string.publication_medication_unpublished_suffix) else ""
             }
     val quickEditAction = if (bulkSelected == null && onQuickEdit != null) Modifier.semantics {
-        customActions = listOf(CustomAccessibilityAction(uiText(R.string.ui_pharmacy_admin_screen_120)) {
+        customActions = listOf(CustomAccessibilityAction(uiText(R.string.availability_edit_action)) {
             onQuickEdit(); true
         })
     } else Modifier
@@ -174,11 +174,11 @@ import java.time.LocalDate
                 MedicationNameLines(medication.genericAr, medication.genericEn, preferences.names,
                     prominent = true, query = query, primaryStyle = MaterialTheme.typography.titleMedium, maxLines = 2,
                     strength = medication.strength, titleTrailing = pendingMarker)
-                Text(form?.nameAr ?: uiText(R.string.ui_aqaqeer_app_026), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(form?.nameAr ?: uiText(R.string.catalog_unknown_dosage_form_label), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             } else {
                 MedicationSummary(medication, preferences.names, prominent = true, query = query, titleTrailing = pendingMarker)
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(UiSpacing.hair)) {
-                    Text(form?.nameAr ?: uiText(R.string.ui_aqaqeer_app_026), modifier = Modifier.weight(1f, fill = false), style = MaterialTheme.typography.bodyMedium)
+                    Text(form?.nameAr ?: uiText(R.string.catalog_unknown_dosage_form_label), modifier = Modifier.weight(1f, fill = false), style = MaterialTheme.typography.bodyMedium)
 
                 }
             }
@@ -187,7 +187,7 @@ import java.time.LocalDate
             MedicationBadges(medication, today, sectionId?.let { status }, onQuickEdit, name,
                 quickMenuOpen, dismissQuickMenu, chooseStatus, selectionEnabled)
 
-            if (!compact && !(preferences.groupingEnabled && preferences.grouping == HomeGrouping.CATEGORY)) LabeledValue(uiText(R.string.ui_pharmacy_admin_screen_073), row.category)
+            if (!compact && !(preferences.groupingEnabled && preferences.grouping == HomeGrouping.CATEGORY)) LabeledValue(uiText(R.string.catalog_category_label), row.category)
             val elsewhere = row.elsewhere
             val tipIdentity = listOf(LocalNoticeScope.current, "availability-tip", medication.id, sectionId.orEmpty())
             val tipContent = elsewhere.flatMap { listOf(it.id, it.nameAr) }
@@ -196,7 +196,7 @@ import java.time.LocalDate
                 Row(Modifier.fillMaxWidth().padding(UiSpacing.hair).testTag("tip_${medication.id}"),
                     verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(UiSpacing.hair)) {
                     AppIcon(UiIcon.INFO)
-                    Text(uiText(R.string.ui_medication_components_007) + elsewhere.joinToString(uiText(R.string.ui_medication_components_008)) { it.nameAr },
+                    Text(uiText(R.string.availability_elsewhere_prefix) + elsewhere.joinToString(uiText(R.string.shared_arabic_list_separator)) { it.nameAr },
                         style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
                     IconButton(onClick = { UiSession.dismiss(tipIdentity, tipContent) }) {
                         AppIcon(UiIcon.CLOSE, description = uiText(R.string.notice_dismiss))

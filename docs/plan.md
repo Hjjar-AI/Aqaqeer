@@ -11,7 +11,13 @@ The approved source batch adds session dismissal controls, finite snackbars, foc
 | U1 / P1 — Compile and Android acceptance | Separate build/test/device or hosted authorization | Both flavors; snackbar close/timeout/Undo/View and route ownership; independent notice/card-tip dismissal across navigation/rotation, changed content and new sessions; unchanged backup snooze/domain blocks; restored navigation/draft keys and role restrictions; forms/secret visibility and validation; grid keys/scroll/bulk/editor guards, phone two-column layout, large text/IME/wide panes, all accents and manual light/dark/AMOLED contrast. |
 | U2 / P2 — Source integrity links | Separate decision for unrelated artwork records | The full source-only checker reports two pre-existing missing artwork links in assets/branding/launcher-revision.md; no UI token/resource/delimiter/whitespace finding was observed. |
 
-Deferred: image/font reduction, numbered-resource renaming/string-file consolidation, component gallery and screenshot testing. Preserve current assets, string IDs, adaptive columns and lifecycle clocks; no measured performance improvement is claimed.
+Deferred: image/font reduction, component gallery and screenshot testing. Preserve current assets, adaptive columns and lifecycle clocks; no measured performance improvement is claimed.
+
+## String resource organization — source implemented / 2026-11-17
+
+Renamed 756 numbered UI identifiers and redistributed all 870 entries from the large UI file and both review files into twelve feature files; existing semantic names/text/attributes and flavor app names are retained. [Source evidence](validation.md#string-resource-organization--2026-11-17) records identifier-only production/helper/test reference checks. Test scope is limited to reference inspection/edits; no assertion changes or execution are authorized.
+
+Remaining: compile/resource processing and the existing U1 Android acceptance, when separately authorized. Verify both flavors, resource formatting, field labels/tags and representative navigation/Home/forms/history/connection/publication/backup/maintenance/import/report text. No new behavior, test authoring/execution, Gradle, builds, lint, migration, version or device work is included.
 
 ## Initial attribution-free baseline — 2026-11-16
 

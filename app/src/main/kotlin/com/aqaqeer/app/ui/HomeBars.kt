@@ -19,10 +19,10 @@ internal data class HomeBulkPresentation(val section: String, val selectedCount:
             visibleCount = state.visibleCount, selectVisible = selectVisible, clear = clear) {
             ActionGroup {
                 AppButton(enabled = state.selectedCount > 0 && state.valid && !state.busy, onClick = openEditor) {
-                    Text(uiText(R.string.ui_home_screen_007))
+                    Text(uiText(R.string.home_edit_selection_action))
                 }
                 AppButton(variant = AppButtonVariant.QUIET, enabled = !state.busy, onClick = clear) {
-                    Text(uiText(R.string.ui_home_screen_008))
+                    Text(uiText(R.string.home_clear_selection_action))
                 }
             }
         }

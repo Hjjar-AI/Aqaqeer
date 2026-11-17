@@ -19,11 +19,11 @@ import com.aqaqeer.app.data.MedicationPresentation
         shape = MaterialTheme.shapes.medium, modifier = Modifier.fillMaxWidth().testTag("bulk_selection_bar")) {
         ContentSection(modifier = Modifier.padding(UiSpacing.related)) {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                Text(uiText(R.string.ui_bulk_selection_bar_001, MedicationPresentation.displayDigits(count.toString()), section), Modifier.weight(1f))
-                AppButton(variant = AppButtonVariant.QUIET, enabled = !busy && visibleCount > 0, onClick = selectVisible) { Text(uiText(R.string.ui_bulk_selection_bar_002)) }
-                IconButton(enabled = !busy, onClick = cancel) { AppIcon(UiIcon.CLOSE, description = uiText(R.string.ui_bulk_selection_bar_003)) }
+                Text(uiText(R.string.availability_selection_count_format, MedicationPresentation.displayDigits(count.toString()), section), Modifier.weight(1f))
+                AppButton(variant = AppButtonVariant.QUIET, enabled = !busy && visibleCount > 0, onClick = selectVisible) { Text(uiText(R.string.availability_select_visible_action)) }
+                IconButton(enabled = !busy, onClick = cancel) { AppIcon(UiIcon.CLOSE, description = uiText(R.string.availability_finish_selection_description)) }
             }
-            if (!valid) Text(uiText(R.string.ui_bulk_selection_bar_004), color = MaterialTheme.colorScheme.error)
+            if (!valid) Text(uiText(R.string.availability_deleted_selection_error), color = MaterialTheme.colorScheme.error)
             content()
         }
     }

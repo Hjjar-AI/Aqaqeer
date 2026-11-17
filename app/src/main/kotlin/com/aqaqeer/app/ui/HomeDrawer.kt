@@ -44,28 +44,28 @@ import com.aqaqeer.app.data.*
             verticalArrangement = Arrangement.spacedBy(UiSpacing.hair)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(UiSpacing.related)) {
                 BrandEmblem(Modifier.size(Size.avatarM), description = null)
-                Text(pharmacy?.name ?: uiText(R.string.ui_screen_titles_020), Modifier.weight(1f).semantics { heading() },
+                Text(pharmacy?.name ?: uiText(R.string.navigation_app_title), Modifier.weight(1f).semantics { heading() },
                     style = MaterialTheme.typography.titleMedium)
             }
-            CompactDrawerItem(icon = UiIcon.HOME, label = uiText(R.string.ui_home_drawer_001), selected = true, onClick = { openRoute(Route.Home) })
+            CompactDrawerItem(icon = UiIcon.HOME, label = uiText(R.string.navigation_drawer_home_label), selected = true, onClick = { openRoute(Route.Home) })
             if (ready?.isDemo == true) DrawerRow(uiText(R.string.review_demo_mode), { openRoute(Route.Settings) }, icon = UiIcon.SETTINGS)
-            if (pharmacy != null) DrawerGroup(uiText(R.string.ui_home_drawer_002), categoriesOpen, { categoriesOpen = !categoriesOpen }, UiIcon.CATEGORY) {
-                if (filters.categoryIds.size > 1) SupportingText(uiText(R.string.ui_home_drawer_003))
-                CompactDrawerItem(label = uiText(R.string.ui_home_drawer_004), selected = filters.categoryIds.isEmpty(), onClick = { chooseCategory(null) })
+            if (pharmacy != null) DrawerGroup(uiText(R.string.navigation_drawer_categories_heading), categoriesOpen, { categoriesOpen = !categoriesOpen }, UiIcon.CATEGORY) {
+                if (filters.categoryIds.size > 1) SupportingText(uiText(R.string.home_drawer_replace_categories_help))
+                CompactDrawerItem(label = uiText(R.string.home_drawer_all_categories_label), selected = filters.categoryIds.isEmpty(), onClick = { chooseCategory(null) })
                 drawerCategories.forEach { category ->
                     CompactDrawerItem(label = category.nameAr, selected = filters.categoryIds == setOf(category.id), onClick = { chooseCategory(category.id) })
                 }
             }
-            if (pharmacy != null && (!ready.isDemo || ready.admin)) DrawerGroup(uiText(R.string.ui_home_drawer_005), catalogOpen, { catalogOpen = !catalogOpen }, UiIcon.HISTORY) {
-                DrawerRow(uiText(R.string.ui_screen_titles_002), { openRoute(Route.Admin) }, icon = UiIcon.TOOLS)
+            if (pharmacy != null && (!ready.isDemo || ready.admin)) DrawerGroup(uiText(R.string.navigation_drawer_catalog_history_heading), catalogOpen, { catalogOpen = !catalogOpen }, UiIcon.HISTORY) {
+                DrawerRow(uiText(R.string.navigation_admin_tools_title), { openRoute(Route.Admin) }, icon = UiIcon.TOOLS)
             }
-            DrawerGroup(uiText(R.string.ui_home_drawer_008), applicationOpen, { applicationOpen = !applicationOpen }, UiIcon.INFO) {
-                DrawerRow(uiText(R.string.ui_screen_titles_013), { openRoute(Route.About) }, icon = UiIcon.INFO)
-                if (pharmacy != null) DrawerRow(uiText(R.string.ui_home_drawer_009), showDataTimes, icon = UiIcon.CALENDAR)
+            DrawerGroup(uiText(R.string.navigation_drawer_application_heading), applicationOpen, { applicationOpen = !applicationOpen }, UiIcon.INFO) {
+                DrawerRow(uiText(R.string.navigation_about_title), { openRoute(Route.About) }, icon = UiIcon.INFO)
+                if (pharmacy != null) DrawerRow(uiText(R.string.home_drawer_data_times_label), showDataTimes, icon = UiIcon.CALENDAR)
             }
         }
         Surface(shadowElevation = UiSpacing.hair) {
-            DrawerRow(uiText(R.string.ui_screen_titles_012), { openRoute(Route.Settings) }, icon = UiIcon.SETTINGS)
+            DrawerRow(uiText(R.string.navigation_settings_title), { openRoute(Route.Settings) }, icon = UiIcon.SETTINGS)
         }
     }
 }
@@ -77,7 +77,7 @@ import com.aqaqeer.app.data.*
     Column(Modifier.fillMaxWidth().animateContentSize()) {
         AppButton(variant = AppButtonVariant.SECONDARY, onClick = toggle,
             modifier = Modifier.fillMaxWidth().heightIn(min = UiSpacing.touch).semantics {
-                stateDescription = uiText(if (expanded) R.string.ui_home_drawer_010 else R.string.ui_home_drawer_011)
+                stateDescription = uiText(if (expanded) R.string.shared_expanded_state_label else R.string.shared_collapsed_state_label)
             }, shape = MaterialTheme.shapes.medium,
             border = BorderStroke(AppStroke.hairline, MaterialTheme.colorScheme.outlineVariant),
             colors = ButtonDefaults.outlinedButtonColors(

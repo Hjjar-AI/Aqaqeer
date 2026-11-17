@@ -20,7 +20,7 @@ internal data class BadgePresentation(val text: String, val tone: StatusTone, va
 @Composable internal fun expiryBadge(expiry: ExpiryState): BadgePresentation {
     val uiText = rememberUiText()
     val expired = expiry == ExpiryState.EXPIRED
-    return BadgePresentation(uiText(if (expired) R.string.ui_medication_components_010 else R.string.ui_medication_components_011),
+    return BadgePresentation(uiText(if (expired) R.string.catalog_expired_badge_label else R.string.catalog_expiring_soon_badge_label),
         if (expired) LocalStatusColors.current.out else LocalStatusColors.current.low, UiIcon.WARNING)
 }
 

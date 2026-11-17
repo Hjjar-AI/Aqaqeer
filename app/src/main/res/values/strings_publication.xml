@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="pin_changed_review">تغيرت الرسالة المثبتة؛ أعد المراجعة.</string>
+    <string name="pin_recovery_confirm">راجعت البيانات والتحذير وأؤكد نشرها وتثبيت نسخة جديدة</string>
+    <string name="pin_recovery_explicit">استرداد بتأكيد صريح</string>
+    <string name="pin_recovery_help">إذا فُقد تثبيت عقاقير أو ثُبّتت رسالة أخرى، افحص الحالة ثم راجع التحذير والبيانات المحتفظ بها قبل تأكيد نشر نسخة جديدة. لا تستخدم هذا الإجراء لتجاوز فشل الاتصال أو فك التشفير.</string>
+    <string name="pin_recovery_live_snapshot">توجد نسخة مشتركة سليمة؛ استخدم التحديث أو النشر المعتاد بدلاً من استرداد التثبيت.</string>
+    <string name="pin_recovery_retained">هوية ووقت النسخة المحتفظ بها</string>
+    <string name="pin_recovery_title">نشر نسخة جديدة وتثبيتها</string>
+    <string name="pin_recovery_unavailable">النسخة المشتركة مفقودة أو الرسالة المثبتة لا تخص عقاقير.</string>
+    <string name="pin_recovery_warning">ستُنشر البيانات المحتفظ بها على هذا الهاتف (%1$d دواء) مع التعديلات المراجعة وتُثبّت نسخة جديدة. قد تكون هناك تغييرات بعيدة غير مرئية لا يمكن استعادتها. راجع البيانات قبل التأكيد.</string>
+    <string name="publication_after_label" formatted="false">"بعد"</string>
+    <string name="publication_automatic_reconnect_help" formatted="false">"قد تُنشر التعديلات المنتظرة تلقائياً عند عودة الاتصال. النسخ المشتركة لا تشمل السجل المحلي."</string>
+    <string name="publication_before_label" formatted="false">"قبل"</string>
+    <string name="publication_cancel_availability_change_action" formatted="false">"إلغاء تعديل التوافر"</string>
+    <string name="publication_changes_review_label" formatted="false">"مراجعة التغييرات"</string>
+    <string name="publication_choose_value_help" formatted="false">"اختر القيمة التي ستُستخدم."</string>
+    <string name="publication_confirm_delete_dependents_action" formatted="false">"تأكيد الحذف وتحديث العناصر المرتبطة"</string>
+    <string name="publication_defer_action" formatted="false">"لاحقاً"</string>
+    <string name="publication_delete_conflict_help" formatted="false">"حذف عنصر تغير في النسخة المنشورة؛ راجع جميع التغييرات والعناصر المرتبطة قبل الاختيار."</string>
+    <string name="publication_deleted_value_label" formatted="false">"غير موجود / حذف"</string>
+    <string name="publication_empty_pharmacy_confirm_help" formatted="false">"يمكنك البدء بإضافة الأدوية أولاً ثم النشر. لن يُصدر ملف اتصال حتى يتم التحقق من أول نشر."</string>
+    <string name="publication_empty_pharmacy_confirm_title" formatted="false">"نشر صيدلية فارغة الآن؟"</string>
+    <string name="publication_empty_value_label" formatted="false">"فارغ"</string>
+    <string name="publication_keep_published_entity_action" formatted="false">"إبقاء العنصر المنشور وإلغاء الحذف"</string>
+    <string name="publication_local_draft_help" formatted="false">"أضف الأدوية، ثم أكمل إعداد تيليغرام وانشر. يمكنك تأجيل نشر الصيدلية الفارغة."</string>
+    <string name="publication_local_draft_label" formatted="false">"مسودة محلية — غير مشتركة"</string>
+    <string name="publication_local_value_format">"نسختك: %1$s"</string>
+    <string name="publication_maintenance_block_message" formatted="false">"النشر متوقف حتى إكمال صيانة الاتصال ومراجعتها."</string>
+    <string name="publication_medication_unpublished_suffix" formatted="false">" · تعديلات غير منشورة"</string>
+    <string name="publication_no_verified_publication_message" formatted="false">"لا يوجد نشر متحقق منه"</string>
+    <string name="publication_original_value_label" formatted="false">"القيمة قبل التعديل"</string>
+    <string name="publication_pending_attempt_review_message" formatted="false">"توجد محاولة نشر محفوظة؛ راجع نتيجتها قبل المتابعة."</string>
+    <string name="publication_pending_banner_count_format">"التعديلات المنتظرة: %1$s"</string>
+    <string name="publication_pending_busy_message" formatted="false">"جار تنفيذ عملية؛ احتُفظ بالعمل حتى اكتمال التحقق."</string>
+    <string name="publication_pending_conflicts_message" formatted="false">"توجد تعارضات تحتاج مراجعة قبل النشر."</string>
+    <string name="publication_pending_count_format">"التعديلات غير المنشورة: %1$s"</string>
+    <string name="publication_pending_local_draft_help" formatted="false">"مسودة محلية — النشر الأول يبدأ المشاركة."</string>
+    <string name="publication_pending_publish_action" formatted="false">"نشر"</string>
+    <string name="publication_pending_reconnect_help" formatted="false">"تعديلات محلية لم تُؤكد بعد؛ قد يُستأنف النشر المنتظر عند عودة الاتصال."</string>
+    <string name="publication_pending_review_action" formatted="false">"مراجعة"</string>
+    <string name="publication_pending_setup_required_message" formatted="false">"أكمل إعداد تيليغرام من أدوات الإدارة قبل النشر."</string>
+    <string name="publication_pending_update_required_message" formatted="false">"يلزم إصدار متوافق قبل النشر؛ احتُفظ بالعمل."</string>
+    <string name="publication_publish_now_action" formatted="false">"نشر الآن"</string>
+    <string name="publication_publish_verify_action" formatted="false">"نشر والتحقق"</string>
+    <string name="publication_published_value_format">"النسخة المنشورة: %1$s"</string>
+    <string name="publication_related_entity_label" formatted="false">"عنصر مرتبط"</string>
+    <string name="publication_restore_related_entity_action" formatted="false">"استعادة العنصر المرتبط"</string>
+    <string name="publication_restore_review_block_message" formatted="false">"النشر متوقف حتى مراجعة الاستعادة ومقارنة النسخة المستعادة بالنسخة المشتركة."</string>
+    <string name="publication_restore_taxonomy_action" formatted="false">"استعادة التصنيف أو الشكل"</string>
+    <string name="publication_resume_failed_message" formatted="false">"تعذر استئناف النشر؛ احتُفظ بالعمل."</string>
+    <string name="publication_review_retained_work_action" formatted="false">"مراجعة العمل المحفوظ"</string>
+    <string name="publication_toolbar_pending_count_format">"نشر (%1$s)"</string>
+    <string name="publication_unpublished_local_draft_label" formatted="false">"مسودة محلية — لم تُنشر"</string>
+    <string name="publication_use_default_taxonomy_action" formatted="false">"استخدام التصنيف أو الشكل الافتراضي"</string>
+    <string name="publication_use_local_value_action" formatted="false">"استخدم نسختي"</string>
+    <string name="publication_use_published_value_action" formatted="false">"استخدم النسخة المنشورة"</string>
+    <string name="publish_multiple_attempts">توجد أكثر من محاولة نشر محفوظة. أُوقف النشر لحماية العمل؛ يلزم فحص المحاولات واستردادها.</string>
+    <string name="review_check_backup">إنشاء نسخة احتياطية</string>
+    <string name="review_check_catalog">إضافة الأدوية</string>
+    <string name="review_check_connection">إعداد الاتصال</string>
+    <string name="review_check_publish">نشر البيانات</string>
+    <string name="review_hide_checklist">إخفاء القائمة المكتملة</string>
+    <string name="review_publication_summary">ملخص التعديلات</string>
+    <string name="review_setup_checklist">خطوات إعداد الإدارة</string>
+    <string name="review_unpublished">غير منشور</string>
+</resources>

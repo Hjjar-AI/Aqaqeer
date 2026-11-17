@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="history_admin_pin_verifier_label" formatted="false">"بيانات التحقق من رمز الإدارة"</string>
+    <string name="history_admin_required_message" formatted="false">"يلزم تفويض إدارة على هذا الجهاز لعرض السجل."</string>
+    <string name="history_all_filter_label" formatted="false">"الكل"</string>
+    <string name="history_apply_filters_action" formatted="false">"تطبيق الفلاتر"</string>
+    <string name="history_clear_filters_action" formatted="false">"مسح الفلاتر"</string>
+    <string name="history_connection_activated_label" formatted="false">"تفعيل اتصال متحقق"</string>
+    <string name="history_date_from_label" formatted="false">"من تاريخ"</string>
+    <string name="history_date_range_error" formatted="false">"أدخل تاريخاً صحيحاً مثل 2026-11-10، على أن تكون البداية قبل النهاية أو مساوية لها."</string>
+    <string name="history_date_through_label" formatted="false">"إلى تاريخ شامل"</string>
+    <string name="history_deleted_medication_label" formatted="false">"دواء محذوف — السجل محفوظ"</string>
+    <string name="history_deleted_section_label" formatted="false">"قسم محذوف"</string>
+    <string name="history_device_observed_time_format">"وقت الرصد على هذا الجهاز: %1$s"</string>
+    <string name="history_edit_medication_action_format">"تعديل %1$s"</string>
+    <string name="history_editor_filter_label" formatted="false">"المحرر"</string>
+    <string name="history_editor_identifier_label" formatted="false">"معرّف المحرر"</string>
+    <string name="history_editor_prefix" formatted="false">"المحرر: "</string>
+    <string name="history_empty_help" formatted="false">"قد يكون السجل فارغاً على هذا الجهاز، أو لا توجد أحداث ضمن الفلاتر المختارة."</string>
+    <string name="history_empty_title" formatted="false">"لا توجد أحداث مطابقة"</string>
+    <string name="history_entity_change_label" formatted="false">"إضافة أو حذف"</string>
+    <string name="history_entity_identifier_format">"معرّف العنصر: %1$s"</string>
+    <string name="history_entity_identifier_label" formatted="false">"معرّف العنصر"</string>
+    <string name="history_event_identifier_label" formatted="false">"معرّف الحدث"</string>
+    <string name="history_filter_title" formatted="false">"تصفية السجل"</string>
+    <string name="history_hide_technical_details_action" formatted="false">"إخفاء التفاصيل التقنية"</string>
+    <string name="history_identifier_format">"معرّف: %1$s"</string>
+    <string name="history_last_modified_format">"آخر تعديل: %1$s · %2$s"</string>
+    <string name="history_load_failed_message" formatted="false">"تعذر قراءة السجل. تحقق من التفويض ثم حاول مجدداً؛ احتُفظ بالبيانات."</string>
+    <string name="history_local_change_label" formatted="false">"تغيير محلي"</string>
+    <string name="history_local_history_help" formatted="false">"لا يُشارك السجل عبر تيليغرام. الهاتف الجديد يبدأ دون سجل سابق؛ لا يمكن استنتاج التغييرات التي لم يرصدها هذا الجهاز."</string>
+    <string name="history_local_history_title" formatted="false">"عن سجل هذا الجهاز"</string>
+    <string name="history_local_maintenance_label" formatted="false">"صيانة اتصال محلية"</string>
+    <string name="history_maintenance_completed_label" formatted="false">"اكتمال مراجعة صيانة الاتصال"</string>
+    <string name="history_medication_filter_label" formatted="false">"الدواء"</string>
+    <string name="history_medication_history_action" formatted="false">"سجل الدواء على هذا الجهاز"</string>
+    <string name="history_missing_publication_revision_help" formatted="false">"لا يوجد رقم نشر مرتبط بهذا الحدث؛ راجع قائمة التعديلات لمعرفة العمل المنتظر."</string>
+    <string name="history_missing_value_label" formatted="false">"غير موجود / غير مسجّل"</string>
+    <string name="history_newer_action" formatted="false">"الأحدث"</string>
+    <string name="history_non_medication_event_help" formatted="false">"هذا الحدث لا يمثل تعديلاً على الأدوية."</string>
+    <string name="history_observed_entity_change_label" formatted="false">"إضافة أو حذف مرصود"</string>
+    <string name="history_observed_remote_change_label" formatted="false">"تغيير بعيد رصده هذا الجهاز"</string>
+    <string name="history_observed_time_caveat_help" formatted="false">"وقت الرصد لا يثبت وقت التعديل الأصلي."</string>
+    <string name="history_observed_time_prefix" formatted="false">"رُصد: "</string>
+    <string name="history_older_action" formatted="false">"الأقدم"</string>
+    <string name="history_original_edit_time_prefix" formatted="false">"وقت التعديل الأصلي: "</string>
+    <string name="history_original_editor_prefix" formatted="false">"المحرر الأصلي: "</string>
+    <string name="history_page_format">"صفحة %1$s"</string>
+    <string name="history_publication_attribution_help" formatted="false">"هذا الحدث يوثّق النشر؛ لا يتتبع أسماء المحررين."</string>
+    <string name="history_publication_identifier_label" formatted="false">"معرّف النشر"</string>
+    <string name="history_publication_revision_format">"رقم النسخة المنشورة: %1$s"</string>
+    <string name="history_publisher_prefix" formatted="false">"الناشر: "</string>
+    <string name="history_recovery_values_redacted_help" formatted="false">"تفاصيل الاسترداد محفوظة في التخزين المحمي ولا تُعرض هنا."</string>
+    <string name="history_related_record_label" formatted="false">"سجل عنصر مرتبط"</string>
+    <string name="history_restore_reconciled_label" formatted="false">"مصالحة النسخة المستعادة"</string>
+    <string name="history_restore_replacement_reviewed_label" formatted="false">"مراجعة استبدال المحتوى المستعاد"</string>
+    <string name="history_restore_review_label" formatted="false">"مراجعة استعادة — لا تعني النشر"</string>
+    <string name="history_retained_unapplied_snapshot_label" formatted="false">"نسخة محفوظة للمراجعة — لم تُطبّق"</string>
+    <string name="history_retry_action" formatted="false">"إعادة المحاولة"</string>
+    <string name="history_section_prefix" formatted="false">"القسم: "</string>
+    <string name="history_sensitive_values_redacted_help" formatted="false">"لا تُعرض قيم بيانات التحقق أو محتوى سجل الصيدلية هنا."</string>
+    <string name="history_technical_details_title" formatted="false">"تفاصيل تقنية"</string>
+    <string name="history_truncated_display_help" formatted="false">"قيمة مختصرة للعرض؛ السجل المحفوظ لم يُختصر."</string>
+    <string name="history_unknown_label" formatted="false">"غير معروف"</string>
+    <string name="history_unknown_source_label" formatted="false">"المصدر غير معروف"</string>
+    <string name="history_unknown_time_label" formatted="false">"وقت غير معروف"</string>
+    <string name="history_update_time_missing_message" formatted="false">"وقت التحديث غير مسجل"</string>
+    <string name="history_verified_publication_label" formatted="false">"نشر موثّق"</string>
+    <string name="logic_history_availability">التوافر</string>
+    <string name="logic_history_maintenance">الصيانة</string>
+    <string name="logic_history_medication">بيانات الأدوية</string>
+    <string name="logic_history_pharmacy">الصيدلية</string>
+    <string name="logic_history_publication">النشر والاسترداد</string>
+    <string name="logic_history_taxonomy">التصنيفات والأشكال والأقسام</string>
+    <string name="logic_history_type">نوع التغيير</string>
+    <string name="review_7_days">7 أيام</string>
+    <string name="review_custom">مخصص</string>
+    <string name="review_since_sunday">منذ بداية الأسبوع</string>
+    <string name="review_today">اليوم</string>
+    <string name="review_yesterday">أمس</string>
+</resources>

@@ -19,7 +19,7 @@ import com.aqaqeer.app.reports.*
 @Composable internal fun ReportsScreen(ready: CatalogState.Ready?, vm: CatalogViewModel) {
     val uiText = rememberUiText()
     if (ready == null || !ready.admin || ready.isDemo || ready.requiresUpdate) {
-        FormPage { InformationCard(uiText(R.string.ui_screen_titles_017), uiText(R.string.ui_reports_screen_001)) }
+        FormPage { InformationCard(uiText(R.string.navigation_reports_title), uiText(R.string.exchange_report_access_required_message)) }
         return
     }
     val pharmacyId = ready.catalog.pharmacy?.pharmacyId
@@ -46,57 +46,57 @@ import com.aqaqeer.app.reports.*
     fun export(asPdf: Boolean) {
         vm.beginReportSave(asPdf)
         try { if (asPdf) pdf.launch("aqaqeer-report.pdf") else csv.launch("aqaqeer-report.csv") }
-        catch (_: Exception) { vm.saveReport(null); vm.adminMessage.value = uiText(R.string.ui_reports_screen_002) }
+        catch (_: Exception) { vm.saveReport(null); vm.adminMessage.value = uiText(R.string.exchange_report_save_picker_failed_message) }
     }
     Column(Modifier.fillMaxSize()) {
         LazyColumn(Modifier.weight(1f), contentPadding = PaddingValues(UiSpacing.page), verticalArrangement = Arrangement.spacedBy(UiSpacing.section)) {
             item {
                 ContentSection {
                     OperationStatus(busy, message, cancel = vm::cancelAdminOperation)
-                    GroupedCard(title = uiText(R.string.ui_reports_screen_003)) {
-                        ChoicePicker(uiText(R.string.ui_reports_screen_004), ReportPreset.entries, preset, {
-                            when (it) { ReportPreset.OUT -> uiText(R.string.ui_reports_screen_005); ReportPreset.FULL -> uiText(R.string.ui_reports_screen_006); ReportPreset.EXPIRING_SOON -> uiText(R.string.ui_reports_screen_007) }
+                    GroupedCard(title = uiText(R.string.exchange_report_prepare_title)) {
+                        ChoicePicker(uiText(R.string.exchange_report_preset_label), ReportPreset.entries, preset, {
+                            when (it) { ReportPreset.OUT -> uiText(R.string.exchange_report_out_in_section_label); ReportPreset.FULL -> uiText(R.string.exchange_report_all_availability_label); ReportPreset.EXPIRING_SOON -> uiText(R.string.exchange_report_expiring_not_expired_label) }
                         }, enabled = !busy, itemKey = { it.name }) { preset = it }
                         if (preset == ReportPreset.OUT) CheckChoiceRow(allSections, uiText(R.string.logic_all_shortages), enabled = !busy) { allSections = it }
-                        if (preset == ReportPreset.OUT && !allSections) ChoicePicker(uiText(R.string.ui_reports_screen_008), ready.catalog.sections,
+                        if (preset == ReportPreset.OUT && !allSections) ChoicePicker(uiText(R.string.exchange_report_section_label), ready.catalog.sections,
                             ready.catalog.sections.find { it.id == section }, { it.nameAr }, enabled = !busy, itemKey = { it.id }) { section = it.id }
-                        CheckChoiceRow(unpublished, uiText(R.string.ui_reports_screen_009), enabled = !busy) { unpublished = it }
-                        AppButton(enabled = !busy, onClick = { vm.prepareReport(request) }) { Text(uiText(R.string.ui_reports_screen_010)) }
-                        ExpandableInformation(uiText(R.string.ui_reports_screen_011),
-                            uiText(R.string.ui_reports_screen_012))
+                        CheckChoiceRow(unpublished, uiText(R.string.exchange_report_include_drafts_label), enabled = !busy) { unpublished = it }
+                        AppButton(enabled = !busy, onClick = { vm.prepareReport(request) }) { Text(uiText(R.string.exchange_report_prepare_preview_action)) }
+                        ExpandableInformation(uiText(R.string.exchange_report_source_help_title),
+                            uiText(R.string.exchange_report_source_help))
                     }
                 }
             }
             if (current != null) {
                 item {
-                    GroupedCard(title = uiText(R.string.ui_reports_screen_013)) {
+                    GroupedCard(title = uiText(R.string.exchange_report_preview_title)) {
                         Text(current.pharmacyName, style = MaterialTheme.typography.titleMedium)
-                        Text(uiText(R.string.ui_reports_screen_014, MedicationPresentation.displayDigits(current.medications.size.toString())))
-                        Text(if (current.request.includeUnpublished) uiText(R.string.ui_reports_screen_015) else uiText(R.string.ui_reports_screen_016))
-                        LabeledValue(uiText(R.string.ui_reports_screen_017), bidi(MedicationPresentation.timestamp(current.generatedAt, current.timezone)))
-                        ExpandableInformation(uiText(R.string.ui_reports_screen_018), uiText(R.string.ui_reports_screen_019, bidi(current.timezone)) +
-                            (current.publishedAt?.let { bidi(MedicationPresentation.timestamp(it, current.timezone)) } ?: uiText(R.string.ui_reports_screen_020)))
+                        Text(uiText(R.string.exchange_report_medication_count_format, MedicationPresentation.displayDigits(current.medications.size.toString())))
+                        Text(if (current.request.includeUnpublished) uiText(R.string.exchange_report_drafts_included_label) else uiText(R.string.exchange_report_published_only_label))
+                        LabeledValue(uiText(R.string.exchange_report_created_at_label), bidi(MedicationPresentation.timestamp(current.generatedAt, current.timezone)))
+                        ExpandableInformation(uiText(R.string.exchange_report_times_heading), uiText(R.string.exchange_report_pharmacy_publication_time_prefix, bidi(current.timezone)) +
+                            (current.publishedAt?.let { bidi(MedicationPresentation.timestamp(it, current.timezone)) } ?: uiText(R.string.exchange_report_unpublished_label)))
                     }
                 }
                 items(if (showAll) current.medications else current.medications.take(5), key = { it.id }) { med ->
                     GroupedCard {
                         MedicationSummary(med, prominent = true, form = current.forms.firstOrNull { it.id == med.formId }?.nameAr)
-                        med.expiryDate?.let { LabeledValue(uiText(R.string.ui_reports_screen_021), bidi(it.toString())) }
+                        med.expiryDate?.let { LabeledValue(uiText(R.string.exchange_report_expiry_label), bidi(it.toString())) }
                         current.sections.forEach { s ->
                             WrappingContent { Text(s.nameAr); StatusBadge(current.status(med.id, s.id)) }
                         }
                     }
                 }
                 if (current.medications.size > 5) item {
-                    AppButton(variant = AppButtonVariant.QUIET, onClick = { showAll = !showAll }) { Text(if (showAll) uiText(R.string.ui_reports_screen_022) else uiText(R.string.ui_reports_screen_023)) }
+                    AppButton(variant = AppButtonVariant.QUIET, onClick = { showAll = !showAll }) { Text(if (showAll) uiText(R.string.exchange_report_show_first_five_action) else uiText(R.string.exchange_report_show_all_action)) }
                 }
             }
         }
         if (current != null) Surface(shadowElevation = UiSpacing.hair) {
             Column(Modifier.fillMaxWidth().padding(UiSpacing.related)) {
-                Text(uiText(R.string.ui_reports_screen_024, MedicationPresentation.displayDigits(current.medications.size.toString())),
+                Text(uiText(R.string.exchange_report_save_full_count_format, MedicationPresentation.displayDigits(current.medications.size.toString())),
                     style = MaterialTheme.typography.labelLarge)
-                ExportButtons(!busy, listOf(uiText(R.string.ui_reports_screen_025) to { export(false) }, uiText(R.string.ui_reports_screen_026) to { export(true) }))
+                ExportButtons(!busy, listOf(uiText(R.string.exchange_report_save_csv_action) to { export(false) }, uiText(R.string.exchange_report_save_pdf_action) to { export(true) }))
             }
         }
     }

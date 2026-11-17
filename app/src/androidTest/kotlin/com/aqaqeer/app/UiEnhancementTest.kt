@@ -155,9 +155,9 @@ class UiEnhancementTest {
             }
         }
         compose.onNodeWithText("غير متوفر").performScrollTo().performClick()
-        compose.onNodeWithText(uiText(R.string.ui_bulk_medication_editor_010)).performClick()
+        compose.onNodeWithText(uiText(R.string.availability_bulk_preview_action)).performClick()
         compose.onNodeWithText("Item 29",substring=true).performScrollTo().assertIsDisplayed()
-        compose.onNodeWithText(uiText(R.string.ui_pharmacy_admin_screen_109)).assertIsDisplayed().performClick()
+        compose.onNodeWithText(uiText(R.string.catalog_save_local_action)).assertIsDisplayed().performClick()
         compose.onNodeWithText("إلغاء").assertIsDisplayed().performClick()
         compose.runOnIdle { assertEquals(1,saves);assertEquals(1,cancellations) }
     }

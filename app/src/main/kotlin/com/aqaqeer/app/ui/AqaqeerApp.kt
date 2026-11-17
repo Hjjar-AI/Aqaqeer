@@ -113,7 +113,7 @@ internal fun statusLabel(status: AvailabilityStatus, text: UiText? = null): Stri
     LaunchedEffect(feedback?.id, state.destination) {
         val message = feedback?.takeIf { it.destination == state.destination } ?: return@LaunchedEffect
         val result = snackbar.showSnackbar(message.message, actionLabel = when {
-            message.undo != null -> uiText(R.string.ui_aqaqeer_app_001); message.medicationId != null -> uiText(R.string.ui_aqaqeer_app_002); else -> null
+            message.undo != null -> uiText(R.string.shared_undo_action); message.medicationId != null -> uiText(R.string.shared_view_action); else -> null
         }, withDismissAction = true, duration = if (message.undo != null || message.medicationId != null)
             SnackbarDuration.Long else SnackbarDuration.Short)
         if (result == SnackbarResult.ActionPerformed && viewModel.state.value.destination == message.destination) {
@@ -135,12 +135,12 @@ internal fun statusLabel(status: AvailabilityStatus, text: UiText? = null): Stri
         var detailMenuOpen by remember(medication.id) { mutableStateOf(false) }
         if (editable) IconButton(enabled = !adminBusy,
             onClick = { navigate(Route.EditMedication(medication.id)) }) {
-            AppIcon(UiIcon.EDIT, description = uiText(R.string.ui_aqaqeer_app_012))
+            AppIcon(UiIcon.EDIT, description = uiText(R.string.catalog_edit_medication_availability_description))
         }
         if (ready.admin) Box {
-            IconButton(onClick = { detailMenuOpen = true }) { AppIcon(UiIcon.MORE, description = uiText(R.string.ui_aqaqeer_app_013)) }
+            IconButton(onClick = { detailMenuOpen = true }) { AppIcon(UiIcon.MORE, description = uiText(R.string.catalog_medication_options_description)) }
             DropdownMenu(expanded = detailMenuOpen, onDismissRequest = { detailMenuOpen = false }) {
-                DropdownMenuItem(text = { Text(uiText(R.string.ui_aqaqeer_app_014)) },
+                DropdownMenuItem(text = { Text(uiText(R.string.history_medication_history_action)) },
                     leadingIcon = { AppIcon(UiIcon.HISTORY) },
                     onClick = { detailMenuOpen = false; viewModel.openHistory(medication.id) })
             }
@@ -207,7 +207,7 @@ internal fun statusLabel(status: AvailabilityStatus, text: UiText? = null): Stri
                         Column(Modifier.weight(1f).then(if (drawerEligible) Modifier
                             .heightIn(min = UiSpacing.touch)
                             .clickable(enabled = !homeModalOpen && !dataTimesOpen,
-                                onClickLabel = uiText(R.string.ui_aqaqeer_app_003)) {
+                                onClickLabel = uiText(R.string.home_data_times_description)) {
                                 afterDrawer { dataTimesOpen = true }
                             } else Modifier), verticalArrangement = Arrangement.Center) {
                             if (titleMedication != null && !dualPane) {
@@ -219,11 +219,11 @@ internal fun statusLabel(status: AvailabilityStatus, text: UiText? = null): Stri
                             if (drawerEligible) {
                                 val ready = readyForTitle
                                 val timeLabel = when {
-                                    ready.isDemo -> uiText(R.string.ui_aqaqeer_app_004)
-                                    ready.lifecycle == "LOCAL_DRAFT" -> uiText(R.string.ui_aqaqeer_app_005)
-                                    else -> uiText(R.string.ui_aqaqeer_app_006) + (ready.publishedAt?.let {
+                                    ready.isDemo -> uiText(R.string.home_demo_data_label)
+                                    ready.lifecycle == "LOCAL_DRAFT" -> uiText(R.string.publication_unpublished_local_draft_label)
+                                    else -> uiText(R.string.home_data_time_prefix) + (ready.publishedAt?.let {
                                         bidi(MedicationPresentation.timestamp(it, ready.catalog.pharmacy?.timezone ?: "Asia/Damascus"))
-                                    } ?: uiText(R.string.ui_aqaqeer_app_007))
+                                    } ?: uiText(R.string.publication_no_verified_publication_message))
                                 }
                                 Text(timeLabel, style = MaterialTheme.typography.labelMedium,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -240,15 +240,15 @@ internal fun statusLabel(status: AvailabilityStatus, text: UiText? = null): Stri
                                 else navigate(Route.Settings)
                             }
                         }, modifier = Modifier.testTag("home_menu")) {
-                        AppIcon(if (drawerEligible) UiIcon.MENU else UiIcon.SETTINGS, description = if (drawerEligible) uiText(R.string.ui_aqaqeer_app_008) else uiText(R.string.ui_screen_titles_012))
+                        AppIcon(if (drawerEligible) UiIcon.MENU else UiIcon.SETTINGS, description = if (drawerEligible) uiText(R.string.navigation_open_drawer_description) else uiText(R.string.navigation_settings_title))
                     }
                     if (!homeDestination) IconButton(enabled = !adminBusy, onClick = back, modifier = Modifier.testTag("back")) {
-                        AppIcon(UiIcon.BACK, description = uiText(R.string.ui_aqaqeer_app_009))
+                        AppIcon(UiIcon.BACK, description = uiText(R.string.navigation_back_description))
                     }
                 }, actions = {
                     if (drawerEligible && readyForTitle.admin && (readyForTitle.pendingCount > 0 || readyForTitle.uncertain || sharing.busy)) {
                         AppButton(variant = AppButtonVariant.QUIET, enabled = !adminBusy, onClick = viewModel::review) {
-                            Text(uiText(R.string.ui_aqaqeer_app_011, MedicationPresentation.displayDigits(readyForTitle.pendingCount.toString())))
+                            Text(uiText(R.string.publication_toolbar_pending_count_format, MedicationPresentation.displayDigits(readyForTitle.pendingCount.toString())))
                         }
                     }
                     if (!dualPane && readyForTitle != null && titleMedication != null)
@@ -306,9 +306,9 @@ internal fun statusLabel(status: AvailabilityStatus, text: UiText? = null): Stri
                             context.startActivity(Intent(Intent.ACTION_SENDTO,
                                 ("mailto:" + context.getString(R.string.contact_email)).toUri()))
                         } catch (_: ActivityNotFoundException) {
-                            scope.launch { snackbar.showSnackbar(uiText(R.string.ui_aqaqeer_app_015), withDismissAction = true, duration = SnackbarDuration.Short) }
+                            scope.launch { snackbar.showSnackbar(uiText(R.string.navigation_email_app_missing_message), withDismissAction = true, duration = SnackbarDuration.Short) }
                         } catch (_: SecurityException) {
-                            scope.launch { snackbar.showSnackbar(uiText(R.string.ui_aqaqeer_app_016), withDismissAction = true, duration = SnackbarDuration.Short) }
+                            scope.launch { snackbar.showSnackbar(uiText(R.string.navigation_email_app_open_failed_message), withDismissAction = true, duration = SnackbarDuration.Short) }
                         }
                     }
                     Route.Create, Route.Admin, Route.Setup, Route.Review, Route.Taxonomy, Route.Promote, Route.Leave, Route.ExportConnection -> PharmacyAdminScreen(state, viewModel)
@@ -327,17 +327,17 @@ internal fun statusLabel(status: AvailabilityStatus, text: UiText? = null): Stri
                             val noticeHeader: (@Composable (Set<String>) -> Unit)? = if (catalogState.maintenancePaused || catalogState.restorePaused ||
                                 showReminder || catalogState.admin && !catalogState.isDemo && catalogState.lifecycle == "LOCAL_DRAFT") ({ visible ->
                                 if (catalogState.maintenancePaused && "maintenance" in visible) {
-                                    InformationCard(uiText(R.string.ui_aqaqeer_app_017), uiText(R.string.ui_aqaqeer_app_018))
-                                    NavigationCard(uiText(R.string.ui_aqaqeer_app_019), { navigate(Route.Maintenance) })
+                                    InformationCard(uiText(R.string.maintenance_publication_paused_title), uiText(R.string.maintenance_paused_browsing_help))
+                                    NavigationCard(uiText(R.string.maintenance_continue_action), { navigate(Route.Maintenance) })
                                 }
                                 if (catalogState.restorePaused && "restore" in visible) {
-                                    InformationCard(uiText(R.string.ui_aqaqeer_app_020), uiText(R.string.ui_aqaqeer_app_021))
-                                    NavigationCard(uiText(R.string.ui_aqaqeer_app_022), { navigate(Route.Backup) })
+                                    InformationCard(uiText(R.string.backup_restore_publication_paused_title), uiText(R.string.backup_restore_paused_browsing_help))
+                                    NavigationCard(uiText(R.string.backup_review_restore_action), { navigate(Route.Backup) })
                                 }
                                 if (showReminder && "backup" in visible) DueBackupReminder(catalogState,
                                     { navigate(Route.Backup) }, { viewModel.command { viewModel.backups.dismissReminder() } })
                                 if (catalogState.admin && !catalogState.isDemo && catalogState.lifecycle == "LOCAL_DRAFT" && "local-draft" in visible)
-                                    SupportingText(uiText(R.string.ui_pharmacy_admin_screen_038))
+                                    SupportingText(uiText(R.string.publication_local_draft_label))
                             }) else null
                             val pageHeader: (@Composable () -> Unit)? = if (noticeHeader == null) null else ({
                                 noticeHeader(setOf("maintenance", "restore", "backup", "local-draft"))
@@ -385,7 +385,7 @@ internal fun statusLabel(status: AvailabilityStatus, text: UiText? = null): Stri
                             val detailContent: @Composable () -> Unit = {
                                 if (medication != null) MedicationScreen(catalogState, medication, now,
                                     state.homePreferences.secondaryHijri, pageHeader, viewModel)
-                                else Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { EmptyState(uiText(R.string.ui_aqaqeer_app_023)) }
+                                else Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { EmptyState(uiText(R.string.catalog_detail_choose_medication_message)) }
                             }
                             HomeDetailLayout(dualPane = dualPane, showDetail = medication != null,
                                 list = browseContent, detail = detailContent,
@@ -395,7 +395,7 @@ internal fun statusLabel(status: AvailabilityStatus, text: UiText? = null): Stri
                                             horizontalArrangement = Arrangement.spacedBy(UiSpacing.related)) {
                                             IconButton(enabled = !adminBusy && !homeModalOpen && !dataTimesOpen,
                                                 onClick = back, modifier = Modifier.testTag("back")) {
-                                                AppIcon(UiIcon.BACK, description = uiText(R.string.ui_aqaqeer_app_009))
+                                                AppIcon(UiIcon.BACK, description = uiText(R.string.navigation_back_description))
                                             }
                                             Column(Modifier.weight(1f)) {
                                                 Text(bidi(MedicationPresentation.scientificName(medication)),
@@ -427,9 +427,9 @@ internal fun statusLabel(status: AvailabilityStatus, text: UiText? = null): Stri
     val uiText = rememberUiText()
     Surface(color = MaterialTheme.colorScheme.secondaryContainer, shape = MaterialTheme.shapes.medium) {
         Column(Modifier.fillMaxWidth().padding(horizontal = UiSpacing.page, vertical = UiSpacing.related)) {
-            Text(uiText(R.string.ui_aqaqeer_app_024), fontWeight = FontWeight.Bold,
+            Text(uiText(R.string.shared_demo_notice_title), fontWeight = FontWeight.Bold,
                 style = MaterialTheme.typography.bodyMedium, modifier = Modifier.testTag("demo_notice"))
-            Text(uiText(R.string.ui_aqaqeer_app_025), style = MaterialTheme.typography.bodySmall)
+            Text(uiText(R.string.shared_demo_notice_help), style = MaterialTheme.typography.bodySmall)
         }
     }
 }
@@ -463,16 +463,16 @@ internal fun statusLabel(status: AvailabilityStatus, text: UiText? = null): Stri
             val captured = editor?.takeIf { it.section.id == section.id }
             val current = captured != null && !captured.restored && captured.expected[medication.id] == catalog.status(medication.id, section.id)
             GroupedCard {
-                Text(section.nameAr + if (section.isActive) "" else uiText(R.string.ui_aqaqeer_app_030), fontWeight = FontWeight.Bold)
+                Text(section.nameAr + if (section.isActive) "" else uiText(R.string.catalog_closed_section_suffix), fontWeight = FontWeight.Bold)
                 EditableStatusPill(catalog.status(medication.id, section.id), onOpen = if (canEdit && section.isActive && !busy) ({
                     editor = AvailabilitySelection(requireNotNull(catalog.pharmacy).pharmacyId, section, listOf(medication),
                         mapOf(medication.id to catalog.status(medication.id, section.id)), false)
                 }) else null, expanded = captured != null, dismiss = { if (!busy) editor = null }, enabled = !busy && (captured == null || current),
                     choose = { status -> if (current && !vm.adminBusy.value) vm.saveAvailability(captured, BulkMedicationChanges(status = status)) { if (editor == captured) editor = null } })
-                if (record == null) SupportingText(uiText(R.string.ui_aqaqeer_app_031))
+                if (record == null) SupportingText(uiText(R.string.history_update_time_missing_message))
                 else {
                     SupportingText(relativeTime(record.updatedAt, now, text = uiText))
-                    CollapsibleGroup(uiText(R.string.ui_history_components_021), expanded, { expanded = !expanded }) {
+                    CollapsibleGroup(uiText(R.string.history_technical_details_title), expanded, { expanded = !expanded }) {
                         SupportingText(bidi(MedicationPresentation.timestamp(record.updatedAt, catalog.pharmacy?.timezone ?: "Asia/Damascus")))
                     }
                 }
@@ -485,15 +485,15 @@ internal fun statusLabel(status: AvailabilityStatus, text: UiText? = null): Stri
             GroupedCard {
                 MedicationPresentation.names(medication.genericAr, medication.genericEn, NameDisplay.BOTH).drop(1).forEach { Text(bidi(it.text)) }
                 if (medication.nameAr != null || medication.nameEn != null)
-                    Text(uiText(R.string.ui_medication_components_002) + ": " + bidi(MedicationPresentation.names(medication.nameAr, medication.nameEn, NameDisplay.BOTH).joinToString(" · ") { it.text }))
-                LabeledValue(uiText(R.string.ui_pharmacy_admin_screen_074), catalog.formsById[medication.formId]?.nameAr.orEmpty())
-                LabeledValue(uiText(R.string.ui_pharmacy_admin_screen_073), catalog.categoriesById[medication.categoryId]?.nameAr.orEmpty())
-                medication.expiryDate?.let { LabeledValue(uiText(R.string.ui_aqaqeer_app_028), bidi(it.toString())); SecondaryHijriDate(it, showHijri) }
+                    Text(uiText(R.string.catalog_trade_name_heading) + ": " + bidi(MedicationPresentation.names(medication.nameAr, medication.nameEn, NameDisplay.BOTH).joinToString(" · ") { it.text }))
+                LabeledValue(uiText(R.string.catalog_dosage_form_label), catalog.formsById[medication.formId]?.nameAr.orEmpty())
+                LabeledValue(uiText(R.string.catalog_category_label), catalog.categoriesById[medication.categoryId]?.nameAr.orEmpty())
+                medication.expiryDate?.let { LabeledValue(uiText(R.string.catalog_gregorian_expiry_date_label), bidi(it.toString())); SecondaryHijriDate(it, showHijri) }
                 ExpiryBadge(medication, MedicationPresentation.today(now, catalog.pharmacy?.timezone ?: "Asia/Damascus"))
-                medication.brand?.let { LabeledValue(uiText(R.string.ui_pharmacy_admin_screen_069), bidi(it)) }
+                medication.brand?.let { LabeledValue(uiText(R.string.catalog_brand_label), bidi(it)) }
             }
         }
-        medication.note?.let { note -> item { InformationCard(uiText(R.string.ui_aqaqeer_app_032), note) } }
+        medication.note?.let { note -> item { InformationCard(uiText(R.string.catalog_notes_heading), note) } }
     }
 }
 
@@ -527,19 +527,19 @@ internal fun statusLabel(status: AvailabilityStatus, text: UiText? = null): Stri
         verticalArrangement = Arrangement.spacedBy(UiSpacing.group)) {
         if (demo) item(key = "demo_mode") { DemoModeControls(demoAdmin, changeDemoAdmin, resetDemo) }
         item { SettingsGroup(uiText(R.string.review_appearance), initiallyExpanded = true) {
-            SettingsChoiceRows(uiText(R.string.ui_aqaqeer_app_034), ThemeChoice.entries, theme, setTheme, {
-                uiText(when (it) { ThemeChoice.SYSTEM -> R.string.ui_aqaqeer_app_035; ThemeChoice.LIGHT -> R.string.ui_aqaqeer_app_036
-                    ThemeChoice.DARK -> R.string.ui_aqaqeer_app_037; ThemeChoice.AMOLED -> R.string.ui_aqaqeer_app_038 })
+            SettingsChoiceRows(uiText(R.string.settings_theme_label), ThemeChoice.entries, theme, setTheme, {
+                uiText(when (it) { ThemeChoice.SYSTEM -> R.string.settings_theme_system_label; ThemeChoice.LIGHT -> R.string.settings_theme_light_label
+                    ThemeChoice.DARK -> R.string.settings_theme_dark_label; ThemeChoice.AMOLED -> R.string.settings_theme_amoled_label })
             }, choiceModifier = { Modifier.testTag("theme_${it.name}") })
-            SettingsChoiceRows(uiText(R.string.ui_aqaqeer_app_039), ThemeAccent.entries, accent, setAccent, {
-                uiText(when (it) { ThemeAccent.GOLD -> R.string.ui_aqaqeer_app_040; ThemeAccent.BLUE -> R.string.ui_aqaqeer_app_041
-                    ThemeAccent.GREEN -> R.string.ui_aqaqeer_app_042; ThemeAccent.PURPLE -> R.string.ui_aqaqeer_app_043; ThemeAccent.CRIMSON -> R.string.ui_aqaqeer_app_044 })
+            SettingsChoiceRows(uiText(R.string.settings_primary_accent_label), ThemeAccent.entries, accent, setAccent, {
+                uiText(when (it) { ThemeAccent.GOLD -> R.string.settings_accent_gold_label; ThemeAccent.BLUE -> R.string.settings_accent_blue_label
+                    ThemeAccent.GREEN -> R.string.settings_accent_green_label; ThemeAccent.PURPLE -> R.string.settings_accent_purple_label; ThemeAccent.CRIMSON -> R.string.settings_accent_crimson_label })
             }, swatch = { appColorScheme(theme, it, systemDark, resources).primary })
         } }
         item { SettingsGroup(uiText(R.string.review_list_display)) {
-            SettingsChoiceRows(uiText(R.string.ui_aqaqeer_app_045), HomeSort.entries, preferences.sort, setSort, label = {
-                uiText(when (it) { HomeSort.SCIENTIFIC_NAME -> R.string.ui_aqaqeer_app_046; HomeSort.ARABIC_NAME -> R.string.ui_aqaqeer_app_047
-                    HomeSort.ENGLISH_NAME -> R.string.ui_aqaqeer_app_048; HomeSort.AVAILABILITY -> R.string.ui_aqaqeer_app_049 })
+            SettingsChoiceRows(uiText(R.string.settings_medication_sort_label), HomeSort.entries, preferences.sort, setSort, label = {
+                uiText(when (it) { HomeSort.SCIENTIFIC_NAME -> R.string.settings_sort_scientific_name_label; HomeSort.ARABIC_NAME -> R.string.settings_sort_arabic_trade_name_label
+                    HomeSort.ENGLISH_NAME -> R.string.settings_sort_english_trade_name_label; HomeSort.AVAILABILITY -> R.string.settings_sort_section_availability_label })
             }, modifier = Modifier.testTag("sort_preference"), choiceModifier = { Modifier.testTag("sort_${it.name}") })
             ContentSection {
                 CardLayoutPicker(preferences.layout, setLayout)
@@ -547,25 +547,25 @@ internal fun statusLabel(status: AvailabilityStatus, text: UiText? = null): Stri
             }
             SwitchChoiceRow(preferences.twoColumns, uiText(R.string.review_adaptive_columns), uiText(R.string.review_adaptive_columns_help), Modifier.testTag("two_columns"), setTwoColumns)
             ContentSection {
-                SwitchChoiceRow(preferences.groupingEnabled, uiText(R.string.ui_home_screen_025), uiText(R.string.ui_home_screen_026), change = setGroupingEnabled)
-                if (preferences.groupingEnabled) SettingsChoiceRows(uiText(R.string.ui_home_screen_027), HomeGrouping.entries,
-                    preferences.grouping, setGrouping, label = { uiText(if (it == HomeGrouping.CATEGORY) R.string.ui_pharmacy_admin_screen_073 else R.string.ui_home_screen_028) },
+                SwitchChoiceRow(preferences.groupingEnabled, uiText(R.string.settings_grouping_label), uiText(R.string.settings_grouping_help), change = setGroupingEnabled)
+                if (preferences.groupingEnabled) SettingsChoiceRows(uiText(R.string.settings_grouping_mode_label), HomeGrouping.entries,
+                    preferences.grouping, setGrouping, label = { uiText(if (it == HomeGrouping.CATEGORY) R.string.catalog_category_label else R.string.settings_grouping_scientific_letter_label) },
                     modifier = Modifier.testTag("grouping_preference"), choiceModifier = { Modifier.testTag("grouping_${it.name}") })
             }
-            SettingsChoiceRows(uiText(R.string.ui_aqaqeer_app_056), NameDisplay.entries, preferences.names, setNames, label = {
-                uiText(when (it) { NameDisplay.ARABIC -> R.string.ui_aqaqeer_app_057; NameDisplay.ENGLISH -> R.string.ui_aqaqeer_app_058; NameDisplay.BOTH -> R.string.ui_aqaqeer_app_059 })
+            SettingsChoiceRows(uiText(R.string.settings_medication_name_display_label), NameDisplay.entries, preferences.names, setNames, label = {
+                uiText(when (it) { NameDisplay.ARABIC -> R.string.settings_names_arabic_label; NameDisplay.ENGLISH -> R.string.settings_names_english_label; NameDisplay.BOTH -> R.string.settings_names_both_label })
             }, modifier = Modifier.testTag("names_preference"), choiceModifier = { Modifier.testTag("names_${it.name}") })
         } }
         item { SettingsGroup(uiText(R.string.review_dates_placement)) {
             SwitchChoiceRow(preferences.sectionsAtBottom, uiText(R.string.home_sections_bottom), uiText(R.string.home_sections_bottom_help), Modifier.testTag("sections_at_bottom"), setSectionsAtBottom)
             SwitchChoiceRow(preferences.searchAtBottom, uiText(R.string.home_search_bottom), uiText(R.string.home_search_bottom_help), Modifier.testTag("search_at_bottom"), setSearchAtBottom)
             ContentSection {
-                SwitchChoiceRow(preferences.secondaryHijri, uiText(R.string.ui_aqaqeer_app_060), uiText(R.string.ui_aqaqeer_app_061), Modifier.testTag("secondary_hijri"), setSecondaryHijri)
-                ExpandableInformation(uiText(R.string.ui_aqaqeer_app_063), uiText(R.string.ui_aqaqeer_app_064))
+                SwitchChoiceRow(preferences.secondaryHijri, uiText(R.string.settings_secondary_hijri_label), uiText(R.string.settings_secondary_hijri_help), Modifier.testTag("secondary_hijri"), setSecondaryHijri)
+                ExpandableInformation(uiText(R.string.settings_hijri_method_title), uiText(R.string.settings_hijri_method_help))
             }
         } }
-        openBackup?.let { item { NavigationCard(uiText(R.string.ui_screen_titles_011), it) } }
-        item { NavigationCard(uiText(R.string.ui_screen_titles_013), openAbout, Modifier.testTag("open_about")) }
+        openBackup?.let { item { NavigationCard(uiText(R.string.navigation_backup_title), it) } }
+        item { NavigationCard(uiText(R.string.navigation_about_title), openAbout, Modifier.testTag("open_about")) }
     }
 }
 
@@ -577,22 +577,22 @@ internal fun statusLabel(status: AvailabilityStatus, text: UiText? = null): Stri
         item { ExpandableInformation(uiText(R.string.review_legend), uiText(R.string.review_legend_body) + "\n" + uiText(R.string.review_changed) + ": " + uiText(R.string.review_changed_help)) }
         item {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(uiText(R.string.ui_screen_titles_020), style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Bold)
+                Text(uiText(R.string.navigation_app_title), style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Bold)
                 Text(bidi(BuildConfig.VERSION_NAME), fontFamily = FontFamily.SansSerif,
                     color = MaterialTheme.colorScheme.onSurfaceVariant)
-                if (BuildConfig.IS_DEMO) Text(uiText(R.string.ui_aqaqeer_app_068), color = MaterialTheme.colorScheme.secondary)
+                if (BuildConfig.IS_DEMO) Text(uiText(R.string.navigation_demo_build_label), color = MaterialTheme.colorScheme.secondary)
             }
         }
-        item { InformationCard(uiText(R.string.ui_aqaqeer_app_069), uiText(R.string.ui_aqaqeer_app_070)) }
+        item { InformationCard(uiText(R.string.navigation_about_app_title), uiText(R.string.navigation_about_app_help)) }
         item {
-            GroupedCard(title = uiText(R.string.ui_aqaqeer_app_071)) {
-                Text(uiText(R.string.ui_aqaqeer_app_072), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+            GroupedCard(title = uiText(R.string.navigation_development_heading)) {
+                Text(uiText(R.string.navigation_developer_name), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
                 Text(bidi(uiText(R.string.contact_email)), fontFamily = FontFamily.SansSerif,
                     modifier = Modifier.testTag("developer_email"))
-                AppButton(variant = AppButtonVariant.SECONDARY, onClick = contact, modifier = Modifier.testTag("email_contact")) { Text(uiText(R.string.ui_aqaqeer_app_073)) }
+                AppButton(variant = AppButtonVariant.SECONDARY, onClick = contact, modifier = Modifier.testTag("email_contact")) { Text(uiText(R.string.navigation_email_contact_action)) }
             }
         }
-        item { InformationCard(uiText(R.string.ui_aqaqeer_app_074), uiText(R.string.ui_aqaqeer_app_075)) }
+        item { InformationCard(uiText(R.string.navigation_app_update_title), uiText(R.string.navigation_manual_update_help)) }
     }
 }
 
@@ -601,23 +601,23 @@ internal fun statusLabel(status: AvailabilityStatus, text: UiText? = null): Stri
     val compactHeight = LocalLayoutMetrics.current.compact(viewportHeight(1f), LayoutTokens.welcomeCompactHeight)
     Column(Modifier.fillMaxWidth().padding(vertical = UiSpacing.section), horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(UiSpacing.section)) {
-        Text(uiText(R.string.ui_aqaqeer_app_076), style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
+        Text(uiText(R.string.navigation_welcome_title), style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
         BrandEmblem(Modifier.size(if (compactHeight) Size.emblemCompact else Size.emblemLarge))
         openConnection?.let { action ->
-            GroupedCard(title = uiText(R.string.ui_aqaqeer_app_077)) {
-                Text(uiText(R.string.ui_aqaqeer_app_078))
-                AppButton(onClick = action) { Text(uiText(R.string.ui_aqaqeer_app_079)) }
+            GroupedCard(title = uiText(R.string.connection_join_with_file_title)) {
+                Text(uiText(R.string.connection_join_with_file_help))
+                AppButton(onClick = action) { Text(uiText(R.string.connection_join_with_file_action)) }
             }
         }
         openCreate?.let { action ->
-            GroupedCard(title = uiText(R.string.ui_aqaqeer_app_080)) {
-                Text(uiText(R.string.ui_aqaqeer_app_081))
-                AppButton(variant = AppButtonVariant.SECONDARY, onClick = action, modifier = Modifier.testTag("create_pharmacy")) { Text(uiText(R.string.ui_screen_titles_001)) }
+            GroupedCard(title = uiText(R.string.catalog_create_pharmacy_welcome_title)) {
+                Text(uiText(R.string.catalog_create_pharmacy_welcome_help))
+                AppButton(variant = AppButtonVariant.SECONDARY, onClick = action, modifier = Modifier.testTag("create_pharmacy")) { Text(uiText(R.string.navigation_create_pharmacy_title)) }
             }
         }
         ActionGroup {
-            openRestore?.let { action -> AppButton(variant = AppButtonVariant.QUIET, onClick = action) { Text(uiText(R.string.ui_aqaqeer_app_082)) } }
-            AppButton(variant = AppButtonVariant.QUIET, onClick = openSettings) { Text(uiText(R.string.ui_aqaqeer_app_083)) }
+            openRestore?.let { action -> AppButton(variant = AppButtonVariant.QUIET, onClick = action) { Text(uiText(R.string.backup_restore_welcome_action)) } }
+            AppButton(variant = AppButtonVariant.QUIET, onClick = openSettings) { Text(uiText(R.string.navigation_settings_about_action)) }
         }
     }
 }
@@ -625,7 +625,7 @@ internal fun statusLabel(status: AvailabilityStatus, text: UiText? = null): Stri
 @Composable private fun LoadingScreen() {
     val uiText = rememberUiText()
     Column(Modifier.fillMaxSize().padding(UiSpacing.page), verticalArrangement = Arrangement.spacedBy(UiSpacing.section)) {
-        Text(uiText(R.string.ui_aqaqeer_app_084), style = MaterialTheme.typography.bodyMedium)
+        Text(uiText(R.string.shared_catalog_loading_message), style = MaterialTheme.typography.bodyMedium)
         CircularProgressIndicator()
     }
 }
@@ -633,12 +633,12 @@ internal fun statusLabel(status: AvailabilityStatus, text: UiText? = null): Stri
 @Composable private fun RecoveryScreen(retry: () -> Unit, openSettings: () -> Unit) {
     val uiText = rememberUiText()
     FormPage {
-        Text(uiText(R.string.ui_aqaqeer_app_085), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-        SectionHeading(uiText(R.string.ui_aqaqeer_app_086))
-        Text(uiText(R.string.ui_aqaqeer_app_087))
-        AppButton(onClick = retry) { Text(uiText(R.string.ui_history_screen_006)) }
-        Text(uiText(R.string.ui_aqaqeer_app_088))
-        NavigationCard(uiText(R.string.ui_aqaqeer_app_089), openSettings)
+        Text(uiText(R.string.shared_protected_storage_retained_title), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+        SectionHeading(uiText(R.string.shared_protected_storage_unavailable_title))
+        Text(uiText(R.string.shared_protected_storage_retry_help))
+        AppButton(onClick = retry) { Text(uiText(R.string.history_retry_action)) }
+        Text(uiText(R.string.shared_protected_storage_recovery_help))
+        NavigationCard(uiText(R.string.navigation_help_about_action), openSettings)
     }
 }
 

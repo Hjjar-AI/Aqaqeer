@@ -107,7 +107,7 @@ import androidx.compose.ui.unit.LayoutDirection
                 horizontalArrangement = Arrangement.spacedBy(UiSpacing.related)) {
                 Column(Modifier.weight(1f)) {
                     SupportingText(label)
-                    Text(selected?.let(name) ?: uiText(R.string.ui_choice_components_001), color = if (enabled) MaterialTheme.colorScheme.onSurface
+                    Text(selected?.let(name) ?: uiText(R.string.shared_choose_label), color = if (enabled) MaterialTheme.colorScheme.onSurface
                         else MaterialTheme.colorScheme.onSurfaceVariant)
                 }
                 RowChevron(down = true)
@@ -125,7 +125,7 @@ import androidx.compose.ui.unit.LayoutDirection
                     // Dialog constraints already reflect IME resizing; do not subtract it twice.
                     Column(Modifier.heightIn(max = minOf(maxHeight, viewportHeight(0.65f))),
                         verticalArrangement = Arrangement.spacedBy(UiSpacing.related)) {
-                        if (values.size > 8) FormField(uiText(R.string.ui_choice_components_002), query, { query = it })
+                        if (values.size > 8) FormField(uiText(R.string.shared_search_label), query, { query = it })
                         LazyColumn(Modifier.fillMaxWidth().weight(1f, fill = false)) {
                             items(visible, key = { itemKey(it.first) }) { (value, text, _) ->
                                 AppButton(variant = AppButtonVariant.QUIET, onClick = { choose(value); expanded = false }, modifier = Modifier.fillMaxWidth()) {
@@ -134,10 +134,10 @@ import androidx.compose.ui.unit.LayoutDirection
                                 }
                             }
                         }
-                        if (visible.isEmpty()) Text(uiText(R.string.ui_choice_components_003))
+                        if (visible.isEmpty()) Text(uiText(R.string.shared_no_matches_message))
                     }
                 }
-            }, confirmButton = { AppButton(variant = AppButtonVariant.QUIET, onClick = { expanded = false }) { Text(uiText(R.string.ui_choice_components_004)) } })
+            }, confirmButton = { AppButton(variant = AppButtonVariant.QUIET, onClick = { expanded = false }) { Text(uiText(R.string.shared_close_action)) } })
         }
     }
 }

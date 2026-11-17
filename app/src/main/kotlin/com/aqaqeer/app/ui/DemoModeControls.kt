@@ -21,5 +21,5 @@ import com.aqaqeer.app.uiText
         title = { Text(uiText(R.string.review_demo_reset)) },
         text = { Text(uiText(R.string.review_demo_reset_help)) },
         confirmButton = { DestructiveConfirmButton(true, { confirmReset = false; reset() }, uiText(R.string.review_demo_reset)) },
-        dismissButton = { AppButton(variant = AppButtonVariant.QUIET, onClick = { confirmReset = false }) { Text(uiText(R.string.ui_choice_components_004)) } })
+        dismissButton = { AppButton(variant = AppButtonVariant.QUIET, onClick = { confirmReset = false }) { Text(uiText(R.string.shared_close_action)) } })
 }

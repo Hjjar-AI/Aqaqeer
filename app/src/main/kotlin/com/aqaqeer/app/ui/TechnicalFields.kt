@@ -21,7 +21,7 @@ import java.time.ZoneOffset
     var open by rememberSaveable { mutableStateOf(false) }
     fun city(zone: String): String = android.icu.text.TimeZoneNames.getInstance(java.util.Locale.forLanguageTag("ar"))
         .getExemplarLocationName(zone) ?: zone.substringAfterLast('/').replace('_', ' ')
-    NavigationRow(uiText(R.string.ui_technical_fields_001), { open = true }, supporting = city(value) + " · " + bidi(value))
+    NavigationRow(uiText(R.string.shared_timezone_label), { open = true }, supporting = city(value) + " · " + bidi(value))
     if (open) {
         var query by rememberSaveable { mutableStateOf("") }
         val zones = remember(value) {
@@ -30,17 +30,17 @@ import java.time.ZoneOffset
         }
         val offsets = remember(zones) { val now = Instant.now(); zones.associateWith { ZoneId.of(it).rules.getOffset(now).id } }
         val visible = remember(query, zones) { zones.filter { it.contains(query.trim(), ignoreCase = true) || city(it).contains(query.trim(), ignoreCase = true) } }
-        AppDialog(onDismissRequest = { open = false }, title = { Text(uiText(R.string.ui_technical_fields_002)) }, text = {
+        AppDialog(onDismissRequest = { open = false }, title = { Text(uiText(R.string.shared_timezone_picker_title)) }, text = {
             Column(verticalArrangement = Arrangement.spacedBy(UiSpacing.related)) {
-                FormField(uiText(R.string.ui_technical_fields_003), query, { query = it }, ltr = true)
+                FormField(uiText(R.string.shared_timezone_search_placeholder), query, { query = it }, ltr = true)
                 LazyColumn(Modifier.heightIn(max = viewportHeight(0.45f))) {
                     items(visible, key = { it }) { zone ->
                         AppButton(variant = AppButtonVariant.QUIET, onClick = { change(zone); open = false }, modifier = Modifier.fillMaxWidth()) { Column { Text(city(zone)); SupportingText(bidi("${zone} · UTC${offsets.getValue(zone).let { if (it == "Z") "+00:00" else it }}")) } }
                     }
                 }
-                if (visible.isEmpty()) Text(uiText(R.string.ui_technical_fields_004))
+                if (visible.isEmpty()) Text(uiText(R.string.shared_timezone_no_matches_help))
             }
-        }, confirmButton = { AppButton(variant = AppButtonVariant.QUIET, onClick = { open = false }) { Text(uiText(R.string.ui_choice_components_004)) } })
+        }, confirmButton = { AppButton(variant = AppButtonVariant.QUIET, onClick = { open = false }) { Text(uiText(R.string.shared_close_action)) } })
     }
 }
 
@@ -49,9 +49,9 @@ import java.time.ZoneOffset
     submitted: Boolean = false, required: Boolean = false, tag: String = label) {
     val uiText = rememberUiText()
     var open by rememberSaveable(label) { mutableStateOf(false) }
-    FormField(label, value, { change(MedicationPresentation.westernDigits(it)) }, supportingText = uiText(R.string.ui_technical_fields_005), required = required, submitted = submitted, validate = FormGuidance::date, tag = tag, ltr = true, trailingContent = {
+    FormField(label, value, { change(MedicationPresentation.westernDigits(it)) }, supportingText = uiText(R.string.shared_gregorian_date_format_help), required = required, submitted = submitted, validate = FormGuidance::date, tag = tag, ltr = true, trailingContent = {
             IconButton(onClick = { open = true }) {
-                AppIcon(UiIcon.CALENDAR, description = uiText(R.string.ui_technical_fields_006, label))
+                AppIcon(UiIcon.CALENDAR, description = uiText(R.string.shared_gregorian_picker_description, label))
             }
         })
     if (open) {
@@ -61,9 +61,9 @@ import java.time.ZoneOffset
             AppButton(variant = AppButtonVariant.QUIET, enabled = picker.selectedDateMillis != null, onClick = {
                 picker.selectedDateMillis?.let { change(Instant.ofEpochMilli(it).atZone(ZoneOffset.UTC).toLocalDate().toString()) }
                 open = false
-            }) { Text(uiText(R.string.ui_technical_fields_007)) }
-        }, dismissButton = { AppButton(variant = AppButtonVariant.QUIET, onClick = { open = false }) { Text(uiText(R.string.ui_bulk_medication_editor_012)) } }) {
-            DatePicker(picker, title = { Text(uiText(R.string.ui_technical_fields_008), modifier = Modifier.padding(UiSpacing.page)) })
+            }) { Text(uiText(R.string.shared_date_picker_confirm_action)) }
+        }, dismissButton = { AppButton(variant = AppButtonVariant.QUIET, onClick = { open = false }) { Text(uiText(R.string.availability_bulk_cancel_action)) } }) {
+            DatePicker(picker, title = { Text(uiText(R.string.shared_gregorian_picker_title), modifier = Modifier.padding(UiSpacing.page)) })
         }
     }
 }

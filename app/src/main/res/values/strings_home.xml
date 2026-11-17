@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_add_search_name_action" formatted="false">"إضافة دواء بهذا الاسم"</string>
+    <string name="home_availability_filter_heading" formatted="false">"التوافر"</string>
+    <string name="home_bulk_selection_retention_help" formatted="false">"البحث والفلاتر لا يزيلان الأدوية المحددة. اختيار قسم آخر يبدأ تحديداً جديداً."</string>
+    <string name="home_clear_search_description" formatted="false">"مسح البحث"</string>
+    <string name="home_clear_search_filters_action" formatted="false">"مسح البحث والفلاتر"</string>
+    <string name="home_clear_selection_action" formatted="false">"مسح التحديد"</string>
+    <string name="home_data_time_prefix" formatted="false">"وقت البيانات: "</string>
+    <string name="home_data_times_description" formatted="false">"عرض أوقات التحديث والنشر"</string>
+    <string name="home_data_times_title" formatted="false">"أوقات البيانات"</string>
+    <string name="home_demo_data_label" formatted="false">"بيانات تجريبية"</string>
+    <string name="home_drawer_all_categories_label" formatted="false">"كل التصنيفات"</string>
+    <string name="home_drawer_data_times_label" formatted="false">"أوقات التحديث والنشر"</string>
+    <string name="home_drawer_replace_categories_help" formatted="false">"عدة تصنيفات محددة؛ اختيار تصنيف هنا يستبدلها."</string>
+    <string name="home_edit_selection_action" formatted="false">"تعديل المحدد"</string>
+    <string name="home_empty_catalog_help" formatted="false">"لم تُضف أدوية إلى هذه الصيدلية."</string>
+    <string name="home_empty_catalog_title" formatted="false">"لا توجد أدوية بعد"</string>
+    <string name="home_filter_sheet_title" formatted="false">"تصفية الأدوية"</string>
+    <string name="home_filter_summary_format">"الحالات المحددة: %1$s · التصنيفات المحددة: %2$s"</string>
+    <string name="home_filters_action" formatted="false">"الفلاتر"</string>
+    <string name="home_last_refresh_label" formatted="false">"آخر تحديث"</string>
+    <string name="home_last_successful_refresh_label" formatted="false">"آخر تحديث ناجح"</string>
+    <string name="home_maintenance_paused_notice" formatted="false">"النشر متوقف — أكمل صيانة الاتصال"</string>
+    <string name="home_never_refreshed_label" formatted="false">"لم يتم التحديث بعد"</string>
+    <string name="home_never_refreshed_notice" formatted="false">"لم يُسجل تحديث ناجح بعد"</string>
+    <string name="home_no_active_sections_help" formatted="false">"لا يوجد قسم نشط؛ افتح التفاصيل للاطلاع على التوافر المسجل."</string>
+    <string name="home_no_active_sections_title" formatted="false">"جميع الأقسام مغلقة"</string>
+    <string name="home_no_matches_help" formatted="false">"جرّب تغيير البحث أو الفلاتر."</string>
+    <string name="home_not_yet_label" formatted="false">"لم يتم بعد"</string>
+    <string name="home_notice_count_suffix">" · %1$s تنبيهات"</string>
+    <string name="home_offline_notice" formatted="false">"دون اتصال — تُعرض البيانات المحفوظة"</string>
+    <string name="home_pharmacy_timezone_label" formatted="false">"توقيت الصيدلية"</string>
+    <string name="home_publication_progress_notice" formatted="false">"جار نشر التعديلات والتحقق منها"</string>
+    <string name="home_publication_review_notice" formatted="false">"نتيجة نشر تحتاج إلى مراجعة"</string>
+    <string name="home_publication_time_label" formatted="false">"وقت النشر"</string>
+    <string name="home_refresh_action" formatted="false">"تحديث البيانات"</string>
+    <string name="home_refresh_failed_notice" formatted="false">"تعذر تحديث البيانات"</string>
+    <string name="home_refresh_progress" formatted="false">"جار تحديث البيانات…"</string>
+    <string name="home_restore_paused_notice" formatted="false">"النشر متوقف — راجع النسخة المستعادة"</string>
+    <string name="home_results_count_format">"%1$s من %2$s أدوية"</string>
+    <string name="home_search_bottom">البحث والتصفية في الأسفل</string>
+    <string name="home_search_bottom_help">يبقي البحث وزر التصفية أسفل قائمة الأدوية وفوق الأقسام السفلية.</string>
+    <string name="home_search_placeholder" formatted="false">"الاسم أو العيار"</string>
+    <string name="home_section_out_count_format">" · %1$s غير متوفر"</string>
+    <string name="home_sections_bottom">شريط الأقسام في الأسفل</string>
+    <string name="home_sections_bottom_help">يبقى أسفل البحث والتصفية عند نقلهما للأسفل، ويختفي مؤقتاً أثناء ظهور لوحة المفاتيح.</string>
+    <string name="home_selected_count_suffix">" · %1$s محددة"</string>
+    <string name="home_show_results_action" formatted="false">"عرض النتائج"</string>
+    <string name="home_stale_refresh_notice" formatted="false">"مرّ يوم أو أكثر منذ آخر تحديث ناجح"</string>
+    <string name="home_two_columns">عرض البطاقات في عمودين</string>
+    <string name="home_two_columns_help">أوقفه لعرض بطاقة واحدة في كل صف.</string>
+    <string name="home_unpublished_count_format">"%1$s تعديلات غير منشورة"</string>
+    <string name="home_unpublished_label" formatted="false">"تعديلات غير منشورة"</string>
+    <string name="home_update_required_help" formatted="false">"البيانات المحفوظة متاحة للقراءة. اطلب من المسؤول ملف APK متوافقاً؛ التعديل والنشر متوقفان."</string>
+    <string name="home_update_required_notice" formatted="false">"يلزم إصدار متوافق قبل التعديل أو النشر"</string>
+    <string name="home_update_required_title" formatted="false">"يلزم إصدار متوافق من التطبيق"</string>
+    <string name="logic_offline">لا يوجد اتصال بالإنترنت</string>
+    <string name="logic_refresh_applied">تم تحديث البيانات</string>
+    <string name="logic_refresh_current">البيانات محدثة بالفعل</string>
+    <string name="logic_retry_after">؛ أعد المحاولة بعد %s ثانية</string>
+    <string name="review_available_only">المتوفر فقط</string>
+    <string name="review_changed">محدّث</string>
+    <string name="review_changed_help">تغيّر الدواء بعد تحديث البيانات؛ تبقى العلامة خلال الجلسة الحالية والجلسة التالية.</string>
+    <string name="review_elsewhere">%1$s نتائج إضافية في أقسام أخرى</string>
+    <string name="review_expiry_soon">ينتهي قريباً</string>
+    <string name="review_extra_filters">فلاتر إضافية</string>
+    <string name="review_no_results_in_section">لا توجد نتائج في هذا القسم</string>
+    <string name="review_refresh_now">تحديث الآن</string>
+    <string name="review_section_search_stock">توجد نتائج بحث متوفرة في هذا القسم</string>
+    <string name="review_whats_new">ما الجديد</string>
+</resources>

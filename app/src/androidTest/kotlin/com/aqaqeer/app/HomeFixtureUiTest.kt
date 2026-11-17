@@ -76,7 +76,7 @@ class HomeFixtureUiTest {
             }
         }
         compose.onNodeWithTag("home").performScrollToNode(hasTestTag("med_English only"))
-        compose.onNodeWithTag("expiry_m", useUnmergedTree = true).assertTextEquals(uiText(R.string.ui_medication_components_011))
+        compose.onNodeWithTag("expiry_m", useUnmergedTree = true).assertTextEquals(uiText(R.string.catalog_expiring_soon_badge_label))
         compose.runOnIdle { now = Instant.parse("2026-11-09T21:00:00Z") }
         compose.onNodeWithTag("expiry_m", useUnmergedTree = true).assertTextEquals("منتهي الصلاحية")
         compose.onNodeWithTag("med_English only").assertTextContains("غير متوفر")

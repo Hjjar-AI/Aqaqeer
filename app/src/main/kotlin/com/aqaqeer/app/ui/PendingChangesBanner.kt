@@ -18,17 +18,17 @@ import com.aqaqeer.app.data.MedicationPresentation
     val working = busy || sharing.busy
     val blocked = publicationBlockedReason(ready, sharing, working)
     GroupedCard {
-        Text(uiText(R.string.ui_pending_changes_banner_001, MedicationPresentation.displayDigits(ready.pendingCount.toString())))
+        Text(uiText(R.string.publication_pending_banner_count_format, MedicationPresentation.displayDigits(ready.pendingCount.toString())))
         if (blocked != null) Text(blocked, style = MaterialTheme.typography.bodyMedium)
-        else Text(if (ready.lifecycle == "LOCAL_DRAFT") uiText(R.string.ui_pending_changes_banner_002)
-            else uiText(R.string.ui_pending_changes_banner_003), style = MaterialTheme.typography.bodyMedium)
+        else Text(if (ready.lifecycle == "LOCAL_DRAFT") uiText(R.string.publication_pending_local_draft_help)
+            else uiText(R.string.publication_pending_reconnect_help), style = MaterialTheme.typography.bodyMedium)
         sharing.message?.let { Text(it, style = MaterialTheme.typography.bodyMedium) }
         ActionGroup {
-            AppButton(variant = AppButtonVariant.QUIET, enabled = !working, onClick = review) { Text(uiText(R.string.ui_pending_changes_banner_004)) }
+            AppButton(variant = AppButtonVariant.QUIET, enabled = !working, onClick = review) { Text(uiText(R.string.publication_pending_review_action)) }
             AppButton(enabled = blocked == null, onClick = publish) {
                 AppIcon(UiIcon.PUBLISH)
                 Spacer(Modifier.width(UiSpacing.hair))
-                Text(uiText(R.string.ui_pending_changes_banner_005))
+                Text(uiText(R.string.publication_pending_publish_action))
             }
         }
     }
@@ -36,12 +36,12 @@ import com.aqaqeer.app.data.MedicationPresentation
 
 internal fun publicationBlockedReason(ready: CatalogState.Ready, sharing: SharingStatus, working: Boolean): String? = when {
         ready.isDemo -> uiText(R.string.review_demo_local_only)
-        ready.requiresUpdate -> uiText(R.string.ui_pending_changes_banner_006)
-        ready.maintenancePaused -> uiText(R.string.ui_pharmacy_admin_screen_032)
-        ready.restorePaused -> uiText(R.string.ui_pharmacy_admin_screen_033)
-        working -> uiText(R.string.ui_pending_changes_banner_007)
-        !ready.hasPublicationConnection -> uiText(R.string.ui_pending_changes_banner_008)
-        sharing.conflicts.isNotEmpty() -> uiText(R.string.ui_pending_changes_banner_009)
-        ready.uncertain -> uiText(R.string.ui_pending_changes_banner_010)
+        ready.requiresUpdate -> uiText(R.string.publication_pending_update_required_message)
+        ready.maintenancePaused -> uiText(R.string.publication_maintenance_block_message)
+        ready.restorePaused -> uiText(R.string.publication_restore_review_block_message)
+        working -> uiText(R.string.publication_pending_busy_message)
+        !ready.hasPublicationConnection -> uiText(R.string.publication_pending_setup_required_message)
+        sharing.conflicts.isNotEmpty() -> uiText(R.string.publication_pending_conflicts_message)
+        ready.uncertain -> uiText(R.string.publication_pending_attempt_review_message)
         else -> null
     }

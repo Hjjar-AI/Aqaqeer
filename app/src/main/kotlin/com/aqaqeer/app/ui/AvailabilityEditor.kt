@@ -97,7 +97,7 @@ internal val InitialAvailabilitySaver = Saver<Map<String, AvailabilityStatus>, A
     busy: Boolean, isSaving: () -> Boolean, save: (AvailabilitySelection, AvailabilityStatus) -> Unit) {
     val uiText = rememberUiText()
     val pharmacyId = catalog.pharmacy?.pharmacyId ?: return
-    GroupedCard(title = uiText(R.string.ui_pharmacy_admin_screen_120)) {
+    GroupedCard(title = uiText(R.string.availability_edit_action)) {
         SupportingText(uiText(R.string.edit_availability_immediate_hint))
         if (catalog.sections.isEmpty()) SupportingText(uiText(R.string.edit_availability_no_sections))
         catalog.sections.forEach { section ->
@@ -116,7 +116,7 @@ internal val InitialAvailabilitySaver = Saver<Map<String, AvailabilityStatus>, A
 @Composable private fun SectionAvailabilityChoices(section: Section, current: AvailabilityStatus,
     busy: Boolean, choose: (AvailabilityStatus) -> Unit) {
     val uiText = rememberUiText()
-    Text(section.nameAr + if (section.isActive) "" else uiText(R.string.ui_aqaqeer_app_030),
+    Text(section.nameAr + if (section.isActive) "" else uiText(R.string.catalog_closed_section_suffix),
         style = MaterialTheme.typography.titleSmall)
     if (section.isActive) WrappingContent {
         if (current == AvailabilityStatus.UNKNOWN) StatusBadge(current)

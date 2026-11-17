@@ -45,11 +45,11 @@ import com.aqaqeer.app.data.CatalogSnapshot
     var visible by remember(label) { mutableStateOf(false) }
     val weakPin = secret && numericSecret && FormGuidance.simpleNumericPattern(value)
     val validationError = errorText ?: if (required == true && (if (secret) value.isEmpty() else value.isBlank()))
-        uiText(R.string.ui_admin_components_001) else validate?.invoke(value)
+        uiText(R.string.shared_field_required_error) else validate?.invoke(value)
     val error = validationError.takeIf { touched || submitted }
     val shortLabel = label
     val hint = listOfNotNull(supportingText ?: rule,
-        if (required == false) uiText(R.string.ui_admin_components_003) else null).distinct().joinToString(" · ").takeIf { it.isNotBlank() }
+        if (required == false) uiText(R.string.shared_field_optional_label) else null).distinct().joinToString(" · ").takeIf { it.isNotBlank() }
     val focusRequester = remember { FocusRequester() }
     val reveal = remember { BringIntoViewRequester() }
     val focusController = LocalFormFocus.current
@@ -73,7 +73,7 @@ import com.aqaqeer.app.data.CatalogSnapshot
             onDone = { focus.clearFocus(); onDone?.invoke() }),
         visualTransformation = if (secret && !visible) PasswordVisualTransformation() else VisualTransformation.None,
         trailingIcon = if (secret) ({ IconButton(onClick = { visible = !visible }) {
-            AppIcon(UiIcon.VISIBILITY, description = if (visible) uiText(R.string.ui_admin_components_004, shortLabel) else uiText(R.string.ui_admin_components_005, shortLabel))
+            AppIcon(UiIcon.VISIBILITY, description = if (visible) uiText(R.string.shared_secret_hide_description, shortLabel) else uiText(R.string.shared_secret_show_description, shortLabel))
         } }) else trailingContent,
         modifier = modifier.fillMaxWidth().testTag(tag).bringIntoViewRequester(reveal).focusRequester(focusRequester).onFocusChanged {
             if (it.isFocused) focusedOnce = true else if (focusedOnce) touched = true
@@ -138,7 +138,7 @@ import com.aqaqeer.app.data.CatalogSnapshot
         verticalArrangement = Arrangement.spacedBy(UiSpacing.related)) {
         if (busy) {
             LinearProgressIndicator(Modifier.fillMaxWidth())
-            cancel?.let { AppButton(variant = AppButtonVariant.QUIET, onClick = it) { Text(uiText(R.string.ui_admin_components_006)) } }
+            cancel?.let { AppButton(variant = AppButtonVariant.QUIET, onClick = it) { Text(uiText(R.string.shared_cancel_operation_action)) } }
         }
         error?.let { NoticeStrip(Notice(it, NoticeSeverity.ERROR)) }
         message?.let { NoticeStrip(Notice(it)) }
@@ -156,20 +156,20 @@ import com.aqaqeer.app.data.CatalogSnapshot
             return@forEach
         }
         GroupedCard(title = "${conflict.entity} · ${fieldLabel(conflict.field)}") {
-            val deletion = conflict.key.startsWith("delete:") || conflict.field == uiText(R.string.ui_admin_components_007)
+            val deletion = conflict.key.startsWith("delete:") || conflict.field == uiText(R.string.publication_changes_review_label)
             val restoreParent = conflict.key.startsWith("parent:")
             val restoreReference = conflict.key.startsWith("reference:")
-            Text(if (deletion) uiText(R.string.ui_admin_components_008) else uiText(R.string.ui_admin_components_009))
-            AdaptivePickers(first = { Text(uiText(R.string.ui_admin_components_010, reviewValue(conflict.field, conflict.mine, catalog, text = uiText))) },
-                second = { Text(uiText(R.string.ui_admin_components_011, reviewValue(conflict.field, conflict.theirs, catalog, text = uiText))) })
-            ExpandableInformation(uiText(R.string.ui_admin_components_012), reviewValue(conflict.field, conflict.base, catalog, text = uiText))
+            Text(if (deletion) uiText(R.string.publication_delete_conflict_help) else uiText(R.string.publication_choose_value_help))
+            AdaptivePickers(first = { Text(uiText(R.string.publication_local_value_format, reviewValue(conflict.field, conflict.mine, catalog, text = uiText))) },
+                second = { Text(uiText(R.string.publication_published_value_format, reviewValue(conflict.field, conflict.theirs, catalog, text = uiText))) })
+            ExpandableInformation(uiText(R.string.publication_original_value_label), reviewValue(conflict.field, conflict.base, catalog, text = uiText))
             RadioChoiceRows(listOf(true, false), choices[conflict.key],
                 { choose(choices + (conflict.key to it)) },
                 { mine -> when {
-                    deletion -> if (mine) uiText(R.string.ui_admin_components_013) else uiText(R.string.ui_admin_components_014)
-                    restoreParent -> if (mine) uiText(R.string.ui_admin_components_015) else uiText(R.string.ui_admin_components_016)
-                    restoreReference -> if (mine) uiText(R.string.ui_admin_components_017) else uiText(R.string.ui_admin_components_018)
-                    else -> if (mine) uiText(R.string.ui_admin_components_019) else uiText(R.string.ui_admin_components_020)
+                    deletion -> if (mine) uiText(R.string.publication_confirm_delete_dependents_action) else uiText(R.string.publication_keep_published_entity_action)
+                    restoreParent -> if (mine) uiText(R.string.publication_restore_related_entity_action) else uiText(R.string.publication_cancel_availability_change_action)
+                    restoreReference -> if (mine) uiText(R.string.publication_restore_taxonomy_action) else uiText(R.string.publication_use_default_taxonomy_action)
+                    else -> if (mine) uiText(R.string.publication_use_local_value_action) else uiText(R.string.publication_use_published_value_action)
                 } })
         }
     }
@@ -188,11 +188,11 @@ import com.aqaqeer.app.data.CatalogSnapshot
 
 @Composable internal fun BackupReminderCard(export: () -> Unit, dismiss: () -> Unit) {
     val uiText = rememberUiText()
-    GroupedCard(title = uiText(R.string.ui_admin_components_021)) {
-        SupportingText(uiText(R.string.ui_admin_components_022))
+    GroupedCard(title = uiText(R.string.backup_reminder_title)) {
+        SupportingText(uiText(R.string.backup_reminder_help))
         ActionGroup {
-            AppButton(onClick = export) { Text(uiText(R.string.ui_admin_components_023)) }
-            AppButton(variant = AppButtonVariant.QUIET, onClick = dismiss) { Text(uiText(R.string.ui_admin_components_024)) }
+            AppButton(onClick = export) { Text(uiText(R.string.backup_reminder_export_action)) }
+            AppButton(variant = AppButtonVariant.QUIET, onClick = dismiss) { Text(uiText(R.string.backup_reminder_snooze_action)) }
         }
     }
 }
@@ -214,8 +214,8 @@ internal class BackupExportSecrets {
 @Composable internal fun BackupPassphraseFields(password: String, confirmation: String, setPassword: (String) -> Unit,
     setConfirmation: (String) -> Unit) {
     val uiText = rememberUiText()
-    SecretField(uiText(R.string.ui_admin_components_025), password, setPassword, required = true, supportingText = uiText(R.string.ui_admin_components_026), validate = { if (it.codePointCount(0, it.length) >= 8) null else uiText(R.string.ui_admin_components_027) })
-    SecretField(uiText(R.string.ui_admin_components_028), confirmation, setConfirmation, required = true, imeAction = ImeAction.Done, validate = { if (it == password) null else uiText(R.string.ui_admin_components_029) })
+    SecretField(uiText(R.string.backup_passphrase_label), password, setPassword, required = true, supportingText = uiText(R.string.backup_passphrase_help), validate = { if (it.codePointCount(0, it.length) >= 8) null else uiText(R.string.backup_passphrase_min_length_error) })
+    SecretField(uiText(R.string.backup_passphrase_confirmation_label), confirmation, setConfirmation, required = true, imeAction = ImeAction.Done, validate = { if (it == password) null else uiText(R.string.backup_passphrase_mismatch_error) })
 }
 
 /** A short explanation stays available without occupying the primary reading path. */

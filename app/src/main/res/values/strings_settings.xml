@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="review_adaptive_columns">أعمدة تلقائية</string>
+    <string name="review_adaptive_columns_help">يتكيف عدد الأعمدة مع العرض وحجم الخط</string>
+    <string name="review_appearance">المظهر</string>
+    <string name="review_dates_placement">التواريخ ومواضع الأشرطة</string>
+    <string name="review_demo_admin">إدارة تجريبية</string>
+    <string name="review_demo_edit_help">تعديلات على بيانات مؤقتة فقط. يمكنك التبديل بين القارئ والإدارة لمعاينتها. التعديلات غير محفوظة بصورة دائمة، ولا تتصل النسخة بخدمات النشر.</string>
+    <string name="review_demo_local_only">عرض محلي: المزامنة والنشر والاتصالات الحقيقية غير متاحة.</string>
+    <string name="review_demo_mode">وضع العرض التجريبي</string>
+    <string name="review_demo_reader">قارئ</string>
+    <string name="review_demo_reset">إعادة البيانات التجريبية</string>
+    <string name="review_demo_reset_help">ستُحذف التعديلات والسجل التجريبي وتعود بيانات العرض الأصلية.</string>
+    <string name="review_list_display">عرض القائمة</string>
+    <string name="settings_accent_blue_label" formatted="false">"أزرق"</string>
+    <string name="settings_accent_crimson_label" formatted="false">"قرمزي"</string>
+    <string name="settings_accent_gold_label" formatted="false">"ذهبي"</string>
+    <string name="settings_accent_green_label" formatted="false">"أخضر"</string>
+    <string name="settings_accent_purple_label" formatted="false">"أرجواني"</string>
+    <string name="settings_appearance_display_heading" formatted="false">"المظهر والعرض"</string>
+    <string name="settings_card_compact_label" formatted="false">"مختصرة"</string>
+    <string name="settings_card_expanded_label" formatted="false">"موسعة"</string>
+    <string name="settings_card_preview_details" formatted="false">"الاسم التجاري · الشكل الدوائي · التصنيف"</string>
+    <string name="settings_card_preview_label" formatted="false">"معاينة البطاقة"</string>
+    <string name="settings_card_preview_scientific_name" formatted="false">"اسم علمي · 500 mg"</string>
+    <string name="settings_grouping_help" formatted="false">"إظهار عناوين للمجموعات دون تغيير البحث أو الفلاتر."</string>
+    <string name="settings_grouping_label" formatted="false">"تجميع الأدوية"</string>
+    <string name="settings_grouping_mode_label" formatted="false">"التجميع حسب"</string>
+    <string name="settings_grouping_scientific_letter_label" formatted="false">"حرف الاسم العلمي"</string>
+    <string name="settings_hijri_method_help" formatted="false">"التقويم الهجري الحسابي المدني بدورة 30 سنة؛ قد يختلف عن رؤية الهلال محلياً. الفلاتر والتقارير تبقى ميلادية."</string>
+    <string name="settings_hijri_method_title" formatted="false">"طريقة التقويم الهجري"</string>
+    <string name="settings_medication_cards_label" formatted="false">"بطاقات الأدوية"</string>
+    <string name="settings_medication_name_display_label" formatted="false">"عرض أسماء الأدوية"</string>
+    <string name="settings_medication_sort_label" formatted="false">"ترتيب الأدوية"</string>
+    <string name="settings_names_arabic_label" formatted="false">"العربية"</string>
+    <string name="settings_names_both_label" formatted="false">"العربية والإنجليزية"</string>
+    <string name="settings_names_english_label" formatted="false">"الإنجليزية"</string>
+    <string name="settings_pharmacy_data_heading" formatted="false">"بيانات الصيدلية"</string>
+    <string name="settings_primary_accent_label" formatted="false">"اللون الأساسي"</string>
+    <string name="settings_secondary_hijri_description" formatted="false">"إظهار تاريخ هجري ثانوي للعرض فقط"</string>
+    <string name="settings_secondary_hijri_help" formatted="false">"يظهر بجانب الميلادي في التفاصيل والسجل؛ الإدخال والحسابات تبقى ميلادية."</string>
+    <string name="settings_secondary_hijri_label" formatted="false">"تاريخ هجري ثانوي للعرض فقط"</string>
+    <string name="settings_sort_arabic_trade_name_label" formatted="false">"الاسم التجاري العربي"</string>
+    <string name="settings_sort_english_trade_name_label" formatted="false">"الاسم التجاري الإنجليزي"</string>
+    <string name="settings_sort_scientific_name_label" formatted="false">"الاسم العلمي"</string>
+    <string name="settings_sort_section_availability_label" formatted="false">"التوافر في القسم الحالي"</string>
+    <string name="settings_theme_amoled_label" formatted="false">"أسود"</string>
+    <string name="settings_theme_dark_label" formatted="false">"داكن"</string>
+    <string name="settings_theme_label" formatted="false">"المظهر"</string>
+    <string name="settings_theme_light_label" formatted="false">"فاتح"</string>
+    <string name="settings_theme_system_label" formatted="false">"حسب النظام"</string>
+</resources>

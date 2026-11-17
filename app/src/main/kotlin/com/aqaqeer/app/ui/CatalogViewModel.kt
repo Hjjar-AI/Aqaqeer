@@ -128,7 +128,7 @@ class CatalogViewModel @Inject constructor(
                 val unprocessed = session.rows.filter { it.record.number !in latest.results }.associate { row ->
                     val skipped = row.decision.action == CsvAction.SKIP || (!row.decision.selected && row.error == null)
                     row.record.number to CsvRowResult(row.record.number, if (skipped) CsvOutcome.SKIPPED else CsvOutcome.FAILED,
-                        row.warnings.joinToString(uiText(R.string.ui_catalog_view_model_001)), if (skipped) "" else row.error ?: uiText(R.string.ui_catalog_view_model_002))
+                        row.warnings.joinToString(uiText(R.string.exchange_csv_warning_separator)), if (skipped) "" else row.error ?: uiText(R.string.exchange_csv_unprocessed_row_error))
                 }
                 latest.copy(results = latest.results + unprocessed, finished = true)
             }
@@ -141,7 +141,7 @@ class CatalogViewModel @Inject constructor(
         command(queueOffline = false) {
             if (draft.first == CsvSaveKind.TEMPLATE) csvImports.template(uri)
             else csvImports.exportResults(uri, draft.second, draft.first == CsvSaveKind.RETRY)
-            if (route.value == "csv-import") feedback.value = UiFeedback(uiText(R.string.ui_catalog_view_model_003), "csv-import")
+            if (route.value == "csv-import") feedback.value = UiFeedback(uiText(R.string.exchange_csv_file_saved_message), "csv-import")
         }
     }
     internal fun prepareReport(request: ReportRequest) = command(queueOffline = false) {
@@ -155,7 +155,7 @@ class CatalogViewModel @Inject constructor(
         if (uri == null || draft == null) return
         command(queueOffline = false) {
             if (draft.second) reports.pdf(uri, draft.first) else reports.csv(uri, draft.first)
-            if (route.value == "reports") feedback.value = UiFeedback(uiText(R.string.ui_catalog_view_model_004), "reports")
+            if (route.value == "reports") feedback.value = UiFeedback(uiText(R.string.exchange_report_file_saved_message), "reports")
         }
     }
     private fun exchangeEligible(pharmacyId: String): Boolean = (state.value.catalog as? CatalogState.Ready)?.let {
@@ -189,21 +189,21 @@ class CatalogViewModel @Inject constructor(
         command(RouteStorage.decode(destination), queueOffline, action)
 
     internal fun command(destination: Route? = null, queueOffline: Boolean = true, action: suspend () -> Unit) {
-        if (adminBusy.value) { feedback.value = UiFeedback(uiText(R.string.ui_catalog_view_model_005), route.value); return }
+        if (adminBusy.value) { feedback.value = UiFeedback(uiText(R.string.shared_operation_busy_message), route.value); return }
         val origin = route.value
         refreshJob?.cancel()
         adminBusy.value = true; adminMessage.value = null
         adminJob = viewModelScope.launch {
             try { action(); if (queueOffline && !online) markReconnectSafely(); if (destination != null) navigate(destination) }
             catch (e: CancellationException) { throw e }
-            catch (e: MaintenanceReview) { maintenance.conflicts.value = e.conflicts; adminMessage.value = uiText(R.string.ui_catalog_view_model_006) }
+            catch (e: MaintenanceReview) { maintenance.conflicts.value = e.conflicts; adminMessage.value = uiText(R.string.maintenance_review_choices_error) }
             catch (e: Exception) { adminMessage.value = (e as? com.aqaqeer.app.admin.AdminProblem)?.reason ?: (e as? MaintenanceProblem)?.reason ?: (e as? CsvProblem)?.reason ?: when ((e as? com.aqaqeer.app.security.files.EnvelopeException)?.error) {
-                com.aqaqeer.app.security.files.EnvelopeError.AUTHENTICATION -> uiText(R.string.ui_catalog_view_model_007)
-                com.aqaqeer.app.security.files.EnvelopeError.TOO_LARGE -> uiText(R.string.ui_catalog_view_model_008)
-                com.aqaqeer.app.security.files.EnvelopeError.RESOURCE_LIMIT -> uiText(R.string.ui_catalog_view_model_009)
-                com.aqaqeer.app.security.files.EnvelopeError.UNSUPPORTED_FORMAT -> uiText(R.string.ui_catalog_view_model_010)
-                com.aqaqeer.app.security.files.EnvelopeError.INVALID_CREDENTIAL -> uiText(R.string.ui_catalog_view_model_011)
-                else -> uiText(R.string.ui_catalog_view_model_012)
+                com.aqaqeer.app.security.files.EnvelopeError.AUTHENTICATION -> uiText(R.string.backup_operation_authentication_error)
+                com.aqaqeer.app.security.files.EnvelopeError.TOO_LARGE -> uiText(R.string.backup_operation_size_error)
+                com.aqaqeer.app.security.files.EnvelopeError.RESOURCE_LIMIT -> uiText(R.string.backup_operation_resources_error)
+                com.aqaqeer.app.security.files.EnvelopeError.UNSUPPORTED_FORMAT -> uiText(R.string.backup_operation_format_unsupported_error)
+                com.aqaqeer.app.security.files.EnvelopeError.INVALID_CREDENTIAL -> uiText(R.string.backup_operation_passphrase_error)
+                else -> uiText(R.string.shared_operation_failed_message)
             } }
             finally {
                 if (route.value == origin) adminMessage.value?.let { feedback.value = UiFeedback(it, origin) }
@@ -216,7 +216,7 @@ class CatalogViewModel @Inject constructor(
         secretCommand(RouteStorage.decode(destination), *secrets, queueOffline = queueOffline, action = action)
 
     internal fun secretCommand(destination: Route?, vararg secrets: CharArray, queueOffline: Boolean = true, action: suspend () -> Unit) {
-        if (adminBusy.value) { secrets.forEach { it.fill('\u0000') }; feedback.value = UiFeedback(uiText(R.string.ui_catalog_view_model_005), route.value); return }
+        if (adminBusy.value) { secrets.forEach { it.fill('\u0000') }; feedback.value = UiFeedback(uiText(R.string.shared_operation_busy_message), route.value); return }
         command(destination, queueOffline = queueOffline) { try { action() } finally { secrets.forEach { it.fill('\u0000') } } }
         // Also clear transferred secrets if a cancelled scope never starts the coroutine body.
         adminJob?.invokeOnCompletion { secrets.forEach { it.fill('\u0000') } }
@@ -227,13 +227,13 @@ class CatalogViewModel @Inject constructor(
             selection.pharmacyId)
         availabilitySavedId.value = selection.id
         complete()
-        feedback.value = UiFeedback(uiText(R.string.ui_catalog_view_model_013), route.value, undo = receipt)
+        feedback.value = UiFeedback(uiText(R.string.availability_saved_local_message), route.value, undo = receipt)
     }
     internal fun undo(receipt: AvailabilityUndo) = command { admin.undoAvailability(receipt) }
     internal fun medicationSaved(id: String, added: Boolean) {
         navigate(Route.Home)
         highlightedMedication.value = id
-        feedback.value = UiFeedback(if (added) uiText(R.string.ui_catalog_view_model_014) else uiText(R.string.ui_catalog_view_model_015), "home", medicationId = id)
+        feedback.value = UiFeedback(if (added) uiText(R.string.catalog_medication_added_message) else uiText(R.string.catalog_medication_saved_message), "home", medicationId = id)
     }
     internal fun review() = command(Route.Review) { pendingEdits.value = admin.pending() }
     internal fun publish(choices: Map<String, Boolean> = emptyMap(), reviewOnFailure: Boolean = false,
@@ -273,7 +273,7 @@ class CatalogViewModel @Inject constructor(
                 delay(maxOf(2000L shl attempt, sharing.status.value.retryAfterSeconds * 1000L))
             }
             } catch (e: CancellationException) { throw e }
-            catch (_: Exception) { feedback.value = UiFeedback(uiText(R.string.ui_catalog_view_model_016), "home") }
+            catch (_: Exception) { feedback.value = UiFeedback(uiText(R.string.publication_resume_failed_message), "home") }
         }
     }
     override fun onCleared() { connectivity.unregisterNetworkCallback(networkObserver); super.onCleared() }
@@ -396,7 +396,7 @@ class CatalogViewModel @Inject constructor(
                 .onStart { emit(HistoryUiState(effective, loading = true, pharmacyId = pharmacyId, medicationScope = medication)) }
                 .catch { error ->
                     if (error is CancellationException) throw error
-                    emit(HistoryUiState(effective, error = uiText(R.string.ui_catalog_view_model_017),
+                    emit(HistoryUiState(effective, error = uiText(R.string.history_load_failed_message),
                         pharmacyId = pharmacyId, medicationScope = medication))
                 }
         }

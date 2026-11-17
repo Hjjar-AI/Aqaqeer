@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="exchange_csv_after_format">"بعد: %1$s"</string>
+    <string name="exchange_csv_availability_prefix" formatted="false">"التوافر: "</string>
+    <string name="exchange_csv_before_format">"قبل: %1$s"</string>
+    <string name="exchange_csv_choose_preview_action" formatted="false">"اختيار ملف ومعاينته"</string>
+    <string name="exchange_csv_clear_value_prefix" formatted="false">"مسح هذه القيمة: "</string>
+    <string name="exchange_csv_confirm_import_help_format">"حفظ %1$s صفوف محددة في %2$s؟ يحفظ كل صف وارتباطاته معاً. قد تنجح صفوف وتفشل أخرى؛ تبقى النتائج لكل صف. المعاينة أعلاه لا تنشر مباشرة."</string>
+    <string name="exchange_csv_confirm_import_title" formatted="false">"تأكيد الاستيراد المحلي"</string>
+    <string name="exchange_csv_create_action_label" formatted="false">"إنشاء"</string>
+    <string name="exchange_csv_create_another_action_label" formatted="false">"إنشاء دواء آخر"</string>
+    <string name="exchange_csv_create_taxonomy_consent_label" formatted="false">"أوافق على إضافة التصنيف أو الشكل المقترح"</string>
+    <string name="exchange_csv_decision_label" formatted="false">"القرار"</string>
+    <string name="exchange_csv_existing_match_prefix" formatted="false">"تطابق موجود: "</string>
+    <string name="exchange_csv_failed_outcome_label" formatted="false">"فشل / لم يُعالج"</string>
+    <string name="exchange_csv_file_saved_message" formatted="false">"اكتمل حفظ ملف CSV وإغلاقه"</string>
+    <string name="exchange_csv_finish_without_saving_action" formatted="false">"إعداد تقرير الأخطاء والتخطي دون حفظ صفوف"</string>
+    <string name="exchange_csv_hide_details_action" formatted="false">"إخفاء التفاصيل"</string>
+    <string name="exchange_csv_import_limits_help" formatted="false">"UTF-8، حتى 10 ميبيبايت و10000 صف و64 كيبيبايت للخلية. لا تُحفظ بيانات قبل التأكيد. الملف الجديد يستبدل جلسة المعاينة ونتائجها فقط."</string>
+    <string name="exchange_csv_import_navigation_label" formatted="false">"استيراد الأدوية من CSV"</string>
+    <string name="exchange_csv_optional_clear_help" formatted="false">"في التحديث، الخلايا الفارغة تبقي القيم. مسح قيمة اختيارية يحتاج اختياراً صريحاً. "</string>
+    <string name="exchange_csv_result_format">"النتيجة: %1$s"</string>
+    <string name="exchange_csv_retry_formula_warning" formatted="false">"ملف إعادة المحاولة يحفظ القيم الخام، وقد يتضمن صيغاً إذا فتحته في برنامج جداول. تقرير النتائج يحيد الصيغ وقد يضيف فاصلة عليا؛ استخدم ملف إعادة المحاولة للاستيراد."</string>
+    <string name="exchange_csv_review_commit_action" formatted="false">"مراجعة تأكيد الحفظ"</string>
+    <string name="exchange_csv_row_count_format">"الصفوف: %1$s"</string>
+    <string name="exchange_csv_row_number_format">"صف %1$s"</string>
+    <string name="exchange_csv_row_selection_help" formatted="false">"اختر الصفوف المطلوبة. الأسماء المكررة تحتاج قراراً صريحاً، وإضافة تصنيف أو شكل تحتاج موافقتك."</string>
+    <string name="exchange_csv_save_completion_help" formatted="false">"نجاح الحفظ يتطلب إغلاق الملف. قد يبقى ملف جزئي عند الإلغاء أو فشل مزود التخزين."</string>
+    <string name="exchange_csv_save_results_action" formatted="false">"حفظ تقرير النتائج الآمن للجداول"</string>
+    <string name="exchange_csv_save_retry_action" formatted="false">"حفظ الصفوف الفاشلة لإعادة المحاولة"</string>
+    <string name="exchange_csv_save_selected_rows_action" formatted="false">"حفظ الصفوف المحددة"</string>
+    <string name="exchange_csv_save_template_action" formatted="false">"حفظ القالب"</string>
+    <string name="exchange_csv_select_row_description" formatted="false">"تحديد هذا الصف للحفظ"</string>
+    <string name="exchange_csv_select_valid_rows_action" formatted="false">"تحديد الصفوف الصالحة والموافق عليها"</string>
+    <string name="exchange_csv_session_finished_help" formatted="false">"اكتملت الجلسة أو أُوقفت. المحفوظ يبقى محلياً؛ راجع التعديلات للنشر. لا تعاد الصفوف تلقائياً."</string>
+    <string name="exchange_csv_session_title" formatted="false">"جلسة الاستيراد"</string>
+    <string name="exchange_csv_skip_action_label" formatted="false">"تخطي"</string>
+    <string name="exchange_csv_skipped_outcome_label" formatted="false">"تُخطي"</string>
+    <string name="exchange_csv_target_medication_label" formatted="false">"الدواء المستهدف"</string>
+    <string name="exchange_csv_template_section_ids_help" formatted="false">"تقبل أعمدة التوافر AVAILABLE / LOW / OUT / UNKNOWN دون حساسية لحالة الأحرف أو التسميات العربية. تقبل معرّف القسم أو اسمه الواضح. معرّفات القالب الحالي:"</string>
+    <string name="exchange_csv_truncated_suffix" formatted="false">"… (مختصر)"</string>
+    <string name="exchange_csv_unprocessed_row_error" formatted="false">"لم يُعالج الصف؛ أُوقفت العملية. أعد المعاينة قبل المحاولة"</string>
+    <string name="exchange_csv_update_selected_action_label" formatted="false">"تحديث دواء محدد"</string>
+    <string name="exchange_csv_updated_outcome_label" formatted="false">"حُدّث"</string>
+    <string name="exchange_csv_values_changes_heading" formatted="false">"القيم والتغييرات وخيارات المسح"</string>
+    <string name="exchange_csv_warning_separator" formatted="false">"؛ "</string>
+    <string name="exchange_report_access_required_message" formatted="false">"يلزم تفويض إدارة وإصدار متوافق"</string>
+    <string name="exchange_report_all_availability_label" formatted="false">"التوافر الكامل"</string>
+    <string name="exchange_report_created_at_label" formatted="false">"أُنشئ"</string>
+    <string name="exchange_report_drafts_included_label" formatted="false">"يشمل التعديلات غير المنشورة"</string>
+    <string name="exchange_report_expiring_not_expired_label" formatted="false">"صلاحية قصيرة — يستثني المنتهي"</string>
+    <string name="exchange_report_expiry_label" formatted="false">"الانتهاء"</string>
+    <string name="exchange_report_file_saved_message" formatted="false">"اكتمل حفظ التقرير وإغلاقه"</string>
+    <string name="exchange_report_include_drafts_label" formatted="false">"تضمين التعديلات غير المنشورة"</string>
+    <string name="exchange_report_medication_count_format">"الأدوية: %1$s"</string>
+    <string name="exchange_report_out_in_section_label" formatted="false">"غير المتوفر في قسم"</string>
+    <string name="exchange_report_pharmacy_publication_time_prefix">"توقيت الصيدلية: %1$s\nوقت النشر: "</string>
+    <string name="exchange_report_prepare_preview_action" formatted="false">"إعداد التقرير ومعاينته"</string>
+    <string name="exchange_report_prepare_title" formatted="false">"إعداد التقرير"</string>
+    <string name="exchange_report_preset_label" formatted="false">"التقرير"</string>
+    <string name="exchange_report_preview_title" formatted="false">"معاينة التقرير"</string>
+    <string name="exchange_report_published_only_label" formatted="false">"البيانات المنشورة فقط"</string>
+    <string name="exchange_report_save_csv_action" formatted="false">"ملف جداول (CSV)"</string>
+    <string name="exchange_report_save_full_count_format">"حفظ التقرير الكامل (%1$s أدوية)"</string>
+    <string name="exchange_report_save_pdf_action" formatted="false">"ملف PDF عربي"</string>
+    <string name="exchange_report_save_picker_failed_message" formatted="false">"تعذر فتح منتقي الحفظ"</string>
+    <string name="exchange_report_section_label" formatted="false">"القسم"</string>
+    <string name="exchange_report_show_all_action" formatted="false">"عرض جميع الأدوية"</string>
+    <string name="exchange_report_show_first_five_action" formatted="false">"عرض أول خمسة أدوية"</string>
+    <string name="exchange_report_source_help" formatted="false">"المصدر الافتراضي هو النسخة المنشورة المتحققة. لتصدير المسودة فعّل تضمين التعديلات. إذا لم يوجد القسم في المصدر المنشور، اختر قسماً آخر أو ضمّن التعديلات. تبقى اللقطة ثابتة؛ أعد إعدادها لتضمين تغييرات لاحقة. قد يبقى ملف جزئي عند الإلغاء أو فشل مزود التخزين. ملف الجداول CSV يُجهّز للعرض الآمن في تطبيقات الجداول ويختلف عن قالب الاستيراد وملف إعادة المحاولة."</string>
+    <string name="exchange_report_source_help_title" formatted="false">"عن مصدر التقرير وحفظه"</string>
+    <string name="exchange_report_times_heading" formatted="false">"توقيت التقرير والنشر"</string>
+    <string name="exchange_report_unpublished_label" formatted="false">"لم يُنشر"</string>
+    <string name="exchange_reports_navigation_label" formatted="false">"تقارير CSV وPDF"</string>
+    <string name="logic_all_shortages">النواقص في جميع الأقسام النشطة</string>
+    <string name="logic_csv_skip_duplicates">تخطي جميع المكررات</string>
+    <string name="logic_csv_update_match">تحديث الدواء المطابق</string>
+    <string name="logic_csv_update_matches">تحديث جميع المطابقات الوحيدة</string>
+</resources>

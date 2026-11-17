@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="connection_bot_token_label" formatted="false">"رمز البوت"</string>
+    <string name="connection_copy_setup_command_action" formatted="false">"نسخ الأمر"</string>
+    <string name="connection_create_bot_step_help" formatted="false">"أنشئ بوتاً مخصصاً عبر BotFather وأدخل الرمز."</string>
+    <string name="connection_create_bot_step_title" formatted="false">"1. إنشاء البوت"</string>
+    <string name="connection_dedicated_bot_help" formatted="false">"لن يُحذف أي webhook قائم. استخدم بوتاً مخصصاً إذا كان البوت مرتبطاً بخدمة أخرى. بعد الحفظ اختر مراجعة التعديلات والنشر؛ يمكنك نشر صيدلية فارغة أيضاً."</string>
+    <string name="connection_discover_group_action" formatted="false">"اكتشاف المجموعة"</string>
+    <string name="connection_discover_group_step_help" formatted="false">"أرسل الأمر التالي داخل المجموعة. استخدم جهازاً واحداً للاكتشاف."</string>
+    <string name="connection_discover_group_step_title" formatted="false">"3. اكتشاف المجموعة والتحقق"</string>
+    <string name="connection_export_protection_title" formatted="false">"حماية ملف الاتصال"</string>
+    <string name="connection_export_security_help" formatted="false">"يحصل المستورد على صلاحية القراءة. اختر أربعة أرقام على الأقل؛ يفضل توليد 16 رقماً عشوائياً؛ تجنب التواريخ والتسلسلات والأرقام المكررة. شارك الملف وكلمته عبر قناتين منفصلتين."</string>
+    <string name="connection_file_password_label" formatted="false">كلمة ملف الاتصال</string>
+    <string name="connection_file_password_label_with_guidance" formatted="false">"كلمة ملف الاتصال — أربعة أرقام على الأقل؛ يفضل توليد 16 رقماً عشوائياً"</string>
+    <string name="connection_file_password_rule" formatted="false">أربعة أرقام على الأقل؛ يفضل توليد 16 رقماً عشوائياً</string>
+    <string name="connection_group_id_help" formatted="false">"بديل للاكتشاف؛ الصق المعرّف السالب كاملاً مثل -1001234567890"</string>
+    <string name="connection_group_id_label" formatted="false">"معرّف المجموعة"</string>
+    <string name="connection_group_title_format">"المجموعة: %1$s"</string>
+    <string name="connection_import_activate_reader_action" formatted="false">"تفعيل الصيدلية للقراءة"</string>
+    <string name="connection_import_activation_help" formatted="false">"سيعيد التفعيل التحقق عبر الإنترنت ويحفظ بيانات الصيدلية للقراءة دون اتصال. لا يمنحك صلاحية مسؤول."</string>
+    <string name="connection_import_activation_progress" formatted="false">"جار التحقق وتفعيل الصيدلية…"</string>
+    <string name="connection_import_already_configured_error" formatted="false">"هذا الجهاز مُعدّ لصيدلية. لا يمكن استبدالها باستيراد ملف انضمام."</string>
+    <string name="connection_import_bot_invalid_error" formatted="false">"بيانات البوت غير صالحة. اطلب ملف اتصال حديثاً من المسؤول."</string>
+    <string name="connection_import_caption_mismatch_error" formatted="false">"بيانات وصف النسخة لا تطابق محتواها المحمي. تواصل مع المسؤول."</string>
+    <string name="connection_import_choose_another_file_action" formatted="false">"اختيار ملف آخر"</string>
+    <string name="connection_import_choose_connection_file_action" formatted="false">"اختيار ملف اتصال .aqz"</string>
+    <string name="connection_import_choose_file_error" formatted="false">"اختر ملف الاتصال من تطبيق الملفات."</string>
+    <string name="connection_import_configured_pharmacy_help" formatted="false">"هذا الجهاز مُعدّ لصيدلية. ملف الانضمام لا يستبدلها. استبدال اتصال الصيدلية نفسها سيُتاح من مسار صيانة منفصل."</string>
+    <string name="connection_import_confirm_discard_action" formatted="false">"إلغاء الاتصال"</string>
+    <string name="connection_import_crypto_unavailable_error" formatted="false">"تعذرت خدمة التشفير على هذا الجهاز."</string>
+    <string name="connection_import_decrypt_stage_action" formatted="false">"فك التشفير وحفظ الاتصال المعلق"</string>
+    <string name="connection_import_demo_blocked_error" formatted="false">"النسخة التجريبية لا تستورد اتصالات صيدليات حقيقية."</string>
+    <string name="connection_import_demo_unavailable_help" formatted="false">"النسخة التجريبية منفصلة ولا تستورد اتصالات صيدليات حقيقية."</string>
+    <string name="connection_import_discard_confirmation_help_format">"ستُزال نسخة الاتصال المحفوظة داخل التطبيق للصيدلية «%1$s». يبقى الملف الأصلي في مكانه."</string>
+    <string name="connection_import_discard_confirmation_title" formatted="false">"إلغاء الاتصال المعلق؟"</string>
+    <string name="connection_import_discard_pending_action" formatted="false">"إلغاء الاتصال المعلق"</string>
+    <string name="connection_import_download_size_error" formatted="false">"تتجاوز البيانات المستلمة الحد المسموح. احتُفظ بالاتصال المعلق."</string>
+    <string name="connection_import_file_format_unsupported_error" formatted="false">"تنسيق الملف غير مدعوم. اطلب ملف اتصال متوافقاً من المسؤول."</string>
+    <string name="connection_import_file_io_error" formatted="false">"تعذرت قراءة الملف أو تنظيف النسخة المؤقتة. اختر الملف مجدداً وحاول مرة أخرى."</string>
+    <string name="connection_import_file_password_help" formatted="false">"أربعة أرقام على الأقل؛ تُقبل الأرقام العربية والإنجليزية. لا تُحفظ كلمة المرور."</string>
+    <string name="connection_import_file_password_label" formatted="false">"كلمة مرور الملف"</string>
+    <string name="connection_import_file_picker_failed_message" formatted="false">"تعذر فتح تطبيق الملفات."</string>
+    <string name="connection_import_file_picker_missing_message" formatted="false">"لا يوجد تطبيق ملفات متاح للاختيار."</string>
+    <string name="connection_import_file_resources_error" formatted="false">"لا تكفي الموارد لمعالجة هذا الملف."</string>
+    <string name="connection_import_file_selected_help" formatted="false">"تم اختيار ملف. أدخل كلمة المرور التي أعطاك إياها المسؤول."</string>
+    <string name="connection_import_file_size_error" formatted="false">"يتجاوز الملف الحد المسموح: 10 ميبيبايت."</string>
+    <string name="connection_import_file_version_unsupported_error" formatted="false">"يتطلب الملف إصداراً متوافقاً أحدث من التطبيق."</string>
+    <string name="connection_import_group_access_error" formatted="false">"تعذر الوصول إلى مجموعة الصيدلية. راجع المسؤول بشأن صلاحيات البوت."</string>
+    <string name="connection_import_invalid_file_error" formatted="false">"هذا ليس ملف اتصال صالحاً."</string>
+    <string name="connection_import_invalid_payload_error" formatted="false">"بيانات ملف الاتصال غير صالحة لهذه العملية."</string>
+    <string name="connection_import_keep_pending_action" formatted="false">"احتفاظ"</string>
+    <string name="connection_import_medication_count_prefix" formatted="false">"عدد الأدوية في النسخة: "</string>
+    <string name="connection_import_network_error" formatted="false">"تعذر الاتصال بتيليغرام. تحقق من الإنترنت وحاول مجدداً؛ احتُفظ بالاتصال المعلق."</string>
+    <string name="connection_import_not_activated_help" formatted="false">"لم تُفعّل بيانات الصيدلية على هذا الجهاز بعد. لا يمنح ملف الاتصال صلاحية مسؤول."</string>
+    <string name="connection_import_open_file_title" formatted="false">"فتح ملف الاتصال"</string>
+    <string name="connection_import_operation_failed_error" formatted="false">"تعذرت العملية. احتُفظ بالبيانات الحالية؛ حاول مرة أخرى."</string>
+    <string name="connection_import_operation_progress" formatted="false">"جار تنفيذ العملية…"</string>
+    <string name="connection_import_password_min_digits_error" formatted="false">"أدخل أربعة أرقام على الأقل"</string>
+    <string name="connection_import_password_or_corrupt_error" formatted="false">"كلمة المرور غير صحيحة أو الملف تالف."</string>
+    <string name="connection_import_password_required_error" formatted="false">"أدخل كلمة مرور الملف: أربعة أرقام على الأقل."</string>
+    <string name="connection_import_pending_activation_help" formatted="false">"احفظ ملف الاتصال ثم تحقق من النسخة المنشورة عبر تيليغرام. يظل الاتصال معلقاً ولن تظهر الأدوية حتى تفعيل الصيدلية على هذا الجهاز."</string>
+    <string name="connection_import_pending_changed_error" formatted="false">"تغير الاتصال المعلق. أعد فتح الشاشة وحاول مجدداً."</string>
+    <string name="connection_import_pending_exists_error" formatted="false">"يوجد اتصال بانتظار التحقق. ألغِه قبل اختيار اتصال آخر."</string>
+    <string name="connection_import_pending_saved_title" formatted="false">"اتصال محفوظ ومعلق"</string>
+    <string name="connection_import_pending_title" formatted="false">"اتصال معلق"</string>
+    <string name="connection_import_pinned_snapshot_missing_error" formatted="false">"نسخة الصيدلية غير متاحة في الرسالة المثبّتة. تواصل مع المسؤول."</string>
+    <string name="connection_import_protected_storage_error" formatted="false">"تعذرت قراءة البيانات المحمية. احتُفظ بها؛ حاول مجدداً أو تواصل مع المسؤول."</string>
+    <string name="connection_import_protected_storage_help" formatted="false">"يجب استعادة إمكانية فتح البيانات المحمية قبل استيراد اتصال. يمكنك الرجوع إلى الإعدادات والمساعدة."</string>
+    <string name="connection_import_publication_time_utc_prefix" formatted="false">"وقت النشر (التوقيت العالمي): "</string>
+    <string name="connection_import_rate_limit_error" formatted="false">"طلب تيليغرام الانتظار. حاول مجدداً لاحقاً."</string>
+    <string name="connection_import_read_permission_error" formatted="false">"لم يعد إذن قراءة الملف متاحاً. اختره مجدداً."</string>
+    <string name="connection_import_response_invalid_error" formatted="false">"استجابة تيليغرام أو بيانات النسخة غير صالحة. احتُفظ بالاتصال المعلق."</string>
+    <string name="connection_import_retry_storage_action" formatted="false">"حاول قراءة البيانات المحمية مجدداً"</string>
+    <string name="connection_import_reverify_action" formatted="false">"إعادة التحقق عبر تيليغرام"</string>
+    <string name="connection_import_snapshot_authentication_error" formatted="false">"تعذر توثيق نسخة الصيدلية. قد تكون تالفة أو تغير مفتاحها؛ اطلب ملف اتصال حديثاً."</string>
+    <string name="connection_import_snapshot_changed_error" formatted="false">"تغيرت النسخة أثناء التحقق. أعد التحقق للحصول على النسخة الحالية."</string>
+    <string name="connection_import_snapshot_format_unsupported_error" formatted="false">"تنسيق النسخة المنشورة غير مدعوم. اطلب إصداراً متوافقاً من التطبيق."</string>
+    <string name="connection_import_snapshot_invalid_error" formatted="false">"بيانات النسخة المنشورة غير صالحة. احتُفظ بالاتصال المعلق."</string>
+    <string name="connection_import_snapshot_io_error" formatted="false">"تعذرت قراءة نسخة الصيدلية المحمية. احتُفظ بالاتصال المعلق."</string>
+    <string name="connection_import_snapshot_key_mismatch_error" formatted="false">"إصدار مفتاح النسخة لا يطابق ملف الاتصال. اطلب ملفاً حديثاً من المسؤول."</string>
+    <string name="connection_import_snapshot_pharmacy_mismatch_error" formatted="false">"النسخة المنشورة تخص صيدلية أخرى. احتُفظ بالاتصال المعلق."</string>
+    <string name="connection_import_snapshot_resources_error" formatted="false">"لا تكفي الموارد لمعالجة النسخة المنشورة."</string>
+    <string name="connection_import_snapshot_size_error" formatted="false">"تتجاوز النسخة المنشورة الحد المسموح: 10 ميبيبايت."</string>
+    <string name="connection_import_snapshot_version_unsupported_error" formatted="false">"تتطلب النسخة إصداراً متوافقاً أحدث من التطبيق. احتُفظ بالاتصال المعلق دون تفعيل."</string>
+    <string name="connection_import_unavailable_title" formatted="false">"الاستيراد غير متاح"</string>
+    <string name="connection_import_update_required_help" formatted="false">"اطلب من المسؤول ملف APK متوافقاً وثبّته يدوياً. لن يزيل ملف اتصال أقدم هذا المتطلب."</string>
+    <string name="connection_import_verification_progress" formatted="false">"جار التحقق عبر تيليغرام…"</string>
+    <string name="connection_import_verified_identity_help" formatted="false">"تم التحقق من هوية الصيدلية ومتطلبات النسخة."</string>
+    <string name="connection_import_verified_time_utc_prefix" formatted="false">"وقت التحقق (التوقيت العالمي): "</string>
+    <string name="connection_import_verified_title" formatted="false">"تم التحقق من النسخة المنشورة"</string>
+    <string name="connection_import_verified_update_required_title" formatted="false">"تم توثيق النسخة؛ يلزم تحديث التطبيق"</string>
+    <string name="connection_import_verify_action" formatted="false">"التحقق عبر تيليغرام"</string>
+    <string name="connection_join_with_file_action" formatted="false">"الانضمام بملف اتصال"</string>
+    <string name="connection_join_with_file_help" formatted="false">"افتح ملف الاتصال الذي أرسله المسؤول لعرض أدوية الصيدلية."</string>
+    <string name="connection_join_with_file_title" formatted="false">"لدي ملف اتصال — انضمام"</string>
+    <string name="connection_pending_status_label" formatted="false">"الاتصال المعلق"</string>
+    <string name="connection_refresh_app_version_unsupported_error" formatted="false">"يلزم إصدار متوافق من التطبيق. احتُفظ بالبيانات المحفوظة؛ اطلب APK متوافقاً من المسؤول."</string>
+    <string name="connection_refresh_lineage_review_error" formatted="false">"تسلسل النسخة المنشورة يحتاج مراجعة المسؤول. احتُفظ بالنسخة الواردة والبيانات المحلية دون استبدالها."</string>
+    <string name="connection_refresh_local_data_changed_error" formatted="false">"تغيرت البيانات المحلية أثناء التحديث. احتُفظ بها؛ حاول مجدداً."</string>
+    <string name="connection_refresh_local_work_review_error" formatted="false">"توجد تغييرات محلية أو محاولة نشر معلقة تحتاج مراجعة قبل تطبيق النسخة الواردة. احتُفظ بها جميعاً."</string>
+    <string name="connection_refresh_unavailable_error" formatted="false">"التحديث غير متاح لهذا الجهاز."</string>
+    <string name="connection_save_file_action" formatted="false">"حفظ ملف الاتصال"</string>
+    <string name="connection_save_setup_action" formatted="false">"تأكيد المجموعة وحفظ الاتصال — النشر لاحقاً"</string>
+    <string name="connection_saved_data_status_label" formatted="false">"البيانات المحفوظة"</string>
+    <string name="connection_setup_group_step_help" formatted="false">"أنشئ مجموعة خاصة وأضف البوت مشرفاً بصلاحية إرسال الملفات وتثبيت الرسائل."</string>
+    <string name="connection_setup_group_step_title" formatted="false">"2. إعداد المجموعة"</string>
+    <string name="connection_sharing_heading" formatted="false">"المشاركة"</string>
+    <string name="connection_telegram_details_title" formatted="false">"اتصال تيليغرام"</string>
+    <string name="connection_verify_group_action" formatted="false">"تحقق من المجموعة والصلاحيات"</string>
+    <string name="logic_copy_password">نسخ كلمة الملف</string>
+    <string name="logic_file_destination_failed">تعذر فتح وجهة الملف؛ أعد المحاولة</string>
+    <string name="logic_generate_password">توليد 16 رقماً عشوائياً</string>
+    <string name="logic_password_guidance">يمكن استخدام أربعة أرقام على الأقل؛ كلمة عشوائية أطول تقاوم التخمين بشكل أفضل</string>
+    <string name="logic_password_pattern">تجنب التكرار والتسلسلات والتواريخ؛ يفضل توليد كلمة عشوائية</string>
+    <string name="pin_group_guidance">خصّص المجموعة لعقاقير، واترك تثبيت الرسائل لنسخة البوت فقط. قيّد صلاحية التثبيت لدى الأعضاء والمشرفين البشريين حيثما أمكن. تثبيت رسالة أخرى قد يوقف تحديث البيانات لدى الجميع.</string>
+</resources>

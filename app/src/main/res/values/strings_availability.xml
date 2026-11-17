@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="availability_before_after_format">"قبل: %1$s؛ بعد: %2$s"</string>
+    <string name="availability_bulk_cancel_action" formatted="false">"إلغاء"</string>
+    <string name="availability_bulk_category_change_format">"التصنيف: %1$s ← %2$s"</string>
+    <string name="availability_bulk_change_choices_action" formatted="false">"تغيير الاختيارات"</string>
+    <string name="availability_bulk_change_count_format">"سيتغير %1$s من %2$s أدوية."</string>
+    <string name="availability_bulk_form_change_format">"الشكل: %1$s ← %2$s"</string>
+    <string name="availability_bulk_invalid_choices_error" formatted="false">"راجع الخيارات واختر قيمة موجودة لكل حقل مفعّل قبل الحفظ."</string>
+    <string name="availability_bulk_preview_action" formatted="false">"معاينة"</string>
+    <string name="availability_bulk_select_description" formatted="false">"تحديد أدوية للتعديل الجماعي"</string>
+    <string name="availability_bulk_shared_fields_help" formatted="false">"الشكل والتصنيف يخصان الدواء في كل الأقسام."</string>
+    <string name="availability_bulk_stale_selection_error" formatted="false">"تغيرت البيانات المختارة أو القسم أو حُذف دواء؛ أنهِ التحديد وابدأ مجدداً."</string>
+    <string name="availability_bulk_status_change_format">"التوافر: %1$s ← %2$s"</string>
+    <string name="availability_bulk_unavailable_label" formatted="false">"غير متاح"</string>
+    <string name="availability_bulk_unchanged_label" formatted="false">"دون تغيير"</string>
+    <string name="availability_change_status_action" formatted="false">"تغيير الحالة"</string>
+    <string name="availability_current_status_format">"الحالة الحالية: %1$s"</string>
+    <string name="availability_deleted_selection_error" formatted="false">"حُذف دواء محدد؛ امسح التحديد وابدأ مجدداً."</string>
+    <string name="availability_edit_action" formatted="false">"تعديل التوافر"</string>
+    <string name="availability_edit_medication_description_format">"تعديل توافر %1$s"</string>
+    <string name="availability_editor_stale_error" formatted="false">"تغيرت الحالات أو حُذف دواء منذ فتح المحرر. أغلقه وافتحه مجدداً قبل التعديل."</string>
+    <string name="availability_elsewhere_prefix" formatted="false">"متوفر في: "</string>
+    <string name="availability_finish_selection_description" formatted="false">"إنهاء التحديد"</string>
+    <string name="availability_immediate_save_help" formatted="false">"اختر حالة أخرى لحفظها محلياً فوراً."</string>
+    <string name="availability_initial_status_help" formatted="false">"يمكنك تحديد توافر الدواء في كل قسم قبل الحفظ؛ الحالة الافتراضية هي متوفر."</string>
+    <string name="availability_legacy_details_edit_help" formatted="false">"افتح التفاصيل ثم اختر شارة القسم لتعديل التوافر في ورقة مستقلة."</string>
+    <string name="availability_local_save_publication_help" formatted="false">"الحفظ محلي؛ راجع التعديلات للنشر. قد يُستأنف النشر المنتظر عند عودة الاتصال."</string>
+    <string name="availability_medication_selection_description_format">"تحديد %1$s · %2$s"</string>
+    <string name="availability_preview_selection_title" formatted="false">"معاينة جميع الأدوية المحددة"</string>
+    <string name="availability_saved_local_message" formatted="false">"حُفظت التعديلات محلياً"</string>
+    <string name="availability_section_format">"القسم: %1$s"</string>
+    <string name="availability_sections_heading" formatted="false">"التوافر حسب الأقسام"</string>
+    <string name="availability_select_medication_description" formatted="false">"تحديد الدواء"</string>
+    <string name="availability_select_visible_action" formatted="false">"تحديد الظاهر"</string>
+    <string name="availability_selection_count_format">"المحدد: %1$s — %2$s"</string>
+    <string name="availability_single_section_confirmation_title" formatted="false">"تأكيد التوافر في قسم واحد"</string>
+    <string name="availability_unchanged_suffix" formatted="false">" (دون تغيير)"</string>
+    <string name="edit_availability_immediate_hint">تُحفظ تغييرات التوافر فوراً لكل قسم. زر «حفظ محلياً» يحفظ بيانات الدواء أدناه.</string>
+    <string name="edit_availability_no_sections">لا توجد أقسام لعرض التوافر.</string>
+    <string name="logic_missing_medication">الدواء المحدد لم يعد موجوداً؛ راجع التحديد</string>
+    <string name="new_availability_hint">اختر التوافر لكل قسم؛ يُحفظ مع الدواء عند الضغط على «حفظ محلياً». الافتراضي: متوافر.</string>
+    <string name="new_availability_reset">إعادة التوافر الافتراضي</string>
+    <string name="new_availability_title">التوافر عند الإضافة</string>
+    <string name="review_select">تحديد</string>
+    <string name="status_available">متوفر</string>
+    <string name="status_low">توفر محدود</string>
+    <string name="status_out">غير متوفر</string>
+    <string name="status_unknown">غير معروف</string>
+</resources>

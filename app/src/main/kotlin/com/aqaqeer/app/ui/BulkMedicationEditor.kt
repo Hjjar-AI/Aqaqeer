@@ -37,7 +37,7 @@ private data class BulkFieldOption(val value: String?, val label: String)
         (changes.status != null && selection.expected[med.id] != changes.status) ||
             (changes.formId != null && med.formId != changes.formId) ||
             (changes.categoryId != null && med.categoryId != changes.categoryId)
-    val unchanged = BulkFieldOption(null, uiText(R.string.ui_bulk_medication_editor_001))
+    val unchanged = BulkFieldOption(null, uiText(R.string.availability_bulk_unchanged_label))
     val statuses = listOf(unchanged) + MedicationPresentation.editableStatuses.map { BulkFieldOption(it.name, statusLabel(it, text = uiText)) }
     val forms = listOf(unchanged) + catalog.forms.map { BulkFieldOption(it.id, it.nameAr) }
     val categories = listOf(unchanged) + catalog.categories.map { BulkFieldOption(it.id, it.nameAr) }
@@ -48,18 +48,18 @@ private data class BulkFieldOption(val value: String?, val label: String)
                     onClick = { if (!savingNow()) statusName = option.value }, label = { Text(option.label) }) }
             }
             AdaptivePickers(first = {
-                ChoicePicker(uiText(R.string.ui_pharmacy_admin_screen_074), forms, forms.find { it.value == formId }, { it.label }, enabled = !busy, itemKey = { option -> option.value?.let { "value:$it" } ?: "unchanged" }) {
+                ChoicePicker(uiText(R.string.catalog_dosage_form_label), forms, forms.find { it.value == formId }, { it.label }, enabled = !busy, itemKey = { option -> option.value?.let { "value:$it" } ?: "unchanged" }) {
                     if (!savingNow()) formId = it.value
                 }
             }, second = {
-                ChoicePicker(uiText(R.string.ui_pharmacy_admin_screen_073), categories, categories.find { it.value == categoryId }, { it.label }, enabled = !busy, itemKey = { option -> option.value?.let { "value:$it" } ?: "unchanged" }) {
+                ChoicePicker(uiText(R.string.catalog_category_label), categories, categories.find { it.value == categoryId }, { it.label }, enabled = !busy, itemKey = { option -> option.value?.let { "value:$it" } ?: "unchanged" }) {
                     if (!savingNow()) categoryId = it.value
                 }
             })
-            if (formId != null || categoryId != null) SupportingText(uiText(R.string.ui_bulk_medication_editor_002))
+            if (formId != null || categoryId != null) SupportingText(uiText(R.string.availability_bulk_shared_fields_help))
         } else {
             val count = selection.medications.count(::changed)
-            Text(uiText(R.string.ui_bulk_medication_editor_003, MedicationPresentation.displayDigits(count.toString()), MedicationPresentation.displayDigits(selection.expected.size.toString())))
+            Text(uiText(R.string.availability_bulk_change_count_format, MedicationPresentation.displayDigits(count.toString()), MedicationPresentation.displayDigits(selection.expected.size.toString())))
             LazyColumn(Modifier.fillMaxWidth().heightIn(max = viewportHeight() * 0.55f)) {
             items(selection.expected.keys.toList(), key = { it }) { id ->
                 val med = selectedMedications[id]
@@ -68,22 +68,22 @@ private data class BulkFieldOption(val value: String?, val label: String)
                 HorizontalDivider()
                 MedicationSummary(med, prominent = true, form = selection.formNames[med.formId])
                 changes.status?.let { result ->
-                    Text(uiText(R.string.ui_bulk_medication_editor_004, statusLabel(selection.expected.getValue(med.id), text = uiText), statusLabel(result, text = uiText)))
+                    Text(uiText(R.string.availability_bulk_status_change_format, statusLabel(selection.expected.getValue(med.id), text = uiText), statusLabel(result, text = uiText)))
                 }
                 changes.formId?.let { target ->
-                    Text(uiText(R.string.ui_bulk_medication_editor_006, selection.formNames[med.formId] ?: uiText(R.string.ui_bulk_medication_editor_005), catalog.forms.find { it.id == target }?.nameAr ?: uiText(R.string.ui_bulk_medication_editor_005)))
+                    Text(uiText(R.string.availability_bulk_form_change_format, selection.formNames[med.formId] ?: uiText(R.string.availability_bulk_unavailable_label), catalog.forms.find { it.id == target }?.nameAr ?: uiText(R.string.availability_bulk_unavailable_label)))
                 }
                 changes.categoryId?.let { target ->
-                    Text(uiText(R.string.ui_bulk_medication_editor_007, selection.categoryNames[med.categoryId] ?: uiText(R.string.ui_bulk_medication_editor_005), catalog.categories.find { it.id == target }?.nameAr ?: uiText(R.string.ui_bulk_medication_editor_005)))
+                    Text(uiText(R.string.availability_bulk_category_change_format, selection.categoryNames[med.categoryId] ?: uiText(R.string.availability_bulk_unavailable_label), catalog.categories.find { it.id == target }?.nameAr ?: uiText(R.string.availability_bulk_unavailable_label)))
                 }
-                if (!changed(med)) SupportingText(uiText(R.string.ui_bulk_medication_editor_001))
+                if (!changed(med)) SupportingText(uiText(R.string.availability_bulk_unchanged_label))
                 }
             }
             }
         }
-        if (!contextValid && selection.medications.isNotEmpty()) Text(uiText(R.string.ui_bulk_medication_editor_008),
+        if (!contextValid && selection.medications.isNotEmpty()) Text(uiText(R.string.availability_bulk_stale_selection_error),
             color = MaterialTheme.colorScheme.error)
-        if (preview && !fieldsValid) Text(uiText(R.string.ui_bulk_medication_editor_009),
+        if (preview && !fieldsValid) Text(uiText(R.string.availability_bulk_invalid_choices_error),
             color = MaterialTheme.colorScheme.error)
         InlineOperationStatus(busy, message)
         ActionGroup {
@@ -91,10 +91,10 @@ private data class BulkFieldOption(val value: String?, val label: String)
                 if (!savingNow() && fieldsValid && contextValid) {
                     if (preview) save(changes) else preview = true
                 }
-            }) { Text(if (preview) uiText(R.string.ui_pharmacy_admin_screen_109) else uiText(R.string.ui_bulk_medication_editor_010)) }
+            }) { Text(if (preview) uiText(R.string.catalog_save_local_action) else uiText(R.string.availability_bulk_preview_action)) }
             if (preview) AppButton(variant = AppButtonVariant.QUIET, enabled = !busy,
-                onClick = { if (!savingNow()) preview = false }) { Text(uiText(R.string.ui_bulk_medication_editor_011)) }
-            AppButton(variant = AppButtonVariant.QUIET, enabled = !busy, onClick = { if (!savingNow()) dismiss() }) { Text(uiText(R.string.ui_bulk_medication_editor_012)) }
+                onClick = { if (!savingNow()) preview = false }) { Text(uiText(R.string.availability_bulk_change_choices_action)) }
+            AppButton(variant = AppButtonVariant.QUIET, enabled = !busy, onClick = { if (!savingNow()) dismiss() }) { Text(uiText(R.string.availability_bulk_cancel_action)) }
         }
     }
 }

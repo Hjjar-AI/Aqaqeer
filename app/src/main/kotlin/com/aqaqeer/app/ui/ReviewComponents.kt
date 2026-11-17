@@ -26,7 +26,7 @@ import com.aqaqeer.app.uiText
     val uiText = rememberUiText()
     Column(modifier.fillMaxWidth().animateContentSize()) {
         AppButton(variant = AppButtonVariant.QUIET, onClick = toggle, modifier = Modifier.fillMaxWidth().heightIn(min = UiSpacing.touch)
-            .semantics { stateDescription = uiText(if (expanded) R.string.ui_home_drawer_010 else R.string.ui_home_drawer_011) }) {
+            .semantics { stateDescription = uiText(if (expanded) R.string.shared_expanded_state_label else R.string.shared_collapsed_state_label) }) {
             Text(title, Modifier.weight(1f))
             ExpansionChevron(expanded)
         }
@@ -142,7 +142,7 @@ internal data class Notice(val text: String, val severity: NoticeSeverity = Noti
         Column(Modifier.fillMaxWidth().animateContentSize()) {
             AppButton(variant = AppButtonVariant.QUIET, onClick = { expanded = !expanded },
                 modifier = Modifier.fillMaxWidth().heightIn(min = UiSpacing.touch).semantics {
-                    stateDescription = uiText(if (expanded) R.string.ui_home_drawer_010 else R.string.ui_home_drawer_011)
+                    stateDescription = uiText(if (expanded) R.string.shared_expanded_state_label else R.string.shared_collapsed_state_label)
                 }, contentPadding = PaddingValues(Space.none), shape = MaterialTheme.shapes.medium) {
                 Text(title, Modifier.weight(1f).semantics { heading() }, style = MaterialTheme.typography.titleMedium)
                 ExpansionChevron(expanded)
@@ -172,7 +172,7 @@ internal data class Notice(val text: String, val severity: NoticeSeverity = Noti
 @Composable internal fun CardLayoutPicker(selected: com.aqaqeer.app.data.CardLayout, change: (com.aqaqeer.app.data.CardLayout) -> Unit) {
     val uiText = rememberUiText()
     ContentSection {
-        Text(uiText(R.string.ui_aqaqeer_app_050), Modifier.semantics { heading() }, style = MaterialTheme.typography.titleSmall)
+        Text(uiText(R.string.settings_medication_cards_label), Modifier.semantics { heading() }, style = MaterialTheme.typography.titleSmall)
         AdaptivePickers(first = { LayoutChoice(com.aqaqeer.app.data.CardLayout.COMPACT, selected, change) },
             second = { LayoutChoice(com.aqaqeer.app.data.CardLayout.EXPANDED, selected, change) })
     }
@@ -181,7 +181,7 @@ internal data class Notice(val text: String, val severity: NoticeSeverity = Noti
     change: (com.aqaqeer.app.data.CardLayout) -> Unit) {
     val uiText = rememberUiText()
     AppChip(selected == layout, onClick = { change(layout) }, modifier = Modifier.fillMaxWidth(), shape = MaterialTheme.shapes.medium, label = {
-        Column { Text(uiText(if (layout == com.aqaqeer.app.data.CardLayout.COMPACT) R.string.ui_aqaqeer_app_051 else R.string.ui_aqaqeer_app_052))
+        Column { Text(uiText(if (layout == com.aqaqeer.app.data.CardLayout.COMPACT) R.string.settings_card_compact_label else R.string.settings_card_expanded_label))
             repeat(if (layout == com.aqaqeer.app.data.CardLayout.COMPACT) 2 else 4) {
                 HorizontalDivider(Modifier.width(Size.drawerOutside).padding(vertical = AppStroke.emphasis))
             }
@@ -193,9 +193,9 @@ internal data class Notice(val text: String, val severity: NoticeSeverity = Noti
     Surface(modifier = Modifier.fillMaxWidth(), shape = MaterialTheme.shapes.medium,
         border = BorderStroke(AppStroke.hairline, MaterialTheme.colorScheme.outlineVariant), color = MaterialTheme.colorScheme.surface) {
         Column(Modifier.padding(UiSpacing.section), verticalArrangement = Arrangement.spacedBy(UiSpacing.hair)) {
-            Text(uiText(R.string.ui_aqaqeer_app_053), style = MaterialTheme.typography.labelMedium)
-            Text(uiText(R.string.ui_aqaqeer_app_054), style = if (layout == com.aqaqeer.app.data.CardLayout.COMPACT) MaterialTheme.typography.titleSmall else MaterialTheme.typography.titleLarge)
-            if (layout == com.aqaqeer.app.data.CardLayout.EXPANDED) SupportingText(uiText(R.string.ui_aqaqeer_app_055))
+            Text(uiText(R.string.settings_card_preview_label), style = MaterialTheme.typography.labelMedium)
+            Text(uiText(R.string.settings_card_preview_scientific_name), style = if (layout == com.aqaqeer.app.data.CardLayout.COMPACT) MaterialTheme.typography.titleSmall else MaterialTheme.typography.titleLarge)
+            if (layout == com.aqaqeer.app.data.CardLayout.EXPANDED) SupportingText(uiText(R.string.settings_card_preview_details))
             StatusBadge(com.aqaqeer.app.data.AvailabilityStatus.AVAILABLE)
         }
     }

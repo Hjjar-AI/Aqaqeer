@@ -45,15 +45,15 @@ class PresentationUiTest {
         val selection = AvailabilitySelection(F.pharmacyId,c.sections.single(),listOf(a,b),mapOf(a.id to AvailabilityStatus.AVAILABLE,b.id to AvailabilityStatus.UNKNOWN),true)
         var busy by mutableStateOf(false); var saves = 0
         compose.setContent { AqaqeerTheme(ThemeChoice.LIGHT) { BulkMedicationEditor(selection,c,busy,null,{}, { saves++ }, { true }) } }
-        compose.onNodeWithText(uiText(R.string.ui_bulk_medication_editor_010)).assertIsNotEnabled()
+        compose.onNodeWithText(uiText(R.string.availability_bulk_preview_action)).assertIsNotEnabled()
         compose.onNodeWithText(MedicationPresentation.statusLabel(AvailabilityStatus.OUT)).performClick()
-        compose.onNodeWithText(uiText(R.string.ui_bulk_medication_editor_010)).performClick()
+        compose.onNodeWithText(uiText(R.string.availability_bulk_preview_action)).performClick()
         assertEquals(0, saves)
         compose.onNodeWithText("Second medication", substring = true).assertExists()
         compose.runOnIdle { busy = true }
-        compose.onNodeWithText(uiText(R.string.ui_pharmacy_admin_screen_109)).assertIsNotEnabled(); compose.onNodeWithText("إلغاء").assertIsNotEnabled()
+        compose.onNodeWithText(uiText(R.string.catalog_save_local_action)).assertIsNotEnabled(); compose.onNodeWithText("إلغاء").assertIsNotEnabled()
         compose.runOnIdle { busy = false }
-        compose.onNodeWithText(uiText(R.string.ui_pharmacy_admin_screen_109)).performClick(); assertEquals(1, saves)
+        compose.onNodeWithText(uiText(R.string.catalog_save_local_action)).performClick(); assertEquals(1, saves)
     }
     @Test fun historyRedactionAndDeletedNamesAreVisibleWithoutSensitiveValues() {
         val entry = HistoryDisplayEntry("id","pharmacy",F.pharmacyId,"محفوظ","adminPinVerifier",HistoryValue(null),HistoryValue(null),F.time,null,null,true)

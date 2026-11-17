@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="catalog_active_label" formatted="false">"نشط"</string>
+    <string name="catalog_active_section_label" formatted="false">"قسم نشط"</string>
+    <string name="catalog_add_taxonomy_action" formatted="false">"إضافة جديد"</string>
+    <string name="catalog_additional_information_heading" formatted="false">"معلومات إضافية"</string>
+    <string name="catalog_admin_authorization_help" formatted="false">"تفويض الإدارة يُحفظ على هذا الجهاز؛ لا يلزم الرمز عند كل تشغيل."</string>
+    <string name="catalog_admin_pin_confirmation_label" formatted="false">"تأكيد رمز الإدارة"</string>
+    <string name="catalog_admin_pin_label" formatted="false">"رمز الإدارة"</string>
+    <string name="catalog_admin_pin_label_with_guidance" formatted="false">"رمز الإدارة — أربعة أرقام على الأقل"</string>
+    <string name="catalog_admin_pin_mismatch_error" formatted="false">"رمزا الإدارة غير متطابقين"</string>
+    <string name="catalog_arabic_name_label" formatted="false">"الاسم العربي"</string>
+    <string name="catalog_authorize_admin_title" formatted="false">"تفويض الإدارة"</string>
+    <string name="catalog_brand_label" formatted="false">"العلامة التجارية"</string>
+    <string name="catalog_catalog_heading" formatted="false">"الكتالوج"</string>
+    <string name="catalog_category_label" formatted="false">"التصنيف"</string>
+    <string name="catalog_closed_section_suffix" formatted="false">" · قسم مغلق"</string>
+    <string name="catalog_confirm_delete_action" formatted="false">"حذف"</string>
+    <string name="catalog_confirm_medication_delete_label" formatted="false">"تأكيد حذف الدواء"</string>
+    <string name="catalog_create_pharmacy_action" formatted="false">"إنشاء الصيدلية"</string>
+    <string name="catalog_create_pharmacy_welcome_help" formatted="false">"ابدأ محلياً وأضف الأدوية، ثم أعدّ المشاركة عندما تكون جاهزاً."</string>
+    <string name="catalog_create_pharmacy_welcome_title" formatted="false">"أنا المسؤول — إنشاء صيدلية"</string>
+    <string name="catalog_creation_admin_pin_label" formatted="false">رمز الإدارة</string>
+    <string name="catalog_creation_admin_pin_rule" formatted="false">أربعة أرقام على الأقل</string>
+    <string name="catalog_creation_progress" formatted="false">"جارٍ إنشاء الصيدلية…"</string>
+    <string name="catalog_delete_medication_action" formatted="false">"حذف الدواء"</string>
+    <string name="catalog_delete_section_name_confirmation_label" formatted="false">"اكتب اسم القسم لتأكيد الحذف"</string>
+    <string name="catalog_delete_taxonomy_action" formatted="false">"حذف العنصر"</string>
+    <string name="catalog_deleted_category_label" formatted="false">"تصنيف محذوف"</string>
+    <string name="catalog_deleted_form_label" formatted="false">"شكل محذوف"</string>
+    <string name="catalog_detail_choose_medication_message" formatted="false">"اختر دواء لعرض تفاصيله"</string>
+    <string name="catalog_device_already_configured_message" formatted="false">"هذا الجهاز مُعدّ مسبقاً"</string>
+    <string name="catalog_device_connection_heading" formatted="false">"بيانات الجهاز والاتصال"</string>
+    <string name="catalog_dosage_form_label" formatted="false">"الشكل"</string>
+    <string name="catalog_dosage_form_picker_label" formatted="false">"الشكل الدوائي"</string>
+    <string name="catalog_duplicate_medication_warning" formatted="false">"تنبيه: يوجد دواء بالاسم نفسه؛ لن يُدمج تلقائياً."</string>
+    <string name="catalog_edit_authorization_required_message" formatted="false">"يلزم تفويض إدارة وحالة تسمح بالتعديل"</string>
+    <string name="catalog_edit_medication_availability_description" formatted="false">"تعديل الدواء والتوافر"</string>
+    <string name="catalog_edit_taxonomy_title" formatted="false">"تحرير العنصر"</string>
+    <string name="catalog_edit_unavailable_title" formatted="false">"التعديل غير متاح"</string>
+    <string name="catalog_editor_name_label" formatted="false">"اسم المحرر"</string>
+    <string name="catalog_english_name_label" formatted="false">"الاسم الإنجليزي"</string>
+    <string name="catalog_english_name_label_with_guidance" formatted="false">"الاسم الإنجليزي — اختياري"</string>
+    <string name="catalog_entity_availability_label" formatted="false">"التوفر"</string>
+    <string name="catalog_entity_category_label" formatted="false">"تصنيف"</string>
+    <string name="catalog_entity_dosage_form_label" formatted="false">"شكل دوائي"</string>
+    <string name="catalog_entity_medication_label" formatted="false">"دواء"</string>
+    <string name="catalog_entity_pharmacy_label" formatted="false">"الصيدلية"</string>
+    <string name="catalog_entity_section_label" formatted="false">"قسم"</string>
+    <string name="catalog_expired_badge_label" formatted="false">"منتهي الصلاحية"</string>
+    <string name="catalog_expiring_soon_badge_label" formatted="false">"صلاحية قصيرة"</string>
+    <string name="catalog_expiry_date_label" formatted="false">"تاريخ الانتهاء"</string>
+    <string name="catalog_expiry_warning_days_label" formatted="false">"أيام تنبيه الانتهاء"</string>
+    <string name="catalog_gregorian_expiry_date_label" formatted="false">"تاريخ الانتهاء (ميلادي)"</string>
+    <string name="catalog_hide_optional_information_action" formatted="false">"إخفاء المعلومات الاختيارية"</string>
+    <string name="catalog_inactive_suffix" formatted="false">" — غير نشط"</string>
+    <string name="catalog_initial_section_default_name" formatted="false">"القسم الرئيسي"</string>
+    <string name="catalog_initial_section_name_label" formatted="false">"اسم القسم الأول"</string>
+    <string name="catalog_leave_acknowledgement_label" formatted="false">"أفهم وأؤكد المغادرة"</string>
+    <string name="catalog_leave_confirmation_title" formatted="false">"تأكيد المغادرة"</string>
+    <string name="catalog_leave_consequences_help" formatted="false">"ستُحذف البيانات المحلية والتعديلات غير المنشورة والاتصال من هذا الجهاز. لن تُحذف بيانات تيليغرام أو الملفات التي صدّرتها. قد توجد تعديلات غير منشورة على أجهزة أخرى."</string>
+    <string name="catalog_leave_delete_local_action" formatted="false">"مغادرة وحذف البيانات المحلية"</string>
+    <string name="catalog_leave_pharmacy_name_label" formatted="false">"اكتب اسم الصيدلية للتأكيد"</string>
+    <string name="catalog_leave_pharmacy_name_mismatch_error" formatted="false">"اكتب اسم الصيدلية كما يظهر تماماً"</string>
+    <string name="catalog_leave_uncertain_publication_warning" formatted="false">"نتيجة النشر غير مؤكدة؛ المغادرة تحذف سجل المحاولة المحلي ولا تلغي ما قد نُشر بالفعل."</string>
+    <string name="catalog_medication_added_message" formatted="false">"أُضيف الدواء محلياً"</string>
+    <string name="catalog_medication_identity_heading" formatted="false">"الاسم العلمي وبيانات الدواء"</string>
+    <string name="catalog_medication_missing_message" formatted="false">"لم يعد هذا الدواء موجوداً."</string>
+    <string name="catalog_medication_optional_information_heading" formatted="false">"الاسم التجاري ومعلومات إضافية"</string>
+    <string name="catalog_medication_options_description" formatted="false">"خيارات الدواء"</string>
+    <string name="catalog_medication_saved_message" formatted="false">"حُفظ الدواء محلياً"</string>
+    <string name="catalog_medication_strength_label" formatted="false">العيار</string>
+    <string name="catalog_medication_strength_rule" formatted="false">مطلوب</string>
+    <string name="catalog_medication_trade_name_arabic_label" formatted="false">"الاسم التجاري بالعربية"</string>
+    <string name="catalog_medication_trade_name_english_label" formatted="false">"الاسم التجاري بالإنجليزية"</string>
+    <string name="catalog_note_label" formatted="false">"ملاحظة"</string>
+    <string name="catalog_notes_heading" formatted="false">"ملاحظات"</string>
+    <string name="catalog_offline_creation_help" formatted="false">"يمكنك البدء دون اتصال. لن تُشارك البيانات حتى إعداد تيليغرام وتأكيد النشر."</string>
+    <string name="catalog_order_label" formatted="false">"الترتيب"</string>
+    <string name="catalog_pharmacy_name_label" formatted="false">"اسم الصيدلية"</string>
+    <string name="catalog_pharmacy_setup_title" formatted="false">"بيانات الصيدلية والإدارة"</string>
+    <string name="catalog_protected_suffix" formatted="false">" — محمي"</string>
+    <string name="catalog_save_local_action" formatted="false">"حفظ محلياً"</string>
+    <string name="catalog_save_taxonomy_action" formatted="false">"حفظ"</string>
+    <string name="catalog_scientific_name_arabic_label" formatted="false">"الاسم العلمي بالعربية"</string>
+    <string name="catalog_scientific_name_english_label" formatted="false">"الاسم العلمي بالإنجليزية"</string>
+    <string name="catalog_scientific_name_required_error" formatted="false">"أدخل اسماً علمياً بالعربية أو الإنجليزية على الأقل"</string>
+    <string name="catalog_scientific_name_required_help" formatted="false">"أحد الاسمين العلميين مطلوب"</string>
+    <string name="catalog_strength_label" formatted="false">"العيار"</string>
+    <string name="catalog_strength_label_with_guidance" formatted="false">"العيار — مطلوب"</string>
+    <string name="catalog_taxonomy_delete_confirmation_label" formatted="false">"تأكيد الحذف وإعادة الإسناد"</string>
+    <string name="catalog_taxonomy_delete_consequences_help" formatted="false">"حذف التصنيف أو الشكل يعيد الأدوية إلى غير مصنف / أخرى. حذف القسم يزيل حالات توفره؛ لا يمكن حذف القسم الأخير."</string>
+    <string name="catalog_taxonomy_english_name_label" formatted="false">الاسم الإنجليزي</string>
+    <string name="catalog_taxonomy_english_name_rule" formatted="false">اختياري</string>
+    <string name="catalog_taxonomy_items_heading" formatted="false">"العناصر"</string>
+    <string name="catalog_taxonomy_type_label" formatted="false">"النوع"</string>
+    <string name="catalog_trade_name_description_format">"الاسم التجاري: %1$s"</string>
+    <string name="catalog_trade_name_heading" formatted="false">"الاسم التجاري"</string>
+    <string name="catalog_trade_name_label_with_guidance" formatted="false">"الاسم التجاري — اختياري"</string>
+    <string name="catalog_uncategorized_label" formatted="false">"غير مصنف"</string>
+    <string name="catalog_unknown_dosage_form_label" formatted="false">"شكل غير معروف"</string>
+    <string name="delete_invalid_type">نوع غير صالح</string>
+    <string name="delete_missing_category">لم يعد التصنيف موجوداً</string>
+    <string name="delete_missing_form">لم يعد الشكل موجوداً</string>
+    <string name="delete_missing_medication">لم يعد الدواء موجوداً</string>
+    <string name="delete_missing_section">لم يعد القسم موجوداً</string>
+    <string name="logic_duplicate_confirm">يوجد دواء بالاسم والتركيز والشكل نفسه؛ أؤكد حفظ هذا السجل مستقلاً</string>
+    <string name="logic_duplicate_warning">يوجد دواء بالاسم والتركيز والشكل نفسه؛ أكد إنشاء سجل مستقل أو تعديل هذا السجل</string>
+    <string name="logic_past_expiry">تاريخ الصلاحية في الماضي؛ تحقق منه قبل الحفظ</string>
+</resources>

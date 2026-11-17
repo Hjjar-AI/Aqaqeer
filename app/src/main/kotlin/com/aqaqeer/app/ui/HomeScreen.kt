@@ -346,12 +346,12 @@ import java.time.ZoneId
                         toggleGroup = { group -> collapsedGroups = if (group in collapsedGroups) collapsedGroups - group else collapsedGroups + group },
                         leadingContent = {
                         if (canEdit && selected != null && bulkMode && contextValid) item(span = { GridItemSpan(maxLineSpan) }) {
-                            SupportingText(uiText(R.string.ui_home_screen_009))
+                            SupportingText(uiText(R.string.home_bulk_selection_retention_help))
                         }
                         if (editor == null && (availabilityBusy || availabilityMessage != null)) item(span = { GridItemSpan(maxLineSpan) }) {
                             InlineOperationStatus(availabilityBusy, availabilityMessage)
                         }
-                        if (selected == null) item(span = { GridItemSpan(maxLineSpan) }) { InformationCard(uiText(R.string.ui_home_screen_010), uiText(R.string.ui_home_screen_011)) }
+                        if (selected == null) item(span = { GridItemSpan(maxLineSpan) }) { InformationCard(uiText(R.string.home_no_active_sections_title), uiText(R.string.home_no_active_sections_help)) }
                         if (displayed != null && searching && selected != null)
                             item(key = "current_search_section_${selected.id}", span = { GridItemSpan(maxLineSpan) }) {
                                 ContentSection {
@@ -361,15 +361,15 @@ import java.time.ZoneId
                                 }
                             }
                         if (displayed != null && visible.isEmpty() && otherSectionResults.isEmpty()) item(span = { GridItemSpan(maxLineSpan) }) {
-                            GroupedCard(title = if (catalog.medications.isEmpty()) uiText(R.string.ui_home_screen_012) else uiText(R.string.ui_choice_components_003)) {
+                            GroupedCard(title = if (catalog.medications.isEmpty()) uiText(R.string.home_empty_catalog_title) else uiText(R.string.shared_no_matches_message)) {
                                 EmptyCapsule(Modifier.size(if (compactHeight) Size.illustrationSmall else Size.illustrationLarge).align(Alignment.CenterHorizontally))
                                 if (catalog.medications.isEmpty()) {
-                                    SupportingText(uiText(R.string.ui_home_screen_013))
-                                    if (canEdit && openAddMedication != null) AppButton(onClick = openAddMedication) { Text(uiText(R.string.ui_screen_titles_009)) }
+                                    SupportingText(uiText(R.string.home_empty_catalog_help))
+                                    if (canEdit && openAddMedication != null) AppButton(onClick = openAddMedication) { Text(uiText(R.string.navigation_add_medication_title)) }
                                 } else {
-                                    SupportingText(uiText(R.string.ui_home_screen_014))
-                                    if (canEdit) AppButton(variant = AppButtonVariant.QUIET, onClick = { prefillMedication(searchText.text) }) { Text(uiText(R.string.ui_home_screen_015)) }
-                                    AppButton(variant = AppButtonVariant.QUIET, onClick = { changeSearch(TextFieldValue("")); clearFilters(); focus.clearFocus() }) { Text(uiText(R.string.ui_home_screen_016)) }
+                                    SupportingText(uiText(R.string.home_no_matches_help))
+                                    if (canEdit) AppButton(variant = AppButtonVariant.QUIET, onClick = { prefillMedication(searchText.text) }) { Text(uiText(R.string.home_add_search_name_action)) }
+                                    AppButton(variant = AppButtonVariant.QUIET, onClick = { changeSearch(TextFieldValue("")); clearFilters(); focus.clearFocus() }) { Text(uiText(R.string.home_clear_search_filters_action)) }
                                 }
                             }
                         }
@@ -429,16 +429,16 @@ import java.time.ZoneId
     val timezone = ready.catalog.pharmacy?.timezone ?: "Asia/Damascus"
     val now = rememberPresentationTime(timezone)
     val last = ready.lastSuccessfulRefreshAt
-    AppDialog(onDismissRequest = dismiss, title = { Text(uiText(R.string.ui_aqaqeer_app_010)) },
+    AppDialog(onDismissRequest = dismiss, title = { Text(uiText(R.string.home_data_times_title)) },
         text = {
             DialogBody {
-                LabeledValue(uiText(R.string.ui_home_screen_017), last?.let { relativeTime(it, now, text = uiText) } ?: uiText(R.string.ui_home_screen_018))
-                LabeledValue(uiText(R.string.ui_home_screen_019), last?.let { bidi(MedicationPresentation.timestamp(it, timezone)) } ?: uiText(R.string.ui_home_screen_020))
-                LabeledValue(uiText(R.string.ui_home_screen_021), ready.publishedAt?.let { bidi(MedicationPresentation.timestamp(it, timezone)) } ?: uiText(R.string.ui_aqaqeer_app_007))
-                LabeledValue(uiText(R.string.ui_home_screen_022), bidi(timezone))
+                LabeledValue(uiText(R.string.home_last_refresh_label), last?.let { relativeTime(it, now, text = uiText) } ?: uiText(R.string.home_never_refreshed_label))
+                LabeledValue(uiText(R.string.home_last_successful_refresh_label), last?.let { bidi(MedicationPresentation.timestamp(it, timezone)) } ?: uiText(R.string.home_not_yet_label))
+                LabeledValue(uiText(R.string.home_publication_time_label), ready.publishedAt?.let { bidi(MedicationPresentation.timestamp(it, timezone)) } ?: uiText(R.string.publication_no_verified_publication_message))
+                LabeledValue(uiText(R.string.home_pharmacy_timezone_label), bidi(timezone))
             }
         }, dismissButton = if (refresh != null) ({ AppButton(variant = AppButtonVariant.QUIET, enabled = !busy, onClick = refresh) { Text(uiText(R.string.review_refresh_now)) } }) else null,
-        confirmButton = { AppButton(variant = AppButtonVariant.QUIET, onClick = dismiss) { Text(uiText(R.string.ui_choice_components_004)) } })
+        confirmButton = { AppButton(variant = AppButtonVariant.QUIET, onClick = dismiss) { Text(uiText(R.string.shared_close_action)) } })
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -449,10 +449,10 @@ import java.time.ZoneId
     ModalBottomSheet(onDismissRequest = dismiss, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
         Column(Modifier.fillMaxWidth().heightIn(max = viewportHeight()).padding(UiSpacing.page),
             verticalArrangement = Arrangement.spacedBy(UiSpacing.related)) {
-            SectionHeading(uiText(R.string.ui_home_screen_023))
+            SectionHeading(uiText(R.string.home_filter_sheet_title))
             Column(Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(UiSpacing.group)) {
-                if (showStatuses) ContentSection(title = uiText(R.string.ui_home_screen_024)) {
+                if (showStatuses) ContentSection(title = uiText(R.string.home_availability_filter_heading)) {
                     WrappingContent(Modifier.testTag("status_filters")) {
                         if (admin) AppChip(
                             selected = filters.statuses == setOf(AvailabilityStatus.AVAILABLE, AvailabilityStatus.LOW),
@@ -462,7 +462,7 @@ import java.time.ZoneId
                             modifier = Modifier.testTag("filter_${status.name}")) }
                     }
                 }
-                ContentSection(title = uiText(R.string.ui_pharmacy_admin_screen_073)) {
+                ContentSection(title = uiText(R.string.catalog_category_label)) {
                     WrappingContent(Modifier.testTag("category_filters")) {
                         catalog.categories.forEach { category -> AppChip(selected = category.id in filters.categoryIds,
                             onClick = { toggleCategory(category.id) }, label = { Text(category.nameAr) },
@@ -474,7 +474,7 @@ import java.time.ZoneId
                 }
                 FilterSummary(filters, clear)
             }
-            AppButton(onClick = dismiss) { Text(uiText(R.string.ui_home_screen_029)) }
+            AppButton(onClick = dismiss) { Text(uiText(R.string.home_show_results_action)) }
         }
     }
 }
@@ -496,7 +496,7 @@ import java.time.ZoneId
     val uiText = rememberUiText()
     Column {
         AppButton(variant = AppButtonVariant.SECONDARY, onClick = refresh, enabled = !state.busy, modifier = Modifier.testTag("refresh_catalog")) {
-            Text(if (state.busy) uiText(R.string.ui_home_screen_030) else uiText(R.string.ui_home_screen_031))
+            Text(if (state.busy) uiText(R.string.home_refresh_progress) else uiText(R.string.home_refresh_action))
         }
         state.error?.let { Text(it, color = MaterialTheme.colorScheme.error, modifier = Modifier.testTag("refresh_error")) }
     }
@@ -506,9 +506,9 @@ import java.time.ZoneId
     val uiText = rememberUiText()
     if (filters.statuses.isEmpty() && filters.categoryIds.isEmpty() && !filters.expiringSoon && !filters.unpublishedOnly && !filters.fetchedOnly) return
     ActionGroup(Modifier.testTag("filter_summary")) {
-        Text(uiText(R.string.ui_home_screen_032, MedicationPresentation.displayDigits(filters.statuses.size.toString()), MedicationPresentation.displayDigits(filters.categoryIds.size.toString())))
+        Text(uiText(R.string.home_filter_summary_format, MedicationPresentation.displayDigits(filters.statuses.size.toString()), MedicationPresentation.displayDigits(filters.categoryIds.size.toString())))
         if (filters.statuses.isNotEmpty() || filters.categoryIds.isNotEmpty() || filters.expiringSoon || filters.unpublishedOnly || filters.fetchedOnly)
-            AppButton(variant = AppButtonVariant.QUIET, onClick = clear, modifier = Modifier.testTag("clear_filters")) { Text(uiText(R.string.ui_history_screen_017)) }
+            AppButton(variant = AppButtonVariant.QUIET, onClick = clear, modifier = Modifier.testTag("clear_filters")) { Text(uiText(R.string.history_clear_filters_action)) }
     }
 }
 
@@ -520,26 +520,26 @@ import java.time.ZoneId
     val clock = rememberPresentationTime(ready.catalog.pharmacy?.timezone ?: "Asia/Damascus")
     val noticeScope = LocalNoticeScope.current
     val allNotices = buildList {
-        if (ready.requiresUpdate) add(HomeNotice("update", uiText(R.string.ui_home_screen_036)))
-        if (ready.maintenancePaused) add(HomeNotice("maintenance", uiText(R.string.ui_home_screen_037)))
-        if (ready.restorePaused) add(HomeNotice("restore", uiText(R.string.ui_home_screen_038)))
+        if (ready.requiresUpdate) add(HomeNotice("update", uiText(R.string.home_update_required_notice)))
+        if (ready.maintenancePaused) add(HomeNotice("maintenance", uiText(R.string.home_maintenance_paused_notice)))
+        if (ready.restorePaused) add(HomeNotice("restore", uiText(R.string.home_restore_paused_notice)))
         if (ready.admin && !ready.isDemo && (ready.pendingCount > 0 || ready.uncertain || publicationBusy) &&
             !ready.requiresUpdate && !ready.maintenancePaused && !ready.restorePaused && publicationBlockReason != null)
             add(HomeNotice("publication-block", publicationBlockReason))
-        if (refresh != null && state.refresh.error != null) add(HomeNotice("refresh-error", uiText(R.string.ui_home_screen_039), listOf(state.refresh.error.orEmpty())))
+        if (refresh != null && state.refresh.error != null) add(HomeNotice("refresh-error", uiText(R.string.home_refresh_failed_notice), listOf(state.refresh.error.orEmpty())))
         if (ready.admin && !ready.isDemo) {
-            if (publicationBusy) add(HomeNotice("publication-progress", uiText(R.string.ui_home_screen_040)))
-            if (ready.uncertain) add(HomeNotice("uncertain", uiText(R.string.ui_home_screen_041)))
-            if (ready.backupReminderAt?.let { clock.toEpochMilli() >= it } == true) add(HomeNotice("backup", uiText(R.string.ui_admin_components_021), listOf(ready.backupReminderAt.toString())))
-            if (ready.lifecycle == "LOCAL_DRAFT") add(HomeNotice("local-draft", uiText(R.string.ui_pharmacy_admin_screen_038)))
+            if (publicationBusy) add(HomeNotice("publication-progress", uiText(R.string.home_publication_progress_notice)))
+            if (ready.uncertain) add(HomeNotice("uncertain", uiText(R.string.home_publication_review_notice)))
+            if (ready.backupReminderAt?.let { clock.toEpochMilli() >= it } == true) add(HomeNotice("backup", uiText(R.string.backup_reminder_title), listOf(ready.backupReminderAt.toString())))
+            if (ready.lifecycle == "LOCAL_DRAFT") add(HomeNotice("local-draft", uiText(R.string.publication_local_draft_label)))
         }
-        if (!state.online) add(HomeNotice("offline", uiText(R.string.ui_home_screen_033)))
+        if (!state.online) add(HomeNotice("offline", uiText(R.string.home_offline_notice)))
         if (!ready.isDemo && ready.lifecycle == "SHARED") {
             val last = ready.lastSuccessfulRefreshAt
-            if (last == null) add(HomeNotice("never-refreshed", uiText(R.string.ui_home_screen_034)))
-            else if (Duration.between(last, clock) >= Duration.ofHours(24)) add(HomeNotice("stale", uiText(R.string.ui_home_screen_035), listOf(last.toString())))
+            if (last == null) add(HomeNotice("never-refreshed", uiText(R.string.home_never_refreshed_notice)))
+            else if (Duration.between(last, clock) >= Duration.ofHours(24)) add(HomeNotice("stale", uiText(R.string.home_stale_refresh_notice), listOf(last.toString())))
         }
-        if (ready.isDemo) add(HomeNotice("demo", uiText(R.string.ui_aqaqeer_app_004)))
+        if (ready.isDemo) add(HomeNotice("demo", uiText(R.string.home_demo_data_label)))
     }
     val notices = allNotices.filterNot { UiSession.isDismissed(listOf(noticeScope, "home", it.kind), it.content) }
     SideEffect { UiSession.reconcile(listOf(noticeScope, "home"), allNotices.associate { listOf(noticeScope, "home", it.kind) to it.content }) }
@@ -555,15 +555,15 @@ import java.time.ZoneId
     val noticeDetails: @Composable ColumnScope.() -> Unit = {
         if ((visible("stale") || visible("never-refreshed")) && compact && refresh != null && !ready.isDemo && ready.lifecycle == "SHARED" &&
             (ready.lastSuccessfulRefreshAt == null || Duration.between(ready.lastSuccessfulRefreshAt, clock) >= Duration.ofHours(24)))
-            NoticeStrip(Notice(uiText(R.string.ui_home_screen_035), NoticeSeverity.WARNING,
+            NoticeStrip(Notice(uiText(R.string.home_stale_refresh_notice), NoticeSeverity.WARNING,
                 uiText(R.string.review_refresh_now), refresh), enabled = !state.refresh.busy)
-        if (visible("update")) InformationCard(uiText(R.string.ui_home_screen_045), uiText(R.string.ui_home_screen_046))
+        if (visible("update")) InformationCard(uiText(R.string.home_update_required_title), uiText(R.string.home_update_required_help))
         if (visible("refresh-error") && refresh != null) RefreshControls(state.refresh, refresh)
-        if (visible("offline")) SupportingText(uiText(R.string.ui_home_screen_033))
+        if (visible("offline")) SupportingText(uiText(R.string.home_offline_notice))
         if (!ready.isDemo && ready.lifecycle == "SHARED") {
-            if (visible("never-refreshed")) SupportingText(uiText(R.string.ui_home_screen_034))
+            if (visible("never-refreshed")) SupportingText(uiText(R.string.home_never_refreshed_notice))
             else if (visible("stale"))
-                SupportingText(uiText(R.string.ui_home_screen_035))
+                SupportingText(uiText(R.string.home_stale_refresh_notice))
         }
 
         pageHeader?.invoke(notices.map { it.kind }.toSet())
@@ -573,7 +573,7 @@ import java.time.ZoneId
         Column(Modifier.heightIn(max = viewportHeight(0.7f)).verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(UiSpacing.related), content = noticeDetails)
     }, confirmButton = {
-        AppButton(variant = AppButtonVariant.QUIET, onClick = { expanded = false }) { Text(uiText(R.string.ui_choice_components_004)) }
+        AppButton(variant = AppButtonVariant.QUIET, onClick = { expanded = false }) { Text(uiText(R.string.shared_close_action)) }
     })
     Surface(color = if (visible("update") || visible("refresh-error")) MaterialTheme.colorScheme.errorContainer
         else if (visible("stale"))
@@ -583,7 +583,7 @@ import java.time.ZoneId
             Row(verticalAlignment = Alignment.CenterVertically) {
             AppButton(variant = AppButtonVariant.QUIET, onClick = { expanded = !expanded }, modifier = Modifier.weight(1f)) {
                 AppIcon(if (visible("update") || visible("refresh-error")) UiIcon.WARNING else UiIcon.INFO)
-                Text(notices.first().text + if (notices.size > 1) uiText(R.string.ui_home_screen_043, MedicationPresentation.displayDigits(notices.size.toString())) else "",
+                Text(notices.first().text + if (notices.size > 1) uiText(R.string.home_notice_count_suffix, MedicationPresentation.displayDigits(notices.size.toString())) else "",
                     modifier = Modifier.weight(1f), maxLines = if (compact) 1 else 2, overflow = TextOverflow.Ellipsis)
                 ExpansionChevron(expanded)
             }
@@ -595,7 +595,7 @@ import java.time.ZoneId
             }
             if ((visible("stale") || visible("never-refreshed")) && !compact && refresh != null && !ready.isDemo && ready.lifecycle == "SHARED" &&
                 (ready.lastSuccessfulRefreshAt == null || Duration.between(ready.lastSuccessfulRefreshAt, clock) >= Duration.ofHours(24)))
-                NoticeStrip(Notice(uiText(R.string.ui_home_screen_035), NoticeSeverity.WARNING,
+                NoticeStrip(Notice(uiText(R.string.home_stale_refresh_notice), NoticeSeverity.WARNING,
                     uiText(R.string.review_refresh_now), refresh), enabled = !state.refresh.busy)
             if (expanded && !compact) Column(Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(UiSpacing.related), content = noticeDetails)
@@ -607,10 +607,10 @@ internal fun relativeTime(at: Instant, now: Instant, text: UiText? = null): Stri
     val uiText = text ?: UiText(com.aqaqeer.app.AppStrings.resources)
     val seconds = Duration.between(at, now).seconds
     return when {
-        seconds < 0 -> uiText(R.string.ui_home_screen_047)
-        seconds < 60 -> uiText(R.string.ui_home_screen_048)
-        seconds < 3600 -> uiText(R.string.ui_home_screen_049, MedicationPresentation.displayDigits((seconds / 60).toString()))
-        seconds < 86400 -> uiText(R.string.ui_home_screen_050, MedicationPresentation.displayDigits((seconds / 3600).toString()))
-        else -> uiText(R.string.ui_home_screen_051, MedicationPresentation.displayDigits((seconds / 86400).toString()))
+        seconds < 0 -> uiText(R.string.shared_relative_time_future_message)
+        seconds < 60 -> uiText(R.string.shared_relative_time_now_label)
+        seconds < 3600 -> uiText(R.string.shared_relative_time_minutes_format, MedicationPresentation.displayDigits((seconds / 60).toString()))
+        seconds < 86400 -> uiText(R.string.shared_relative_time_hours_format, MedicationPresentation.displayDigits((seconds / 3600).toString()))
+        else -> uiText(R.string.shared_relative_time_days_format, MedicationPresentation.displayDigits((seconds / 86400).toString()))
     }
 }

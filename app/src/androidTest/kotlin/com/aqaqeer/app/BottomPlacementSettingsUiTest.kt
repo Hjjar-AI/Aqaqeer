@@ -22,7 +22,7 @@ class BottomPlacementSettingsUiTest {
             runBlocking { preferences.setSectionsAtBottom(true); preferences.setSearchAtBottom(true) }
             compose.waitUntil(15000) { compose.onAllNodesWithTag("home").fetchSemanticsNodes().isNotEmpty() }
             compose.onNodeWithTag("home_menu").performClick()
-            compose.onNodeWithText(uiText(R.string.ui_screen_titles_012)).performScrollTo().performClick()
+            compose.onNodeWithText(uiText(R.string.navigation_settings_title)).performScrollTo().performClick()
             compose.onNodeWithText(uiText(R.string.review_dates_placement)).performScrollTo().performClick()
             compose.onNodeWithTag("sections_at_bottom").performScrollTo().assertIsOn().performClick()
             compose.waitUntil(10000) { !runBlocking { preferences.home.first() }.sectionsAtBottom }

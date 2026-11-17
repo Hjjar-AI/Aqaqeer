@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="logic_busy">انتظر اكتمال العملية الحالية</string>
+    <string name="logic_weak_pattern">تجنب التواريخ والتسلسلات والأرقام المكررة</string>
+    <string name="notice_dismiss">إخفاء التنبيه</string>
+    <string name="review_all">الكل</string>
+    <string name="review_apply_file">تطبيق</string>
+    <string name="review_choose_file">اختيار الملف</string>
+    <string name="review_copied">تم النسخ</string>
+    <string name="review_copy">نسخ</string>
+    <string name="review_exact_time">التاريخ والوقت</string>
+    <string name="review_in_progress">جارٍ التنفيذ</string>
+    <string name="review_local">محلي</string>
+    <string name="review_preview">معاينة</string>
+    <string name="review_remote">منشور</string>
+    <string name="review_required_convention">الحقول غير المعلّمة مطلوبة؛ الحقول الاختيارية مميزة.</string>
+    <string name="review_select_file">اختيار الملف</string>
+    <string name="review_sensitive">تنبيه: إجراء حساس</string>
+    <string name="review_technical_details">التفاصيل التقنية</string>
+    <string name="review_validate_file">التحقق والمراجعة</string>
+    <string name="shared_admin_authorization_required_message" formatted="false">"يلزم تفويض إدارة"</string>
+    <string name="shared_arabic_list_separator" formatted="false">"، "</string>
+    <string name="shared_cancel_operation_action" formatted="false">"إلغاء العملية"</string>
+    <string name="shared_catalog_loading_message" formatted="false">"جار تحميل البيانات…"</string>
+    <string name="shared_choose_label" formatted="false">"اختر"</string>
+    <string name="shared_close_action" formatted="false">"إغلاق"</string>
+    <string name="shared_collapse_description">"إخفاء: %1$s"</string>
+    <string name="shared_collapsed_state_label" formatted="false">"مطوي"</string>
+    <string name="shared_compatible_version_required_message" formatted="false">"يلزم إصدار متوافق"</string>
+    <string name="shared_date_picker_confirm_action" formatted="false">"اختيار"</string>
+    <string name="shared_demo_notice_help" formatted="false">"بيانات توضيحية منفصلة عن أي صيدلية حقيقية"</string>
+    <string name="shared_demo_notice_title" formatted="false">"عرض تجريبي · بيانات مؤقتة"</string>
+    <string name="shared_expanded_state_label" formatted="false">"موسّع"</string>
+    <string name="shared_field_optional_label" formatted="false">"اختياري"</string>
+    <string name="shared_field_required_error" formatted="false">"أكمل هذا الحقل المطلوب"</string>
+    <string name="shared_field_required_label" formatted="false">"مطلوب"</string>
+    <string name="shared_gregorian_date_format_help" formatted="false">"تاريخ ميلادي: YYYY-MM-DD"</string>
+    <string name="shared_gregorian_date_invalid_error" formatted="false">"أدخل تاريخاً ميلادياً صحيحاً مثل 2026-11-12"</string>
+    <string name="shared_gregorian_picker_description">"اختيار %1$s من التقويم الميلادي"</string>
+    <string name="shared_gregorian_picker_title" formatted="false">"اختيار تاريخ ميلادي"</string>
+    <string name="shared_hijri_before_epoch_message" formatted="false">"الهجري الحسابي المدني: غير متاح قبل بداية التقويم"</string>
+    <string name="shared_hijri_date_format">"هجري حسابي مدني: %1$s هـ"</string>
+    <string name="shared_no_label" formatted="false">"لا"</string>
+    <string name="shared_no_matches_message" formatted="false">"لا توجد نتائج مطابقة"</string>
+    <string name="shared_nonnegative_days_error" formatted="false">"أدخل عدداً صحيحاً غير سالب للأيام"</string>
+    <string name="shared_operation_busy_message" formatted="false">"انتظر اكتمال العملية الحالية"</string>
+    <string name="shared_operation_failed_message" formatted="false">"تعذر إتمام العملية. تحقق من الحقول والتفويض والاتصال والمساحة المتاحة؛ احتُفظ بالبيانات."</string>
+    <string name="shared_pin_digits_error" formatted="false">"أدخل أربعة أرقام عربية أو إنجليزية على الأقل"</string>
+    <string name="shared_protected_storage_recovery_help" formatted="false">"إذا استمرت المشكلة، تواصل مع المسؤول بشأن نسخة احتياطية. استعادة النسخ تتطلب تخزيناً محمياً قابلاً للفتح؛ لا تحذف بيانات التطبيق لتجاوز المشكلة."</string>
+    <string name="shared_protected_storage_retained_title" formatted="false">"لم تُحذف بياناتك"</string>
+    <string name="shared_protected_storage_retry_help" formatted="false">"قد يكون مفتاح الجهاز غير متاح أو تعذرت قراءة قاعدة البيانات. يمكنك إعادة المحاولة بأمان؛ لن يستبدل التطبيق المفتاح أو يمسح البيانات."</string>
+    <string name="shared_protected_storage_unavailable_title" formatted="false">"تعذر فتح البيانات المحمية"</string>
+    <string name="shared_relative_time_days_format">"منذ %1$s يوم"</string>
+    <string name="shared_relative_time_future_message" formatted="false">"وقت مسجل لاحق للساعة الحالية"</string>
+    <string name="shared_relative_time_hours_format">"منذ %1$s ساعة"</string>
+    <string name="shared_relative_time_minutes_format">"منذ %1$s دقيقة"</string>
+    <string name="shared_relative_time_now_label" formatted="false">"الآن"</string>
+    <string name="shared_search_label" formatted="false">"بحث"</string>
+    <string name="shared_secret_hide_description">"إخفاء %1$s"</string>
+    <string name="shared_secret_show_description">"إظهار %1$s"</string>
+    <string name="shared_telegram_group_id_error" formatted="false">"أدخل معرّف المجموعة السالب الصحيح"</string>
+    <string name="shared_timezone_invalid_error" formatted="false">"أدخل منطقة زمنية صحيحة مثل Asia/Damascus"</string>
+    <string name="shared_timezone_label" formatted="false">"المنطقة الزمنية"</string>
+    <string name="shared_timezone_no_matches_help" formatted="false">"لا توجد منطقة مطابقة؛ جرّب اسم مدينة بالإنجليزية مثل Damascus."</string>
+    <string name="shared_timezone_picker_title" formatted="false">"اختيار المنطقة الزمنية"</string>
+    <string name="shared_timezone_search_placeholder" formatted="false">"ابحث عن منطقة زمنية"</string>
+    <string name="shared_undo_action" formatted="false">"تراجع"</string>
+    <string name="shared_update_editing_blocked_help" formatted="false">"يلزم إصدار متوافق للتعديل والنشر؛ السجل والنسخ الاحتياطي متاحان."</string>
+    <string name="shared_view_action" formatted="false">"عرض"</string>
+    <string name="shared_yes_label" formatted="false">"نعم"</string>
+</resources>

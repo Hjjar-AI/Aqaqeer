@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="maintenance_activate_reader_connection_action" formatted="false">"تأكيد هذا الاتصال وتفعيل القراءة"</string>
+    <string name="maintenance_activation_completed_help" formatted="false">"تم التفعيل بعد التحقق. تحتاج الأجهزة الأخرى ملف اتصال جديداً. النقل لا يمسح المصدر ولا يوقف أجهزته؛ نسّق إيقاف استخدامه وإلغاء اعتماده يدوياً لتجنب نسختين منفصلتين."</string>
+    <string name="maintenance_admin_authorization_required_help" formatted="false">"القراءة متاحة. مراجعة العمل المحتفظ به وصيانة الاعتماد تحتاج تفويض الإدارة الحالي وإصداراً متوافقاً."</string>
+    <string name="maintenance_admin_pin_propagation_help" formatted="false">"يبقى هذا الجهاز مفوضاً بعد التحقق من نشر تغييره نفسه. الأجهزة الأخرى تخرج من الإدارة عندما ترصد الرمز الجديد؛ الأجهزة غير المتصلة لا تُقفل فوراً."</string>
+    <string name="maintenance_authorize_admin_action" formatted="false">"تفعيل الإدارة بالرمز الحالي ثم العودة للصيانة"</string>
+    <string name="maintenance_backup_completed_message" formatted="false">"اكتمل حفظ نسخة داخل هذه الصيانة؛ سيُفحص المصدر مجدداً قبل المتابعة."</string>
+    <string name="maintenance_backup_limits_help" formatted="false">"يشمل الحد المشفر 64 ميبيبايت كامل السجل. الفشل أو الإلغاء أو تغير المصدر لا يجيز المتابعة؛ لا تُحفظ عبارة المرور."</string>
+    <string name="maintenance_bot_label" formatted="false">"البوت"</string>
+    <string name="maintenance_cancel_safely_action" formatted="false">"إلغاء الصيانة إذا أمكن الرجوع بأمان"</string>
+    <string name="maintenance_change_admin_pin_title" formatted="false">"تغيير رمز الإدارة"</string>
+    <string name="maintenance_choose_replacement_file_action" formatted="false">"اختيار .aqz للصيدلية نفسها"</string>
+    <string name="maintenance_complete_before_editing_message" formatted="false">"أكمل صيانة الاتصال أولاً"</string>
+    <string name="maintenance_confirm_completion_action" formatted="false">"فحص الوجهة وتأكيد اكتمال الصيانة"</string>
+    <string name="maintenance_confirm_destination_title" formatted="false">"تأكيد الوجهة"</string>
+    <string name="maintenance_confirm_new_admin_pin_label" formatted="false">"تأكيد رمز الإدارة الجديد"</string>
+    <string name="maintenance_connection_pin_action" formatted="false">"صيانة الاتصال ورمز الإدارة"</string>
+    <string name="maintenance_continue_action" formatted="false">"متابعة صيانة الاتصال"</string>
+    <string name="maintenance_continue_to_botfather_action" formatted="false">"فحص المصدر والانتقال لخطوة BotFather"</string>
+    <string name="maintenance_coordination">اتفقوا على مشرف واحد لإتمام الصيانة، وأوقفوا النشر من الهواتف الأخرى حتى تنتهي. أي تغيير في المصدر يستلزم مراجعته وحفظ نسخة احتياطية جديدة داخل العملية.</string>
+    <string name="maintenance_current_admin_pin_label" formatted="false">"رمز الإدارة الحالي"</string>
+    <string name="maintenance_current_step_label" formatted="false">"خطوة الصيانة الحالية"</string>
+    <string name="maintenance_destination_bot_token_label" formatted="false">"رمز بوت الوجهة"</string>
+    <string name="maintenance_destination_connection_title" formatted="false">"اتصال الوجهة"</string>
+    <string name="maintenance_destination_group_id_help" formatted="false">"الصق معرّف المجموعة السالب كاملاً؛ لا تدخل رابط المجموعة"</string>
+    <string name="maintenance_destination_group_id_label" formatted="false">"معرّف المجموعة الخاصة للوجهة"</string>
+    <string name="maintenance_destination_heading" formatted="false">"الوجهة"</string>
+    <string name="maintenance_editing_publication_blocked_message" formatted="false">"التعديل والنشر متوقفان حتى إكمال الصيانة"</string>
+    <string name="maintenance_editing_publication_paused_message" formatted="false">"النشر والتعديل متوقفان أثناء المراجعة"</string>
+    <string name="maintenance_empty_destination_help" formatted="false">"اختر مجموعة خاصة مخصصة دون أي رسالة مثبتة، وأضف البوت مشرفاً بصلاحيات المستندات والتثبيت."</string>
+    <string name="maintenance_export_verified_backup_action" formatted="false">"حفظ نسخة مشفرة والتحقق من إغلاقها"</string>
+    <string name="maintenance_file_picker_failed_message" formatted="false">"تعذر فتح منتقي الملفات"</string>
+    <string name="maintenance_finish_reader_replacement_action" formatted="false">"التحقق وإنهاء استبدال اتصال القراءة"</string>
+    <string name="maintenance_fresh_backup_required_help" formatted="false">"تغيير رمز البوت والمفتاح أو نقل المجموعة يحتاج نسخة احتياطية جديدة داخل العملية، بعد التحقق من المصدر. لا تكفي نسخة سابقة أو تذكير النسخ."</string>
+    <string name="maintenance_fresh_backup_title" formatted="false">"نسخة احتياطية جديدة لهذه الصيانة"</string>
+    <string name="maintenance_group_label" formatted="false">"المجموعة"</string>
+    <string name="maintenance_identity_unverified_label" formatted="false">"غير متحقق حالياً"</string>
+    <string name="maintenance_inspect_source_action" formatted="false">"فحص المصدر ومراجعة حالته"</string>
+    <string name="maintenance_new_admin_pin_label" formatted="false">رمز الإدارة الجديد</string>
+    <string name="maintenance_new_admin_pin_label_with_guidance" formatted="false">"رمز الإدارة الجديد — أربعة أرقام على الأقل"</string>
+    <string name="maintenance_new_admin_pin_rule" formatted="false">أربعة أرقام على الأقل</string>
+    <string name="maintenance_paused_browsing_help" formatted="false">"البيانات المحفوظة متاحة. أكمل التحقق والمراجعة قبل استئناف التعديل أو النشر."</string>
+    <string name="maintenance_phase_activating_message" formatted="false">"استكمال تبديل محلي قابل للاسترداد؛ احتُفظ بالبيانات"</string>
+    <string name="maintenance_phase_backup_saved_message" formatted="false">"اكتملت نسخة الصيانة؛ تحقق المصدر يسبق المتابعة"</string>
+    <string name="maintenance_phase_cancelling_message" formatted="false">"استكمال الإلغاء الآمن مع إبقاء الاتصال الأصلي"</string>
+    <string name="maintenance_phase_complete_message" formatted="false">"تأكيد اكتمال الصيانة ومراجعة بقية الأجهزة"</string>
+    <string name="maintenance_phase_destination_ready_message" formatted="false">"الوجهة مؤكدة والمفتاح الجديد محفوظ؛ لم يُتحقق من نشره بعد"</string>
+    <string name="maintenance_phase_publication_prepared_message" formatted="false">"نسخة النشر مجهزة؛ لا تؤكد هذه الحالة أنها نُشرت"</string>
+    <string name="maintenance_phase_replacement_pending_message" formatted="false">"اتصال بديل معلق؛ لم يُفعّل بعد"</string>
+    <string name="maintenance_phase_replacement_verified_message" formatted="false">"تم التحقق؛ التفعيل يحتاج تأكيداً جديداً"</string>
+    <string name="maintenance_phase_review_message" formatted="false">"الاتصال مفعل للقراءة؛ راجع العمل المحتفظ به دون نشر تلقائي"</string>
+    <string name="maintenance_phase_source_reviewed_message" formatted="false">"المصدر مراجع؛ احفظ نسخة احتياطية داخل العملية"</string>
+    <string name="maintenance_phase_token_revocation_message" formatted="false">"استبدال رمز البوت نفسه؛ قد يتعذر الرجوع للرمز القديم"</string>
+    <string name="maintenance_phase_upload_started_message" formatted="false">"بدأ إرسال الملف؛ ستُفحص نتيجة المحاولة قبل المتابعة"</string>
+    <string name="maintenance_phase_uploaded_message" formatted="false">"أُرسل ملف مرشح؛ لم يُتحقق من اعتماده كنسخة منشورة"</string>
+    <string name="maintenance_phase_write_started_message" formatted="false">"قد تكون الوجهة تغيرت؛ يلزم فحص النتيجة قبل أي إعادة"</string>
+    <string name="maintenance_possible_remote_changes_warning" formatted="false">"قد يكون التفعيل أو النشر اكتمل؛ يلزم فحص نتيجته قبل الإلغاء أو الرجوع."</string>
+    <string name="maintenance_prepare_keep_current_connection_action" formatted="false">"تجهيز الصيانة مع إبقاء الاتصال الحالي"</string>
+    <string name="maintenance_prepare_rotated_key_action" formatted="false">"التحقق من الرمز وتجهيز المفتاح الجديد"</string>
+    <string name="maintenance_protected_state_retained_help" formatted="false">"احتُفظ بالبيانات. لا تكرر الاستبدال أو تمسح بيانات التطبيق؛ احتفظ بنسخة وتواصل مع المسؤول للاسترداد."</string>
+    <string name="maintenance_protected_state_unreadable_title" formatted="false">"تعذر قراءة صيانة الاتصال المحمية"</string>
+    <string name="maintenance_publication_label" formatted="false">"النسخة"</string>
+    <string name="maintenance_publication_paused_title" formatted="false">"صيانة الاتصال — النشر متوقف"</string>
+    <string name="maintenance_publication_time_utc_label" formatted="false">"وقت النشر (UTC)"</string>
+    <string name="maintenance_real_pharmacy_required_message" formatted="false">"يلزم إعداد صيدلية حقيقية أولاً"</string>
+    <string name="maintenance_reconcile_pending_first_message" formatted="false">"صالح التعديلات ومحاولة النشر أولاً."</string>
+    <string name="maintenance_reconcile_without_publishing_action" formatted="false">"فحص ومصالحة العمل — دون نشر"</string>
+    <string name="maintenance_relocation_confirmation_label" formatted="false">"أؤكد نقل الصيدلية نفسها إلى هذه الوجهة"</string>
+    <string name="maintenance_replace_connection_description" formatted="false">"استبدال اتصال هذه الصيدلية وصيانة الاعتماد"</string>
+    <string name="maintenance_replace_local_connection_title" formatted="false">"استبدال اتصال هذا الجهاز"</string>
+    <string name="maintenance_replacement_activation_help" formatted="false">"راجع الصيدلية والمجموعة أعلاه. التفعيل يتحقق مجدداً ويحفظ نسخة القراءة؛ لا ينشر العمل المحتفظ به."</string>
+    <string name="maintenance_replacement_bot_token_label" formatted="false">"رمز البوت البديل"</string>
+    <string name="maintenance_replacement_file_password_label" formatted="false">"كلمة مرور ملف الاتصال"</string>
+    <string name="maintenance_restore_review_required_help" formatted="false">"أكمل تأكيد الاتصال ومصالحة النسخة المستعادة قبل بدء صيانة أخرى."</string>
+    <string name="maintenance_restore_review_required_title" formatted="false">"راجع الاستعادة أولاً"</string>
+    <string name="maintenance_resume_activation_action" formatted="false">"فحص استكمال التفعيل المنقطع"</string>
+    <string name="maintenance_retained_connection_help" formatted="false">"احتُفظ بالاتصال والعمل؛ راجع مسؤول الصيدلية."</string>
+    <string name="maintenance_retained_work_review_help" formatted="false">"راجع العمل المحتفظ به والمحاولات السابقة. نية تغيير رمز لا تطابق تفويض الرمز الحالي تحتاج إلغاءً صريحاً ثم طلب تغيير جديد."</string>
+    <string name="maintenance_retry_verification_help" formatted="false">"يُفحص المصدر والوجهة قبل المتابعة. إعادة المحاولة تفحص النتيجة الحالية قبل أي إرسال جديد؛ لا يوجد قفل مضمون بين أجهزة المسؤولين."</string>
+    <string name="maintenance_review_cancellation_action" formatted="false">"فحص إمكان الرجوع باتصال موثق ومراجعته"</string>
+    <string name="maintenance_review_choices_error" formatted="false">"راجع الخيارات ثم أعد العملية"</string>
+    <string name="maintenance_review_destination_snapshot_action" formatted="false">"مراجعة نسخة مختلفة موثقة في الوجهة"</string>
+    <string name="maintenance_review_first_action" formatted="false">"مراجعة صيانة الاتصال أولاً"</string>
+    <string name="maintenance_review_keep_key_action" formatted="false">"مراجعة إبقاء الرمز البديل مع المفتاح السابق دون نشر جديد"</string>
+    <string name="maintenance_same_pharmacy_connection_help" formatted="false">"ملف اتصال جديد للصيدلية نفسها يغيّر اتصال هذا الجهاز فقط، ولا يمنح القارئ صلاحيات إدارة."</string>
+    <string name="maintenance_save_admin_pin_change_action" formatted="false">"حفظ تغيير الرمز محلياً ثم مراجعته للنشر"</string>
+    <string name="maintenance_shared_pharmacy_required_help" formatted="false">"صيانة النقل واستبدال الاتصال متاحان بعد مشاركة الصيدلية أولاً."</string>
+    <string name="maintenance_sharing_heading" formatted="false">"صيانة المشاركة"</string>
+    <string name="maintenance_source_heading" formatted="false">"المصدر"</string>
+    <string name="maintenance_source_unverified_warning" formatted="false">"المصدر غير متحقق الآن. النسخة المحتفظ بها قد لا تشمل تغييرات بعيدة لم يرصدها الجهاز."</string>
+    <string name="maintenance_stage_replacement_file_action" formatted="false">"فحص الملف وحفظ استبدال معلق"</string>
+    <string name="maintenance_start_relocation_action" formatted="false">"بدء نقل الصيدلية لبوت أو مجموعة أخرى"</string>
+    <string name="maintenance_start_token_key_rotation_action" formatted="false">"بدء استبدال رمز البوت ومفتاح النسخ"</string>
+    <string name="maintenance_title" formatted="false">"صيانة الاتصال"</string>
+    <string name="maintenance_token_revocation_help" formatted="false">"اطلب إلغاء الرمز القديم من BotFather، ثم أدخل الرمز البديل للبوت نفسه. الإلغاء هنا لا يعيد رمزاً ألغيتَه خارج التطبيق. البيانات القديمة والنسخ المصدّرة لا يمكن سحبها."</string>
+    <string name="maintenance_use_retained_recovery_label" formatted="false">"إذا تعذر المصدر، أريد مراجعة الاسترداد بالنسخة المحتفظ بها صراحة"</string>
+    <string name="maintenance_verify_destination_action" formatted="false">"فحص الوجهة والصلاحيات"</string>
+    <string name="maintenance_verify_publish_continue_action" formatted="false">"فحص النتيجة والمتابعة بالنشر والتحقق"</string>
+    <string name="maintenance_verify_replacement_action" formatted="false">"التحقق من الاتصال والنسخة المنشورة"</string>
+</resources>

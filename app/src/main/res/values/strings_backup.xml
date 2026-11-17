@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="backup_authorize_admin_action" formatted="false">"تفعيل الإدارة برمز الصيدلية"</string>
+    <string name="backup_change_restore_file_action" formatted="false">"تغيير الملف المحدد"</string>
+    <string name="backup_choose_export_destination_action" formatted="false">"اختيار مكان الحفظ"</string>
+    <string name="backup_choose_restore_file_action" formatted="false">"اختيار ملف .aqbak"</string>
+    <string name="backup_complete_restore_review_action" formatted="false">"إكمال مراجعة الاستعادة أولاً"</string>
+    <string name="backup_confirm_correct_group_action" formatted="false">"هذه المجموعة الصحيحة"</string>
+    <string name="backup_confirm_group_title" formatted="false">"تأكيد المجموعة"</string>
+    <string name="backup_confirm_restored_connection_title" formatted="false">"تأكيد اتصال النسخة المستعادة"</string>
+    <string name="backup_connection_unconfirmed_message" formatted="false">"الاتصال غير مؤكّد على هذا الجهاز."</string>
+    <string name="backup_continue_local_draft_action" formatted="false">"متابعة العمل بالمسودة المحلية"</string>
+    <string name="backup_current_pharmacy_confirmation_label" formatted="false">"اكتب اسم الصيدلية الحالية للتأكيد"</string>
+    <string name="backup_export_contents_help" formatted="false">"تشمل البيانات وكل السجل المحلي والتعديلات والاتصال. لا تشمل تفويض الإدارة. احتفظ بالملف وعبارة مروره بأمان؛ لا يمكن استعادة عبارة مرور منسية."</string>
+    <string name="backup_export_heading" formatted="false">"حفظ نسخة احتياطية"</string>
+    <string name="backup_export_success_message" formatted="false">"حُفظت النسخة الاحتياطية المشفّرة"</string>
+    <string name="backup_file_picker_failed_message" formatted="false">"تعذر فتح منتقي الملفات؛ حاول مجدداً"</string>
+    <string name="backup_file_size_limit_help" formatted="false">"الحد الأقصى للملف المشفّر 64 ميغابايت (67٬108٬864 بايت). لا تُحذف أجزاء من السجل لتقليل الحجم."</string>
+    <string name="backup_group_confirmed_message" formatted="false">"تم تأكيد المجموعة؛ سيُفحص المنشور مجدداً عند المصالحة."</string>
+    <string name="backup_inspect_reconciliation_action" formatted="false">"فحص المنشور ومراجعة المصالحة — دون نشر"</string>
+    <string name="backup_operation_authentication_error" formatted="false">"عبارة المرور غير صحيحة أو الملف تالف"</string>
+    <string name="backup_operation_format_unsupported_error" formatted="false">"تنسيق النسخة غير مدعوم؛ قد يلزم تحديث التطبيق"</string>
+    <string name="backup_operation_passphrase_error" formatted="false">"استخدم عبارة مرور من ثمانية أحرف على الأقل دون تغيير المسافات أو الأحرف"</string>
+    <string name="backup_operation_resources_error" formatted="false">"لا توجد موارد كافية لمعالجة الملف بأمان؛ احتُفظ بالبيانات"</string>
+    <string name="backup_operation_size_error" formatted="false">"الملف أكبر من الحد المسموح؛ احتُفظ بالبيانات والسجل كاملاً"</string>
+    <string name="backup_passphrase_confirmation_label" formatted="false">"تأكيد عبارة مرور النسخة"</string>
+    <string name="backup_passphrase_help" formatted="false">"ثمانية محارف على الأقل؛ تُحفظ المسافات كما كتبتها"</string>
+    <string name="backup_passphrase_label" formatted="false">"عبارة مرور النسخة"</string>
+    <string name="backup_passphrase_min_length_error" formatted="false">"أدخل ثمانية محارف على الأقل دون حذف المسافات"</string>
+    <string name="backup_passphrase_mismatch_error" formatted="false">"عبارتا المرور غير متطابقتين"</string>
+    <string name="backup_reminder_export_action" formatted="false">"حفظ نسخة"</string>
+    <string name="backup_reminder_help" formatted="false">"احفظ بيانات هذا الجهاز وسجله وتعديلاته في ملف مشفّر."</string>
+    <string name="backup_reminder_snooze_action" formatted="false">"ذكّرني بعد أسبوع"</string>
+    <string name="backup_reminder_title" formatted="false">"حان وقت حفظ نسخة احتياطية"</string>
+    <string name="backup_replace_local_data_acknowledgement_label" formatted="false">"أفهم استبدال البيانات والتعديلات المحلية"</string>
+    <string name="backup_replace_local_data_warning_format">"ستُستبدل بيانات هذا الجهاز وسجله وتعديلاته غير المنشورة (%1$s). احفظ نسخة حالية أولاً إن احتجتها."</string>
+    <string name="backup_replace_published_contents_label" formatted="false">"استبدال محتوى المنشور بالنسخة الاحتياطية بدلاً من دمج التعديلات"</string>
+    <string name="backup_replacement_bot_token_help" formatted="false">"اتركه فارغاً للإبقاء على الاتصال. الانتقال إلى بوت أو مجموعة أخرى يحتاج ترحيل اتصال منفصلاً."</string>
+    <string name="backup_replacement_bot_token_label" formatted="false">رمز بديل للبوت نفسه</string>
+    <string name="backup_replacement_bot_token_label_with_guidance" formatted="false">"رمز بديل للبوت نفسه — اختياري"</string>
+    <string name="backup_replacement_bot_token_rule" formatted="false">اختياري</string>
+    <string name="backup_restore_admin_only_message" formatted="false">"الاستعادة من الإعدادات متاحة للمسؤول فقط."</string>
+    <string name="backup_restore_admin_reconciliation_help" formatted="false">"يمكنك عرض البيانات دون اتصال. يلزم تفويض الإدارة والتحقق من المجموعة ومصالحة النسخة المنشورة قبل النشر. رمز الإدارة المنشور يبقى كما هو."</string>
+    <string name="backup_restore_maintenance_blocked_help" formatted="false">"أكمل صيانة الاتصال أو ألغها بأمان قبل استبدال بيانات هذا الجهاز."</string>
+    <string name="backup_restore_maintenance_blocked_title" formatted="false">"النسخ متاح؛ الاستعادة متوقفة أثناء الصيانة"</string>
+    <string name="backup_restore_passphrase_label" formatted="false">"عبارة مرور الملف"</string>
+    <string name="backup_restore_paused_browsing_help" formatted="false">"البيانات متاحة محلياً. تحقق من الاتصال ورمز الإدارة الحالي ثم راجع الاستعادة قبل النشر."</string>
+    <string name="backup_restore_paused_title" formatted="false">"النشر متوقف بعد الاستعادة"</string>
+    <string name="backup_restore_publication_paused_title" formatted="false">"نسخة مستعادة — النشر متوقف"</string>
+    <string name="backup_restore_validation_help" formatted="false">"يجري فحص الملف كاملاً قبل استبدال البيانات. تبدأ الاستعادة محلياً دون نشر تلقائي، وتحتاج رمز الإدارة مجدداً."</string>
+    <string name="backup_restore_welcome_action" formatted="false">"استعادة نسخة احتياطية"</string>
+    <string name="backup_restored_pharmacy_confirmation_label" formatted="false">"اكتب اسم الصيدلية المستعادة للتأكيد"</string>
+    <string name="backup_review_maintenance_action" formatted="false">"مراجعة صيانة الاتصال"</string>
+    <string name="backup_review_restore_action" formatted="false">"مراجعة الاستعادة"</string>
+    <string name="backup_validate_restore_action" formatted="false">"فحص النسخة واستعادتها"</string>
+    <string name="backup_verify_connection_group_action" formatted="false">"التحقق من الاتصال والمجموعة"</string>
+    <string name="review_restore_step">مراجعة الاستعادة</string>
+</resources>

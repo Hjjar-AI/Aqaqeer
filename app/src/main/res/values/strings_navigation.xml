@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="contact_email" translatable="false">hjjarmhmmdali@gmail.com</string>
+    <string name="navigation_about_app_help" formatted="false">"لمعرفة توافر الأدوية حسب أقسام الصيدلية، والاطلاع على البيانات المحفوظة دون اتصال."</string>
+    <string name="navigation_about_app_title" formatted="false">"عن عقاقير"</string>
+    <string name="navigation_about_description" formatted="false">"الإصدار والمطوّر والتواصل"</string>
+    <string name="navigation_about_title" formatted="false">"حول التطبيق"</string>
+    <string name="navigation_add_medication_title" formatted="false">"إضافة دواء"</string>
+    <string name="navigation_admin_tools_title" formatted="false">"أدوات الإدارة"</string>
+    <string name="navigation_app_title" formatted="false">"عقاقير"</string>
+    <string name="navigation_app_update_title" formatted="false">"تحديث التطبيق"</string>
+    <string name="navigation_back_description" formatted="false">"رجوع"</string>
+    <string name="navigation_backup_title" formatted="false">"النسخ الاحتياطي والاستعادة"</string>
+    <string name="navigation_brand_logo_description" formatted="false">"شعار عقاقير"</string>
+    <string name="navigation_connection_export_title" formatted="false">"إصدار ملف اتصال"</string>
+    <string name="navigation_connection_file_title" formatted="false">"ملف الاتصال"</string>
+    <string name="navigation_create_pharmacy_title" formatted="false">"إنشاء صيدلية"</string>
+    <string name="navigation_csv_import_title" formatted="false">"استيراد CSV"</string>
+    <string name="navigation_demo_build_label" formatted="false">"نسخة تجريبية منفصلة"</string>
+    <string name="navigation_developer_name" formatted="false">"محمد علي حجار"</string>
+    <string name="navigation_development_heading" formatted="false">"تطوير"</string>
+    <string name="navigation_drawer_application_heading" formatted="false">"التطبيق"</string>
+    <string name="navigation_drawer_catalog_history_heading" formatted="false">"الأدوية والسجل"</string>
+    <string name="navigation_drawer_categories_heading" formatted="false">"التصنيفات"</string>
+    <string name="navigation_drawer_home_label" formatted="false">"الرئيسية"</string>
+    <string name="navigation_drawer_setup_sharing_label" formatted="false">"إعداد المشاركة"</string>
+    <string name="navigation_drawer_sharing_security_heading" formatted="false">"المشاركة والحماية"</string>
+    <string name="navigation_edit_medication_title" formatted="false">"تعديل الدواء"</string>
+    <string name="navigation_email_app_missing_message" formatted="false">"لا يوجد تطبيق بريد. العنوان ظاهر أدناه للتواصل."</string>
+    <string name="navigation_email_app_open_failed_message" formatted="false">"تعذر فتح تطبيق البريد. يمكنك استخدام العنوان الظاهر."</string>
+    <string name="navigation_email_contact_action" formatted="false">"التواصل بالبريد الإلكتروني"</string>
+    <string name="navigation_help_about_action" formatted="false">"المساعدة وحول التطبيق"</string>
+    <string name="navigation_history_title" formatted="false">"السجل المحلي"</string>
+    <string name="navigation_leave_pharmacy_title" formatted="false">"مغادرة الصيدلية"</string>
+    <string name="navigation_maintenance_title" formatted="false">"الاتصال وصيانة الاعتماد"</string>
+    <string name="navigation_manual_update_help" formatted="false">"للحصول على تحديث، اطلب ملف APK أحدث من مسؤول الصيدلية وثبّته يدوياً."</string>
+    <string name="navigation_medication_details_title" formatted="false">"تفاصيل الدواء"</string>
+    <string name="navigation_open_drawer_description" formatted="false">"فتح القائمة الجانبية"</string>
+    <string name="navigation_promote_admin_title" formatted="false">"تفعيل الإدارة"</string>
+    <string name="navigation_publication_review_title" formatted="false">"مراجعة التعديلات والنشر"</string>
+    <string name="navigation_reports_title" formatted="false">"التقارير"</string>
+    <string name="navigation_settings_about_action" formatted="false">"الإعدادات وحول التطبيق"</string>
+    <string name="navigation_settings_title" formatted="false">"الإعدادات"</string>
+    <string name="navigation_taxonomy_title" formatted="false">"الأقسام والتصنيفات والأشكال"</string>
+    <string name="navigation_telegram_setup_title" formatted="false">"إعداد تيليغرام"</string>
+    <string name="navigation_welcome_title" formatted="false">"إعداد الصيدلية"</string>
+    <string name="review_legend">دليل الحالات والعلامات</string>
+    <string name="review_legend_body">متوفر: الدواء متاح. توفر محدود: المخزون محدود. غير متوفر: يظهر مع خطوط خلفية. غير معروف: لم تُسجّل حالة. غير منشور: توجد تعديلات محلية. محدّث: تغير الدواء بعد جلب البيانات.</string>
+</resources>

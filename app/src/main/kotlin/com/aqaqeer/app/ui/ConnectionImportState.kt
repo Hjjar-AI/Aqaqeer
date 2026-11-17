@@ -28,70 +28,70 @@ data class ConnectionImportUiState(
 
 internal fun connectionImportMessage(error: Exception): String = when (error) {
     is EnvelopeException -> when (error.error) {
-        EnvelopeError.AUTHENTICATION -> uiText(R.string.ui_connection_import_state_001)
-        EnvelopeError.INVALID_CREDENTIAL -> uiText(R.string.ui_connection_import_state_002)
-        EnvelopeError.TOO_LARGE -> uiText(R.string.ui_connection_import_state_003)
-        EnvelopeError.RESOURCE_LIMIT -> uiText(R.string.ui_connection_import_state_004)
-        EnvelopeError.UNSUPPORTED_FORMAT -> uiText(R.string.ui_connection_import_state_005)
-        EnvelopeError.INVALID_FORMAT -> uiText(R.string.ui_connection_import_state_006)
-        EnvelopeError.IO -> uiText(R.string.ui_connection_import_state_007)
-        EnvelopeError.CRYPTO_UNAVAILABLE -> uiText(R.string.ui_connection_import_state_008)
+        EnvelopeError.AUTHENTICATION -> uiText(R.string.connection_import_password_or_corrupt_error)
+        EnvelopeError.INVALID_CREDENTIAL -> uiText(R.string.connection_import_password_required_error)
+        EnvelopeError.TOO_LARGE -> uiText(R.string.connection_import_file_size_error)
+        EnvelopeError.RESOURCE_LIMIT -> uiText(R.string.connection_import_file_resources_error)
+        EnvelopeError.UNSUPPORTED_FORMAT -> uiText(R.string.connection_import_file_format_unsupported_error)
+        EnvelopeError.INVALID_FORMAT -> uiText(R.string.connection_import_invalid_file_error)
+        EnvelopeError.IO -> uiText(R.string.connection_import_file_io_error)
+        EnvelopeError.CRYPTO_UNAVAILABLE -> uiText(R.string.connection_import_crypto_unavailable_error)
     }
     is PayloadException -> when (error.error) {
-        PayloadError.RESOURCE_LIMIT -> uiText(R.string.ui_connection_import_state_004)
-        PayloadError.UNSUPPORTED_SCHEMA -> uiText(R.string.ui_connection_import_state_009)
-        else -> uiText(R.string.ui_connection_import_state_010)
+        PayloadError.RESOURCE_LIMIT -> uiText(R.string.connection_import_file_resources_error)
+        PayloadError.UNSUPPORTED_SCHEMA -> uiText(R.string.connection_import_file_version_unsupported_error)
+        else -> uiText(R.string.connection_import_invalid_payload_error)
     }
     is ConnectionImportException -> when (error.error) {
-        ConnectionImportError.CONFIGURED -> uiText(R.string.ui_connection_import_state_011)
-        ConnectionImportError.DEMO -> uiText(R.string.ui_connection_import_state_012)
-        ConnectionImportError.PENDING_EXISTS -> uiText(R.string.ui_connection_import_state_013)
-        ConnectionImportError.INVALID_URI -> uiText(R.string.ui_connection_import_state_014)
+        ConnectionImportError.CONFIGURED -> uiText(R.string.connection_import_already_configured_error)
+        ConnectionImportError.DEMO -> uiText(R.string.connection_import_demo_blocked_error)
+        ConnectionImportError.PENDING_EXISTS -> uiText(R.string.connection_import_pending_exists_error)
+        ConnectionImportError.INVALID_URI -> uiText(R.string.connection_import_choose_file_error)
     }
-    is StorageRecoveryRequired -> uiText(R.string.ui_connection_import_state_015)
-    is PendingConnectionChanged -> uiText(R.string.ui_connection_import_state_016)
-    is SecurityException -> uiText(R.string.ui_connection_import_state_017)
-    else -> uiText(R.string.ui_connection_import_state_018)
+    is StorageRecoveryRequired -> uiText(R.string.connection_import_protected_storage_error)
+    is PendingConnectionChanged -> uiText(R.string.connection_import_pending_changed_error)
+    is SecurityException -> uiText(R.string.connection_import_read_permission_error)
+    else -> uiText(R.string.connection_import_operation_failed_error)
 }
 
 internal fun connectionVerificationMessage(error: Exception): String = when (error) {
     is SnapshotReadException -> when (error.error) {
-        SnapshotReadError.INVALID_CREDENTIALS -> uiText(R.string.ui_connection_import_state_019)
-        SnapshotReadError.ACCESS_DENIED -> uiText(R.string.ui_connection_import_state_020)
-        SnapshotReadError.SNAPSHOT_UNAVAILABLE -> uiText(R.string.ui_connection_import_state_021)
-        SnapshotReadError.RESPONSE_TOO_LARGE -> uiText(R.string.ui_connection_import_state_022)
-        SnapshotReadError.RESOURCE_LIMIT -> uiText(R.string.ui_connection_import_state_023)
-        SnapshotReadError.RATE_LIMITED -> uiText(R.string.ui_connection_import_state_024) +
+        SnapshotReadError.INVALID_CREDENTIALS -> uiText(R.string.connection_import_bot_invalid_error)
+        SnapshotReadError.ACCESS_DENIED -> uiText(R.string.connection_import_group_access_error)
+        SnapshotReadError.SNAPSHOT_UNAVAILABLE -> uiText(R.string.connection_import_pinned_snapshot_missing_error)
+        SnapshotReadError.RESPONSE_TOO_LARGE -> uiText(R.string.connection_import_download_size_error)
+        SnapshotReadError.RESOURCE_LIMIT -> uiText(R.string.connection_import_snapshot_resources_error)
+        SnapshotReadError.RATE_LIMITED -> uiText(R.string.connection_import_rate_limit_error) +
             if (error.retryAfterSeconds > 0) uiText(R.string.logic_retry_after, MedicationPresentation.displayDigits(error.retryAfterSeconds.toString())) else ""
-        SnapshotReadError.NETWORK -> uiText(R.string.ui_connection_import_state_025)
-        SnapshotReadError.CHANGED_DURING_READ -> uiText(R.string.ui_connection_import_state_026)
-        SnapshotReadError.CAPTION_MISMATCH -> uiText(R.string.ui_connection_import_state_027)
-        SnapshotReadError.INVALID_RESPONSE -> uiText(R.string.ui_connection_import_state_028)
+        SnapshotReadError.NETWORK -> uiText(R.string.connection_import_network_error)
+        SnapshotReadError.CHANGED_DURING_READ -> uiText(R.string.connection_import_snapshot_changed_error)
+        SnapshotReadError.CAPTION_MISMATCH -> uiText(R.string.connection_import_caption_mismatch_error)
+        SnapshotReadError.INVALID_RESPONSE -> uiText(R.string.connection_import_response_invalid_error)
     }
     is EnvelopeException -> when (error.error) {
-        EnvelopeError.AUTHENTICATION -> uiText(R.string.ui_connection_import_state_029)
-        EnvelopeError.TOO_LARGE -> uiText(R.string.ui_connection_import_state_030)
-        EnvelopeError.RESOURCE_LIMIT -> uiText(R.string.ui_connection_import_state_023)
-        EnvelopeError.UNSUPPORTED_FORMAT -> uiText(R.string.ui_connection_import_state_031)
-        else -> uiText(R.string.ui_connection_import_state_032)
+        EnvelopeError.AUTHENTICATION -> uiText(R.string.connection_import_snapshot_authentication_error)
+        EnvelopeError.TOO_LARGE -> uiText(R.string.connection_import_snapshot_size_error)
+        EnvelopeError.RESOURCE_LIMIT -> uiText(R.string.connection_import_snapshot_resources_error)
+        EnvelopeError.UNSUPPORTED_FORMAT -> uiText(R.string.connection_import_snapshot_format_unsupported_error)
+        else -> uiText(R.string.connection_import_snapshot_io_error)
     }
     is PayloadException -> when (error.error) {
-        PayloadError.UNSUPPORTED_SCHEMA -> uiText(R.string.ui_connection_import_state_033)
-        PayloadError.WRONG_PHARMACY -> uiText(R.string.ui_connection_import_state_034)
-        PayloadError.WRONG_KEY_VERSION -> uiText(R.string.ui_connection_import_state_035)
-        PayloadError.RESOURCE_LIMIT -> uiText(R.string.ui_connection_import_state_023)
-        else -> uiText(R.string.ui_connection_import_state_036)
+        PayloadError.UNSUPPORTED_SCHEMA -> uiText(R.string.connection_import_snapshot_version_unsupported_error)
+        PayloadError.WRONG_PHARMACY -> uiText(R.string.connection_import_snapshot_pharmacy_mismatch_error)
+        PayloadError.WRONG_KEY_VERSION -> uiText(R.string.connection_import_snapshot_key_mismatch_error)
+        PayloadError.RESOURCE_LIMIT -> uiText(R.string.connection_import_snapshot_resources_error)
+        else -> uiText(R.string.connection_import_snapshot_invalid_error)
     }
     else -> connectionImportMessage(error)
 }
 
 internal fun refreshMessage(error: Exception): String = when (error) {
     is com.aqaqeer.app.data.RefreshException -> when (error.error) {
-        com.aqaqeer.app.data.RefreshError.UPDATE_REQUIRED -> uiText(R.string.ui_connection_import_state_037)
-        com.aqaqeer.app.data.RefreshError.PUBLICATION_RECOVERY -> uiText(R.string.ui_connection_import_state_038)
-        com.aqaqeer.app.data.RefreshError.LOCAL_WORK -> uiText(R.string.ui_connection_import_state_039)
-        com.aqaqeer.app.data.RefreshError.LOCAL_STATE_CHANGED -> uiText(R.string.ui_connection_import_state_040)
-        else -> uiText(R.string.ui_connection_import_state_041)
+        com.aqaqeer.app.data.RefreshError.UPDATE_REQUIRED -> uiText(R.string.connection_refresh_app_version_unsupported_error)
+        com.aqaqeer.app.data.RefreshError.PUBLICATION_RECOVERY -> uiText(R.string.connection_refresh_lineage_review_error)
+        com.aqaqeer.app.data.RefreshError.LOCAL_WORK -> uiText(R.string.connection_refresh_local_work_review_error)
+        com.aqaqeer.app.data.RefreshError.LOCAL_STATE_CHANGED -> uiText(R.string.connection_refresh_local_data_changed_error)
+        else -> uiText(R.string.connection_refresh_unavailable_error)
     }
-    else -> connectionVerificationMessage(error).replace(uiText(R.string.ui_connection_import_state_042), uiText(R.string.ui_connection_import_state_043))
+    else -> connectionVerificationMessage(error).replace(uiText(R.string.connection_pending_status_label), uiText(R.string.connection_saved_data_status_label))
 }

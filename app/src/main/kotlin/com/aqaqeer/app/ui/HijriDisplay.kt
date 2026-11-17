@@ -42,6 +42,6 @@ internal object HijriDisplay {
     val uiText = rememberUiText()
     if (!enabled) return
     val date = HijriDisplay.date(gregorian)
-    Text(if (date == null) uiText(R.string.ui_hijri_display_001)
-        else uiText(R.string.ui_hijri_display_002, bidi(date)), style = MaterialTheme.typography.bodySmall)
+    Text(if (date == null) uiText(R.string.shared_hijri_before_epoch_message)
+        else uiText(R.string.shared_hijri_date_format, bidi(date)), style = MaterialTheme.typography.bodySmall)
 }

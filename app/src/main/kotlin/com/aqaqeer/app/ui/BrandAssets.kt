@@ -27,7 +27,7 @@ internal object BrandAssets {
             .also { samples.put(sample, it) }
 }
 
-@Composable internal fun BrandEmblem(modifier: Modifier, description: String? = uiText(R.string.ui_brand_assets_001)) {
+@Composable internal fun BrandEmblem(modifier: Modifier, description: String? = uiText(R.string.navigation_brand_logo_description)) {
     val resources = LocalContext.current.resources
     BoxWithConstraints(modifier) {
         val pixels = with(LocalDensity.current) { maxOf(maxWidth, maxHeight).toPx() }.coerceAtLeast(1f)

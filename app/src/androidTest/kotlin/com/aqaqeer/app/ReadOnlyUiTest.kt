@@ -29,7 +29,7 @@ class ReadOnlyUiTest {
     }
     private fun settings() {
         compose.onNodeWithTag("home_menu").performClick()
-        compose.onNodeWithText(uiText(R.string.ui_screen_titles_012)).performClick()
+        compose.onNodeWithText(uiText(R.string.navigation_settings_title)).performClick()
         compose.onNodeWithTag("settings").assertIsDisplayed()
     }
 
