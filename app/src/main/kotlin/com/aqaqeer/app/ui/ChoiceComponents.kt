@@ -28,7 +28,6 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.LayoutDirection
-import androidx.compose.ui.unit.dp
 
 /** Callers own state and workflows; a row exposes just one selection target. */
 @Composable internal fun <T> RadioChoiceRows(choices: List<T>, selected: T?, select: (T) -> Unit,

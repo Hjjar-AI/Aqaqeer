@@ -17,7 +17,6 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.*
 import kotlinx.coroutines.launch
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
 import com.aqaqeer.app.R
 import com.aqaqeer.app.uiText
 
@@ -81,7 +80,7 @@ internal data class Notice(val text: String, val severity: NoticeSeverity = Noti
 
 @Composable internal fun AdaptivePickers(first: @Composable () -> Unit, second: @Composable () -> Unit) {
     BoxWithConstraints {
-        if (maxWidth < LayoutTokens.compactHeight * LocalDensity.current.fontScale) Column(verticalArrangement = Arrangement.spacedBy(UiSpacing.related)) {
+        if (maxWidth < LayoutTokens.pickerStackWidth * LocalLayoutMetrics.current.fontScale) Column(verticalArrangement = Arrangement.spacedBy(UiSpacing.related)) {
             first(); second()
         } else Row(horizontalArrangement = Arrangement.spacedBy(UiSpacing.related)) {
             Box(Modifier.weight(1f)) { first() }; Box(Modifier.weight(1f)) { second() }

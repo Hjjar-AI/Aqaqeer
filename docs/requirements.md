@@ -177,7 +177,7 @@ Use the initial field contract in section 7; preserve non-price fields, history,
 
 Expiry optional; threshold is a nonnegative integer, default 60. Editing a past expiry shows a non-blocking warning. Before today: Expired red badge. Today through today+threshold inclusive: Expires soon, labeled «صلاحية قصيرة» in Arabic badges/reports. No date: no badge. Expired medications retain their recorded availability; do not infer a status change. Exports labeled “expiring soon” exclude expired items and say so.
 
-Smart tip in compact and expanded cards: only when current section status is OUT; list other active sections whose status is AVAILABLE. LOW/UNKNOWN never qualify. This is a location hint, not a therapeutic recommendation.
+Smart tip in compact and expanded cards: only when current section status is OUT; list other active sections whose status is AVAILABLE. LOW/UNKNOWN never qualify. This is a location hint, not a therapeutic recommendation. A close control hides that medication/section tip for the current task/process session across navigation and rotation; changed tip content can appear again. Dismissals are not saved to preferences or backups.
 
 ### Search matching
 
@@ -311,7 +311,7 @@ Light mode uses white card surfaces and near-white app backgrounds with a very l
 
 ### Appearance preferences
 
-Settings includes a separate installation-local «أسود» AMOLED mode alongside system/light/dark. AMOLED always uses dark foreground/status/accent variants and pure #000000 content backgrounds and neutral surfaces, including cards, sheets, dialogs and snackbars; suppress tonal surface tint so elevation cannot lift black to gray. Retain readable foregrounds/outlines and semantic colored badges/selection controls. Existing stored modes and default system behavior remain. Crimson uses cool ruby accents/rose-neutral surfaces and matching tertiary roles, clearly separate from gold’s amber palette.
+Settings includes a separate installation-local «أسود» AMOLED mode alongside system/light/dark. AMOLED always uses dark foreground/status/accent variants and pure #000000 content backgrounds and card surfaces. Interactive and elevated container roles use subtle near-black levels (#0E0E0E–#141414) so nested tips, sheets and dialogs remain distinguishable; suppress additional tonal surface tint. Retain readable foregrounds/outlines and semantic colored badges/selection controls. Existing stored modes and default system behavior remain. Crimson uses cool ruby accents/rose-neutral surfaces and matching tertiary roles, clearly separate from gold’s amber palette.
 
 Design: Material 3 with deep-gold light accent #7A5A12, warm near-white surfaces and gold selection; dark accent #E8C66D on ink surfaces. Gold is the default primary accent. Settings offers five one-word Arabic color choices: ذهبي، أزرق، أخضر، أرجواني، قرمزي.
 
@@ -322,6 +322,8 @@ Keep the five hues clearly separated: amber gold, cyan blue, emerald green, mage
 Statuses retain independent green/amber/red/neutral tones, icons and labels; expiry reuses amber/red. Medication cards use a status-colored edge and tonal fill; major groups use 24 dp spacing. Action-blocking text is at least 14 sp.
 
 Small status/list transitions respect system animation scaling. Do not show skeleton placeholder cards. Initial catalog loading uses a simple progress indicator with the existing loading label; Home preserves its completed result during recomputation and otherwise waits for actual rows without placeholder cards. Empty states retain reset/add actions and a faint emblem.
+
+Bottom snackbars expose a close action and explicit finite Material durations: Long for Undo/View and Short for information, retaining accessibility timeout handling. Home notices also expose close controls, scoped by pharmacy and individual notice identity/content for the current task/process session; navigation and rotation retain dismissals, while new sessions and changed/resolved-then-returned content may show them again. Dismissal hides presentation only; role, update, publication, restore and maintenance restrictions remain enforced. The backup reminder's existing seven-day snooze action is unchanged.
 
 ### Shared components and previews
 

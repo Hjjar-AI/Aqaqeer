@@ -83,7 +83,7 @@ import com.aqaqeer.app.reports.*
     }
     if (confirm && session != null) AppDialog(onDismissRequest = { confirm = false },
         title = { Text(uiText(R.string.ui_csv_import_screen_017)) },
-        text = { DialogBody { Text(uiText(R.string.ui_csv_import_screen_018, MedicationPresentation.displayDigits(session.rows.count { it.decision.selected && it.error == null }.toString()), ready.catalog.pharmacy?.name)) } },
+        body = { Text(uiText(R.string.ui_csv_import_screen_018, MedicationPresentation.displayDigits(session.rows.count { it.decision.selected && it.error == null }.toString()), ready.catalog.pharmacy?.name)) },
         confirmButton = { AppButton(variant = AppButtonVariant.QUIET, enabled = !busy, onClick = { confirm = false; vm.commitCsv() }) { Text(uiText(R.string.ui_csv_import_screen_019)) } },
         dismissButton = { AppButton(variant = AppButtonVariant.QUIET, onClick = { confirm = false }) { Text(uiText(R.string.ui_bulk_medication_editor_012)) } })
 }

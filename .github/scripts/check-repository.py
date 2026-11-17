@@ -42,6 +42,68 @@ def anchors(text):
     return values
 
 
+# Exact definition files only: dimensions/scales live in UiTokens; Theme owns palette definitions.
+UI_TOKEN_DEFINITIONS = frozenset((
+    "app/src/main/kotlin/com/aqaqeer/app/ui/UiTokens.kt",
+    "app/src/main/kotlin/com/aqaqeer/app/ui/Theme.kt",
+))
+
+
+def kotlin_code_only(source):
+    """Mask comments, chars and strings while preserving newlines and source positions."""
+    out = list(source)
+    index = 0
+    while index < len(source):
+        start = index
+        if source.startswith("//", index):
+            end = source.find("\n", index)
+            index = len(source) if end < 0 else end
+        elif source.startswith("/*", index):
+            index += 2
+            depth = 1
+            while index < len(source) and depth:
+                if source.startswith("/*", index):
+                    depth += 1
+                    index += 2
+                elif source.startswith("*/", index):
+                    depth -= 1
+                    index += 2
+                else:
+                    index += 1
+        elif source.startswith('"""', index):
+            end = source.find('"""', index + 3)
+            index = len(source) if end < 0 else end + 3
+        elif source[index] in ("\"", "'"):
+            quote = source[index]
+            index += 1
+            while index < len(source):
+                if source[index] == "\\":
+                    index += 2
+                elif source[index] == quote:
+                    index += 1
+                    break
+                else:
+                    index += 1
+        else:
+            index += 1
+            continue
+        for offset in range(start, min(index, len(source))):
+            if out[offset] != "\n":
+                out[offset] = " "
+    return "".join(out)
+
+
+def ui_token_problems(name, source):
+    if not name.startswith("app/src/main/kotlin/com/aqaqeer/app/ui/") or not name.endswith(".kt") or name in UI_TOKEN_DEFINITIONS:
+        return []
+    code = kotlin_code_only(source)
+    findings = []
+    for match in re.finditer(r"(?<![\w.])\d+(?:\.\d+)?\.dp\b|\bColor\s*\(\s*0[xX]", code):
+        line = source.count("\n", 0, match.start()) + 1
+        findings.append(f"{name}:{line}: UI dimension/colour literal must use a named token/resource")
+    return findings
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--source-only', action='store_true', help='Exclude tests/inventories when test inspection is not authorized')
@@ -72,6 +134,7 @@ def main():
         except UnicodeDecodeError:
             continue
         files += 1
+        problems.extend(ui_token_problems(name, text))
         for rule, pattern in SECRET_PATTERNS.items():
             for match in pattern.finditer(text):
                 # Only documented, explicitly fake fixture values may be exempted here.

@@ -18,7 +18,6 @@ import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.LayoutDirection
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import android.content.res.Resources
 import android.content.res.Configuration
@@ -170,7 +169,7 @@ private fun amoledColors(colors: ColorScheme): ColorScheme = colors.copy(
     surfaceContainer = Color(0xFF121212), surfaceContainerHigh = Color(0xFF131313), surfaceContainerHighest = Color(0xFF141414),
     onSurfaceVariant = Color(0xFFC7C7C7), surfaceTint = Color.Transparent,
     outline = Color(0xFF8C8C8C), outlineVariant = Color(0xFF444444),
-    inverseSurface = Color.Black, inverseOnSurface = Color(0xFFF1F1F1), inversePrimary = colors.primary,
+    inverseSurface = Color(0xFF141414), inverseOnSurface = Color(0xFFF1F1F1), inversePrimary = colors.primary,
 )
 
 internal data class StatusTone(val container: Color, val content: Color, val edge: Color)
@@ -248,6 +247,6 @@ internal fun appColorScheme(choice: ThemeChoice, accent: ThemeAccent, systemDark
     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl,
         LocalStatusColors provides statuses) {
         MaterialTheme(colorScheme = colors,
-            typography = ArabicTypography, shapes = AppShapes, content = content)
+            typography = ArabicTypography, shapes = AppShapes) { ProvideLayoutMetrics(content) }
     }
 }

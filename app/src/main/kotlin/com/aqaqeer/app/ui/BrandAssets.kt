@@ -42,5 +42,5 @@ internal object BrandAssets {
 /** A dedicated decorative illustration keeps empty states independent of logo crop geometry. */
 @Composable internal fun EmptyCapsule(modifier: Modifier = Modifier) {
     Image(androidx.compose.ui.res.painterResource(R.drawable.empty_state_capsule),
-        contentDescription = null, modifier = modifier, alpha = 0.30f)
+        contentDescription = null, modifier = modifier, alpha = Alpha.ghost)
 }

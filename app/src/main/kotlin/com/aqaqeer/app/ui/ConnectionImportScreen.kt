@@ -122,7 +122,7 @@ import com.aqaqeer.app.BuildConfig
         val pending = state.pending
         AppDialog(onDismissRequest = { if (!state.busy) confirmDiscard = false },
             title = { Text(uiText(R.string.ui_connection_import_screen_035)) },
-            text = { DialogBody { Text(uiText(R.string.ui_connection_import_screen_036, pending.pharmacyName)) } },
+            body = { Text(uiText(R.string.ui_connection_import_screen_036, pending.pharmacyName)) },
             confirmButton = { AppButton(variant = AppButtonVariant.QUIET, colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error), onClick = { confirmDiscard = false; discard(pending.id) }, enabled = !state.busy) { Text(uiText(R.string.ui_connection_import_screen_037)) } },
             dismissButton = { AppButton(variant = AppButtonVariant.QUIET, onClick = { confirmDiscard = false }, enabled = !state.busy) { Text(uiText(R.string.ui_connection_import_screen_038)) } })
     }

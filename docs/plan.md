@@ -2,6 +2,17 @@
 
 [Requirements](requirements.md) define acceptance; [architecture](architecture.md) describes implementation; [validation](validation.md) records results. This plan grants no execution authorization.
 
+## Android UI cleanup — source implemented / 2026-11-17
+
+The approved source batch adds session dismissal controls, finite snackbars, focused Home rendering/action bundles, shared Material wrappers, typed navigation with retained encodings, explicit field instructions/visited-state retention, centralized tokens/palettes and configuration-aware UI resource readers. [Source evidence and limits](validation.md#android-ui-cleanup--2026-11-17) distinguish this from compilation/runtime acceptance. No execution authorization is added.
+
+| ID / priority | Dependency | Remaining work / acceptance |
+| --- | --- | --- |
+| U1 / P1 — Compile and Android acceptance | Separate build/test/device or hosted authorization | Both flavors; snackbar close/timeout/Undo/View and route ownership; independent notice/card-tip dismissal across navigation/rotation, changed content and new sessions; unchanged backup snooze/domain blocks; restored navigation/draft keys and role restrictions; forms/secret visibility and validation; grid keys/scroll/bulk/editor guards, phone two-column layout, large text/IME/wide panes, all accents and manual light/dark/AMOLED contrast. |
+| U2 / P2 — Source integrity links | Separate decision for unrelated artwork records | The full source-only checker reports two pre-existing missing artwork links in assets/branding/launcher-revision.md; no UI token/resource/delimiter/whitespace finding was observed. |
+
+Deferred: image/font reduction, numbered-resource renaming/string-file consolidation, component gallery and screenshot testing. Preserve current assets, string IDs, adaptive columns and lifecycle clocks; no measured performance improvement is claimed.
+
 ## Initial attribution-free baseline — 2026-11-16
 
 Approved production changes cover initial-v1 attribution-free storage/files, timestamp/operation-ID merge ordering, fresh APK numbering, Home/cards/detail/filter/selection changes, two-session fetched markers, Settings/navigation, forms, Maintenance, History and source previews. [Validation](validation.md#initial-attribution-free-baseline--2026-11-16) records source checks and limits. Earlier results below predate this baseline and do not validate it. The user subsequently authorized test repair/creation without local execution, then workflow 03 with JVM scope only.
@@ -24,9 +35,9 @@ The user selected responsive search secondary controls; pinned controls with com
 
 Remaining acceptance: search-trailing Filters with leading clear, reader What’s new beside Filters inside the trailing search-field row, admin Add in the former external-filter position without a floating overlay, absent Select shortcut with retained long-press bulk, admin card-to-edit routing and visible per-section immediate availability controls above the existing-medication fields (new-medication initial AVAILABLE/LOW/OUT choices saved atomically with the medication, with draft recreation, reset, stale-section rejection and unchanged defaults); the skeleton-free initial/context-change loading states and retained Home rows during recomputation (source changes after the latest hosted build); narrow/large-text field width and focus across secondary-control relocation; pinned controls and complete notice actions on short/IME windows; Home → medication A → B → back, drawer Home/category navigation, Add clearance, grouping/scroll retention and width changes around 840 dp; predictive completion/cancellation with busy/modals and disabled animations; RTL/LTR drawer-edge versus section drags; Arabic diacritics, headings, tab labels/icon slots and long detail titles; picker keyboard/empty/search/reordering/unchanged sentinel identities; single bulk-entry haptic; compact step semantics; empty-state art and theme/large-text contrast. Workflow 10 run 43967349302 compiled/packaged both debug flavors at `e9dadd4`; the listed Android runtime acceptance remains unverified. Future execution still requires separate authorization. Previous runtime passes do not validate these changes.
 
-## Baseline Profile proposal — separate future project
+## Baseline Profile proposal — prioritized separate future project
 
-**Proposal only, requested by the user; no profile generation, test work, builds, device use or execution is authorized.** A Baseline Profile supplies Android with frequently used code paths to optimize ahead of time. Potential benefits are faster startup and smoother initial interactions; this repository has no measurements establishing a benefit. [Android overview](https://developer.android.com/topic/performance/baselineprofiles/overview).
+**Prioritized planning only, requested by the user; no profile generation, test work, builds, device use or execution is authorized.** Baseline Profile and repeatable Home scrolling measurements are one future project, before further speculative card optimization. A Baseline Profile supplies Android with frequently used code paths to optimize ahead of time. Potential benefits are faster startup and smoother initial interactions; this repository has no measurements establishing a benefit. [Android overview](https://developer.android.com/topic/performance/baselineprofiles/overview).
 
 Proposed scope and order:
 

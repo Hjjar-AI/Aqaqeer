@@ -77,7 +77,7 @@ import com.aqaqeer.app.maintenance.*
             listOf(MaintenancePhase.DESTINATION_READY, MaintenancePhase.PREPARED, MaintenancePhase.UPLOAD_STARTED,
                 MaintenancePhase.UPLOADED, MaintenancePhase.WRITE_STARTED, MaintenancePhase.ACTIVATING, MaintenancePhase.COMPLETE)
         if (j.phase in phases) StepHeader(phases.map(::maintenancePhaseLabel), phases.indexOf(j.phase))
-        else NoticeStrip(Notice(maintenancePhaseLabel(j.phase), NoticeSeverity.WARNING))
+        else NoticeStrip(Notice(maintenancePhaseLabel(j.phase, text = uiText), NoticeSeverity.WARNING))
         MaintenanceIdentity(uiText(R.string.ui_maintenance_screen_015), j.sourceTitle, j.sourceBotId, j.sourceGroupId, j.sourceId, j.sourceTime)
         if (j.sourceUnavailable) Text(uiText(R.string.ui_maintenance_screen_016), color = MaterialTheme.colorScheme.error)
         if (j.destinationGroupId != null) MaintenanceIdentity(uiText(R.string.ui_maintenance_screen_017), j.destinationTitle, j.destinationBotId,
@@ -247,7 +247,9 @@ import com.aqaqeer.app.maintenance.*
     }
 }
 
-private fun maintenancePhaseLabel(phase: MaintenancePhase): String = when (phase) {
+private fun maintenancePhaseLabel(phase: MaintenancePhase, text: UiText? = null): String = run {
+    val uiText = text ?: UiText(com.aqaqeer.app.AppStrings.resources)
+    when (phase) {
     MaintenancePhase.PREPARING -> uiText(R.string.ui_maintenance_screen_072)
     MaintenancePhase.STAGED -> uiText(R.string.ui_maintenance_screen_073)
     MaintenancePhase.VERIFIED -> uiText(R.string.ui_maintenance_screen_074)
@@ -263,4 +265,5 @@ private fun maintenancePhaseLabel(phase: MaintenancePhase): String = when (phase
     MaintenancePhase.REVIEW -> uiText(R.string.ui_maintenance_screen_084)
     MaintenancePhase.COMPLETE -> uiText(R.string.ui_maintenance_screen_085)
     MaintenancePhase.CANCELLING -> uiText(R.string.ui_maintenance_screen_086)
+}
 }

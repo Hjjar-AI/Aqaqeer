@@ -27,7 +27,7 @@ sealed interface Route {
 internal val Route.isWide: Boolean get() = this == Route.Home || this is Route.Medication
 internal val Route.isForm: Boolean get() = when (this) {
     Route.Create, Route.Promote, Route.Leave, Route.Setup, Route.ExportConnection, Route.Connection,
-    Route.Backup, Route.Maintenance, Route.Taxonomy -> true
+    Route.Backup, Route.Maintenance, Route.Taxonomy, is Route.EditMedication -> true
     else -> false
 }
 internal val Route.medicationId: String? get() = when (this) {

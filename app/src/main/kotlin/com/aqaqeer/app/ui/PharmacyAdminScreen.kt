@@ -243,6 +243,8 @@ import kotlinx.serialization.json.*
 private fun entityLabel(type: String, text: UiText? = null) = run {
     val uiText = text ?: UiText(com.aqaqeer.app.AppStrings.resources)
     when (type) { "medication" -> uiText(R.string.ui_pharmacy_admin_screen_049); "availability" -> uiText(R.string.ui_pharmacy_admin_screen_050); "category" -> uiText(R.string.ui_pharmacy_admin_screen_051); "form" -> uiText(R.string.ui_pharmacy_admin_screen_052); "section" -> uiText(R.string.ui_pharmacy_admin_screen_053); else -> uiText(R.string.ui_pharmacy_admin_screen_054) }
+}
+
 internal fun fieldLabel(field: String, entityType: String? = null, text: UiText? = null) = run {
     val uiText = text ?: UiText(com.aqaqeer.app.AppStrings.resources)
     when(field) {
@@ -256,6 +258,8 @@ internal fun fieldLabel(field: String, entityType: String? = null, text: UiText?
     "expirySoonThresholdDays" -> uiText(R.string.ui_pharmacy_admin_screen_072); "categoryId" -> uiText(R.string.ui_pharmacy_admin_screen_073); "formId" -> uiText(R.string.ui_pharmacy_admin_screen_074)
     "isActive" -> uiText(R.string.ui_pharmacy_admin_screen_075); "orderIndex" -> uiText(R.string.ui_pharmacy_admin_screen_076); else -> field
 }
+}
+
 internal fun reviewValue(field: String, raw: String, catalog: CatalogSnapshot, limit: Int = 500, text: UiText? = null): String {
     val uiText = text ?: UiText(com.aqaqeer.app.AppStrings.resources)
     if (field == uiText(R.string.ui_admin_components_007)) return raw
@@ -270,8 +274,6 @@ internal fun reviewValue(field: String, raw: String, catalog: CatalogSnapshot, l
         "isActive" -> if (value == "true") uiText(R.string.ui_pharmacy_admin_screen_082) else uiText(R.string.ui_pharmacy_admin_screen_083)
         else -> value.take(limit)
     }
-}
-}
 }
 
 
@@ -307,7 +309,7 @@ internal fun reviewValue(field: String, raw: String, catalog: CatalogSnapshot, l
     }
     if (offerEmptyPublication) AppDialog(onDismissRequest = { offerEmptyPublication = false; vm.navigate(Route.Admin) },
         title = { Text(uiText(R.string.ui_pharmacy_admin_screen_099)) },
-        text = { DialogBody { Text(uiText(R.string.ui_pharmacy_admin_screen_100)) } },
+        body = { Text(uiText(R.string.ui_pharmacy_admin_screen_100)) },
         confirmButton = { AppButton(variant = AppButtonVariant.QUIET, onClick = { offerEmptyPublication = false; vm.navigate(Route.Admin) }) { Text(uiText(R.string.ui_pharmacy_admin_screen_101)) } },
         dismissButton = { AppButton(variant = AppButtonVariant.QUIET, onClick = { offerEmptyPublication = false; vm.navigate(Route.Review); vm.publish() }) { Text(uiText(R.string.ui_pharmacy_admin_screen_102)) } })
     SupportingText(uiText(R.string.pin_group_guidance))

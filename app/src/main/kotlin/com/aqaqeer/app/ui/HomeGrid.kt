@@ -17,7 +17,7 @@ import com.aqaqeer.app.data.*
     leadingContent: LazyGridScope.() -> Unit,
     card: @Composable LazyGridItemScope.(Medication) -> Unit,
     otherCard: @Composable LazyGridItemScope.(SectionSearchResults, MedicationRowUi) -> Unit) {
-    val columns = if (adaptive) GridCells.Adaptive(Size.gridCellMin * maxOf(1f, LocalDensity.current.fontScale)) else GridCells.Fixed(1)
+    val columns = if (adaptive) GridCells.Adaptive(Size.gridCellMin * maxOf(1f, LocalLayoutMetrics.current.fontScale)) else GridCells.Fixed(1)
     LazyVerticalGrid(columns = columns, state = state, modifier = Modifier.fillMaxSize().then(modifier).testTag("home"),
         contentPadding = PaddingValues(start = UiSpacing.page, end = UiSpacing.page, top = UiSpacing.related, bottom = UiSpacing.page),
         horizontalArrangement = Arrangement.spacedBy(UiSpacing.related), verticalArrangement = Arrangement.spacedBy(UiSpacing.related)) {

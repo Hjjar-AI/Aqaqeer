@@ -36,7 +36,6 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
 import androidx.core.text.BidiFormatter
 import androidx.core.net.toUri
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -63,10 +62,8 @@ internal fun statusLabel(status: AvailabilityStatus, text: UiText? = null): Stri
 @Composable fun AqaqeerApp(viewModel: CatalogViewModel) {
     val state by viewModel.shellState.collectAsStateWithLifecycle()
     AqaqeerTheme(state.theme, accent = state.accent) {
-        ProvideLayoutMetrics {
-            CompositionLocalProvider(LocalNoticeScope provides ((state.catalog as? CatalogState.Ready)?.catalog?.pharmacy?.pharmacyId ?: "unconfigured")) {
-                AppContent(state, viewModel)
-            }
+        CompositionLocalProvider(LocalNoticeScope provides ((state.catalog as? CatalogState.Ready)?.catalog?.pharmacy?.pharmacyId ?: "unconfigured")) {
+            AppContent(state, viewModel)
         }
     }
 }
@@ -260,7 +257,7 @@ internal fun statusLabel(status: AvailabilityStatus, text: UiText? = null): Stri
                     colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background))
             }, snackbarHost = { SnackbarHost(snackbar) },
         ) { insets ->
-            ScreenFrame(wide = state.destination.isWide, form = state.destination.isForm || state.destination is Route.EditMedication,
+            ScreenFrame(wide = state.destination.isWide, form = state.destination.isForm,
                 modifier = Modifier.padding(insets).consumeWindowInsets(insets).imePadding()) {
                 AnimatedContent(targetState = state, modifier = Modifier.graphicsLayer {
                     scaleX = 1f - 0.04f * backProgress
@@ -327,21 +324,24 @@ internal fun statusLabel(status: AvailabilityStatus, text: UiText? = null): Stri
                             val selectedMedication = (state.destination as? Route.Medication)?.id
                             val medication = catalogState.catalog.medications.firstOrNull { it.id == selectedMedication }
                             val showReminder = catalogState.backupReminderAt != null
-                            val pageHeader: (@Composable () -> Unit)? = if (catalogState.maintenancePaused || catalogState.restorePaused ||
-                                showReminder || catalogState.admin && !catalogState.isDemo && catalogState.lifecycle == "LOCAL_DRAFT") ({
-                                if (catalogState.maintenancePaused) {
+                            val noticeHeader: (@Composable (Set<String>) -> Unit)? = if (catalogState.maintenancePaused || catalogState.restorePaused ||
+                                showReminder || catalogState.admin && !catalogState.isDemo && catalogState.lifecycle == "LOCAL_DRAFT") ({ visible ->
+                                if (catalogState.maintenancePaused && "maintenance" in visible) {
                                     InformationCard(uiText(R.string.ui_aqaqeer_app_017), uiText(R.string.ui_aqaqeer_app_018))
                                     NavigationCard(uiText(R.string.ui_aqaqeer_app_019), { navigate(Route.Maintenance) })
                                 }
-                                if (catalogState.restorePaused) {
+                                if (catalogState.restorePaused && "restore" in visible) {
                                     InformationCard(uiText(R.string.ui_aqaqeer_app_020), uiText(R.string.ui_aqaqeer_app_021))
                                     NavigationCard(uiText(R.string.ui_aqaqeer_app_022), { navigate(Route.Backup) })
                                 }
-                                if (showReminder) DueBackupReminder(catalogState,
+                                if (showReminder && "backup" in visible) DueBackupReminder(catalogState,
                                     { navigate(Route.Backup) }, { viewModel.command { viewModel.backups.dismissReminder() } })
-                                if (catalogState.admin && !catalogState.isDemo && catalogState.lifecycle == "LOCAL_DRAFT")
+                                if (catalogState.admin && !catalogState.isDemo && catalogState.lifecycle == "LOCAL_DRAFT" && "local-draft" in visible)
                                     SupportingText(uiText(R.string.ui_pharmacy_admin_screen_038))
                             }) else null
+                            val pageHeader: (@Composable () -> Unit)? = if (noticeHeader == null) null else ({
+                                noticeHeader(setOf("maintenance", "restore", "backup", "local-draft"))
+                            })
                             Box(Modifier.fillMaxSize()) {
                             val browseContent: @Composable () -> Unit = {
                             HomeStateContent(viewModel) { state, browse, highlighted -> HomeScreen(ready = catalogState,
@@ -349,7 +349,7 @@ internal fun statusLabel(status: AvailabilityStatus, text: UiText? = null): Stri
                                 now = now,
                                 availabilityBusy = adminBusy,
                                 availabilityMessage = adminMessage,
-                                pageHeader = pageHeader,
+                                pageHeader = noticeHeader,
                                 availabilitySavedId = availabilitySavedId,
                                 publicationBusy = sharing.busy,
                                 publicationBlockReason = publicationBlockedReason(catalogState, sharing, adminBusy || sharing.busy),

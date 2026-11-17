@@ -52,6 +52,9 @@ Use the pinned [catalog](../gradle/libs.versions.toml) and AGP built-in Kotlin; 
 
 ## Setup and commands
 
+The lightweight repository check is `python3 .github/scripts/check-repository.py --source-only` when test inspection is not authorized. It checks source/resource/document integrity and rejects UI dimension/hex-colour literals outside the exact UiTokens/Theme definition files, masking Kotlin comments, chars and strings. Add dimensions to named scale/role tokens and colours to palettes/resources; extend definition exceptions only for an explicitly reviewed definition file. Existing workflows already invoke this checker; triggers, dispatch inputs and execution permissions are unchanged. This check does not compile Kotlin, run tests/lint or establish Android behavior.
+
+
 Local SDK: `/opt/android-shared/Sdk`; canonical Gradle home: `/opt/android-shared/gradle/user-homes/mhmmd`. The POSIX wrapper defaults to that existing cache unless an environment/CLI/system-property override is supplied; Windows uses normal Gradle defaults. Other machines set ignored `local.properties` to their SDK. Python 3.8+ is required by the wrapper version helper (`python3` on POSIX, `python` on Windows).
 
 Diagnose cache ownership/group/ACL/chmod failures before repair; never create a replacement cache to bypass access. Preserve shared SDK/tools and unique downloads; do not merge active binary caches, change global PATH or add experimental AAPT2 overrides. Wrappers use HTTPS/checksums. Online resolution is normal; `--offline` fails on missing artifacts.

@@ -11,7 +11,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.*
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
 
 /** Shared visual treatment; interactive badges keep a full touch target around the same pill. */
 @Composable internal fun MedicationBadge(text: String, tone: StatusTone, modifier: Modifier = Modifier,

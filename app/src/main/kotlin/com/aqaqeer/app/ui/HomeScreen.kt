@@ -33,7 +33,6 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
@@ -87,7 +86,7 @@ import java.time.ZoneId
     now: Instant,
     availabilityBusy: Boolean = false,
     availabilityMessage: String? = null,
-    pageHeader: (@Composable () -> Unit)? = null,
+    pageHeader: (@Composable (Set<String>) -> Unit)? = null,
     availabilitySavedId: String? = null,
     publicationBusy: Boolean = false,
     publicationBlockReason: String? = null,
@@ -271,10 +270,10 @@ import java.time.ZoneId
             }
         }
         val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
-        val swipeThreshold = with(LocalDensity.current) { Size.illustrationSmall.toPx() }
+        val swipeThreshold = with(LocalDensity.current) { LayoutTokens.swipeDistance.toPx() }
         val canSwipe = active.size > 1 && !bulkMode && editor == null && !filtersOpen && !bulkSheetOpen &&
             !availabilityBusy && canOpenHomeModal()
-        val drawerEdge = with(LocalDensity.current) { Space.xl.toPx() }
+        val drawerEdge = with(LocalDensity.current) { LayoutTokens.drawerEdge.toPx() }
         val sectionSwipe = if (!canSwipe) Modifier else Modifier.pointerInput(active.map { it.id }, selected?.id, rtl, swipeThreshold, drawerEdge) {
             awaitEachGesture {
                 val down = awaitFirstDown(requireUnconsumed = false)
@@ -515,7 +514,7 @@ import java.time.ZoneId
 
 /** One pinned entry point; expanding retains the existing notice actions and publication guards. */
 @Composable private fun HomeNoticeStrip(ready: CatalogState.Ready, state: AppUiState,
-    pageHeader: (@Composable () -> Unit)?, refresh: (() -> Unit)?, publicationBusy: Boolean, publicationBlockReason: String?,
+    pageHeader: (@Composable (Set<String>) -> Unit)?, refresh: (() -> Unit)?, publicationBusy: Boolean, publicationBlockReason: String?,
     maxHeight: androidx.compose.ui.unit.Dp, compact: Boolean = false, onDialogVisibilityChanged: (Boolean) -> Unit) {
     val uiText = rememberUiText()
     val clock = rememberPresentationTime(ready.catalog.pharmacy?.timezone ?: "Asia/Damascus")
@@ -567,7 +566,7 @@ import java.time.ZoneId
                 SupportingText(uiText(R.string.ui_home_screen_035))
         }
 
-        if (notices.any { it.kind in setOf("maintenance", "restore", "publication-block", "publication-progress", "uncertain", "backup", "local-draft") }) pageHeader?.invoke()
+        pageHeader?.invoke(notices.map { it.kind }.toSet())
         if (visible("demo")) DemoNotice()
     }
     if (expanded && compact) AppDialog(onDismissRequest = { expanded = false }, text = {
@@ -576,14 +575,14 @@ import java.time.ZoneId
     }, confirmButton = {
         AppButton(variant = AppButtonVariant.QUIET, onClick = { expanded = false }) { Text(uiText(R.string.ui_choice_components_004)) }
     })
-    Surface(color = if (ready.requiresUpdate || state.refresh.error != null) MaterialTheme.colorScheme.errorContainer
-        else if (ready.lastSuccessfulRefreshAt?.let { Duration.between(it, clock) >= Duration.ofHours(24) } == true)
+    Surface(color = if (visible("update") || visible("refresh-error")) MaterialTheme.colorScheme.errorContainer
+        else if (visible("stale"))
             LocalStatusColors.current.low.container else MaterialTheme.colorScheme.surfaceVariant,
         modifier = Modifier.fillMaxWidth().heightIn(max = maxHeight).animateContentSize(tween(Motion.standard))) {
         Column(Modifier.padding(horizontal = UiSpacing.page, vertical = UiSpacing.hair)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
             AppButton(variant = AppButtonVariant.QUIET, onClick = { expanded = !expanded }, modifier = Modifier.weight(1f)) {
-                AppIcon(if (ready.requiresUpdate || state.refresh.error != null) UiIcon.WARNING else UiIcon.INFO)
+                AppIcon(if (visible("update") || visible("refresh-error")) UiIcon.WARNING else UiIcon.INFO)
                 Text(notices.first().text + if (notices.size > 1) uiText(R.string.ui_home_screen_043, MedicationPresentation.displayDigits(notices.size.toString())) else "",
                     modifier = Modifier.weight(1f), maxLines = if (compact) 1 else 2, overflow = TextOverflow.Ellipsis)
                 ExpansionChevron(expanded)

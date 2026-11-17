@@ -77,6 +77,7 @@ internal object Leading {
 internal object LayoutTokens {
     val compactHeight = 480.dp
     val welcomeCompactHeight = 640.dp
+    val pickerStackWidth = 480.dp
     val mediumWidth = 600.dp
     val expandedWidth = 840.dp
     val contentMaxWidth = 840.dp

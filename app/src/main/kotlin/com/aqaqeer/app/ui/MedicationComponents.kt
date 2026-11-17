@@ -34,7 +34,6 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.platform.LocalLayoutDirection
-import androidx.compose.ui.unit.dp
 import com.aqaqeer.app.data.*
 import java.time.LocalDate
 
@@ -121,7 +120,7 @@ import java.time.LocalDate
     val name = remember(medication, formName) { MedicationPresentation.identity(medication, formName) }
     val status = row.status
     val edge by animateColorAsState(statusTone(status).edge, tween(Motion.standard), label = "status edge")
-    val unavailableStripe = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.06f)
+    val unavailableStripe = MaterialTheme.colorScheme.onSurface.copy(alpha = Alpha.stripe)
     val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
     val pendingMarker: (@Composable () -> Unit)? = if (unpublished || row.fetched) ({
         Column {
@@ -156,7 +155,7 @@ import java.time.LocalDate
                 }
             }
             val stripeStroke = Stroke(AppStroke.emphasis.toPx())
-            val stroke = Space.xs.toPx()
+            val stroke = AppStroke.accent.toPx()
             val x = if (rtl) size.width - stroke / 2 else stroke / 2
             onDrawBehind {
                 if (status == AvailabilityStatus.OUT) drawPath(stripes, unavailableStripe, style = stripeStroke)

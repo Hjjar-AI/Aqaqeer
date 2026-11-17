@@ -34,7 +34,7 @@ private data class BrowseRequest(val section: String?, val query: String, val fi
     val preferences: HomePreferences, val unpublished: Set<String>, val fetched: Set<String>, val today: java.time.LocalDate, val readerStockOnly: Boolean)
 internal data class UiFeedback(val message: String, val route: String, val medicationId: String? = null,
     val undo: AvailabilityUndo? = null, val id: String = java.util.UUID.randomUUID().toString()) {
-    val destination: Route get() = RouteStorage.decode(route)
+    val destination: Route = RouteStorage.decode(route)
 }
 
 data class RefreshUiState(val busy: Boolean = false, val error: String? = null)
@@ -53,7 +53,7 @@ data class AppUiState(
     val accent: ThemeAccent = ThemeAccent.GOLD,
     val online: Boolean = true,
 ) {
-    val destination: Route get() = RouteStorage.decode(route)
+    val destination: Route = RouteStorage.decode(route)
 }
 
 @HiltViewModel
@@ -212,6 +212,9 @@ class CatalogViewModel @Inject constructor(
             }
         }
     }
+    internal fun secretCommand(destination: String, vararg secrets: CharArray, queueOffline: Boolean = true, action: suspend () -> Unit) =
+        secretCommand(RouteStorage.decode(destination), *secrets, queueOffline = queueOffline, action = action)
+
     internal fun secretCommand(destination: Route?, vararg secrets: CharArray, queueOffline: Boolean = true, action: suspend () -> Unit) {
         if (adminBusy.value) { secrets.forEach { it.fill('\u0000') }; feedback.value = UiFeedback(uiText(R.string.ui_catalog_view_model_005), route.value); return }
         command(destination, queueOffline = queueOffline) { try { action() } finally { secrets.forEach { it.fill('\u0000') } } }
