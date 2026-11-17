@@ -12,6 +12,7 @@ import android.view.ViewGroup
 import android.view.ViewTreeObserver
 import android.view.animation.PathInterpolator
 import android.widget.FrameLayout
+import android.widget.ImageView
 import androidx.core.splashscreen.SplashScreenViewProvider
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
@@ -38,7 +39,7 @@ internal suspend fun awaitSplashLayout(decor: ViewGroup) {
     }
 }
 
-/** Counter-rotating internal ring lines, followed by a fade into the ready application. */
+/** Enlarge the complete emblem while fading into the ready application. */
 internal fun animateSplashExit(provider: SplashScreenViewProvider, decor: ViewGroup, background: Int, bitmap: Bitmap): Animator? {
     if (!ValueAnimator.areAnimatorsEnabled() || decor.width == 0 || decor.height == 0) {
         provider.remove()
@@ -50,7 +51,7 @@ internal fun animateSplashExit(provider: SplashScreenViewProvider, decor: ViewGr
     val icon = provider.iconView
     val iconLocation = IntArray(2).also(icon::getLocationOnScreen)
     val decorLocation = IntArray(2).also(decor::getLocationOnScreen)
-    // Keep the full logo stationary at the native splash size and center, without its icon mask.
+    // Begin at the native splash size and center, then grow the complete unmasked artwork.
     val nativeEdge = if (icon.width > 0) icon.width * 0.66f else 190f * density
     val edge = minOf(nativeEdge, width * 0.86f, height * 0.62f, 420f * density).toInt().coerceAtLeast(1)
     val centerX = if (icon.width > 0) iconLocation[0] - decorLocation[0] + icon.width / 2 else width / 2
@@ -61,7 +62,12 @@ internal fun animateSplashExit(provider: SplashScreenViewProvider, decor: ViewGr
         isClickable = false
         isFocusable = false
     }
-    val emblem = SplashEmblemView(decor.context, bitmap)
+    val emblem = ImageView(decor.context).apply {
+        scaleType = ImageView.ScaleType.FIT_CENTER
+        setImageBitmap(bitmap)
+        pivotX = edge / 2f
+        pivotY = edge / 2f
+    }
     layer.addView(emblem, FrameLayout.LayoutParams(edge, edge, Gravity.TOP or Gravity.LEFT).apply {
         leftMargin = centerX - edge / 2
         topMargin = centerY - edge / 2
@@ -75,19 +81,23 @@ internal fun animateSplashExit(provider: SplashScreenViewProvider, decor: ViewGr
     layer.layout(0, 0, width, height)
     provider.remove()
     return AnimatorSet().apply {
-        val rings = ValueAnimator.ofFloat(0f, 360f).apply {
-            duration = 640
-            interpolator = PathInterpolator(0.4f, 0f, 0.2f, 1f)
-            addUpdateListener { emblem.ringDegrees = it.animatedValue as Float }
+        playTogether(
+            ObjectAnimator.ofFloat(emblem, View.SCALE_X, 1f, 1.6f),
+            ObjectAnimator.ofFloat(emblem, View.SCALE_Y, 1f, 1.6f),
+            ObjectAnimator.ofFloat(layer, View.ALPHA, 1f, 0f),
+        )
+        duration = 600
+        interpolator = PathInterpolator(0.22f, 0f, 0.2f, 1f)
+        var removed = false
+        fun removeLayer() {
+            if (!removed) {
+                removed = true
+                decor.removeView(layer)
+            }
         }
-        val fade = ObjectAnimator.ofFloat(layer, View.ALPHA, 1f, 0f).apply {
-            duration = 160
-            startDelay = 560
-            interpolator = PathInterpolator(0.22f, 0f, 0.2f, 1f)
-        }
-        playTogether(rings, fade)
         addListener(object : AnimatorListenerAdapter() {
-            override fun onAnimationEnd(animation: Animator) { decor.removeView(layer) }
+            override fun onAnimationCancel(animation: Animator) { removeLayer() }
+            override fun onAnimationEnd(animation: Animator) { removeLayer() }
         })
         start()
     }

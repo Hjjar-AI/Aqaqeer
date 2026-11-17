@@ -1,0 +1,54 @@
+Complementary ring bonds
+
+Use case: precise-object-edit.
+Image 1 is the edit target: the current transparent Aqaqeer Arabic gold/teal wordmark. Make ONE small static edit.
+There are TWO gold chemical hexagons. Change ONLY the THREE teal internal bond strokes inside the RIGHT-HAND hexagon (the smaller hexagon around x=845,y=640 on the 1254px reference, immediately to the right of the tall central gold letter).
+Rotate that internal three-stroke arrangement by 60 degrees around its own hexagon center so it occupies the alternate set of sides. Required result INSIDE THE RIGHT HEXAGON: teal stroke on the UPPER-LEFT sloping side, teal stroke on the RIGHT vertical side, teal stroke on the LOWER-LEFT sloping side.
+Keep the LEFT-HAND hexagon's three teal strokes exactly as they currently are: LEFT vertical, UPPER-RIGHT sloping, LOWER-RIGHT sloping. Thus the two rings have complementary, alternating orientations.
+Do NOT rotate or redraw either gold hexagon outline, the Arabic lettering, dots, capsule, or the whole logo. Preserve the exact Arabic word "عقاقير", composition, rich bright warm gold, teal colour, thin slate-navy outline, finish, shape proportions, canvas size, placement and transparent margins. Do not mute the gold. No extra strokes, no missing strokes, no added details.
+This is a single still logo, NOT an animation. Keep a truly transparent RGBA background and clean antialiased edges. No solid backdrop, checkerboard, shadow, glow, mockup or extra text.
+
+---
+
+Bold tablet score lines
+
+Use case: precise-object-edit.
+Image 1 is the edit target: the current transparent gold-and-teal Aqaqeer Arabic logo with complementary teal bond patterns in its two chemical rings.
+Make ONE small edit: make the dark scored split line across EACH OF THE FOUR ROUND GOLD TABLETS ABOVE THE LETTERS noticeably thicker and bolder. These are the four circular gold dots/tablets at the top, not the horizontal capsule below. Give all four internal tablet split lines a consistent strong stroke, approximately 1.7–2 times the present weight, while preserving their existing individual angles, positions and the circular tablet silhouettes. Use the existing deep slate-navy line colour. Keep each tablet gold on both sides of its split.
+Preserve the just-approved alternating ring arrangement: LEFT hexagon has teal bonds on LEFT vertical, UPPER-RIGHT and LOWER-RIGHT sides; RIGHT hexagon has teal bonds on RIGHT vertical, UPPER-LEFT and LOWER-LEFT sides. Do not change or rotate those.
+Keep the exact Arabic word "عقاقير", rich bright warm gold (do NOT mute it), teal accents, thinner softer OUTER outlines, flatter finish, letter shapes, chemical hexagons, capsule, composition, scale, placement and transparent margins. Do NOT thicken the outer logo or tablet outlines, only the four tablet score/split strokes. No added circles, lines, words, 3D, shadows or glows.
+Output a single still logo on a genuinely transparent RGBA background, same square canvas, uncropped, with clean antialiased edges and no solid backdrop or checkerboard.
+
+---
+
+Teal tablet colour and initial enlargement
+
+Use case: precise-object-edit.
+Image 1 is the edit target: the approved warm-gold Arabic Aqaqeer wordmark with two complementary chemical rings.
+Edit ONLY the FOUR ROUND TABLET DOTS above the letters as one group:
+1. Change their gold interior fill to the SAME rich teal/turquoise used by the internal chemical-ring strokes (approximately #008F9C), with a clean mostly flat finish.
+2. Increase EACH round tablet's diameter by 10 percent, centered on its existing position. Preserve their round shapes, distinct circular boundaries and tidy relationship to the letters. Keep both pairs separate and readable.
+3. Make the dark slate-navy score/split line inside EACH tablet bold and thicker, about 1.7 times its original weight, keeping each split's original angle. Tablet outside outlines stay thin; the score lines should be visually clear on teal.
+Everything outside those four tablets must retain the reference appearance: do not recolour the gold Arabic lettering, do not make gold brighter/yellower or duller, keep its current rich warm-gold hue and softer edge treatment. Keep the exact word "عقاقير", letter shapes, capsule below, chemical outlines and all three teal bonds in each hexagon. LEFT ring's teal bonds remain LEFT vertical / UPPER-RIGHT / LOWER-RIGHT; RIGHT ring's teal bonds remain RIGHT vertical / UPPER-LEFT / LOWER-LEFT.
+Preserve the square canvas, overall logo scale/placement, margins, composition, thinner slate-navy outer contour and clean smooth finish. No red or yellow fringe, edge glow, noise, jagged pixels, added shadow, extra lines, objects, words or mockups.
+Output ONE still isolated logo on a genuinely transparent RGBA background, no solid/white/black/checkerboard backdrop. Keep clean antialiased edges and fully transparent empty areas.
+
+---
+
+Reduce tablets five percent
+
+Use case: precise-object-edit.
+Image 1 is the exact edit target, the latest Aqaqeer Arabic logo with four TEAL round tablet dots, bold dark tablet split lines, bright warm-gold lettering, and complementary teal bonds inside two hexagons.
+Make ONLY this change: reduce EACH of the FOUR TEAL ROUND TABLETS ABOVE THE LETTERS to 95% of its CURRENT diameter, a five-percent size reduction. Scale each tablet about its own existing center, including its outline and split line together. Keep the split lines visually bold. Do not change the capsule below.
+Everything else must stay as in this image: same exact canvas size, logo size and position, Arabic word "عقاقير", rich gold colour, teal colour, thin slate outer outlines, lettering, chemical hexagon outlines, and internal bond arrangement. The LEFT hexagon retains left-vertical / upper-right / lower-right teal bonds; RIGHT hexagon retains right-vertical / upper-left / lower-left teal bonds. Do not enlarge, reposition, reframe or redraw the overall wordmark.
+Keep a genuinely transparent RGBA background, clean antialiased edges, and no glow, shadows, fringe or extra objects. Output a single still logo.
+
+---
+
+Square transparent canvas correction
+
+Use case: precise-object-edit, canvas correction only.
+Use Image 1 as the exact final logo design. Its four TEAL round tablets have already been reduced in size by five percent and have bold navy score lines. Do NOT change the tablet size relative to the lettering again.
+The sole remaining change is CANVAS FORMAT: output a SQUARE transparent RGBA PNG, exactly 1254 by 1254 pixels, aspect ratio 1:1. The image must NOT have a rectangular canvas. Fit the entire existing logo uniformly into the square with transparent padding, centered. Preserve all aspect ratios; no stretching, cropping, reflowing or redesigning.
+Preserve Image 1's rich warm-gold Arabic word "عقاقير", teal tablet colour, current smaller tablets, bold split lines and their angles, thin slate outlines, capsule, and two complementary ring patterns: LEFT ring has teal left-vertical, upper-right, lower-right bonds; RIGHT ring has teal right-vertical, upper-left, lower-left bonds.
+No changes to the design, colours, materials, line weights or spacing within the logo. Only add the transparent space necessary for a square export. Transparent pixels must be truly transparent; no black/white/checkerboard background, extra marks, shadow or glow.
