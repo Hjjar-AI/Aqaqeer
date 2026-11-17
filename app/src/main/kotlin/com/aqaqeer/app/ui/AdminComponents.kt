@@ -37,18 +37,17 @@ import com.aqaqeer.app.data.CatalogSnapshot
     errorText: String? = null, submitted: Boolean = false, validate: ((String) -> String?)? = null,
     tag: String = label, keyboardOptions: androidx.compose.foundation.text.KeyboardOptions? = null,
     numericSecret: Boolean = false, ltr: Boolean = false, singleLine: Boolean = true,
-    imeAction: ImeAction = if (singleLine) ImeAction.Next else ImeAction.Default, onDone: (() -> Unit)? = null, trailingContent: (@Composable () -> Unit)? = null) {
+    imeAction: ImeAction = if (singleLine) ImeAction.Next else ImeAction.Default, onDone: (() -> Unit)? = null, trailingContent: (@Composable () -> Unit)? = null, rule: String? = null) {
     val focus = LocalFocusManager.current
-    var focusedOnce by remember(label) { mutableStateOf(false) }
-    var touched by remember(label) { mutableStateOf(false) }
+    var focusedOnce by rememberSaveable(tag) { mutableStateOf(false) }
+    var touched by rememberSaveable(tag) { mutableStateOf(false) }
     // Visibility is intentionally never saved across recreation.
     var visible by remember(label) { mutableStateOf(false) }
     val weakPin = secret && numericSecret && FormGuidance.simpleNumericPattern(value)
     val validationError = errorText ?: if (required == true && (if (secret) value.isEmpty() else value.isBlank()))
         uiText(R.string.ui_admin_components_001) else validate?.invoke(value)
     val error = validationError.takeIf { touched || submitted }
-    val shortLabel = label.substringBefore(" — ").substringBefore(" YYYY-MM-DD")
-    val rule = label.removePrefix(shortLabel).trim().trimStart('—').trim().takeIf { it.isNotBlank() }
+    val shortLabel = label
     val hint = listOfNotNull(supportingText ?: rule,
         if (required == false) uiText(R.string.ui_admin_components_003) else null).distinct().joinToString(" · ").takeIf { it.isNotBlank() }
     val focusRequester = remember { FocusRequester() }
@@ -210,13 +209,49 @@ internal class BackupExportSecrets {
 
 @Composable internal fun BackupPassphraseFields(password: String, confirmation: String, setPassword: (String) -> Unit,
     setConfirmation: (String) -> Unit) {
-    FormField(uiText(R.string.ui_admin_components_025), password, setPassword, secret = true, required = true,
-        supportingText = uiText(R.string.ui_admin_components_026), validate = { if (it.codePointCount(0, it.length) >= 8) null else uiText(R.string.ui_admin_components_027) })
-    FormField(uiText(R.string.ui_admin_components_028), confirmation, setConfirmation, secret = true, required = true, imeAction = ImeAction.Done, validate = { if (it == password) null else uiText(R.string.ui_admin_components_029) })
+    SecretField(uiText(R.string.ui_admin_components_025), password, setPassword, required = true, supportingText = uiText(R.string.ui_admin_components_026), validate = { if (it.codePointCount(0, it.length) >= 8) null else uiText(R.string.ui_admin_components_027) })
+    SecretField(uiText(R.string.ui_admin_components_028), confirmation, setConfirmation, required = true, imeAction = ImeAction.Done, validate = { if (it == password) null else uiText(R.string.ui_admin_components_029) })
 }
 
 /** A short explanation stays available without occupying the primary reading path. */
 @Composable internal fun ExpandableInformation(title: String, body: String) {
     var expanded by rememberSaveable(title) { mutableStateOf(false) }
     CollapsibleGroup(title, expanded, { expanded = !expanded }) { SupportingText(body) }
+}
+
+@Composable internal fun SecretField(label: String,
+    value: String,
+    change: (String) -> Unit,
+    modifier: Modifier = Modifier,
+    required: Boolean? = null,
+    supportingText: String? = null,
+    errorText: String? = null,
+    submitted: Boolean = false,
+    validate: ((String) -> String?)? = null,
+    tag: String = label,
+    keyboardOptions: androidx.compose.foundation.text.KeyboardOptions? = null,
+    numericSecret: Boolean = false,
+    ltr: Boolean = false,
+    imeAction: ImeAction = ImeAction.Next,
+    onDone: (() -> Unit)? = null,
+    rule: String? = null) {
+    FormField(label = label, value = value, change = change, modifier = modifier, required = required, supportingText = supportingText, errorText = errorText, submitted = submitted, validate = validate, tag = tag, keyboardOptions = keyboardOptions, numericSecret = numericSecret, ltr = ltr, imeAction = imeAction, onDone = onDone, rule = rule, secret = true)
+}
+
+@Composable internal fun MultilineField(label: String,
+    value: String,
+    change: (String) -> Unit,
+    modifier: Modifier = Modifier,
+    required: Boolean? = null,
+    supportingText: String? = null,
+    errorText: String? = null,
+    submitted: Boolean = false,
+    validate: ((String) -> String?)? = null,
+    tag: String = label,
+    keyboardOptions: androidx.compose.foundation.text.KeyboardOptions? = null,
+    ltr: Boolean = false,
+    imeAction: ImeAction = ImeAction.Default,
+    onDone: (() -> Unit)? = null,
+    rule: String? = null) {
+    FormField(label = label, value = value, change = change, modifier = modifier, required = required, supportingText = supportingText, errorText = errorText, submitted = submitted, validate = validate, tag = tag, keyboardOptions = keyboardOptions, ltr = ltr, imeAction = imeAction, onDone = onDone, rule = rule, singleLine = false)
 }

@@ -119,7 +119,7 @@ import com.aqaqeer.app.maintenance.*
                     if (j.phase == MaintenancePhase.TOKEN_CHANGE) {
                         Text(uiText(R.string.ui_maintenance_screen_031))
                         var token by remember(j.id) { mutableStateOf("") }
-                        FormField(uiText(R.string.ui_maintenance_screen_032), token, { token = it }, secret = true, required = true)
+                        SecretField(uiText(R.string.ui_maintenance_screen_032), token, { token = it }, required = true)
                         AppButton(enabled = !busy && token.isNotBlank() && j.receipt != null, onClick = {
                             val submitted = token; token = ""; run { vm.maintenance.rotationToken(submitted) }
                         }) { Text(uiText(R.string.ui_maintenance_screen_033)) }
@@ -157,7 +157,7 @@ import com.aqaqeer.app.maintenance.*
         AppButton(variant = AppButtonVariant.QUIET, enabled = !busy, onClick = {
             try { picker.launch(arrayOf("*/*")) } catch (_: Exception) { vm.adminMessage.value = uiText(R.string.ui_maintenance_screen_044) }
         }) { Text(uiText(R.string.ui_maintenance_screen_045)) }
-        FormField(uiText(R.string.ui_maintenance_screen_046), password, { password = it }, secret = true, required = true)
+        SecretField(uiText(R.string.ui_maintenance_screen_046), password, { password = it }, required = true)
         AppButton(enabled = !busy && selected != null && password.isNotEmpty(), onClick = {
             val uri = selected ?: return@AppButton; val secret = password.toCharArray(); password = ""
             vm.secretCommand(null, secret, queueOffline = false) { vm.maintenance.stageReplacement(uri, secret) }
@@ -168,9 +168,9 @@ import com.aqaqeer.app.maintenance.*
 @Composable private fun PinChangeFields(vm: CatalogViewModel, busy: Boolean) {
     var current by remember { mutableStateOf("") }; var next by remember { mutableStateOf("") }; var confirmation by remember { mutableStateOf("") }
     GroupedCard(title = uiText(R.string.ui_maintenance_screen_048)) {
-        FormField(uiText(R.string.ui_maintenance_screen_049), current, { current = it }, secret = true, required = true, numericSecret = true, validate = FormGuidance::pin)
-        FormField(uiText(R.string.ui_maintenance_screen_050), next, { next = it }, secret = true, required = true, numericSecret = true, validate = FormGuidance::pin)
-        FormField(uiText(R.string.ui_maintenance_screen_051), confirmation, { confirmation = it }, secret = true, required = true, numericSecret = true, validate = { if (it.map { c -> Character.digit(c, 10) } == next.map { c -> Character.digit(c, 10) }) null else uiText(R.string.ui_pharmacy_admin_screen_013) })
+        SecretField(uiText(R.string.ui_maintenance_screen_049), current, { current = it }, required = true, numericSecret = true, validate = FormGuidance::pin)
+        SecretField(uiText(R.string.ui_maintenance_screen_050_label), next, { next = it }, required = true, numericSecret = true, validate = FormGuidance::pin, rule = uiText(R.string.ui_maintenance_screen_050_rule), tag = uiText(R.string.ui_maintenance_screen_050))
+        SecretField(uiText(R.string.ui_maintenance_screen_051), confirmation, { confirmation = it }, required = true, numericSecret = true, validate = { if (it.map { c -> Character.digit(c, 10) } == next.map { c -> Character.digit(c, 10) }) null else uiText(R.string.ui_pharmacy_admin_screen_013) })
         SupportingText(uiText(R.string.ui_maintenance_screen_053))
         AppButton(enabled = !busy && current.isNotEmpty() && next.isNotEmpty() && confirmation.isNotEmpty(), onClick = {
             val a = current.toCharArray(); val b = next.toCharArray(); val c = confirmation.toCharArray()
@@ -223,9 +223,8 @@ import com.aqaqeer.app.maintenance.*
     var token by remember(j.id) { mutableStateOf("") }; var group by remember(j.id) { mutableStateOf("") }
     var title by remember(token, group) { mutableStateOf<String?>(null) }
     GroupedCard(title = uiText(R.string.ui_maintenance_screen_064)) {
-        FormField(uiText(R.string.ui_maintenance_screen_065), token, { token = it }, secret = true, required = true)
-        FormField(uiText(R.string.ui_maintenance_screen_066), group, { group = groupIdInput(it) }, required = true, validate = FormGuidance::group, ltr = true,
-            supportingText = uiText(R.string.ui_maintenance_screen_067))
+        SecretField(uiText(R.string.ui_maintenance_screen_065), token, { token = it }, required = true)
+        FormField(uiText(R.string.ui_maintenance_screen_066), group, { group = groupIdInput(it) }, required = true, validate = FormGuidance::group, ltr = true, supportingText = uiText(R.string.ui_maintenance_screen_067))
         Text(uiText(R.string.ui_maintenance_screen_068))
         AppButton(variant = AppButtonVariant.QUIET, enabled = !busy && token.isNotBlank() && group.toLongOrNull()?.let { it < 0 } == true, onClick = {
             val t = token; val g = group.toLong()

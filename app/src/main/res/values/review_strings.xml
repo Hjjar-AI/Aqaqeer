@@ -56,4 +56,16 @@
     <string name="review_select_file">اختيار الملف</string>
     <string name="notice_dismiss">إخفاء التنبيه</string>
     <string name="contact_email" translatable="false">hjjarmhmmdali@gmail.com</string>
+    <string name="ui_pharmacy_admin_screen_130_label" formatted="false">الاسم الإنجليزي</string>
+    <string name="ui_pharmacy_admin_screen_130_rule" formatted="false">اختياري</string>
+    <string name="ui_pharmacy_admin_screen_113_label" formatted="false">العيار</string>
+    <string name="ui_pharmacy_admin_screen_113_rule" formatted="false">مطلوب</string>
+    <string name="ui_pharmacy_admin_screen_106_label" formatted="false">كلمة ملف الاتصال</string>
+    <string name="ui_pharmacy_admin_screen_106_rule" formatted="false">أربعة أرقام على الأقل؛ يفضل توليد 16 رقماً عشوائياً</string>
+    <string name="ui_pharmacy_admin_screen_011_label" formatted="false">رمز الإدارة</string>
+    <string name="ui_pharmacy_admin_screen_011_rule" formatted="false">أربعة أرقام على الأقل</string>
+    <string name="ui_backup_screen_027_label" formatted="false">رمز بديل للبوت نفسه</string>
+    <string name="ui_backup_screen_027_rule" formatted="false">اختياري</string>
+    <string name="ui_maintenance_screen_050_label" formatted="false">رمز الإدارة الجديد</string>
+    <string name="ui_maintenance_screen_050_rule" formatted="false">أربعة أرقام على الأقل</string>
 </resources>

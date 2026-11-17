@@ -110,7 +110,7 @@ internal fun statusLabel(status: AvailabilityStatus): String = uiText(when (stat
     val context = LocalContext.current
     val feedback by viewModel.feedback.collectAsStateWithLifecycle()
     LaunchedEffect(feedback?.id, state.destination) {
-        val message = feedback?.takeIf { it.route == state.destination } ?: return@LaunchedEffect
+        val message = feedback?.takeIf { it.destination == state.destination } ?: return@LaunchedEffect
         val result = snackbar.showSnackbar(message.message, actionLabel = when {
             message.undo != null -> uiText(R.string.ui_aqaqeer_app_001); message.medicationId != null -> uiText(R.string.ui_aqaqeer_app_002); else -> null
         }, withDismissAction = true, duration = if (message.undo != null || message.medicationId != null)
@@ -256,8 +256,7 @@ internal fun statusLabel(status: AvailabilityStatus): String = uiText(when (stat
                     colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background))
             }, snackbarHost = { SnackbarHost(snackbar) },
         ) { insets ->
-            ScreenFrame(wide = state.destination == Route.Home || state.destination.startsWith("med:"), form = state.destination in setOf(Route.Create, Route.Promote, Route.Leave, Route.Setup, Route.ExportConnection, Route.Connection, Route.Backup, Route.Maintenance, Route.Taxonomy)
-                || state.destination is Route.EditMedication,
+            ScreenFrame(wide = state.destination.isWide, form = state.destination.isForm || state.destination is Route.EditMedication,
                 modifier = Modifier.padding(insets).consumeWindowInsets(insets).imePadding()) {
                 AnimatedContent(targetState = state, modifier = Modifier.graphicsLayer {
                     scaleX = 1f - 0.04f * backProgress
@@ -311,13 +310,13 @@ internal fun statusLabel(status: AvailabilityStatus): String = uiText(when (stat
                             scope.launch { snackbar.showSnackbar(uiText(R.string.ui_aqaqeer_app_016), withDismissAction = true, duration = SnackbarDuration.Short) }
                         }
                     }
-                    "create", "admin", "setup", "review", "taxonomy", "promote", "leave", Route.ExportConnection -> PharmacyAdminScreen(state, viewModel)
-                    else -> if (state.destination is Route.History) HistoryScreen(
+                    Route.Create, Route.Admin, Route.Setup, Route.Review, Route.Taxonomy, Route.Promote, Route.Leave, Route.ExportConnection -> PharmacyAdminScreen(state, viewModel)
+                    is Route.History -> HistoryScreen(
                         state.catalog as? CatalogState.Ready,
                         (state.destination as Route.History).medicationId, viewModel,
                         showHijri = state.homePreferences.secondaryHijri)
-                    else if (state.destination is Route.EditMedication) PharmacyAdminScreen(state, viewModel)
-                    else when (val catalogState = state.catalog) {
+                    is Route.EditMedication -> PharmacyAdminScreen(state, viewModel)
+                    Route.Home, is Route.Medication, is Route.Unknown -> when (val catalogState = state.catalog) {
                         CatalogState.Loading -> LoadingScreen()
                         CatalogState.RecoveryRequired -> RecoveryScreen(viewModel::retryProtectedStorage) { navigate(Route.Settings) }
                         is CatalogState.Ready -> {

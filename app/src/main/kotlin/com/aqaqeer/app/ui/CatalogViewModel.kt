@@ -480,7 +480,7 @@ class CatalogViewModel @Inject constructor(
             savedState["route"] = "home"
             return
         }
-        if destination !is Route.History historyRequest.value = HistoryRequest()
+        if (destination !is Route.History) historyRequest.value = HistoryRequest()
         adminMessage.value = null
         feedback.value = null
         savedState["route"] = RouteStorage.encode(destination)

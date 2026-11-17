@@ -129,10 +129,8 @@ import kotlinx.serialization.json.*
                     FormField(uiText(R.string.ui_pharmacy_admin_screen_009), section, { section = it }, submitted = formSubmitted, required = true)
                     if (creating) SupportingText(uiText(R.string.ui_pharmacy_admin_screen_010))
                     else key(pinEntryVersion) {
-                        FormField(uiText(R.string.ui_pharmacy_admin_screen_011), pin, { pin = it }, secret = true, submitted = formSubmitted,
-                            required = true, numericSecret = true, validate = FormGuidance::pin)
-                        FormField(uiText(R.string.ui_pharmacy_admin_screen_012), confirm, { confirm = it }, secret = true, submitted = formSubmitted,
-                            required = true, numericSecret = true, imeAction = ImeAction.Done, validate = {
+                        SecretField(uiText(R.string.ui_pharmacy_admin_screen_011_label), pin, { pin = it }, submitted = formSubmitted, required = true, numericSecret = true, validate = FormGuidance::pin, rule = uiText(R.string.ui_pharmacy_admin_screen_011_rule), tag = uiText(R.string.ui_pharmacy_admin_screen_011))
+                        SecretField(uiText(R.string.ui_pharmacy_admin_screen_012), confirm, { confirm = it }, submitted = formSubmitted, required = true, numericSecret = true, imeAction = ImeAction.Done, validate = {
                                 if (it.map { c -> Character.digit(c, 10) } == pin.map { c -> Character.digit(c, 10) }) null
                                 else uiText(R.string.ui_pharmacy_admin_screen_013)
                             })
@@ -157,7 +155,7 @@ import kotlinx.serialization.json.*
             state.destination == Route.Promote -> {
                 var pin by remember { mutableStateOf("") }
                 GroupedCard(title = uiText(R.string.ui_pharmacy_admin_screen_016)) {
-                    FormField(uiText(R.string.ui_pharmacy_admin_screen_017), pin, { pin = it }, secret = true, submitted = formSubmitted, required = true, numericSecret = true, imeAction = ImeAction.Done, validate = FormGuidance::pin)
+                    SecretField(uiText(R.string.ui_pharmacy_admin_screen_017), pin, { pin = it }, submitted = formSubmitted, required = true, numericSecret = true, imeAction = ImeAction.Done, validate = FormGuidance::pin)
                 }
                 Text(uiText(R.string.ui_pharmacy_admin_screen_018))
                 AppButton(enabled = !busy, onClick = {
@@ -170,8 +168,7 @@ import kotlinx.serialization.json.*
                 Text(uiText(R.string.ui_screen_titles_007), style = MaterialTheme.typography.headlineSmall)
                 GroupedCard(title = uiText(R.string.ui_pharmacy_admin_screen_019)) {
                     Text(uiText(R.string.ui_pharmacy_admin_screen_020))
-                    if (ready.admin) FormField(uiText(R.string.ui_pharmacy_admin_screen_021), leaveName, { leaveName = it }, submitted = formSubmitted, required = true,
-                        validate = { if (it == catalog.pharmacy?.name) null else uiText(R.string.ui_pharmacy_admin_screen_022) })
+                    if (ready.admin) FormField(uiText(R.string.ui_pharmacy_admin_screen_021), leaveName, { leaveName = it }, submitted = formSubmitted, required = true, validate = { if (it == catalog.pharmacy?.name) null else uiText(R.string.ui_pharmacy_admin_screen_022) })
                     CheckChoiceRow(confirmedLeave, uiText(R.string.ui_pharmacy_admin_screen_023)) { confirmedLeave = it }
                     if (ready.uncertain) NoticeStrip(Notice(uiText(R.string.ui_pharmacy_admin_screen_025), NoticeSeverity.WARNING))
                     AppButton(colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error, contentColor = MaterialTheme.colorScheme.onError), enabled = confirmedLeave && !busy, onClick = {
@@ -286,14 +283,13 @@ internal fun reviewValue(field: String, raw: String, catalog: CatalogSnapshot, l
     StepHeader(listOf(uiText(R.string.ui_pharmacy_admin_screen_093), uiText(R.string.ui_pharmacy_admin_screen_096), uiText(R.string.ui_pharmacy_admin_screen_098)),
         if (title != null) 2 else if (group.isNotBlank()) 1 else 0)
     GroupedCard(title = uiText(R.string.ui_pharmacy_admin_screen_090)) {
-        FormField(uiText(R.string.ui_pharmacy_admin_screen_091), token, { token = it }, secret = true, required = true)
+        SecretField(uiText(R.string.ui_pharmacy_admin_screen_091), token, { token = it }, required = true)
         SelectionContainer { Text(bidi("/aqsetup ${challenge}")) }
         AppButton(variant = AppButtonVariant.SECONDARY, onClick = { clipboard.setPrimaryClip(android.content.ClipData.newPlainText("Aqaqeer", "/aqsetup ${challenge}")) }) { Text(uiText(R.string.ui_pharmacy_admin_screen_092)) }
         AppButton(enabled = !busy && token.isNotBlank(), onClick = { vm.command { found = vm.sharing.discover(token, challenge) } }) { Text(uiText(R.string.ui_pharmacy_admin_screen_093)) }
         if (found.isNotEmpty()) RadioChoiceRows(found, found.find { it.first.toString() == group },
             { group = it.first.toString() }, { it.second })
-        FormField(uiText(R.string.ui_pharmacy_admin_screen_094), group, { group = groupIdInput(it) }, required = true, validate = FormGuidance::group,
-            supportingText = uiText(R.string.ui_pharmacy_admin_screen_095), ltr = true, imeAction = ImeAction.Done)
+        FormField(uiText(R.string.ui_pharmacy_admin_screen_094), group, { group = groupIdInput(it) }, required = true, validate = FormGuidance::group, supportingText = uiText(R.string.ui_pharmacy_admin_screen_095), ltr = true, imeAction = ImeAction.Done)
         AppButton(enabled = !busy && group.toLongOrNull()?.let { it < 0 } == true, onClick = { vm.command { title = vm.sharing.inspectSetup(token, group.toLong()) } }) { Text(uiText(R.string.ui_pharmacy_admin_screen_096)) }
         title?.let { name ->
             Text(uiText(R.string.ui_pharmacy_admin_screen_097, name))
@@ -328,8 +324,7 @@ internal fun reviewValue(field: String, raw: String, catalog: CatalogSnapshot, l
     }
     Text(uiText(R.string.ui_pharmacy_admin_screen_104))
     GroupedCard(title = uiText(R.string.ui_pharmacy_admin_screen_105)) {
-        FormField(uiText(R.string.ui_pharmacy_admin_screen_106), password, { if (it.length <= 1024) { password = it; generated = false } },
-            secret = true, required = true, validate = FormGuidance::pin, imeAction = ImeAction.Done)
+        SecretField(uiText(R.string.ui_pharmacy_admin_screen_106_label), password, { if (it.length <= 1024) { password = it; generated = false } }, required = true, validate = FormGuidance::pin, imeAction = ImeAction.Done, rule = uiText(R.string.ui_pharmacy_admin_screen_106_rule), tag = uiText(R.string.ui_pharmacy_admin_screen_106))
         SupportingText(uiText(R.string.logic_password_guidance))
         if (FormGuidance.simpleNumericPattern(password)) SupportingText(uiText(R.string.logic_password_pattern))
         ActionGroup {
@@ -416,12 +411,9 @@ internal fun reviewValue(field: String, raw: String, catalog: CatalogSnapshot, l
     if (expiryDay != null && expiryDay < MedicationPresentation.today(Instant.now(), c.pharmacy?.timezone ?: "Asia/Damascus"))
         SupportingText(uiText(R.string.logic_past_expiry))
     GroupedCard(title = uiText(R.string.ui_pharmacy_admin_screen_111)) {
-        FormField(uiText(R.string.ui_pharmacy_admin_screen_067), genericAr, { genericAr = it }, submitted = submitted,
-            supportingText = uiText(R.string.ui_pharmacy_admin_screen_112), validate = { scientificError })
-        FormField(uiText(R.string.ui_pharmacy_admin_screen_068), genericEn, { genericEn = it }, ltr = true, submitted = submitted,
-            keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(capitalization = androidx.compose.ui.text.input.KeyboardCapitalization.Words),
-            supportingText = uiText(R.string.ui_pharmacy_admin_screen_112), validate = { scientificError })
-        FormField(uiText(R.string.ui_pharmacy_admin_screen_113), strength, { strength = it }, submitted = submitted, required = true)
+        FormField(uiText(R.string.ui_pharmacy_admin_screen_067), genericAr, { genericAr = it }, submitted = submitted, supportingText = uiText(R.string.ui_pharmacy_admin_screen_112), validate = { scientificError })
+        FormField(uiText(R.string.ui_pharmacy_admin_screen_068), genericEn, { genericEn = it }, ltr = true, submitted = submitted, keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(capitalization = androidx.compose.ui.text.input.KeyboardCapitalization.Words), supportingText = uiText(R.string.ui_pharmacy_admin_screen_112), validate = { scientificError })
+        FormField(uiText(R.string.ui_pharmacy_admin_screen_113_label), strength, { strength = it }, submitted = submitted, required = true, rule = uiText(R.string.ui_pharmacy_admin_screen_113_rule), tag = uiText(R.string.ui_pharmacy_admin_screen_113))
         AdaptivePickers(first = {
             ChoicePicker(uiText(R.string.ui_pharmacy_admin_screen_114), c.forms, c.forms.find { it.id == form }, { it.nameAr }, itemKey = { it.id }) { form = it.id }
         }, second = {
@@ -437,15 +429,14 @@ internal fun reviewValue(field: String, raw: String, catalog: CatalogSnapshot, l
     }
     CollapsibleGroup(uiText(R.string.ui_pharmacy_admin_screen_116), optionalOpen, { optionalOpen = !optionalOpen }) {
     GroupedCard {
-        FormField(uiText(R.string.ui_pharmacy_admin_screen_072), threshold, { threshold = MedicationPresentation.westernDigits(it) }, submitted = submitted,
-            required = true, validate = FormGuidance::threshold, ltr = true, imeAction = ImeAction.Done, onDone = { if (!busy) save() })
+        FormField(uiText(R.string.ui_pharmacy_admin_screen_072), threshold, { threshold = MedicationPresentation.westernDigits(it) }, submitted = submitted, required = true, validate = FormGuidance::threshold, ltr = true, imeAction = ImeAction.Done, onDone = { if (!busy) save() })
     }
     GroupedCard(title = uiText(R.string.ui_pharmacy_admin_screen_117)) {
         FormField(uiText(R.string.ui_pharmacy_admin_screen_064), ar, { ar = it }, submitted = submitted, required = false)
         FormField(uiText(R.string.ui_pharmacy_admin_screen_062), en, { en = it }, ltr = true, submitted = submitted, required = false)
     }
     GroupedCard(title = uiText(R.string.ui_pharmacy_admin_screen_118)) {
-        FormField(uiText(R.string.ui_pharmacy_admin_screen_069), brand, { brand = it }, submitted = submitted, required = false); FormField(uiText(R.string.ui_pharmacy_admin_screen_070), note, { note = it }, submitted = submitted, required = false, singleLine = false)
+        FormField(uiText(R.string.ui_pharmacy_admin_screen_069), brand, { brand = it }, submitted = submitted, required = false); MultilineField(uiText(R.string.ui_pharmacy_admin_screen_070), note, { note = it }, submitted = submitted, required = false)
     }
     }
     if (c.medications.any { other -> other.id != id &&
@@ -484,7 +475,7 @@ internal fun reviewValue(field: String, raw: String, catalog: CatalogSnapshot, l
     }
     AppButton(variant = AppButtonVariant.QUIET, onClick = ::resetForm) { Text(uiText(R.string.ui_pharmacy_admin_screen_128)) }
     GroupedCard(title = uiText(R.string.ui_pharmacy_admin_screen_129)) {
-        FormField(uiText(R.string.ui_pharmacy_admin_screen_065), name, { name = it }, required = true); FormField(uiText(R.string.ui_pharmacy_admin_screen_130), english, { english = it }, required = false)
+        FormField(uiText(R.string.ui_pharmacy_admin_screen_065), name, { name = it }, required = true); FormField(uiText(R.string.ui_pharmacy_admin_screen_130_label), english, { english = it }, required = false, rule = uiText(R.string.ui_pharmacy_admin_screen_130_rule), tag = uiText(R.string.ui_pharmacy_admin_screen_130))
         if (type == "section") CheckChoiceRow(active, uiText(R.string.ui_pharmacy_admin_screen_131)) { active = it }
         AppButton(enabled = !busy && name.isNotBlank(), onClick = { vm.command { vm.admin.saveTaxonomy(type, selected, name, english, active); resetForm() } }) { Text(uiText(R.string.ui_pharmacy_admin_screen_132)) }
     }

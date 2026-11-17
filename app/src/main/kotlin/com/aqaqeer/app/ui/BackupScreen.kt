@@ -78,7 +78,7 @@ import java.time.format.DateTimeFormatter
                 Text(uiText(R.string.ui_backup_screen_013))
                 AppButton(variant = AppButtonVariant.QUIET, enabled = !busy, onClick = { pick.launch(arrayOf("*/*")) }) { Text(if (selected == null) uiText(R.string.ui_backup_screen_014) else uiText(R.string.ui_backup_screen_015)) }
                 if (selected != null) {
-                    FormField(uiText(R.string.ui_backup_screen_016), restorePassword, { restorePassword = it }, secret = true, required = true)
+                    SecretField(uiText(R.string.ui_backup_screen_016), restorePassword, { restorePassword = it }, required = true)
                     if (ready.catalog.pharmacy != null) {
                         Text(uiText(R.string.ui_backup_screen_017, MedicationPresentation.displayDigits(ready.pendingCount.toString())))
                         FormField(uiText(R.string.ui_backup_screen_018), typedName, { typedName = it }, required = true)
@@ -118,7 +118,7 @@ import java.time.format.DateTimeFormatter
 @Composable private fun RestoreConnectionCheck(confirmed: Boolean, vm: CatalogViewModel, busy: Boolean) {
     var token by remember { mutableStateOf("") }; var title by remember(token) { mutableStateOf<String?>(null) }
     GroupedCard(title = uiText(R.string.ui_backup_screen_026)) {
-        FormField(uiText(R.string.ui_backup_screen_027), token, { token = it }, secret = true, required = false)
+        SecretField(uiText(R.string.ui_backup_screen_027_label), token, { token = it }, required = false, rule = uiText(R.string.ui_backup_screen_027_rule), tag = uiText(R.string.ui_backup_screen_027))
         Text(uiText(R.string.ui_backup_screen_028))
         AppButton(variant = AppButtonVariant.QUIET, enabled = !busy, onClick = { vm.command { title = vm.sharing.inspectRestoredConnection(token) } }) { Text(uiText(R.string.ui_backup_screen_029)) }
         title?.let { name ->

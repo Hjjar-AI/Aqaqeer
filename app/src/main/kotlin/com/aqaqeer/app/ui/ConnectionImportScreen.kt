@@ -96,10 +96,7 @@ import com.aqaqeer.app.BuildConfig
                         item {
                             GroupedCard(title = uiText(R.string.ui_connection_import_screen_026)) {
                                 Text(uiText(R.string.ui_connection_import_screen_027))
-                                FormField(uiText(R.string.ui_connection_import_screen_028), password, { if (it.length <= 1024) password = it }, secret = true,
-                                    required = true, tag = "connection_password",
-                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
-                                    validate = { if (it.length >= 4 && it.all { c -> Character.digit(c, 10) in 0..9 }) null else uiText(R.string.ui_connection_import_screen_029) })
+                                SecretField(uiText(R.string.ui_connection_import_screen_028), password, { if (it.length <= 1024) password = it }, required = true, tag = "connection_password", keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword), validate = { if (it.length >= 4 && it.all { c -> Character.digit(c, 10) in 0..9 }) null else uiText(R.string.ui_connection_import_screen_029) })
                                 AppButton(onClick = {
                                     val owned = password.toCharArray()
                                     password = ""; focus.clearFocus(); stage(owned)

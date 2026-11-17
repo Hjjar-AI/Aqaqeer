@@ -48,9 +48,7 @@ import java.time.ZoneOffset
 @Composable internal fun GregorianDateField(label: String, value: String, change: (String) -> Unit,
     submitted: Boolean = false, required: Boolean = false, tag: String = label) {
     var open by rememberSaveable(label) { mutableStateOf(false) }
-    FormField(label, value, { change(MedicationPresentation.westernDigits(it)) },
-        supportingText = uiText(R.string.ui_technical_fields_005), required = required, submitted = submitted,
-        validate = FormGuidance::date, tag = tag, ltr = true, trailingContent = {
+    FormField(label, value, { change(MedicationPresentation.westernDigits(it)) }, supportingText = uiText(R.string.ui_technical_fields_005), required = required, submitted = submitted, validate = FormGuidance::date, tag = tag, ltr = true, trailingContent = {
             IconButton(onClick = { open = true }) {
                 AppIcon(UiIcon.CALENDAR, description = uiText(R.string.ui_technical_fields_006, label))
             }
