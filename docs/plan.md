@@ -8,7 +8,9 @@ The approved source batch adds session dismissal controls, finite snackbars, foc
 
 | ID / priority | Dependency | Remaining work / acceptance |
 | --- | --- | --- |
-| U1 / P1 — Compile and Android acceptance | Separate build/test/device or hosted authorization | Both flavors; snackbar close/timeout/Undo/View and route ownership; independent notice/card-tip dismissal across navigation/rotation, changed content and new sessions; unchanged backup snooze/domain blocks; restored navigation/draft keys and role restrictions; forms/secret visibility and validation; grid keys/scroll/bulk/editor guards, phone two-column layout, large text/IME/wide panes, all accents and manual light/dark/AMOLED contrast. |
+| U1 / P1 — Compile and Android acceptance | Separate build/test/device or hosted authorization | Both flavors compiled/packaged at `eb539b9` in workflow 10 run 44099085893. Compile the subsequent two-cast cleanup; Android acceptance remains: snackbar close/timeout/Undo/View and route ownership; independent notice/card-tip dismissal across navigation/rotation, changed content and new sessions; unchanged backup snooze/domain blocks; restored navigation/draft keys and role restrictions; forms/secret visibility and validation; grid keys/scroll/bulk/editor guards, phone two-column layout, large text/IME/wide panes, all accents and manual light/dark/AMOLED contrast. |
+
+Native packaging follow-up: both flavors in run 44099085893 retained the unable-to-strip diagnostic for AndroidX graphics path, DataStore and SQLCipher libraries. Preserve the diagnostic; establish the cause from detailed output on a separately authorized build before changing packaging/toolchain configuration. The review grants no further execution authorization.
 
 Deferred: image/font reduction, component gallery and screenshot testing. Preserve current assets, adaptive columns and lifecycle clocks; no measured performance improvement is claimed.
 
@@ -16,7 +18,7 @@ Deferred: image/font reduction, component gallery and screenshot testing. Preser
 
 Renamed 756 numbered UI identifiers and redistributed all 870 entries from the large UI file and both review files into twelve feature files; existing semantic names/text/attributes and flavor app names are retained. [Source evidence](validation.md#string-resource-organization--2026-11-17) records identifier-only production/helper/test reference checks. Test scope is limited to reference inspection/edits; no assertion changes or execution are authorized.
 
-Remaining: compile/resource processing and the existing U1 Android acceptance, when separately authorized. Verify both flavors, resource formatting, field labels/tags and representative navigation/Home/forms/history/connection/publication/backup/maintenance/import/report text. No new behavior, test authoring/execution, Gradle, builds, lint, migration, version or device work is included.
+Workflow 10 run 44099085893 compiled production/resource processing for both flavors at `eb539b9`; test compilation, the later cast cleanup and U1 Android acceptance remain pending separate authorization. Verify both flavors, resource formatting, field labels/tags and representative navigation/Home/forms/history/connection/publication/backup/maintenance/import/report text. No new behavior, test authoring/execution, Gradle, builds, lint, migration, version or device work is included.
 
 ## Initial attribution-free baseline — 2026-11-16
 

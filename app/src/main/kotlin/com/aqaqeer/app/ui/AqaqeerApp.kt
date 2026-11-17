@@ -314,7 +314,7 @@ internal fun statusLabel(status: AvailabilityStatus, text: UiText? = null): Stri
                     Route.Create, Route.Admin, Route.Setup, Route.Review, Route.Taxonomy, Route.Promote, Route.Leave, Route.ExportConnection -> PharmacyAdminScreen(state, viewModel)
                     is Route.History -> HistoryScreen(
                         state.catalog as? CatalogState.Ready,
-                        (state.destination as Route.History).medicationId, viewModel,
+                        state.destination.medicationId, viewModel,
                         showHijri = state.homePreferences.secondaryHijri)
                     is Route.EditMedication -> PharmacyAdminScreen(state, viewModel)
                     Route.Home, is Route.Medication, is Route.Unknown -> when (val catalogState = state.catalog) {

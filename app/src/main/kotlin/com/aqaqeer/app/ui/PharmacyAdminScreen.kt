@@ -44,7 +44,7 @@ import kotlinx.serialization.json.*
             FormPage { InformationCard(uiText(R.string.catalog_edit_unavailable_title), uiText(R.string.catalog_edit_authorization_required_message)) }
             return
         }
-        val targetId = (state.destination as Route.EditMedication).id ?: "new"
+        val targetId = state.destination.id ?: "new"
         val medication = catalog.medications.find { it.id == targetId }
         if (targetId != "new" && medication == null) { FormPage { Text(uiText(R.string.catalog_medication_missing_message)) }; return }
         key(catalog.pharmacy?.pharmacyId, targetId) { MedicationEditor(catalog, medication, vm, busy) }
