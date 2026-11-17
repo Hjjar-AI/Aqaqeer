@@ -66,7 +66,7 @@ import java.time.LocalDate
             }) }
             items(entries, key = { it.id }) { entry ->
                 HistoryEntryCard(entry, ready.catalog, zone.id, medicationNames = medicationNames, showHijri = showHijri,
-                    editMedication = if (ready.requiresUpdate || ready.maintenancePaused) null else ({ id -> vm.navigate("edit-med:$id") }))
+                    editMedication = if (ready.requiresUpdate || ready.maintenancePaused) null else ({ id -> vm.navigate(Route.EditMedication(id)) }))
             }
         }
         item {

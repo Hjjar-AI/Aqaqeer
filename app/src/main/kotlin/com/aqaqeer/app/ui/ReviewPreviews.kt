@@ -6,7 +6,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
-import com.aqaqeer.app.AppStrings
 import com.aqaqeer.app.data.*
 import java.time.Instant
 import java.time.LocalDate
@@ -21,7 +20,6 @@ import java.time.LocalDate
 @Composable private fun ReviewExpandedPreview() = ReviewPreview(ThemeChoice.LIGHT, CardLayout.EXPANDED)
 
 @Composable private fun ReviewPreview(theme: ThemeChoice, layout: CardLayout = CardLayout.COMPACT) {
-    AppStrings.resources = LocalContext.current.resources
     val form = CatalogSeeds.forms.first()
     val medication = Medication("00000000-0000-4000-8000-000000000001", strength = "500 mg", formId = form.id,
         categoryId = CatalogSeeds.UNCATEGORIZED_ID, createdAt = Instant.EPOCH, updatedAt = Instant.EPOCH,

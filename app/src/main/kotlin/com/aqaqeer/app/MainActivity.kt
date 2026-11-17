@@ -62,7 +62,7 @@ class MainActivity : ComponentActivity() {
         val splash = installSplashScreen()
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        window.setBackgroundDrawable(ColorDrawable(appColorScheme(launchTheme, launchAccent, systemDark).background.toArgb()))
+        window.setBackgroundDrawable(ColorDrawable(appColorScheme(launchTheme, launchAccent, systemDark, resources).background.toArgb()))
         WindowCompat.getInsetsController(window, window.decorView).apply {
             isAppearanceLightStatusBars = !dark
             isAppearanceLightNavigationBars = !dark
@@ -79,7 +79,7 @@ class MainActivity : ComponentActivity() {
                     val decor = window.decorView as ViewGroup
                     awaitSplashLayout(decor)
                     val state = viewModel.state.value
-                    val background = appColorScheme(state.theme, state.accent, systemDark).background.toArgb()
+                    val background = appColorScheme(state.theme, state.accent, systemDark, resources).background.toArgb()
                     splashExit = animateSplashExit(provider, decor, background, bitmap)
                     handedOff = true
                 } finally {

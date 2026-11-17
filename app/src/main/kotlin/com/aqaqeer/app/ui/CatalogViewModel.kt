@@ -33,7 +33,9 @@ import javax.inject.Inject
 private data class BrowseRequest(val section: String?, val query: String, val filters: HomeFilters,
     val preferences: HomePreferences, val unpublished: Set<String>, val fetched: Set<String>, val today: java.time.LocalDate, val readerStockOnly: Boolean)
 internal data class UiFeedback(val message: String, val route: String, val medicationId: String? = null,
-    val undo: AvailabilityUndo? = null, val id: String = java.util.UUID.randomUUID().toString())
+    val undo: AvailabilityUndo? = null, val id: String = java.util.UUID.randomUUID().toString()) {
+    val destination: Route get() = RouteStorage.decode(route)
+}
 
 data class RefreshUiState(val busy: Boolean = false, val error: String? = null)
 
@@ -50,7 +52,9 @@ data class AppUiState(
     val fetchedIds: Set<String> = emptySet(),
     val accent: ThemeAccent = ThemeAccent.GOLD,
     val online: Boolean = true,
-)
+) {
+    val destination: Route get() = RouteStorage.decode(route)
+}
 
 @HiltViewModel
 @OptIn(FlowPreview::class, kotlinx.coroutines.ExperimentalCoroutinesApi::class)
@@ -181,7 +185,10 @@ class CatalogViewModel @Inject constructor(
     }
     private var adminJob: Job? = null
     internal fun cancelAdminOperation() { adminJob?.cancel() }
-    internal fun command(destination: String? = null, queueOffline: Boolean = true, action: suspend () -> Unit) {
+    internal fun command(destination: String, queueOffline: Boolean = true, action: suspend () -> Unit) =
+        command(RouteStorage.decode(destination), queueOffline, action)
+
+    internal fun command(destination: Route? = null, queueOffline: Boolean = true, action: suspend () -> Unit) {
         if (adminBusy.value) { feedback.value = UiFeedback(uiText(R.string.ui_catalog_view_model_005), route.value); return }
         val origin = route.value
         refreshJob?.cancel()
@@ -205,7 +212,7 @@ class CatalogViewModel @Inject constructor(
             }
         }
     }
-    internal fun secretCommand(destination: String?, vararg secrets: CharArray, queueOffline: Boolean = true, action: suspend () -> Unit) {
+    internal fun secretCommand(destination: Route?, vararg secrets: CharArray, queueOffline: Boolean = true, action: suspend () -> Unit) {
         if (adminBusy.value) { secrets.forEach { it.fill('\u0000') }; feedback.value = UiFeedback(uiText(R.string.ui_catalog_view_model_005), route.value); return }
         command(destination, queueOffline = queueOffline) { try { action() } finally { secrets.forEach { it.fill('\u0000') } } }
         // Also clear transferred secrets if a cancelled scope never starts the coroutine body.
@@ -221,16 +228,16 @@ class CatalogViewModel @Inject constructor(
     }
     internal fun undo(receipt: AvailabilityUndo) = command { admin.undoAvailability(receipt) }
     internal fun medicationSaved(id: String, added: Boolean) {
-        navigate("home")
+        navigate(Route.Home)
         highlightedMedication.value = id
         feedback.value = UiFeedback(if (added) uiText(R.string.ui_catalog_view_model_014) else uiText(R.string.ui_catalog_view_model_015), "home", medicationId = id)
     }
-    internal fun review() = command("review") { pendingEdits.value = admin.pending() }
+    internal fun review() = command(Route.Review) { pendingEdits.value = admin.pending() }
     internal fun publish(choices: Map<String, Boolean> = emptyMap(), reviewOnFailure: Boolean = false,
         recoverPin: Boolean = false) = command {
         check(!BuildConfig.IS_DEMO)
         sharing.publish(choices, recoverPin); pendingEdits.value = admin.pending(); admin.clearReconnectIfDone(sharing.status.value.verified)
-        if (reviewOnFailure && !sharing.status.value.verified) navigate("review")
+        if (reviewOnFailure && !sharing.status.value.verified) navigate(Route.Review)
     }
     internal fun onForeground(active: Boolean) {
         foreground = active
@@ -302,7 +309,7 @@ class CatalogViewModel @Inject constructor(
         val snapshot = (catalog as? CatalogState.Ready)?.catalog
         val requested = if (savedState.get<String>("sectionPharmacy") == snapshot?.pharmacy?.pharmacyId) section.first else null
         val selected = requested ?: snapshot?.pharmacy?.pharmacyId?.let { section.second[it] }
-        AppUiState(catalog, theme, if (BuildConfig.IS_DEMO && !demoRouteAllowed(route)) "home" else route, snapshot?.sections?.firstOrNull { it.isActive && it.id == selected }?.id
+        AppUiState(catalog, theme, if (BuildConfig.IS_DEMO && !demoRouteAllowed(RouteStorage.decode(route))) "home" else route, snapshot?.sections?.firstOrNull { it.isActive && it.id == selected }?.id
             ?: snapshot?.sections?.firstOrNull { it.isActive }?.id, accent = accent)
     }
     private val liveBase = combine(base, FetchedChanges.ids) { base, ids ->
@@ -323,7 +330,7 @@ class CatalogViewModel @Inject constructor(
     init {
         viewModelScope.launch {
             state.collect { current ->
-                if (BuildConfig.IS_DEMO && current.catalog is CatalogState.Ready && !demoRouteAllowed(current.route)) navigate("home")
+                if (BuildConfig.IS_DEMO && current.catalog is CatalogState.Ready && !demoRouteAllowed(current.destination)) navigate(Route.Home)
             }
         }
         viewModelScope.launch {
@@ -372,14 +379,14 @@ class CatalogViewModel @Inject constructor(
     internal val history: StateFlow<HistoryUiState> = combine(
         state.map { current ->
             val ready = current.catalog as? CatalogState.Ready
-            Triple(ready?.catalog?.pharmacy?.pharmacyId, current.route, ready?.admin == true)
+            Triple(ready?.catalog?.pharmacy?.pharmacyId, current.destination, ready?.admin == true)
         }.distinctUntilChanged(), historyRequest,
     ) { access, request -> access to request }.flatMapLatest { (access, request) ->
         val (pharmacyId, destination, authorized) = access
-        if (!authorized || pharmacyId == null || (destination != "history" && !destination.startsWith("history:")))
+        if (!authorized || pharmacyId == null || destination !is Route.History)
             flowOf(HistoryUiState())
         else {
-            val medication = destination.removePrefix("history:").takeIf { destination.startsWith("history:") }
+            val medication = destination.medicationId
             val effective = request.copy(filter = request.filter.copy(medicationId = medication ?: request.filter.medicationId))
             histories.observe(pharmacyId, effective.filter, effective.page)
                 .map { HistoryUiState(effective, page = it, pharmacyId = pharmacyId, medicationScope = medication) }
@@ -394,7 +401,7 @@ class CatalogViewModel @Inject constructor(
 
     internal fun openHistory(medication: String? = null) {
         historyRequest.value = HistoryRequest(filter = HistoryFilter(medicationId = medication))
-        navigate(if (medication == null) "history" else "history:${medication}")
+        navigate(Route.History(medication))
     }
     internal fun filterHistory(filter: HistoryFilter) { historyRequest.value = HistoryRequest(filter) }
     internal fun historyPage(page: Int) {
@@ -431,51 +438,56 @@ class CatalogViewModel @Inject constructor(
         }
     }
 
-    internal fun destinationStateKey(destination: String): String = if (destination.startsWith("edit-med:"))
-        destination + ":" + savedState.get<String>("draft:$destination").orEmpty() else destination
-    fun navigate(destination: String) {
+    internal fun destinationStateKey(destination: String): String = destinationStateKey(RouteStorage.decode(destination))
+    internal fun destinationStateKey(destination: Route): String {
+        val encoded = RouteStorage.encode(destination)
+        return if (destination is Route.EditMedication) encoded + ":" + savedState.get<String>("draft:$encoded").orEmpty() else encoded
+    }
+    fun navigate(destination: String) = navigate(RouteStorage.decode(destination))
+    fun navigate(destination: Route) {
         if (BuildConfig.IS_DEMO && !demoRouteAllowed(destination)) return
-        if (destination == route.value) return
-        if (destination.startsWith("edit-med:")) savedState["draft:$destination"] = java.util.UUID.randomUUID().toString()
+        val encoded = RouteStorage.encode(destination)
+        if (encoded == route.value) return
+        if (destination is Route.EditMedication) savedState["draft:$encoded"] = java.util.UUID.randomUUID().toString()
         val stack = savedState.get<ArrayList<String>>("backStack") ?: arrayListOf("home").also {
             if (route.value != "home") it.add(route.value)
         }
-        if (destination == "home") stack.clear()
-        if (stack.lastOrNull() != destination) stack.add(destination)
+        if (destination == Route.Home) stack.clear()
+        if (stack.lastOrNull() != encoded) stack.add(encoded)
         savedState["backStack"] = stack
         changeRoute(destination)
     }
-    private fun demoRouteAllowed(destination: String): Boolean = when {
-        destination in setOf("home", "settings", "about") || destination.startsWith("med:") -> true
-        destination in setOf("admin", "taxonomy", "review", "history") || destination.startsWith("edit-med:") || destination.startsWith("history:") -> DemoSession.initialize().admin
+    private fun demoRouteAllowed(destination: Route): Boolean = when (destination) {
+        Route.Home, Route.Settings, Route.About, is Route.Medication -> true
+        Route.Admin, Route.Taxonomy, Route.Review, is Route.History, is Route.EditMedication -> DemoSession.initialize().admin
         else -> false
     }
     internal fun setDemoAdmin(value: Boolean) {
         if (!BuildConfig.IS_DEMO || adminBusy.value) return
         DemoSession.setAdmin(value)
         pendingEdits.value = emptyList()
-        navigate("home")
+        navigate(Route.Home)
     }
     internal fun resetDemo() {
         if (!BuildConfig.IS_DEMO || adminBusy.value) return
         DemoSession.reset()
         pendingEdits.value = emptyList(); highlightedMedication.value = null; availabilitySavedId.value = null
-        clearFilters(); setQuery(""); navigate("home")
+        clearFilters(); setQuery(""); navigate(Route.Home)
     }
-    private fun changeRoute(destination: String) {
+    private fun changeRoute(destination: Route) {
         if (BuildConfig.IS_DEMO && !demoRouteAllowed(destination)) {
             savedState["backStack"] = arrayListOf("home")
             savedState["route"] = "home"
             return
         }
-        if (destination != "history" && !destination.startsWith("history:")) historyRequest.value = HistoryRequest()
+        if destination !is Route.History historyRequest.value = HistoryRequest()
         adminMessage.value = null
         feedback.value = null
-        savedState["route"] = destination
+        savedState["route"] = RouteStorage.encode(destination)
     }
     fun back() {
-        if (route.value == "edit-med:new") newMedicationName = ""
-        if (route.value == "connection") {
+        if (RouteStorage.decode(route.value) == Route.EditMedication()) newMedicationName = ""
+        if (RouteStorage.decode(route.value) == Route.Connection) {
             if (importState.value.busy) importOperation?.cancel()
             importState.update { it.copy(selectedUri = null, error = null) }
         }
@@ -483,7 +495,7 @@ class CatalogViewModel @Inject constructor(
         if (stack.size > 1) stack.removeAt(stack.lastIndex)
         if (stack.isEmpty()) stack.add("home")
         savedState["backStack"] = stack
-        changeRoute(stack.last())
+        changeRoute(RouteStorage.decode(stack.last()))
     }
 
     init { reloadConnectionImport(); connectivity.registerDefaultNetworkCallback(networkObserver) }
@@ -491,7 +503,7 @@ class CatalogViewModel @Inject constructor(
     fun openConnectionImport(uri: Uri? = null) {
         if (importState.value.busy) return
         importState.update { it.copy(selectedUri = uri, error = null, verification = null) }
-        navigate("connection")
+        navigate(Route.Connection)
     }
 
     fun reloadConnectionImport() {
@@ -572,7 +584,7 @@ class CatalogViewModel @Inject constructor(
             try {
                 connectionImports.activate(id)
                 restorePendingConnection()
-                navigate("home")
+                navigate(Route.Home)
             } catch (error: CancellationException) {
                 withContext(NonCancellable) {
                     try { restorePendingConnection() }
@@ -584,7 +596,7 @@ class CatalogViewModel @Inject constructor(
                     try {
                         restorePendingConnection()
                         // A completed transaction may only have needed pending-marker cleanup.
-                        if (importState.value.pending == null) navigate("home")
+                        if (importState.value.pending == null) navigate(Route.Home)
                         else importState.update { it.copy(error = connectionVerificationMessage(error)) }
                     } catch (failure: Exception) {
                         importState.update { it.copy(storageReady = false, error = connectionImportMessage(failure)) }

@@ -39,7 +39,7 @@ import com.aqaqeer.app.maintenance.*
             InformationCard(uiText(R.string.ui_maintenance_screen_009), uiText(R.string.maintenance_coordination))
         if (ready.restorePaused) {
             InformationCard(uiText(R.string.ui_maintenance_screen_005), uiText(R.string.ui_maintenance_screen_006))
-            NavigationCard(uiText(R.string.ui_aqaqeer_app_022), { vm.navigate("backup") })
+            NavigationCard(uiText(R.string.ui_aqaqeer_app_022), { vm.navigate(Route.Backup) })
             return@FormPage
         }
         if (j == null) {
@@ -182,7 +182,7 @@ import com.aqaqeer.app.maintenance.*
 
 @Composable private fun AuthorizationNeeded(vm: CatalogViewModel, busy: Boolean) {
     Text(uiText(R.string.ui_maintenance_screen_054))
-    NavigationCard(uiText(R.string.ui_maintenance_screen_055), { vm.navigate("promote") }, enabled = !busy)
+    NavigationCard(uiText(R.string.ui_maintenance_screen_055), { vm.navigate(Route.Promote) }, enabled = !busy)
 }
 
 @Composable internal fun MaintenanceIdentity(label: String, title: String?, bot: Long?, group: Long?, publication: String?, time: String?) {

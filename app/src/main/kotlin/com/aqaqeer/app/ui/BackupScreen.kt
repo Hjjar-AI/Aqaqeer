@@ -46,7 +46,7 @@ import java.time.format.DateTimeFormatter
             StepHeader(listOf(uiText(R.string.review_select_file), uiText(R.string.ui_backup_screen_016), uiText(R.string.ui_backup_screen_002)), 2)
             InformationCard(uiText(R.string.ui_backup_screen_002), uiText(R.string.ui_backup_screen_003))
             if (!ready.admin) {
-                NavigationCard(uiText(R.string.ui_backup_screen_004), { vm.navigate("promote") })
+                NavigationCard(uiText(R.string.ui_backup_screen_004), { vm.navigate(Route.Promote) })
                 return@FormPage
             }
             RestoreReview(ready, vm, busy || sharing.busy)
@@ -69,7 +69,7 @@ import java.time.format.DateTimeFormatter
         }
         if (ready.maintenancePaused) {
             InformationCard(uiText(R.string.ui_backup_screen_010), uiText(R.string.ui_backup_screen_011))
-            NavigationCard(uiText(R.string.ui_backup_screen_012), { vm.navigate("maintenance") })
+            NavigationCard(uiText(R.string.ui_backup_screen_012), { vm.navigate(Route.Maintenance) })
             return@FormPage
         }
         if (ready.catalog.pharmacy == null || ready.admin) {
@@ -87,7 +87,7 @@ import java.time.format.DateTimeFormatter
                     DestructiveConfirmButton(enabled = !busy && restorePassword.isNotEmpty() &&
                         (ready.catalog.pharmacy == null || confirmed && typedName == ready.catalog.pharmacy.name), onClick = {
                         val uri = selected ?: return@DestructiveConfirmButton; val p = restorePassword.toCharArray(); restorePassword = ""
-                        vm.secretCommand("home", p) { vm.backups.restore(uri, p, typedName, confirmed); selected = null }
+                        vm.secretCommand(Route.Home, p) { vm.backups.restore(uri, p, typedName, confirmed); selected = null }
                     }, label = uiText(R.string.ui_backup_screen_020))
                 }
             }

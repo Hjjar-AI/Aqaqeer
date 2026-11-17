@@ -195,16 +195,16 @@ internal data class Notice(val text: String, val severity: NoticeSeverity = Noti
     }
 }
 
-@Composable internal fun SetupChecklist(ready: com.aqaqeer.app.data.CatalogState.Ready, navigate: (String) -> Unit) {
+@Composable internal fun SetupChecklist(ready: com.aqaqeer.app.data.CatalogState.Ready, navigate: (Route) -> Unit) {
     val context = androidx.compose.ui.platform.LocalContext.current
     val pharmacy = ready.catalog.pharmacy?.pharmacyId ?: return
     val prefs = remember { context.getSharedPreferences("setup_checklist", android.content.Context.MODE_PRIVATE) }
     var hidden by rememberSaveable(pharmacy) { mutableStateOf(prefs.getBoolean(pharmacy, false)) }
     val tasks = listOf(
-        Triple(R.string.review_check_catalog, ready.catalog.medications.isNotEmpty(), "edit-med:new"),
-        Triple(R.string.review_check_connection, ready.hasPublicationConnection, "setup"),
-        Triple(R.string.review_check_publish, ready.publishedAt != null, "review"),
-        Triple(R.string.review_check_backup, ready.hasBackup, "backup"))
+        Triple(R.string.review_check_catalog, ready.catalog.medications.isNotEmpty(), Route.EditMedication()),
+        Triple(R.string.review_check_connection, ready.hasPublicationConnection, Route.Setup),
+        Triple(R.string.review_check_publish, ready.publishedAt != null, Route.Review),
+        Triple(R.string.review_check_backup, ready.hasBackup, Route.Backup))
     if (!hidden && !ready.requiresUpdate && !ready.maintenancePaused && !ready.restorePaused) GroupedCard(title = uiText(R.string.review_setup_checklist)) {
         tasks.forEach { (label, complete, route) ->
             AppButton(variant = AppButtonVariant.QUIET, onClick = { navigate(route) }, enabled = !complete) { Text("${if (complete) "✓" else "○"} ${uiText(label)}") }

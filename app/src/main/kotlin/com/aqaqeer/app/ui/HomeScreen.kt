@@ -82,23 +82,43 @@ import java.time.ZoneId
 }
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
-@Composable internal fun HomeScreen(ready: CatalogState.Ready, state: AppUiState, now: Instant,
-    selectSection: (String) -> Unit, setQuery: (String) -> Unit, toggleStatus: (AvailabilityStatus) -> Unit,
-    toggleCategory: (String) -> Unit, clearFilters: () -> Unit, openMedication: (String) -> Unit,
-    openSettings: () -> Unit, openConnection: (() -> Unit)? = null, refresh: (() -> Unit)? = null, openCreate: (() -> Unit)? = null, openRestore: (() -> Unit)? = null,
-    availabilityBusy: Boolean = false, availabilityMessage: String? = null,
-    saveAvailability: ((AvailabilitySelection, AvailabilityStatus, () -> Unit) -> Unit)? = null,
- pageHeader: (@Composable () -> Unit)? = null,
-    openAddMedication: (() -> Unit)? = null,
-    availabilitySavedId: String? = null, publicationBusy: Boolean = false, publicationBlockReason: String? = null,
-    onModalVisibilityChanged: (Boolean) -> Unit = {}, availabilityInProgress: () -> Boolean = { availabilityBusy },
-    canOpenHomeModal: () -> Boolean = { true },
-    setGroupingEnabled: (Boolean) -> Unit = {}, setGrouping: (HomeGrouping) -> Unit = {},
-    saveBulk: ((AvailabilitySelection, BulkMedicationChanges, () -> Unit) -> Unit)? = null,
-    projection: HomeBrowseResult = HomeBrowseResult(), highlightedMedication: String? = null,
-    prefillMedication: (String) -> Unit = {}, onBulkModeChanged: (Boolean) -> Unit = {},
-    toggleExtraFilter: (String) -> Unit = {}, onBottomBarsHeightChanged: (Int) -> Unit = {}, toggleAvailableFilter: () -> Unit = {},
-    editMedication: ((String) -> Unit)? = null) {
+@Composable internal fun HomeScreen(ready: CatalogState.Ready,
+    state: AppUiState,
+    now: Instant,
+    availabilityBusy: Boolean = false,
+    availabilityMessage: String? = null,
+    pageHeader: (@Composable () -> Unit)? = null,
+    availabilitySavedId: String? = null,
+    publicationBusy: Boolean = false,
+    publicationBlockReason: String? = null,
+    projection: HomeBrowseResult = HomeBrowseResult(),
+    highlightedMedication: String? = null,
+    actions: HomeActions) {
+    val selectSection = actions.selectSection
+    val setQuery = actions.setQuery
+    val toggleStatus = actions.toggleStatus
+    val toggleCategory = actions.toggleCategory
+    val clearFilters = actions.clearFilters
+    val openMedication = actions.openMedication
+    val openSettings = actions.openSettings
+    val openConnection = actions.openConnection
+    val refresh = actions.refresh
+    val openCreate = actions.openCreate
+    val openRestore = actions.openRestore
+    val saveAvailability = actions.saveAvailability
+    val openAddMedication = actions.openAddMedication
+    val onModalVisibilityChanged = actions.onModalVisibilityChanged
+    val availabilityInProgress = actions.availabilityInProgress
+    val canOpenHomeModal = actions.canOpenHomeModal
+    val setGroupingEnabled = actions.setGroupingEnabled
+    val setGrouping = actions.setGrouping
+    val saveBulk = actions.saveBulk
+    val prefillMedication = actions.prefillMedication
+    val onBulkModeChanged = actions.onBulkModeChanged
+    val toggleExtraFilter = actions.toggleExtraFilter
+    val onBottomBarsHeightChanged = actions.onBottomBarsHeightChanged
+    val toggleAvailableFilter = actions.toggleAvailableFilter
+    val editMedication = actions.editMedication
     val catalog = ready.catalog
     val focus = LocalFocusManager.current
     val haptics = LocalHapticFeedback.current

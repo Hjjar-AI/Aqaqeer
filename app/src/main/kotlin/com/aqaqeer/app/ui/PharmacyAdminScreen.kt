@@ -38,18 +38,18 @@ import kotlinx.serialization.json.*
     var leaveName by rememberSaveable(state.route) { mutableStateOf("") }
     var confirmedLeave by rememberSaveable(state.route) { mutableStateOf(false) }
     var formSubmitted by rememberSaveable(state.route) { mutableStateOf(false) }
-    if (state.route.startsWith("edit-med:")) {
+    if (state.destination is Route.EditMedication) {
         if (!ready.admin || ready.requiresUpdate || ready.maintenancePaused) {
             FormPage { InformationCard(uiText(R.string.ui_pharmacy_admin_screen_001), uiText(R.string.ui_pharmacy_admin_screen_002)) }
             return
         }
-        val targetId = state.route.removePrefix("edit-med:")
+        val targetId = (state.destination as Route.EditMedication).id ?: "new"
         val medication = catalog.medications.find { it.id == targetId }
         if (targetId != "new" && medication == null) { FormPage { Text(uiText(R.string.ui_pharmacy_admin_screen_003)) }; return }
         key(catalog.pharmacy?.pharmacyId, targetId) { MedicationEditor(catalog, medication, vm, busy) }
         return
     }
-    if (state.route == "review" && ready.admin) {
+    if (state.destination == Route.Review && ready.admin) {
         val configuration = LocalConfiguration.current
         var typeFilter by rememberSaveable(catalog.pharmacy?.pharmacyId) { mutableStateOf<String?>(null) }
         var choices by remember(catalog.pharmacy?.pharmacyId) { mutableStateOf<Map<String, Boolean>>(emptyMap()) }
@@ -64,8 +64,8 @@ import kotlinx.serialization.json.*
             item(key = "review_header") {
                 Column(verticalArrangement = Arrangement.spacedBy(UiSpacing.group)) {
                     OperationStatus(busy || sharing.busy, message, sharing.message)
-                    if (ready.maintenancePaused) NavigationCard(uiText(R.string.ui_pharmacy_admin_screen_029), onClick = { vm.navigate("maintenance") })
-                    if (ready.restorePaused) NavigationCard(uiText(R.string.ui_pharmacy_admin_screen_030), onClick = { vm.navigate("backup") })
+                    if (ready.maintenancePaused) NavigationCard(uiText(R.string.ui_pharmacy_admin_screen_029), onClick = { vm.navigate(Route.Maintenance) })
+                    if (ready.restorePaused) NavigationCard(uiText(R.string.ui_pharmacy_admin_screen_030), onClick = { vm.navigate(Route.Backup) })
                     Text(uiText(R.string.ui_pharmacy_admin_screen_031, MedicationPresentation.displayDigits(ready.pendingCount.toString())), style = MaterialTheme.typography.titleLarge)
                     Text(if (ready.maintenancePaused) uiText(R.string.ui_pharmacy_admin_screen_032) else if (ready.restorePaused) uiText(R.string.ui_pharmacy_admin_screen_033) else uiText(R.string.ui_pharmacy_admin_screen_034))
                     WrappingContent {
@@ -110,13 +110,13 @@ import kotlinx.serialization.json.*
         }
         return
     }
-    FormPage(showFieldConvention = state.route in setOf("create", "promote", "setup", "export-connection", "taxonomy")) {
+    FormPage(showFieldConvention = state.destination in setOf(Route.Create, Route.Promote, Route.Setup, Route.ExportConnection, Route.Taxonomy)) {
         val formFocus = LocalFormFocus.current
         val formScope = rememberCoroutineScope()
         fun revealInvalid() { formSubmitted = true; formScope.launch { formFocus?.focusFirstInvalid() } }
         OperationStatus(busy || sharing.busy, message, sharing.message)
         when {
-            state.route == "create" -> {
+            state.destination == Route.Create -> {
                 if (catalog.pharmacy != null || ready.isDemo) { Text(uiText(R.string.ui_pharmacy_admin_screen_004)); return@FormPage }
                 var name by rememberSaveable(state.route) { mutableStateOf("") }; var zone by rememberSaveable(state.route) { mutableStateOf("Asia/Damascus") }
                 var section by rememberSaveable(state.route) { mutableStateOf(uiText(R.string.ui_pharmacy_admin_screen_005)) }
@@ -151,10 +151,10 @@ import kotlinx.serialization.json.*
                     formSubmitted = false; pinEntryVersion++
                     focus.clearFocus()
                     pin = ""; confirm = ""
-                    vm.secretCommand("home", a, b) { vm.admin.create(name, zone, section, a, b) }
+                    vm.secretCommand(Route.Home, a, b) { vm.admin.create(name, zone, section, a, b) }
                 }) { Text(uiText(R.string.ui_pharmacy_admin_screen_015)) }
             }
-            state.route == "promote" -> {
+            state.destination == Route.Promote -> {
                 var pin by remember { mutableStateOf("") }
                 GroupedCard(title = uiText(R.string.ui_pharmacy_admin_screen_016)) {
                     FormField(uiText(R.string.ui_pharmacy_admin_screen_017), pin, { pin = it }, secret = true, submitted = formSubmitted, required = true, numericSecret = true, imeAction = ImeAction.Done, validate = FormGuidance::pin)
@@ -163,10 +163,10 @@ import kotlinx.serialization.json.*
                 AppButton(enabled = !busy, onClick = {
                     formSubmitted = true
                     if (FormGuidance.pin(pin) != null) { revealInvalid(); return@AppButton }
-                    val p = pin.toCharArray(); pin = ""; vm.secretCommand("home", p) { vm.admin.promote(p) }
+                    val p = pin.toCharArray(); pin = ""; vm.secretCommand(Route.Home, p) { vm.admin.promote(p) }
                 }) { Text(uiText(R.string.ui_screen_titles_006)) }
             }
-            state.route == "leave" -> {
+            state.destination == Route.Leave -> {
                 Text(uiText(R.string.ui_screen_titles_007), style = MaterialTheme.typography.headlineSmall)
                 GroupedCard(title = uiText(R.string.ui_pharmacy_admin_screen_019)) {
                     Text(uiText(R.string.ui_pharmacy_admin_screen_020))
@@ -177,43 +177,43 @@ import kotlinx.serialization.json.*
                     AppButton(colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error, contentColor = MaterialTheme.colorScheme.onError), enabled = confirmedLeave && !busy, onClick = {
                         formSubmitted = true
                         if (ready.admin && leaveName != catalog.pharmacy?.name) { revealInvalid(); return@AppButton }
-                        vm.command("home") { vm.admin.leave(leaveName, true) }
+                        vm.command(Route.Home) { vm.admin.leave(leaveName, true) }
                     }) { Text(uiText(R.string.ui_pharmacy_admin_screen_024)) }
                 }
             }
-            (!ready.admin && state.route != "admin") -> Text(uiText(R.string.ui_pharmacy_admin_screen_026))
-            ready.requiresUpdate && state.route !in setOf("review", "admin") -> Text(uiText(R.string.ui_pharmacy_admin_screen_027))
-            ready.maintenancePaused && state.route !in setOf("admin", "review") -> Text(uiText(R.string.ui_pharmacy_admin_screen_028))
-            ready.isDemo && state.route == "admin" -> {
+            (!ready.admin && state.destination != Route.Admin) -> Text(uiText(R.string.ui_pharmacy_admin_screen_026))
+            ready.requiresUpdate && state.destination !in setOf(Route.Review, Route.Admin) -> Text(uiText(R.string.ui_pharmacy_admin_screen_027))
+            ready.maintenancePaused && state.destination !in setOf(Route.Admin, Route.Review) -> Text(uiText(R.string.ui_pharmacy_admin_screen_028))
+            ready.isDemo && state.destination == Route.Admin -> {
                 InformationCard(uiText(R.string.review_demo_admin), uiText(R.string.review_demo_edit_help))
-                NavigationCard(uiText(R.string.ui_screen_titles_009), { vm.navigate("edit-med:new") })
-                NavigationCard(uiText(R.string.ui_screen_titles_005), { vm.navigate("taxonomy") })
+                NavigationCard(uiText(R.string.ui_screen_titles_009), { vm.navigate(Route.EditMedication()) })
+                NavigationCard(uiText(R.string.ui_screen_titles_005), { vm.navigate(Route.Taxonomy) })
                 NavigationCard(uiText(R.string.ui_screen_titles_015), { vm.openHistory() })
                 NavigationCard(uiText(R.string.ui_screen_titles_004), vm::review)
             }
-            ready.isDemo && state.route !in setOf("taxonomy", "review") -> Text(uiText(R.string.review_demo_local_only))
-            state.route == "setup" -> TelegramSetup(vm, busy, catalog.medications.isEmpty())
-            state.route == "export-connection" -> ConnectionExport(vm, ready.lifecycle == "SHARED", busy)
-            state.route == "taxonomy" -> TaxonomyEditor(catalog, vm, busy)
+            ready.isDemo && state.destination !in setOf(Route.Taxonomy, Route.Review) -> Text(uiText(R.string.review_demo_local_only))
+            state.destination == Route.Setup -> TelegramSetup(vm, busy, catalog.medications.isEmpty())
+            state.destination == Route.ExportConnection -> ConnectionExport(vm, ready.lifecycle == "SHARED", busy)
+            state.destination == Route.Taxonomy -> TaxonomyEditor(catalog, vm, busy)
             else -> {
                 if (ready.admin && !ready.isDemo) SetupChecklist(ready) { vm.navigate(it) }
                 if (!ready.admin) {
-                    NavigationCard(uiText(R.string.ui_screen_titles_006), { vm.navigate("promote") })
-                    NavigationCard(uiText(R.string.ui_screen_titles_018), { vm.navigate("maintenance") })
-                    NavigationCard(uiText(R.string.ui_screen_titles_007), { vm.navigate("leave") }, destructive = true)
+                    NavigationCard(uiText(R.string.ui_screen_titles_006), { vm.navigate(Route.Promote) })
+                    NavigationCard(uiText(R.string.ui_screen_titles_018), { vm.navigate(Route.Maintenance) })
+                    NavigationCard(uiText(R.string.ui_screen_titles_007), { vm.navigate(Route.Leave) }, destructive = true)
                     return@FormPage
                 }
-                NavigationCard(uiText(R.string.ui_screen_titles_011), onClick = { vm.navigate("backup") })
-                NavigationCard(uiText(R.string.ui_screen_titles_007), { vm.navigate("leave") }, destructive = true)
+                NavigationCard(uiText(R.string.ui_screen_titles_011), onClick = { vm.navigate(Route.Backup) })
+                NavigationCard(uiText(R.string.ui_screen_titles_007), { vm.navigate(Route.Leave) }, destructive = true)
                 if (ready.lifecycle == "LOCAL_DRAFT") InformationCard(uiText(R.string.ui_pharmacy_admin_screen_038), uiText(R.string.ui_pharmacy_admin_screen_039))
                 NavigationGroup(uiText(R.string.ui_pharmacy_admin_screen_040)) {
                     NavigationRow(uiText(R.string.ui_screen_titles_015), { vm.openHistory() })
                     HorizontalDivider()
-                    NavigationRow(uiText(R.string.ui_pharmacy_admin_screen_041), { vm.navigate("maintenance") })
+                    NavigationRow(uiText(R.string.ui_pharmacy_admin_screen_041), { vm.navigate(Route.Maintenance) })
                 }
                 if (ready.maintenancePaused) {
                     Text(uiText(R.string.ui_pharmacy_admin_screen_042))
-                    NavigationCard(uiText(R.string.ui_screen_titles_007), onClick = { vm.navigate("leave") }, destructive = true)
+                    NavigationCard(uiText(R.string.ui_screen_titles_007), onClick = { vm.navigate(Route.Leave) }, destructive = true)
                     return@FormPage
                 }
                 if (ready.requiresUpdate) {
@@ -222,20 +222,20 @@ import kotlinx.serialization.json.*
                     return@FormPage
                 }
                 NavigationGroup(uiText(R.string.ui_pharmacy_admin_screen_045)) {
-                    NavigationRow(uiText(R.string.ui_screen_titles_009), { vm.navigate("edit-med:new") })
+                    NavigationRow(uiText(R.string.ui_screen_titles_009), { vm.navigate(Route.EditMedication()) })
                     HorizontalDivider()
-                    NavigationRow(uiText(R.string.ui_screen_titles_005), { vm.navigate("taxonomy") })
+                    NavigationRow(uiText(R.string.ui_screen_titles_005), { vm.navigate(Route.Taxonomy) })
                     HorizontalDivider()
-                    NavigationRow(uiText(R.string.ui_pharmacy_admin_screen_046), { vm.navigate("csv-import") })
+                    NavigationRow(uiText(R.string.ui_pharmacy_admin_screen_046), { vm.navigate(Route.CsvImport) })
                     HorizontalDivider()
-                    NavigationRow(uiText(R.string.ui_pharmacy_admin_screen_047), { vm.navigate("reports") })
+                    NavigationRow(uiText(R.string.ui_pharmacy_admin_screen_047), { vm.navigate(Route.Reports) })
                 }
                 NavigationGroup(uiText(R.string.ui_pharmacy_admin_screen_048)) {
-                    if (ready.lifecycle == "LOCAL_DRAFT") NavigationRow(uiText(R.string.ui_screen_titles_003), { vm.navigate("setup") })
+                    if (ready.lifecycle == "LOCAL_DRAFT") NavigationRow(uiText(R.string.ui_screen_titles_003), { vm.navigate(Route.Setup) })
                     if (ready.lifecycle == "LOCAL_DRAFT") HorizontalDivider()
                     NavigationRow(uiText(R.string.ui_screen_titles_004), vm::review)
                     HorizontalDivider()
-                    NavigationRow(uiText(R.string.ui_screen_titles_008), { vm.navigate("export-connection") }, enabled = ready.lifecycle == "SHARED" && !ready.restorePaused)
+                    NavigationRow(uiText(R.string.ui_screen_titles_008), { vm.navigate(Route.ExportConnection) }, enabled = ready.lifecycle == "SHARED" && !ready.restorePaused)
                 }
             }
         }
@@ -297,14 +297,14 @@ internal fun reviewValue(field: String, raw: String, catalog: CatalogSnapshot, l
         AppButton(enabled = !busy && group.toLongOrNull()?.let { it < 0 } == true, onClick = { vm.command { title = vm.sharing.inspectSetup(token, group.toLong()) } }) { Text(uiText(R.string.ui_pharmacy_admin_screen_096)) }
         title?.let { name ->
             Text(uiText(R.string.ui_pharmacy_admin_screen_097, name))
-            AppButton(enabled = !busy, onClick = { vm.command { vm.sharing.saveSetup(token, group.toLong(), name); token = ""; if (empty) offerEmptyPublication = true else vm.navigate("admin") } }) { Text(uiText(R.string.ui_pharmacy_admin_screen_098)) }
+            AppButton(enabled = !busy, onClick = { vm.command { vm.sharing.saveSetup(token, group.toLong(), name); token = ""; if (empty) offerEmptyPublication = true else vm.navigate(Route.Admin) } }) { Text(uiText(R.string.ui_pharmacy_admin_screen_098)) }
         }
     }
-    if (offerEmptyPublication) AppDialog(onDismissRequest = { offerEmptyPublication = false; vm.navigate("admin") },
+    if (offerEmptyPublication) AppDialog(onDismissRequest = { offerEmptyPublication = false; vm.navigate(Route.Admin) },
         title = { Text(uiText(R.string.ui_pharmacy_admin_screen_099)) },
         text = { DialogBody { Text(uiText(R.string.ui_pharmacy_admin_screen_100)) } },
-        confirmButton = { AppButton(variant = AppButtonVariant.QUIET, onClick = { offerEmptyPublication = false; vm.navigate("admin") }) { Text(uiText(R.string.ui_pharmacy_admin_screen_101)) } },
-        dismissButton = { AppButton(variant = AppButtonVariant.QUIET, onClick = { offerEmptyPublication = false; vm.navigate("review"); vm.publish() }) { Text(uiText(R.string.ui_pharmacy_admin_screen_102)) } })
+        confirmButton = { AppButton(variant = AppButtonVariant.QUIET, onClick = { offerEmptyPublication = false; vm.navigate(Route.Admin) }) { Text(uiText(R.string.ui_pharmacy_admin_screen_101)) } },
+        dismissButton = { AppButton(variant = AppButtonVariant.QUIET, onClick = { offerEmptyPublication = false; vm.navigate(Route.Review); vm.publish() }) { Text(uiText(R.string.ui_pharmacy_admin_screen_102)) } })
     SupportingText(uiText(R.string.pin_group_guidance))
     ExpandableInformation(uiText(R.string.ui_screen_titles_003), uiText(R.string.ui_pharmacy_admin_screen_103))
 }
@@ -455,7 +455,7 @@ internal fun reviewValue(field: String, raw: String, catalog: CatalogSnapshot, l
     if (old != null) {
         GroupedCard(title = uiText(R.string.ui_pharmacy_admin_screen_122)) {
             CheckChoiceRow(confirmDelete, uiText(R.string.ui_pharmacy_admin_screen_123)) { confirmDelete = it }
-            DestructiveConfirmButton(enabled = !busy && confirmDelete, onClick = { vm.command("home") { vm.admin.delete("medication", id) } }, label = uiText(R.string.ui_pharmacy_admin_screen_122))
+            DestructiveConfirmButton(enabled = !busy && confirmDelete, onClick = { vm.command(Route.Home) { vm.admin.delete("medication", id) } }, label = uiText(R.string.ui_pharmacy_admin_screen_122))
         }
     }
     }

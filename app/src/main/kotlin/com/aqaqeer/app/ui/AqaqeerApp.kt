@@ -77,23 +77,19 @@ internal fun statusLabel(status: AvailabilityStatus): String = uiText(when (stat
         (contentInsets.getLeft(this, direction) + contentInsets.getRight(this, direction)).toDp()
     }
     val dualPane = maxWidth - horizontalInsets >= UiSpacing.listDetailBreakpoint
-    fun destinationKey(route: String) = if (dualPane && route.startsWith("med:")) "home" else route
-    val homeDestination = destinationKey(state.route) == "home"
+    fun destinationKey(route: Route): Route = if (dualPane && route is Route.Medication) Route.Home else route
+    val homeDestination = destinationKey(state.destination) == Route.Home
     val connectionImport by viewModel.connectionImport.collectAsStateWithLifecycle()
     val availabilitySavedId by viewModel.availabilitySavedId.collectAsStateWithLifecycle()
     val adminBusy by viewModel.adminBusy.collectAsStateWithLifecycle()
     val adminMessage by viewModel.adminMessage.collectAsStateWithLifecycle()
     val sharing by viewModel.sharing.status.collectAsStateWithLifecycle()
     val configured = (state.catalog as? CatalogState.Ready)?.catalog?.pharmacy != null
-    val medicationRouteId = when {
-        state.route.startsWith("med:") -> state.route.removePrefix("med:")
-        state.route.startsWith("edit-med:") -> state.route.removePrefix("edit-med:").takeUnless { it == "new" }
-        else -> null
-    }
+    val medicationRouteId = state.destination.medicationId
     val missingMedication = state.catalog is CatalogState.Ready && medicationRouteId != null &&
         state.catalog.catalog.medications.none { it.id == medicationRouteId }
-    LaunchedEffect(state.route, configured, missingMedication) {
-        if ((state.route == "connection" && configured) || missingMedication) viewModel.navigate("home")
+    LaunchedEffect(state.destination, configured, missingMedication) {
+        if ((state.destination == Route.Connection && configured) || missingMedication) viewModel.navigate(Route.Home)
     }
     val lifecycle = LocalLifecycleOwner.current.lifecycle
     val refreshEligible = configured && !state.catalog.isDemo && !state.catalog.restorePaused && !state.catalog.maintenancePaused && state.catalog.lifecycle == "SHARED"
@@ -106,38 +102,38 @@ internal fun statusLabel(status: AvailabilityStatus): String = uiText(when (stat
         if (lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)) { viewModel.onForeground(true); if (refreshEligible) viewModel.refreshCatalog(automatic = true) }
         onDispose { lifecycle.removeObserver(observer); viewModel.onForeground(false) }
     }
-    val navigate = viewModel::navigate
+    val navigate: (Route) -> Unit = viewModel::navigate
     val back = viewModel::back
     val now = rememberPresentationDate((state.catalog as? CatalogState.Ready)?.catalog?.pharmacy?.timezone ?: "Asia/Damascus")
     val snackbar = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
     val feedback by viewModel.feedback.collectAsStateWithLifecycle()
-    LaunchedEffect(feedback?.id, state.route) {
-        val message = feedback?.takeIf { it.route == state.route } ?: return@LaunchedEffect
+    LaunchedEffect(feedback?.id, state.destination) {
+        val message = feedback?.takeIf { it.route == state.destination } ?: return@LaunchedEffect
         val result = snackbar.showSnackbar(message.message, actionLabel = when {
             message.undo != null -> uiText(R.string.ui_aqaqeer_app_001); message.medicationId != null -> uiText(R.string.ui_aqaqeer_app_002); else -> null
         }, withDismissAction = true, duration = if (message.undo != null || message.medicationId != null)
             SnackbarDuration.Long else SnackbarDuration.Short)
-        if (result == SnackbarResult.ActionPerformed && viewModel.state.value.route == message.route) {
+        if (result == SnackbarResult.ActionPerformed && viewModel.state.value.destination == message.destination) {
             message.undo?.let(viewModel::undo)
-            message.medicationId?.let { navigate("med:${it}") }
+            message.medicationId?.let { navigate(Route.Medication(it)) }
         }
         viewModel.feedback.compareAndSet(message, null)
     }
     val readyForTitle = state.catalog as? CatalogState.Ready
-    val titleMedication = state.route.takeIf { it.startsWith("med:") }?.removePrefix("med:")
+    val titleMedication = (state.destination as? Route.Medication)?.id
         ?.let { id -> readyForTitle?.catalog?.medications?.find { it.id == id } }
     val title = when {
         titleMedication != null && !dualPane -> bidi(MedicationPresentation.identity(titleMedication))
-        homeDestination -> readyForTitle?.catalog?.pharmacy?.name ?: screenTitle(state.route)
-        else -> screenTitle(state.route)
+        homeDestination -> readyForTitle?.catalog?.pharmacy?.name ?: screenTitle(state.destination)
+        else -> screenTitle(state.destination)
     }
     val medicationActions: @Composable (CatalogState.Ready, Medication) -> Unit = { ready, medication ->
         val editable = ready.admin && !ready.requiresUpdate && !ready.maintenancePaused
         var detailMenuOpen by remember(medication.id) { mutableStateOf(false) }
         if (editable) IconButton(enabled = !adminBusy,
-            onClick = { navigate("edit-med:${medication.id}") }) {
+            onClick = { navigate(Route.EditMedication(medication.id)) }) {
             AppIcon(UiIcon.EDIT, description = uiText(R.string.ui_aqaqeer_app_012))
         }
         if (ready.admin) Box {
@@ -176,12 +172,12 @@ internal fun statusLabel(status: AvailabilityStatus): String = uiText(when (stat
     }
     var backProgress by remember { mutableFloatStateOf(0f) }
     val backAllowed by rememberUpdatedState(!adminBusy && !homeModalOpen && !dataTimesOpen && !drawerState.isOpen)
-    PredictiveBackHandler(enabled = state.route != "home" && backAllowed) { progress ->
-        val origin = viewModel.state.value.route
+    PredictiveBackHandler(enabled = state.destination != Route.Home && backAllowed) { progress ->
+        val origin = viewModel.state.value.destination
         val animate = android.animation.ValueAnimator.areAnimatorsEnabled()
         try {
             progress.collect { backProgress = if (animate) it.progress else 0f }
-            if (backAllowed && viewModel.state.value.route == origin) back()
+            if (backAllowed && viewModel.state.value.destination == origin) back()
         } catch (_: kotlinx.coroutines.CancellationException) {
             // A cancelled gesture leaves the route and its browsing state intact.
         } finally { backProgress = 0f }
@@ -193,7 +189,7 @@ internal fun statusLabel(status: AvailabilityStatus): String = uiText(when (stat
         gesturesEnabled = drawerEligible && !homeModalOpen && !dataTimesOpen,
         drawerContent = {
             DrawerFiltersContent(viewModel) { filters -> HomeDrawer(readyForTitle, filters, adminBusy || sharing.busy,
-                openRoute = { route -> afterDrawer { if (route != state.route) navigate(route) } },
+                openRoute = { route -> afterDrawer { if (route != state.destination) navigate(route) } },
                 chooseCategory = { id -> afterDrawer { viewModel.setQuickCategory(id) } },
                 showDataTimes = { afterDrawer { dataTimesOpen = true } }) }
         }) {
@@ -240,7 +236,7 @@ internal fun statusLabel(status: AvailabilityStatus): String = uiText(when (stat
                         onClick = {
                             if (!homeModalOpen && !dataTimesOpen) {
                                 if (drawerEligible) { focus.clearFocus(); scope.launch { drawerState.open() } }
-                                else navigate("settings")
+                                else navigate(Route.Settings)
                             }
                         }, modifier = Modifier.testTag("home_menu")) {
                         AppIcon(if (drawerEligible) UiIcon.MENU else UiIcon.SETTINGS, description = if (drawerEligible) uiText(R.string.ui_aqaqeer_app_008) else uiText(R.string.ui_screen_titles_012))
@@ -260,95 +256,128 @@ internal fun statusLabel(status: AvailabilityStatus): String = uiText(when (stat
                     colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background))
             }, snackbarHost = { SnackbarHost(snackbar) },
         ) { insets ->
-            ScreenFrame(wide = state.route == "home" || state.route.startsWith("med:"), form = state.route in setOf("create", "promote", "leave", "setup", "export-connection", "connection", "backup", "maintenance", "taxonomy")
-                || state.route.startsWith("edit-med:"),
+            ScreenFrame(wide = state.destination == Route.Home || state.destination.startsWith("med:"), form = state.destination in setOf(Route.Create, Route.Promote, Route.Leave, Route.Setup, Route.ExportConnection, Route.Connection, Route.Backup, Route.Maintenance, Route.Taxonomy)
+                || state.destination is Route.EditMedication,
                 modifier = Modifier.padding(insets).consumeWindowInsets(insets).imePadding()) {
                 AnimatedContent(targetState = state, modifier = Modifier.graphicsLayer {
                     scaleX = 1f - 0.04f * backProgress
                     scaleY = scaleX
                     alpha = 1f - 0.12f * backProgress
-                }, contentKey = { destinationKey(it.route) }, label = "route",
+                }, contentKey = { destinationKey(it.destination) }, label = "route",
                     transitionSpec = { fadeIn(tween(Motion.standard)) togetherWith fadeOut(tween(Motion.standard)) }) { displayed ->
                 val destinationContent: @Composable () -> Unit = {
                 val state = displayed
-                if (state.catalog is CatalogState.RecoveryRequired && state.route !in setOf("settings", "about")) {
-                    RecoveryScreen(viewModel::retryProtectedStorage) { navigate("settings") }
-                } else when (state.route) {
-                    "connection" -> ConnectionImportScreen(connectionImport, state.catalog,
+                if (state.catalog is CatalogState.RecoveryRequired && state.destination !in setOf(Route.Settings, Route.About)) {
+                    RecoveryScreen(viewModel::retryProtectedStorage) { navigate(Route.Settings) }
+                } else when (state.destination) {
+                    Route.Connection -> ConnectionImportScreen(connectionImport, state.catalog,
                         { viewModel.openConnectionImport(it) }, viewModel::stageConnection,
                         viewModel::cancelConnectionImport, viewModel::discardPendingConnection,
                         viewModel::reloadConnectionImport, viewModel::verifyPendingConnection, viewModel::activatePendingConnection)
-                    "settings" -> SettingsScreen(state.theme, viewModel::setTheme, state.homePreferences, viewModel::setSort,
-                        viewModel::setLayout, viewModel::setNames, viewModel::setSecondaryHijri,
-                        state.accent, viewModel::setAccent, viewModel::setTwoColumns,
-                        viewModel::setSectionsAtBottom, viewModel::setSearchAtBottom, viewModel::setGroupingEnabled, viewModel::setGrouping,
-                        if (state.catalog is CatalogState.Ready && !state.catalog.isDemo && !configured) ({ navigate("backup") }) else null,
-                        null,
-                        null, demo = BuildConfig.IS_DEMO, demoAdmin = (state.catalog as? CatalogState.Ready)?.admin == true,
-                        changeDemoAdmin = viewModel::setDemoAdmin, resetDemo = viewModel::resetDemo) { navigate("about") }
-                    "maintenance" -> MaintenanceScreen(state.catalog as? CatalogState.Ready, viewModel)
-                    "backup" -> BackupScreen(state, viewModel)
-                    "csv-import" -> CsvImportScreen(state.catalog as? CatalogState.Ready, viewModel)
-                    "reports" -> ReportsScreen(state.catalog as? CatalogState.Ready, viewModel)
-                    "about" -> AboutScreen {
+                    Route.Settings -> SettingsScreen(theme = state.theme,
+                                preferences = state.homePreferences,
+                                accent = state.accent,
+                                demo = BuildConfig.IS_DEMO,
+                                demoAdmin = (state.catalog as? CatalogState.Ready)?.admin == true,
+                                actions = rememberSettingsActions(SettingsCallbacks(
+                                    setTheme = viewModel::setTheme,
+                                    setSort = viewModel::setSort,
+                                    setLayout = viewModel::setLayout,
+                                    setNames = viewModel::setNames,
+                                    setSecondaryHijri = viewModel::setSecondaryHijri,
+                                    setAccent = viewModel::setAccent,
+                                    setTwoColumns = viewModel::setTwoColumns,
+                                    setSectionsAtBottom = viewModel::setSectionsAtBottom,
+                                    setSearchAtBottom = viewModel::setSearchAtBottom,
+                                    setGroupingEnabled = viewModel::setGroupingEnabled,
+                                    setGrouping = viewModel::setGrouping,
+                                    openBackup = if (state.catalog is CatalogState.Ready && !state.catalog.isDemo && !configured) ({ navigate(Route.Backup) }) else null,
+                                    openMaintenance = null,
+                                    openLeave = null,
+                                    changeDemoAdmin = viewModel::setDemoAdmin,
+                                    resetDemo = viewModel::resetDemo,
+                                    openAbout = { navigate(Route.About) })))
+                    Route.Maintenance -> MaintenanceScreen(state.catalog as? CatalogState.Ready, viewModel)
+                    Route.Backup -> BackupScreen(state, viewModel)
+                    Route.CsvImport -> CsvImportScreen(state.catalog as? CatalogState.Ready, viewModel)
+                    Route.Reports -> ReportsScreen(state.catalog as? CatalogState.Ready, viewModel)
+                    Route.About -> AboutScreen {
                         try {
                             context.startActivity(Intent(Intent.ACTION_SENDTO,
-                                "mailto:hjjarmhmmdali@gmail.com".toUri()))
+                                ("mailto:" + context.getString(R.string.contact_email)).toUri()))
                         } catch (_: ActivityNotFoundException) {
                             scope.launch { snackbar.showSnackbar(uiText(R.string.ui_aqaqeer_app_015), withDismissAction = true, duration = SnackbarDuration.Short) }
                         } catch (_: SecurityException) {
                             scope.launch { snackbar.showSnackbar(uiText(R.string.ui_aqaqeer_app_016), withDismissAction = true, duration = SnackbarDuration.Short) }
                         }
                     }
-                    "create", "admin", "setup", "review", "taxonomy", "promote", "leave", "export-connection" -> PharmacyAdminScreen(state, viewModel)
-                    else -> if (state.route == "history" || state.route.startsWith("history:")) HistoryScreen(
+                    "create", "admin", "setup", "review", "taxonomy", "promote", "leave", Route.ExportConnection -> PharmacyAdminScreen(state, viewModel)
+                    else -> if (state.destination is Route.History) HistoryScreen(
                         state.catalog as? CatalogState.Ready,
-                        state.route.removePrefix("history:").takeIf { state.route.startsWith("history:") }, viewModel,
+                        (state.destination as Route.History).medicationId, viewModel,
                         showHijri = state.homePreferences.secondaryHijri)
-                    else if (state.route.startsWith("edit-med:")) PharmacyAdminScreen(state, viewModel)
+                    else if (state.destination is Route.EditMedication) PharmacyAdminScreen(state, viewModel)
                     else when (val catalogState = state.catalog) {
                         CatalogState.Loading -> LoadingScreen()
-                        CatalogState.RecoveryRequired -> RecoveryScreen(viewModel::retryProtectedStorage) { navigate("settings") }
+                        CatalogState.RecoveryRequired -> RecoveryScreen(viewModel::retryProtectedStorage) { navigate(Route.Settings) }
                         is CatalogState.Ready -> {
-                            val selectedMedication = state.route.removePrefix("med:").takeIf { state.route.startsWith("med:") }
+                            val selectedMedication = (state.destination as? Route.Medication)?.id
                             val medication = catalogState.catalog.medications.firstOrNull { it.id == selectedMedication }
                             val showReminder = catalogState.backupReminderAt != null
                             val pageHeader: (@Composable () -> Unit)? = if (catalogState.maintenancePaused || catalogState.restorePaused ||
                                 showReminder || catalogState.admin && !catalogState.isDemo && catalogState.lifecycle == "LOCAL_DRAFT") ({
                                 if (catalogState.maintenancePaused) {
                                     InformationCard(uiText(R.string.ui_aqaqeer_app_017), uiText(R.string.ui_aqaqeer_app_018))
-                                    NavigationCard(uiText(R.string.ui_aqaqeer_app_019), { navigate("maintenance") })
+                                    NavigationCard(uiText(R.string.ui_aqaqeer_app_019), { navigate(Route.Maintenance) })
                                 }
                                 if (catalogState.restorePaused) {
                                     InformationCard(uiText(R.string.ui_aqaqeer_app_020), uiText(R.string.ui_aqaqeer_app_021))
-                                    NavigationCard(uiText(R.string.ui_aqaqeer_app_022), { navigate("backup") })
+                                    NavigationCard(uiText(R.string.ui_aqaqeer_app_022), { navigate(Route.Backup) })
                                 }
                                 if (showReminder) DueBackupReminder(catalogState,
-                                    { navigate("backup") }, { viewModel.command { viewModel.backups.dismissReminder() } })
+                                    { navigate(Route.Backup) }, { viewModel.command { viewModel.backups.dismissReminder() } })
                                 if (catalogState.admin && !catalogState.isDemo && catalogState.lifecycle == "LOCAL_DRAFT")
                                     SupportingText(uiText(R.string.ui_pharmacy_admin_screen_038))
                             }) else null
                             Box(Modifier.fillMaxSize()) {
                             val browseContent: @Composable () -> Unit = {
-                            HomeStateContent(viewModel) { state, browse, highlighted -> HomeScreen(catalogState, state, now, viewModel::selectSection, viewModel::setQuery,
-                                viewModel::toggleStatus, viewModel::toggleCategory, viewModel::clearFilters,
-                                { navigate("med:${it}") }, { navigate("settings") }, { viewModel.openConnectionImport() },
-                                if (catalogState.isDemo || catalogState.restorePaused || catalogState.maintenancePaused || catalogState.lifecycle != "SHARED") null else ({ viewModel.refreshCatalog() }),
-                                { navigate("create") }, { navigate("backup") }, adminBusy, adminMessage,
-                                saveAvailability = { selection, status, complete ->
-                                    viewModel.saveAvailability(selection, BulkMedicationChanges(status = status), complete)
-                                }, pageHeader = pageHeader, openAddMedication = { viewModel.newMedicationName = ""; navigate("edit-med:new") },
-                                availabilitySavedId = availabilitySavedId, publicationBusy = sharing.busy,
+                            HomeStateContent(viewModel) { state, browse, highlighted -> HomeScreen(ready = catalogState,
+                                state = state,
+                                now = now,
+                                availabilityBusy = adminBusy,
+                                availabilityMessage = adminMessage,
+                                pageHeader = pageHeader,
+                                availabilitySavedId = availabilitySavedId,
+                                publicationBusy = sharing.busy,
                                 publicationBlockReason = publicationBlockedReason(catalogState, sharing, adminBusy || sharing.busy),
-                                onModalVisibilityChanged = { homeModalOpen = it },
-                                availabilityInProgress = { viewModel.adminBusy.value },
-                                canOpenHomeModal = { !dataTimesOpen && !drawerState.isOpen },
-                                setGroupingEnabled = viewModel::setGroupingEnabled, setGrouping = viewModel::setGrouping,
-                                saveBulk = viewModel::saveAvailability, projection = browse, highlightedMedication = highlighted,
-                                prefillMedication = { query -> viewModel.newMedicationName = query; navigate("edit-med:new") },
-                                toggleExtraFilter = viewModel::toggleExtraFilter,
-                                toggleAvailableFilter = viewModel::toggleAvailableFilter,
-                                editMedication = { id -> navigate("edit-med:$id") }) }
+                                projection = browse,
+                                highlightedMedication = highlighted,
+                                actions = rememberHomeActions(HomeCallbacks(
+                                    selectSection = viewModel::selectSection,
+                                    setQuery = viewModel::setQuery,
+                                    toggleStatus = viewModel::toggleStatus,
+                                    toggleCategory = viewModel::toggleCategory,
+                                    clearFilters = viewModel::clearFilters,
+                                    openMedication = { navigate(Route.Medication(it)) },
+                                    openSettings = { navigate(Route.Settings) },
+                                    openConnection = { viewModel.openConnectionImport() },
+                                    refresh = if (catalogState.isDemo || catalogState.restorePaused || catalogState.maintenancePaused || catalogState.lifecycle != "SHARED") null else ({ viewModel.refreshCatalog() }),
+                                    openCreate = { navigate(Route.Create) },
+                                    openRestore = { navigate(Route.Backup) },
+                                    saveAvailability = { selection, status, complete ->
+                                    viewModel.saveAvailability(selection, BulkMedicationChanges(status = status), complete)
+                                },
+                                    openAddMedication = { viewModel.newMedicationName = ""; navigate(Route.EditMedication()) },
+                                    onModalVisibilityChanged = { homeModalOpen = it },
+                                    availabilityInProgress = { viewModel.adminBusy.value },
+                                    canOpenHomeModal = { !dataTimesOpen && !drawerState.isOpen },
+                                    setGroupingEnabled = viewModel::setGroupingEnabled,
+                                    setGrouping = viewModel::setGrouping,
+                                    saveBulk = viewModel::saveAvailability,
+                                    prefillMedication = { query -> viewModel.newMedicationName = query; navigate(Route.EditMedication()) },
+                                    toggleExtraFilter = viewModel::toggleExtraFilter,
+                                    toggleAvailableFilter = viewModel::toggleAvailableFilter,
+                                    editMedication = { id -> navigate(Route.EditMedication(id)) }))) }
                             }
                             val detailContent: @Composable () -> Unit = {
                                 if (medication != null) MedicationScreen(catalogState, medication, now,
@@ -381,8 +410,8 @@ internal fun statusLabel(status: AvailabilityStatus): String = uiText(when (stat
                     }
                 }
                 }
-                val displayedDestination = destinationKey(displayed.route)
-                if (displayedDestination == "home" || displayed.route.startsWith("edit-med:"))
+                val displayedDestination = destinationKey(displayed.destination)
+                if (displayedDestination == Route.Home || displayed.destination is Route.EditMedication)
                     destinationStates.SaveableStateProvider(viewModel.destinationStateKey(displayedDestination), destinationContent)
                 else destinationContent()
                 }
@@ -463,16 +492,31 @@ internal fun statusLabel(status: AvailabilityStatus): String = uiText(when (stat
     }
 }
 
-@Composable private fun SettingsScreen(theme: ThemeChoice, setTheme: (ThemeChoice) -> Unit,
-    preferences: HomePreferences, setSort: (HomeSort) -> Unit, setLayout: (CardLayout) -> Unit,
-    setNames: (NameDisplay) -> Unit, setSecondaryHijri: (Boolean) -> Unit,
-    accent: ThemeAccent, setAccent: (ThemeAccent) -> Unit, setTwoColumns: (Boolean) -> Unit,
-    setSectionsAtBottom: (Boolean) -> Unit, setSearchAtBottom: (Boolean) -> Unit,
-    setGroupingEnabled: (Boolean) -> Unit, setGrouping: (HomeGrouping) -> Unit,
-    openBackup: (() -> Unit)? = null, openMaintenance: (() -> Unit)? = null, openLeave: (() -> Unit)? = null,
-    demo: Boolean = false, demoAdmin: Boolean = false, changeDemoAdmin: (Boolean) -> Unit = {}, resetDemo: () -> Unit = {},
-    openAbout: () -> Unit) {
+@Composable private fun SettingsScreen(theme: ThemeChoice,
+    preferences: HomePreferences,
+    accent: ThemeAccent,
+    demo: Boolean = false,
+    demoAdmin: Boolean = false,
+    actions: SettingsActions) {
+    val setTheme = actions.setTheme
+    val setSort = actions.setSort
+    val setLayout = actions.setLayout
+    val setNames = actions.setNames
+    val setSecondaryHijri = actions.setSecondaryHijri
+    val setAccent = actions.setAccent
+    val setTwoColumns = actions.setTwoColumns
+    val setSectionsAtBottom = actions.setSectionsAtBottom
+    val setSearchAtBottom = actions.setSearchAtBottom
+    val setGroupingEnabled = actions.setGroupingEnabled
+    val setGrouping = actions.setGrouping
+    val openBackup = actions.openBackup
+    val openMaintenance = actions.openMaintenance
+    val openLeave = actions.openLeave
+    val changeDemoAdmin = actions.changeDemoAdmin
+    val resetDemo = actions.resetDemo
+    val openAbout = actions.openAbout
     val systemDark = androidx.compose.foundation.isSystemInDarkTheme()
+    val resources = androidx.compose.ui.platform.LocalContext.current.resources
     LazyColumn(Modifier.fillMaxSize().testTag("settings"), contentPadding = PaddingValues(UiSpacing.page),
         verticalArrangement = Arrangement.spacedBy(UiSpacing.group)) {
         if (demo) item(key = "demo_mode") { DemoModeControls(demoAdmin, changeDemoAdmin, resetDemo) }
@@ -484,7 +528,7 @@ internal fun statusLabel(status: AvailabilityStatus): String = uiText(when (stat
             SettingsChoiceRows(uiText(R.string.ui_aqaqeer_app_039), ThemeAccent.entries, accent, setAccent, {
                 uiText(when (it) { ThemeAccent.GOLD -> R.string.ui_aqaqeer_app_040; ThemeAccent.BLUE -> R.string.ui_aqaqeer_app_041
                     ThemeAccent.GREEN -> R.string.ui_aqaqeer_app_042; ThemeAccent.PURPLE -> R.string.ui_aqaqeer_app_043; ThemeAccent.CRIMSON -> R.string.ui_aqaqeer_app_044 })
-            }, swatch = { appColorScheme(theme, it, systemDark).primary })
+            }, swatch = { appColorScheme(theme, it, systemDark, resources).primary })
         } }
         item { SettingsGroup(uiText(R.string.review_list_display)) {
             SettingsChoiceRows(uiText(R.string.ui_aqaqeer_app_045), HomeSort.entries, preferences.sort, setSort, label = {
@@ -536,7 +580,7 @@ internal fun statusLabel(status: AvailabilityStatus): String = uiText(when (stat
         item {
             GroupedCard(title = uiText(R.string.ui_aqaqeer_app_071)) {
                 Text(uiText(R.string.ui_aqaqeer_app_072), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-                Text(bidi("hjjarmhmmdali@gmail.com"), fontFamily = FontFamily.SansSerif,
+                Text(bidi(uiText(R.string.contact_email)), fontFamily = FontFamily.SansSerif,
                     modifier = Modifier.testTag("developer_email"))
                 AppButton(variant = AppButtonVariant.SECONDARY, onClick = contact, modifier = Modifier.testTag("email_contact")) { Text(uiText(R.string.ui_aqaqeer_app_073)) }
             }

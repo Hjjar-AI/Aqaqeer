@@ -1,0 +1,14 @@
+<resources>
+    <color name="status_available_container">#14532D</color>
+    <color name="status_available_content">#DCFCE7</color>
+    <color name="status_available_edge">#4ADE80</color>
+    <color name="status_low_container">#78350F</color>
+    <color name="status_low_content">#FEF3C7</color>
+    <color name="status_low_edge">#FBBF24</color>
+    <color name="status_out_container">#7F1D1D</color>
+    <color name="status_out_content">#FEE2E2</color>
+    <color name="status_out_edge">#F87171</color>
+    <color name="status_unknown_container">#334155</color>
+    <color name="status_unknown_content">#F1F5F9</color>
+    <color name="status_unknown_edge">#94A3B8</color>
+</resources>
