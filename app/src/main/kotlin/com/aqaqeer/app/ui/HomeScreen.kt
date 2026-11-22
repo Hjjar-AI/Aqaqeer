@@ -140,8 +140,7 @@ internal enum class HomeLeadingItem { BULK_HELP, OPERATION, NO_SECTION, SEARCH_S
         } else openMedication(id)
     }
     val searchControls: @Composable () -> Unit = {
-        HomeSearchControls(searchText, ::changeSearch, searching, state.filters, visible.size,
-            catalog.medications.size, openFilters = {
+        HomeSearchControls(searchText, ::changeSearch, state.filters, openFilters = {
                 if (editor == null && canOpenHomeModal()) {
                     focus.clearFocus(); notifyModal(true); filtersOpen = true
                 }

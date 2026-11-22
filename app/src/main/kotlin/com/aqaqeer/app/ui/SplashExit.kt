@@ -82,12 +82,12 @@ internal fun animateSplashExit(provider: SplashScreenViewProvider, decor: ViewGr
     provider.remove()
     return AnimatorSet().apply {
         playTogether(
-            ObjectAnimator.ofFloat(emblem, View.SCALE_X, 1f, 1.6f),
-            ObjectAnimator.ofFloat(emblem, View.SCALE_Y, 1f, 1.6f),
+            ObjectAnimator.ofFloat(emblem, View.SCALE_X, 1f, 2.4f),
+            ObjectAnimator.ofFloat(emblem, View.SCALE_Y, 1f, 2.4f),
             ObjectAnimator.ofFloat(layer, View.ALPHA, 1f, 0f),
         )
-        duration = 600
-        interpolator = PathInterpolator(0.22f, 0f, 0.2f, 1f)
+        duration = 150
+        interpolator = PathInterpolator(0.4f, 0f, 1f, 1f)
         var removed = false
         fun removeLayer() {
             if (!removed) {

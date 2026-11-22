@@ -44,8 +44,8 @@ import java.time.LocalDate
         Surface {
             Column(Modifier.padding(UiSpacing.page), verticalArrangement = Arrangement.spacedBy(UiSpacing.related)) {
                 listOf(false, true).forEach { compact ->
-                    HomeSearchControls(androidx.compose.ui.text.input.TextFieldValue("باراسيتامول"), {}, true,
-                        HomeFilters(fetchedOnly = true), 1, 20, {}, {}, compact = compact,
+                    HomeSearchControls(androidx.compose.ui.text.input.TextFieldValue("باراسيتامول"), {},
+                        HomeFilters(fetchedOnly = true), {}, {}, compact = compact,
                         showFetchedChip = true)
                 }
             }
@@ -85,7 +85,7 @@ import java.time.LocalDate
         Surface {
             HomeDetailLayout(true, true,
                 list = { Column(Modifier.padding(UiSpacing.page)) {
-                    HomeSearchControls(androidx.compose.ui.text.input.TextFieldValue(""), {}, false, HomeFilters(), 1, 1, {}, {}, showFetchedChip = true)
+                    HomeSearchControls(androidx.compose.ui.text.input.TextFieldValue(""), {}, HomeFilters(), {}, {}, showFetchedChip = true)
                     MedicationCard(MedicationRowUi(medication, ready.catalog.forms.first(), "مسكنات", AvailabilityStatus.AVAILABLE, emptyList(), false, false),
                         "preview-section", HomePreferences(), LocalDate.of(2026, 11, 22), null, null, {}, {})
                 } },

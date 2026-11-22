@@ -38,7 +38,6 @@
     <string name="home_refresh_failed_notice" formatted="false">"تعذر تحديث البيانات"</string>
     <string name="home_refresh_progress" formatted="false">"جار تحديث البيانات…"</string>
     <string name="home_restore_paused_notice" formatted="false">"النشر متوقف — راجع النسخة المستعادة"</string>
-    <string name="home_results_count_format">"%1$s من %2$s أدوية"</string>
     <string name="home_search_bottom">البحث والتصفية في الأسفل</string>
     <string name="home_search_bottom_help">يبقي البحث وزر التصفية أسفل قائمة الأدوية وفوق الأقسام السفلية.</string>
     <string name="home_search_placeholder" formatted="false">"الاسم أو العيار"</string>

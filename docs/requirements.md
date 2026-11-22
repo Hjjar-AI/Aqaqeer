@@ -227,7 +227,7 @@ Normal readers automatically browse only AVAILABLE/LOW in the current section, i
 
 For standard and simulated demo admins, the sheet offers only AVAILABLE/LOW/OUT; UNKNOWN remains readable in cards/detail and file formats. Persist the selected section per pharmacy, falling back to the first active section if it disappears.
 
-Result count and filter reset appear below search only when an applied search or filters are active. Provide independent locally saved Settings switches for sections at bottom and search/filters at bottom, both enabled when unset for readers and admins. Bottom bars stay outside the medication scroll, with search/filters above sections whenever both are enabled.
+Omit result counts from Home search and filtered results. Show filter reset below search when filters are active. Provide independent locally saved Settings switches for sections at bottom and search/filters at bottom, both enabled when unset for readers and admins. Bottom bars stay outside the medication scroll, with search/filters above sections whenever both are enabled.
 
 Keep the pharmacy-name toolbar anchored at the top when the keyboard opens/closes; resize the content area rather than pan the whole window. Hide bottom sections while the keyboard is open, keep bottom search/filters above the keyboard and restore sections on keyboard dismissal. Preserve query, filters, selected section, counts, RTL swipes and modal/busy guards across placement changes. Keep the admin Add button alongside the search field in its chosen top/bottom placement, including above the keyboard when bottom search is visible; preserve modal, busy, compatibility and bulk-selection guards.
 
@@ -263,7 +263,7 @@ Admin Home uses its top publish control as the primary pending-work summary, wit
 
 Review opens the pending queue; Publish follows section 8 and retains all authorization, compatibility, connection, conflict, restore and maintenance guards. Hide pending information after work/attempts resolve. Readers see no admin pending work/actions. Admin cards mark medications with net medication or availability operations; markers follow live pending state, including reversion and acknowledgement.
 
-Cross-section search hints count distinct additional medications excluded by the current section's status filters but matching those same filters in another active section. Retain query and filters when following section links. Ordinary shared-catalog matches are not advertised as extra results.
+Switching sections retains the applied query and filters.
 
 ### Fetched-change markers
 
@@ -375,7 +375,7 @@ The first ring in Arabic reading order (right) uses the alternate three internal
 
 V1 explicitly includes a launch splash screen and an About screen. Use a simple branded splash using the logo, whose lettering includes عقاقير, with a background and system-bar icon contrast matching the saved local theme/accent (pure black in AMOLED), preserving the selected artwork. The platform starting frame may precede local-preference availability; use system-mode resource fallbacks without blocking startup to read DataStore.
 
-Continue into the existing Home/onboarding/recovery routing as soon as essential local startup is ready. Do not add a forced minimum display duration or wait for Telegram refresh. Use a 600 ms splash exit: the complete logo grows smoothly from its native splash size to 1.6× while the splash layer fades out over the same interval. Keep its center fixed; no internal parts spin or move independently. Respect disabled system animations and keep it within launch routing rather than adding an introduction screen.
+Continue into the existing Home/onboarding/recovery routing as soon as essential local startup is ready. Do not add a forced minimum display duration or wait for Telegram refresh. During the 150 ms exit, the complete logo grows from its native splash size to 2.4× while the splash layer fades, giving the impression of moving toward the viewer. Scale the logo as one piece around a fixed center. Keep the animation within launch routing and respect disabled system animations.
 
 Required startup failures lead to their recovery screen. About uses the existing Arabic interface and the app-information/developer-credit/contact requirements in section 10.
 

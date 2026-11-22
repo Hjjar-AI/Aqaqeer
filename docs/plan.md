@@ -59,6 +59,8 @@ Old IDs remain for traceability; consolidated rows replace overlapping checklist
 
 Current workflow selections and commands belong in [build](build.md#manual-quality-and-security-workflows); they are not pass counts. Repair stale test APIs/fixtures only within an explicitly authorized batch. Demo-wrapper failure isolation/refusal of unexpected real work and Android instrumentation prerequisites remain unverified where not covered by recorded results.
 
+For UI1/UI2, include the 150 ms splash exit and the Home results layout with large RTL text, applied filters and a search that matches only other sections.
+
 <a id="baseline-profile-proposal--prioritized-separate-future-project"></a>
 <a id="performance-tooling--planned"></a>
 

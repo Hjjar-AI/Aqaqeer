@@ -76,7 +76,7 @@ import com.aqaqeer.app.data.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable internal fun HomeSearchControls(query: TextFieldValue, changeQuery: (TextFieldValue) -> Unit,
-    searching: Boolean, filters: HomeFilters, visibleCount: Int, totalCount: Int,
+    filters: HomeFilters,
     openFilters: () -> Unit, clearFilters: () -> Unit, compact: Boolean = false,
     showFetchedChip: Boolean = false, toggleFetched: () -> Unit = {},
     addMedication: (() -> Unit)? = null, addEnabled: Boolean = true) {
@@ -88,7 +88,6 @@ import com.aqaqeer.app.data.*
         val keyboardActions = KeyboardActions(onSearch = { focus.clearFocus() })
         val searchShape = AppShapeTokens.search
         val hasFilters = filters.hasAny
-        val showSummary = searching || hasFilters
         val filterCount = filters.statuses.size + filters.categoryIds.size +
             listOf(filters.expiringSoon, filters.unpublishedOnly, filters.fetchedOnly).count { it }
         val leadingAction: @Composable () -> Unit = {
@@ -162,11 +161,8 @@ import com.aqaqeer.app.data.*
                     }
                 }
             }
-            if (showSummary) WrappingContent {
-                if (showSummary) Text(uiText(R.string.home_results_count_format,
-                    MedicationPresentation.displayDigits(visibleCount.toString()), MedicationPresentation.displayDigits(totalCount.toString())),
-                    style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                if (hasFilters) AppButton(variant = AppButtonVariant.QUIET, onClick = clearFilters) { Text(uiText(R.string.history_clear_filters_action)) }
+            if (hasFilters) AppButton(variant = AppButtonVariant.QUIET, onClick = clearFilters) {
+                Text(uiText(R.string.history_clear_filters_action))
             }
         }
     }
