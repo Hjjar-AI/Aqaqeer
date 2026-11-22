@@ -44,7 +44,7 @@ The retained live-PIN/manual-republication/reader-connection extension remains o
 
 ## Ordered delivery backlog
 
-Old IDs remain for traceability; consolidated rows replace overlapping checklists. The search-matrix fixture and thirteen HomeScreen calls are repaired and hosted-verified without production/role-policy changes or weakened assertions. Retain those passes; the tooltip deprecation remains a separate non-blocking source warning. Hosted authorization does not resume local build/lint/device/live work.
+Old IDs remain for traceability; consolidated rows replace overlapping checklists. The search-matrix fixture and thirteen HomeScreen calls are repaired and hosted-verified without production/role-policy changes or weakened assertions. Retain those passes; the tooltip deprecation has a source fix pending compilation. Hosted authorization does not resume local build/lint/device/live work.
 
 | Order / IDs / priority | Dependency | Remaining deliverable / acceptance |
 | --- | --- | --- |

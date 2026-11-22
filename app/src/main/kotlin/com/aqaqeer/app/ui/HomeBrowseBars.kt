@@ -115,7 +115,7 @@ import com.aqaqeer.app.data.*
                 horizontalArrangement = Arrangement.spacedBy(UiSpacing.hair)) {
                 if (showFetchedChip) {
                     if (compactFetchedControl) TooltipBox(
-                        positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
+                        positionProvider = TooltipDefaults.rememberTooltipPositionProvider(TooltipAnchorPosition.Above),
                         tooltip = { PlainTooltip { Text(uiText(R.string.review_whats_new)) } },
                         state = rememberTooltipState()) {
                         IconToggleButton(checked = filters.fetchedOnly, onCheckedChange = { toggleFetched() },
