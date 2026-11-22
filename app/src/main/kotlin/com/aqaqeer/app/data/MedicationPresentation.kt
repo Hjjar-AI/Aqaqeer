@@ -17,7 +17,9 @@ data class HomePreferences(val sort: HomeSort = HomeSort.SCIENTIFIC_NAME,
     val grouping: HomeGrouping = HomeGrouping.CATEGORY, val twoColumns: Boolean = true,
     val sectionsAtBottom: Boolean = true, val searchAtBottom: Boolean = true)
 data class HomeFilters(val statuses: Set<AvailabilityStatus> = emptySet(), val categoryIds: Set<String> = emptySet(),
-    val expiringSoon: Boolean = false, val unpublishedOnly: Boolean = false, val fetchedOnly: Boolean = false)
+    val expiringSoon: Boolean = false, val unpublishedOnly: Boolean = false, val fetchedOnly: Boolean = false) {
+    val hasAny: Boolean get() = statuses.isNotEmpty() || categoryIds.isNotEmpty() || expiringSoon || unpublishedOnly || fetchedOnly
+}
 data class MedicationGroup(val key: String, val label: String, val medications: List<Medication>)
 enum class ExpiryState { EXPIRED, SOON }
 data class DisplayName(val text: String, val english: Boolean)

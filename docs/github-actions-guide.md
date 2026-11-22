@@ -4,7 +4,7 @@ This guide explains how to design, create, configure, operate and maintain GitHu
 
 The reader's local development system is **Ubuntu 26.04.1**, as supplied by the project owner. A workflow can independently select a different GitHub-hosted operating system. This distinction matters throughout the guide.
 
-Documentation reviewed: **2026-11-13**. GitHub.com is the reference platform; GitHub Enterprise Server can differ in supported actions and features. Examples are teaching material unless identified as the current Aqaqeer workflow. Creating this guide did not execute any example, build, test, deployment or GitHub command.
+Tutorial examples reviewed: **2026-11-13**; project references consolidated **2026-11-22**. GitHub.com is the reference platform; GitHub Enterprise Server can differ in supported actions and features. Examples are teaching material unless identified as the current Aqaqeer workflow. Creating this guide did not execute any example, build, test, deployment or GitHub command.
 
 For Aqaqeer's authoritative commands and current toolchain, use [Building Aqaqeer](build.md). The executable configuration is [android.yml](../.github/workflows/android.yml); execution evidence belongs in [validation](validation.md), and pending work belongs in [plan](plan.md).
 
@@ -679,15 +679,10 @@ Review proposed updates, release notes and resulting hashes. Automated proposals
 | Hosted runner | `ubuntu-24.04` | [Workflow](../.github/workflows/android.yml) |
 | Trigger | Manual dispatch only | Workflow `on` declaration |
 | Module | `:app` | [Gradle settings](../settings.gradle.kts) |
-| Wrapper | Gradle 9.8.2 with distribution checksum | [Wrapper properties](../gradle/wrapper/gradle-wrapper.properties) |
-| Android plugin | AGP 9.5.1 | [Version catalog](../gradle/libs.versions.toml) |
-| Build runtime | Temurin JDK 21 | Workflow and [build documentation](build.md) |
-| Java/Kotlin target | 17 | [Module configuration](../app/build.gradle.kts) |
-| Compile/target/minimum SDK | 37.0 / 37 / 26 | Module configuration; explicit compile minor API level 0 |
-| Installed build tools | 36.0.0 | [Shared toolchain configuration](../.github/android-toolchain.json); [AGP 9.2 compatibility](https://developer.android.com/build/releases/agp-9-2-0-release-notes) |
+| Toolchain versions and targets | Read the [pinned toolchain table](build.md#pinned-toolchain); verify the [catalog](../gradle/libs.versions.toml), [wrapper](../gradle/wrapper/gradle-wrapper.properties), [module](../app/build.gradle.kts) and [shared SDK configuration](../.github/android-toolchain.json) | Source declarations, not a second version registry |
 | Debug flavors | `standard`, `demo` | Module configuration |
-| Packaging entry point | POSIX Gradle wrapper | [gradlew](../gradlew) |
-| Extra wrapper prerequisite | Python 3.8+ | [Version helper](../gradle/build_version.py) and build documentation |
+| Packaging entry point | POSIX Gradle wrapper through the shared selector | [Build commands](build.md#setup-and-commands) |
+| Extra wrapper prerequisite | Python; minimum version in build guidance | [Version helper](../gradle/build_version.py) |
 
 These values illustrate inspection, not a requirement for other Android apps. JDK 21 follows this project's documented build environment; it is not inferred solely from bytecode target 17.
 

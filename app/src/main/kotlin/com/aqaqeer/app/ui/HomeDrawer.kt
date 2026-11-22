@@ -4,7 +4,6 @@ import com.aqaqeer.app.uiText
 import com.aqaqeer.app.R
 
 import androidx.compose.animation.animateContentSize
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.ui.semantics.Role
@@ -17,11 +16,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.platform.LocalWindowInfo
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.heading
-import androidx.compose.ui.semantics.stateDescription
 import com.aqaqeer.app.data.*
 
 /** Navigation only; callers close the drawer and recheck context before executing callbacks. */
@@ -38,7 +34,7 @@ import com.aqaqeer.app.data.*
     var categoriesOpen by rememberSaveable(pharmacy?.pharmacyId) { mutableStateOf(true) }
     var catalogOpen by rememberSaveable(pharmacy?.pharmacyId) { mutableStateOf(false) }
     var applicationOpen by rememberSaveable(pharmacy?.pharmacyId) { mutableStateOf(false) }
-    val drawerWidth = with(LocalDensity.current) { (LocalWindowInfo.current.containerSize.width.toDp() - Size.drawerOutside).coerceIn(AppStroke.hairline, Size.drawerMax) }
+    val drawerWidth = (LocalLayoutMetrics.current.width - Size.drawerOutside).coerceIn(Size.drawerMin, Size.drawerMax)
     ModalDrawerSheet(modifier = Modifier.requiredWidth(drawerWidth)) {
         Column(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).padding(UiSpacing.related),
             verticalArrangement = Arrangement.spacedBy(UiSpacing.hair)) {
@@ -73,24 +69,8 @@ import com.aqaqeer.app.data.*
 /** Drawer disclosure headings use the same icon language and corners as navigation rows. */
 @Composable private fun DrawerGroup(title: String, expanded: Boolean, toggle: () -> Unit,
     icon: UiIcon, content: @Composable ColumnScope.() -> Unit) {
-    val uiText = rememberUiText()
     Column(Modifier.fillMaxWidth().animateContentSize()) {
-        AppButton(variant = AppButtonVariant.SECONDARY, onClick = toggle,
-            modifier = Modifier.fillMaxWidth().heightIn(min = UiSpacing.touch).semantics {
-                stateDescription = uiText(if (expanded) R.string.shared_expanded_state_label else R.string.shared_collapsed_state_label)
-            }, shape = MaterialTheme.shapes.medium,
-            border = BorderStroke(AppStroke.hairline, MaterialTheme.colorScheme.outlineVariant),
-            colors = ButtonDefaults.outlinedButtonColors(
-                containerColor = if (expanded) MaterialTheme.colorScheme.surfaceVariant else Color.Transparent,
-                contentColor = MaterialTheme.colorScheme.onSurface),
-            contentPadding = PaddingValues(horizontal = UiSpacing.section, vertical = UiSpacing.related)) {
-            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(UiSpacing.related)) {
-                AppIcon(icon)
-                Text(title, Modifier.weight(1f).semantics { heading() }, style = MaterialTheme.typography.titleSmall)
-                ExpansionChevron(expanded)
-            }
-        }
+        DisclosureHeader(title, expanded, toggle, style = DisclosureStyle.DRAWER, icon = icon)
         if (expanded) ContentSection(spacing = Space.none, content = content)
     }
 }

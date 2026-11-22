@@ -1,28 +1,20 @@
 package com.aqaqeer.app.ui
 
-import androidx.compose.runtime.SideEffect
-
 import com.aqaqeer.app.uiText
 import com.aqaqeer.app.R
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.ui.draw.clip
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawWithCache
-import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.*
 import androidx.compose.ui.text.TextStyle
@@ -111,7 +103,7 @@ import java.time.LocalDate
     bulkSelected: Boolean?, toggleSelection: () -> Unit, onClick: () -> Unit, modifier: Modifier = Modifier,
     selectionEnabled: Boolean = true, query: String = "", unpublished: Boolean = false,
     onLongClick: (() -> Unit)? = null, highlighted: Boolean = false,
-    reserveSelectionSpace: Boolean = false, quickMenuOpen: Boolean = false, dismissQuickMenu: () -> Unit = {}, chooseStatus: (AvailabilityStatus) -> Unit = {}) {
+    reserveSelectionSpace: Boolean = false, quickMenuOpen: Boolean = false, dismissQuickMenu: () -> Unit = {}, chooseStatus: (AvailabilityStatus) -> Unit = {}, editableStatus: Boolean = onQuickEdit != null) {
     val uiText = rememberUiText()
     val medication = row.medication
     val compact = preferences.layout == CardLayout.COMPACT
@@ -145,28 +137,12 @@ import java.time.LocalDate
             bulkSelected == true -> AppCardEmphasis.SELECTED
             else -> AppCardEmphasis.DEFAULT
         }) {
-        Column(Modifier.fillMaxWidth().drawWithCache {
-            val stripes = Path().apply {
-                val spacing = Space.lg.toPx()
-                var x = -size.height
-                while (x < size.width) {
-                    moveTo(x, 0f); lineTo(x + size.height, size.height)
-                    x += spacing
-                }
-            }
-            val stripeStroke = Stroke(AppStroke.emphasis.toPx())
-            val stroke = AppStroke.accent.toPx()
-            val x = if (rtl) size.width - stroke / 2 else stroke / 2
-            onDrawBehind {
-                if (status == AvailabilityStatus.OUT) drawPath(stripes, unavailableStripe, style = stripeStroke)
-                drawLine(edge, Offset(x, 0f), Offset(x, size.height), stroke)
-            }
-        }.padding(if (compact) UiSpacing.related else UiSpacing.section), verticalArrangement = Arrangement.spacedBy(UiSpacing.hair)) {
+        Column(Modifier.fillMaxWidth().statusEdge(status, edge, unavailableStripe, rtl).padding(if (compact) UiSpacing.related else UiSpacing.section), verticalArrangement = Arrangement.spacedBy(UiSpacing.hair)) {
             Row(horizontalArrangement = Arrangement.spacedBy(UiSpacing.hair), verticalAlignment = Alignment.Top) {
                 // Fixed slot prevents selection-mode row/width changes for editable cards.
-                if (reserveSelectionSpace || bulkSelected != null) Box(Modifier.size(Space.xl)) {
+                if (reserveSelectionSpace || bulkSelected != null) Box(Modifier.size(Size.checkbox)) {
                     if (bulkSelected != null) Checkbox(checked = bulkSelected, onCheckedChange = null,
-                        enabled = selectionEnabled, modifier = Modifier.size(Space.xl).testTag("select_${medication.id}").clearAndSetSemantics { })
+                        enabled = selectionEnabled, modifier = Modifier.size(Size.checkbox).testTag("select_${medication.id}").clearAndSetSemantics { })
                 }
                 form?.let { DosageFormIcon(it) }
                 Column(Modifier.weight(1f)) {
@@ -185,24 +161,10 @@ import java.time.LocalDate
                 }
             }
             MedicationBadges(medication, today, sectionId?.let { status }, onQuickEdit, name,
-                quickMenuOpen, dismissQuickMenu, chooseStatus, selectionEnabled)
+                quickMenuOpen, dismissQuickMenu, chooseStatus, selectionEnabled, editableStatus)
 
             if (!compact && !(preferences.groupingEnabled && preferences.grouping == HomeGrouping.CATEGORY)) LabeledValue(uiText(R.string.catalog_category_label), row.category)
-            val elsewhere = row.elsewhere
-            val tipIdentity = listOf(LocalNoticeScope.current, "availability-tip", medication.id, sectionId.orEmpty())
-            val tipContent = elsewhere.flatMap { listOf(it.id, it.nameAr) }
-            SideEffect { UiSession.reconcile(tipIdentity, if (elsewhere.isEmpty()) emptyMap() else mapOf(tipIdentity to tipContent)) }
-            if (elsewhere.isNotEmpty() && !UiSession.isDismissed(tipIdentity, tipContent)) Surface(color = MaterialTheme.colorScheme.surfaceVariant, shape = MaterialTheme.shapes.small) {
-                Row(Modifier.fillMaxWidth().padding(UiSpacing.hair).testTag("tip_${medication.id}"),
-                    verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(UiSpacing.hair)) {
-                    AppIcon(UiIcon.INFO)
-                    Text(uiText(R.string.availability_elsewhere_prefix) + elsewhere.joinToString(uiText(R.string.shared_arabic_list_separator)) { it.nameAr },
-                        style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
-                    IconButton(onClick = { UiSession.dismiss(tipIdentity, tipContent) }) {
-                        AppIcon(UiIcon.CLOSE, description = uiText(R.string.notice_dismiss))
-                    }
-                }
-            }
+            AvailabilityElsewhereTip(medication.id, sectionId, row.elsewhere)
         }
     }
 }
@@ -210,13 +172,13 @@ import java.time.LocalDate
 @OptIn(ExperimentalLayoutApi::class)
 @Composable private fun MedicationBadges(medication: Medication, today: LocalDate, status: AvailabilityStatus?,
     onQuickEdit: (() -> Unit)?, name: String, expanded: Boolean, dismiss: () -> Unit,
-    choose: (AvailabilityStatus) -> Unit, enabled: Boolean) {
+    choose: (AvailabilityStatus) -> Unit, enabled: Boolean, editableStatus: Boolean) {
     val expiry = remember(medication, today) { MedicationPresentation.expiry(medication, today) }
     if (status == null && expiry == null) return
     FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(UiSpacing.hair),
         verticalArrangement = Arrangement.spacedBy(UiSpacing.hair)) {
         if (status != null) Box(Modifier.align(Alignment.CenterVertically)) {
-            EditableStatusPill(status, onQuickEdit, expanded, dismiss, choose, enabled, dense = true)
+            EditableStatusPill(status, onQuickEdit, expanded, dismiss, choose, enabled, dense = true, editable = editableStatus)
         }
         if (expiry != null)
             Box(Modifier.align(Alignment.CenterVertically)) { ExpiryBadge(expiry, dense = true, modifier = Modifier.testTag("expiry_${medication.id}")) }

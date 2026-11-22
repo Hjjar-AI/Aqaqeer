@@ -4,10 +4,8 @@ import com.aqaqeer.app.uiText
 import com.aqaqeer.app.R
 
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.ui.graphics.graphicsLayer
@@ -84,7 +82,7 @@ import androidx.compose.ui.unit.LayoutDirection
             choices.forEach { choice ->
                 AppChip(selected = choice == selected, onClick = { select(choice) }, label = {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(UiSpacing.related)) {
-                        swatch?.let { Box(Modifier.size(Space.md).background(it(choice), androidx.compose.foundation.shape.CircleShape)) }
+                        swatch?.let { Box(Modifier.size(Size.dotM).background(it(choice), androidx.compose.foundation.shape.CircleShape)) }
                         Text(label(choice))
                     }
                 },
@@ -120,24 +118,16 @@ import androidx.compose.ui.unit.LayoutDirection
                 val normalized = MedicationPresentation.normalizedSearch(query)
                 labeled.filter { it.third.contains(normalized) }
             }
-            AppDialog(onDismissRequest = { expanded = false }, title = { Text(label) }, text = {
-                BoxWithConstraints(Modifier.fillMaxWidth()) {
-                    // Dialog constraints already reflect IME resizing; do not subtract it twice.
-                    Column(Modifier.heightIn(max = minOf(maxHeight, viewportHeight(0.65f))),
-                        verticalArrangement = Arrangement.spacedBy(UiSpacing.related)) {
-                        if (values.size > 8) FormField(uiText(R.string.shared_search_label), query, { query = it })
-                        LazyColumn(Modifier.fillMaxWidth().weight(1f, fill = false)) {
-                            items(visible, key = { itemKey(it.first) }) { (value, text, _) ->
-                                AppButton(variant = AppButtonVariant.QUIET, onClick = { choose(value); expanded = false }, modifier = Modifier.fillMaxWidth()) {
-                                    Text(text, modifier = Modifier.weight(1f))
-                                    if (value == selected) AppIcon(UiIcon.CHECK)
-                                }
-                            }
-                        }
-                        if (visible.isEmpty()) Text(uiText(R.string.shared_no_matches_message))
+            SearchableChoiceDialog(label, query, { query = it }, uiText(R.string.shared_search_label),
+                showSearch = values.size > 8, empty = visible.isEmpty(), emptyMessage = uiText(R.string.shared_no_matches_message),
+                dismiss = { expanded = false }) {
+                items(visible, key = { itemKey(it.first) }) { (value, text, _) ->
+                    AppButton(variant = AppButtonVariant.QUIET, onClick = { choose(value); expanded = false }, modifier = Modifier.fillMaxWidth()) {
+                        Text(text, modifier = Modifier.weight(1f))
+                        if (value == selected) AppIcon(UiIcon.CHECK)
                     }
                 }
-            }, confirmButton = { AppButton(variant = AppButtonVariant.QUIET, onClick = { expanded = false }) { Text(uiText(R.string.shared_close_action)) } })
+            }
         }
     }
 }

@@ -1,7 +1,7 @@
 # Aqaqeer · عقاقير
 
 <p align="center">
-  <img src="assets/branding/aqaqeer-icon-gold-teal.png" width="144" alt="Aqaqeer gold and teal logo">
+  <img src="app/src/main/res/drawable-nodpi/aqaqeer_logo.png" width="144" alt="Aqaqeer gold and teal logo">
 </p>
 
 **Medication availability by pharmacy section, with offline viewing and encrypted Telegram sharing.**
@@ -97,7 +97,7 @@ Exact compatibility, encryption, size limits and recovery rules live in the [req
 
 ## Verification status
 
-Hosted JVM checks and builds have passed for the revisions recorded in [validation](docs/validation.md). Earlier Android results are dated evidence and do not establish acceptance of later UI changes. Current remaining checks—including Android runtime/UI acceptance, schema-export regeneration and production signing/update continuity—are tracked in the [plan](docs/plan.md).
+Hosted JVM checks and builds have passed for the revisions recorded in [validation](docs/validation.md). Earlier Android results are dated evidence and do not establish acceptance of later UI changes. The [backup/restore audit](docs/validation.md#backuprestore-requirement-to-evidence-audit--2026-11-22) maps recorded evidence to current requirements. Remaining checks—including current-source compilation, Android runtime/UI acceptance, schema-export regeneration and production signing/update continuity—are ordered in the [plan](docs/plan.md).
 
 ## Documentation
 

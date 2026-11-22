@@ -23,9 +23,7 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.withContext
 import java.time.Instant
 import javax.inject.Inject
@@ -83,84 +81,23 @@ class CatalogViewModel @Inject constructor(
     internal val adminBusy = MutableStateFlow(false)
     internal val adminMessage = MutableStateFlow<String?>(null)
     internal val pendingEdits = MutableStateFlow<List<PendingOperation>>(emptyList())
-    private val csvState = MutableStateFlow(CsvImportState())
-    internal val csvImport = csvState.asStateFlow()
-    private val reportState = MutableStateFlow<ReportSnapshot?>(null)
-    internal val reportSnapshot = reportState.asStateFlow()
-    private var csvSaveDraft: Pair<CsvSaveKind, CsvImportState>? = null
-    private var reportSaveDraft: Pair<ReportSnapshot, Boolean>? = null
+    private val exchangeController = ExchangeController(csvImports, reports,
+        catalogState = ::currentCatalog, currentRoute = ::currentRoute, isOnline = ::currentOnline,
+        feedback = feedback, markReconnectSafely = { markReconnectSafely() },
+        runCommand = { queueOffline, action -> command(queueOffline = queueOffline, action = action) })
+    internal val csvImport = exchangeController.csvImport
+    internal val reportSnapshot = exchangeController.reportSnapshot
+    internal fun loadCsv(uri: Uri) = exchangeController.loadCsv(uri)
+    internal fun reviseCsv(number: Int, decision: CsvDecision) = exchangeController.reviseCsv(number, decision)
+    internal fun chooseCsvDuplicates(update: Boolean) = exchangeController.chooseCsvDuplicates(update)
+    internal fun selectValidCsv() = exchangeController.selectValidCsv()
+    internal fun commitCsv() = exchangeController.commitCsv()
+    internal fun beginCsvSave(kind: CsvSaveKind) = exchangeController.beginCsvSave(kind)
+    internal fun saveCsv(uri: Uri?) = exchangeController.saveCsv(uri)
+    internal fun prepareReport(request: ReportRequest) = exchangeController.prepareReport(request)
+    internal fun beginReportSave(pdf: Boolean) = exchangeController.beginReportSave(pdf)
+    internal fun saveReport(uri: Uri?) = exchangeController.saveReport(uri)
 
-    internal fun loadCsv(uri: Uri) = command(queueOffline = false) {
-        val session = csvImports.load(uri)
-        check(exchangeEligible(session.pharmacyId))
-        csvState.value = CsvImportState(session)
-    }
-    internal fun reviseCsv(number: Int, decision: CsvDecision) = command(queueOffline = false) {
-        val current = csvState.value
-        val session = current.session ?: return@command
-        if (!current.finished) {
-            val revised = csvImports.revise(session, number, decision)
-            if (csvState.value.session?.id == session.id && exchangeEligible(session.pharmacyId)) csvState.value = current.copy(session = revised)
-        }
-    }
-    internal fun chooseCsvDuplicates(update: Boolean) = command(queueOffline = false) {
-        val current = csvState.value; val session = current.session ?: return@command
-        if (!current.finished && exchangeEligible(session.pharmacyId)) {
-            val revised = csvImports.chooseDuplicates(session, update)
-            if (csvState.value.session?.id == session.id) csvState.value = current.copy(session = revised)
-        }
-    }
-    internal fun selectValidCsv() = command(queueOffline = false) {
-        val current = csvState.value; val session = current.session ?: return@command
-        if (!current.finished && exchangeEligible(session.pharmacyId)) csvState.value = current.copy(session = csvImports.selectValid(session))
-    }
-    internal fun commitCsv() = command(queueOffline = false) {
-        val current = csvState.value; val session = current.session ?: return@command
-        if (current.finished) return@command
-        try {
-            csvImports.commit(session) { results ->
-                if (csvState.value.session?.id != session.id) throw CancellationException()
-                csvState.update { it.copy(results = it.results + results.associateBy { result -> result.number }) }
-                if (!online && results.any { it.outcome in setOf(CsvOutcome.CREATED, CsvOutcome.UPDATED) }) markReconnectSafely()
-            }
-        } finally {
-            if (csvState.value.session?.id == session.id) csvState.update { latest ->
-                val unprocessed = session.rows.filter { it.record.number !in latest.results }.associate { row ->
-                    val skipped = row.decision.action == CsvAction.SKIP || (!row.decision.selected && row.error == null)
-                    row.record.number to CsvRowResult(row.record.number, if (skipped) CsvOutcome.SKIPPED else CsvOutcome.FAILED,
-                        row.warnings.joinToString(uiText(R.string.exchange_csv_warning_separator)), if (skipped) "" else row.error ?: uiText(R.string.exchange_csv_unprocessed_row_error))
-                }
-                latest.copy(results = latest.results + unprocessed, finished = true)
-            }
-        }
-    }
-    internal fun beginCsvSave(kind: CsvSaveKind) { csvSaveDraft = kind to csvState.value }
-    internal fun saveCsv(uri: Uri?) {
-        val draft = csvSaveDraft; csvSaveDraft = null
-        if (uri == null || draft == null) return
-        command(queueOffline = false) {
-            if (draft.first == CsvSaveKind.TEMPLATE) csvImports.template(uri)
-            else csvImports.exportResults(uri, draft.second, draft.first == CsvSaveKind.RETRY)
-            if (route.value == "csv-import") feedback.value = UiFeedback(uiText(R.string.exchange_csv_file_saved_message), "csv-import")
-        }
-    }
-    internal fun prepareReport(request: ReportRequest) = command(queueOffline = false) {
-        val snapshot = reports.capture(request)
-        check(exchangeEligible(snapshot.pharmacyId))
-        reportState.value = snapshot
-    }
-    internal fun beginReportSave(pdf: Boolean) { reportState.value?.let { reportSaveDraft = it to pdf } }
-    internal fun saveReport(uri: Uri?) {
-        val draft = reportSaveDraft; reportSaveDraft = null
-        if (uri == null || draft == null) return
-        command(queueOffline = false) {
-            if (draft.second) reports.pdf(uri, draft.first) else reports.csv(uri, draft.first)
-            if (route.value == "reports") feedback.value = UiFeedback(uiText(R.string.exchange_report_file_saved_message), "reports")
-        }
-    }
-    private fun exchangeEligible(pharmacyId: String): Boolean = (state.value.catalog as? CatalogState.Ready)?.let {
-        it.admin && !it.isDemo && !it.requiresUpdate && !it.maintenancePaused && it.catalog.pharmacy?.pharmacyId == pharmacyId
-    } == true
     private val connectivity = context.getSystemService(ConnectivityManager::class.java)
     private var online = connectivity.getNetworkCapabilities(connectivity.activeNetwork)?.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED) == true
     private var foreground = false
@@ -278,11 +215,13 @@ class CatalogViewModel @Inject constructor(
     }
     override fun onCleared() { connectivity.unregisterNetworkCallback(networkObserver); super.onCleared() }
     private val refreshState = MutableStateFlow(RefreshUiState())
-    private val importState = MutableStateFlow(ConnectionImportUiState())
-    val connectionImport: StateFlow<ConnectionImportUiState> = importState.asStateFlow()
-    private var importOperation: Job? = null
+    private val connectionController = ConnectionImportController(connectionImports, viewModelScope) { navigate(it) }
+    val connectionImport: StateFlow<ConnectionImportUiState> = connectionController.connectionImport
     private val onlineState = MutableStateFlow(online)
-    private val route = savedState.getStateFlow("route", "home")
+    private val navigation = NavigationController(savedState,
+        routeAllowed = { !BuildConfig.IS_DEMO || demoRouteAllowed(it) },
+        beforeRoute = ::beforeRoute, beforeBack = ::beforeBack)
+    private val route = navigation.route
     private val section = savedState.getStateFlow<String?>("section", null)
     private val query = savedState.getStateFlow("query", "")
     private val appliedQuery = query.debounce { if (MedicationPresentation.normalizedSearch(it).isEmpty()) 0L else 250L }
@@ -296,6 +235,7 @@ class CatalogViewModel @Inject constructor(
     internal fun retryProtectedStorage() {
         if (state.value.catalog == CatalogState.RecoveryRequired) catalogRetry.update { it + 1 }
     }
+    private val preferenceWriter = PreferenceWriter(preferences, viewModelScope)
     private val sectionPreference = combine(section, preferences.sections) { selected, retained -> selected to retained }
     private val base = combine(catalogRetry.flatMapLatest { attempt -> flow<CatalogState> {
         if (attempt > 0) try { repository.resetProtectedStorage() } catch (error: Exception) {
@@ -345,13 +285,7 @@ class CatalogViewModel @Inject constructor(
             state.map { current -> (current.catalog as? CatalogState.Ready)?.let { ready ->
                 ready.catalog.pharmacy?.pharmacyId to (ready.admin && !ready.isDemo && !ready.requiresUpdate && !ready.maintenancePaused)
             } }.distinctUntilChanged().collect { access ->
-                val pharmacyId = access?.first
-                if (access?.second != true || (csvState.value.session?.pharmacyId?.let { it != pharmacyId } == true)) {
-                    csvState.value = CsvImportState(); csvSaveDraft = null
-                }
-                if (access?.second != true || (reportState.value?.pharmacyId?.let { it != pharmacyId } == true)) {
-                    reportState.value = null; reportSaveDraft = null
-                }
+                exchangeController.reconcileAccess(access)
             }
         }
     }
@@ -371,7 +305,7 @@ class CatalogViewModel @Inject constructor(
     internal val homeBrowse = combine(searchIndex, combine(state, browseDay) { current, now -> current to now }.map { (current, now) ->
         BrowseRequest(current.sectionId, current.appliedQuery, current.filters, current.homePreferences,
             (current.catalog as? CatalogState.Ready)?.unpublishedMedicationIds.orEmpty(), current.fetchedIds,
-            MedicationPresentation.today(now, (current.catalog as? CatalogState.Ready)?.catalog?.pharmacy?.timezone ?: "Asia/Damascus"),
+            MedicationPresentation.today(now, (current.catalog as? CatalogState.Ready)?.catalog?.pharmacy?.timezone ?: DEFAULT_PRESENTATION_TIMEZONE),
             (current.catalog as? CatalogState.Ready)?.let { !it.admin } == true)
     }.distinctUntilChanged()) { index, request -> index to request }.mapLatest { (index, request) ->
         withContext(kotlinx.coroutines.Dispatchers.Default) {
@@ -441,25 +375,23 @@ class CatalogViewModel @Inject constructor(
         }
     }
 
-    internal fun destinationStateKey(destination: String): String = destinationStateKey(RouteStorage.decode(destination))
-    internal fun destinationStateKey(destination: Route): String {
-        val encoded = RouteStorage.encode(destination)
-        return if (destination is Route.EditMedication) encoded + ":" + savedState.get<String>("draft:$encoded").orEmpty() else encoded
+    private fun currentCatalog(): CatalogState = state.value.catalog
+    private fun currentRoute(): String = route.value
+    private fun currentOnline(): Boolean = online
+    private fun beforeRoute(destination: Route) {
+        if (destination !is Route.History) historyRequest.value = HistoryRequest()
+        adminMessage.value = null
+        feedback.value = null
     }
+    private fun beforeBack(destination: Route) {
+        if (destination == Route.EditMedication()) newMedicationName = ""
+        if (destination == Route.Connection) connectionController.onBack()
+    }
+
+    internal fun destinationStateKey(destination: String): String = navigation.destinationStateKey(RouteStorage.decode(destination))
+    internal fun destinationStateKey(destination: Route): String = navigation.destinationStateKey(destination)
     fun navigate(destination: String) = navigate(RouteStorage.decode(destination))
-    fun navigate(destination: Route) {
-        if (BuildConfig.IS_DEMO && !demoRouteAllowed(destination)) return
-        val encoded = RouteStorage.encode(destination)
-        if (encoded == route.value) return
-        if (destination is Route.EditMedication) savedState["draft:$encoded"] = java.util.UUID.randomUUID().toString()
-        val stack = savedState.get<ArrayList<String>>("backStack") ?: arrayListOf("home").also {
-            if (route.value != "home") it.add(route.value)
-        }
-        if (destination == Route.Home) stack.clear()
-        if (stack.lastOrNull() != encoded) stack.add(encoded)
-        savedState["backStack"] = stack
-        changeRoute(destination)
-    }
+    fun navigate(destination: Route) = navigation.navigate(destination)
     private fun demoRouteAllowed(destination: Route): Boolean = when (destination) {
         Route.Home, Route.Settings, Route.About, is Route.Medication -> true
         Route.Admin, Route.Taxonomy, Route.Review, is Route.History, is Route.EditMedication -> DemoSession.initialize().admin
@@ -477,172 +409,28 @@ class CatalogViewModel @Inject constructor(
         pendingEdits.value = emptyList(); highlightedMedication.value = null; availabilitySavedId.value = null
         clearFilters(); setQuery(""); navigate(Route.Home)
     }
-    private fun changeRoute(destination: Route) {
-        if (BuildConfig.IS_DEMO && !demoRouteAllowed(destination)) {
-            savedState["backStack"] = arrayListOf("home")
-            savedState["route"] = "home"
-            return
-        }
-        if (destination !is Route.History) historyRequest.value = HistoryRequest()
-        adminMessage.value = null
-        feedback.value = null
-        savedState["route"] = RouteStorage.encode(destination)
-    }
-    fun back() {
-        if (RouteStorage.decode(route.value) == Route.EditMedication()) newMedicationName = ""
-        if (RouteStorage.decode(route.value) == Route.Connection) {
-            if (importState.value.busy) importOperation?.cancel()
-            importState.update { it.copy(selectedUri = null, error = null) }
-        }
-        val stack = savedState.get<ArrayList<String>>("backStack") ?: arrayListOf("home", route.value)
-        if (stack.size > 1) stack.removeAt(stack.lastIndex)
-        if (stack.isEmpty()) stack.add("home")
-        savedState["backStack"] = stack
-        changeRoute(RouteStorage.decode(stack.last()))
-    }
+    fun back() = navigation.back()
 
     init { reloadConnectionImport(); connectivity.registerDefaultNetworkCallback(networkObserver) }
 
-    fun openConnectionImport(uri: Uri? = null) {
-        if (importState.value.busy) return
-        importState.update { it.copy(selectedUri = uri, error = null, verification = null) }
-        navigate(Route.Connection)
-    }
+    fun openConnectionImport(uri: Uri? = null) = connectionController.openConnectionImport(uri)
+    fun reloadConnectionImport() = connectionController.reloadConnectionImport()
+    fun stageConnection(password: CharArray) = connectionController.stageConnection(password)
+    fun cancelConnectionImport() = connectionController.cancelConnectionImport()
+    fun verifyPendingConnection(id: String) = connectionController.verifyPendingConnection(id)
+    fun activatePendingConnection(id: String) = connectionController.activatePendingConnection(id)
+    fun discardPendingConnection(id: String) = connectionController.discardPendingConnection(id)
 
-    fun reloadConnectionImport() {
-        if (importOperation?.isActive == true) return
-        importState.update { it.copy(loading = true, error = null) }
-        importOperation = viewModelScope.launch(start = CoroutineStart.UNDISPATCHED) {
-            try { restorePendingConnection() }
-            catch (error: CancellationException) { throw error }
-            catch (error: Exception) { importState.update { it.copy(storageReady = false, error = connectionImportMessage(error)) } }
-            finally { importState.update { it.copy(loading = false) } }
-        }
-    }
-
-    /** Takes ownership of password; never place it in SavedStateHandle or a UI state flow. */
-    fun stageConnection(password: CharArray) {
-        val current = importState.value
-        val uri = current.selectedUri
-        if (current.loading || current.busy || !current.storageReady || current.pending != null || uri == null) {
-            password.fill('\u0000'); return
-        }
-        importState.update { it.copy(busy = true, error = null) }
-        importOperation = viewModelScope.launch(start = CoroutineStart.UNDISPATCHED) {
-            try {
-                val pending = connectionImports.stage(uri, password)
-                importState.update { it.copy(pending = pending.info, requirements = pending.requirements,
-                    verification = null, selectedUri = null) }
-            } catch (error: CancellationException) {
-                // A protected atomic write may have finished before dispatch-back cancellation.
-                withContext(NonCancellable) {
-                    try { restorePendingConnection() }
-                    catch (failure: Exception) { importState.update { it.copy(storageReady = false, error = connectionImportMessage(failure)) } }
-                }
-                throw error
-            } catch (error: Exception) {
-                importState.update { it.copy(error = connectionImportMessage(error)) }
-            } finally {
-                password.fill('\u0000')
-                importState.update { it.copy(busy = false) }
-            }
-        }.also { operation -> operation.invokeOnCompletion { password.fill('\u0000') } }
-    }
-
-    fun cancelConnectionImport() { if (importState.value.busy) importOperation?.cancel() }
-
-    fun verifyPendingConnection(id: String) {
-        val current = importState.value
-        if (current.loading || current.busy || !current.storageReady || current.pending?.id != id) return
-        importState.update { it.copy(busy = true, verifying = true, verification = null, error = null) }
-        importOperation = viewModelScope.launch(start = CoroutineStart.UNDISPATCHED) {
-            try {
-                val verification = connectionImports.verify(id)
-                importState.update { if (it.pending?.id == id)
-                    it.copy(verification = verification, requirements = verification.requirements) else it }
-            } catch (error: CancellationException) {
-                withContext(NonCancellable) {
-                    try { restorePendingConnection() }
-                    catch (failure: Exception) { importState.update { it.copy(storageReady = false, error = connectionImportMessage(failure)) } }
-                }
-                throw error
-            } catch (error: Exception) {
-                withContext(NonCancellable) {
-                    try {
-                        restorePendingConnection()
-                        importState.update { it.copy(error = connectionVerificationMessage(error)) }
-                    } catch (failure: Exception) {
-                        importState.update { it.copy(storageReady = false, error = connectionImportMessage(failure)) }
-                    }
-                }
-            } finally { importState.update { it.copy(busy = false, verifying = false) } }
-        }
-    }
-
-    fun activatePendingConnection(id: String) {
-        val current = importState.value
-        if (current.loading || current.busy || !current.storageReady || current.pending?.id != id) return
-        importState.update { it.copy(busy = true, activating = true, verification = null, error = null) }
-        importOperation = viewModelScope.launch(start = CoroutineStart.UNDISPATCHED) {
-            try {
-                connectionImports.activate(id)
-                restorePendingConnection()
-                navigate(Route.Home)
-            } catch (error: CancellationException) {
-                withContext(NonCancellable) {
-                    try { restorePendingConnection() }
-                    catch (failure: Exception) { importState.update { it.copy(storageReady = false, error = connectionImportMessage(failure)) } }
-                }
-                throw error
-            } catch (error: Exception) {
-                withContext(NonCancellable) {
-                    try {
-                        restorePendingConnection()
-                        // A completed transaction may only have needed pending-marker cleanup.
-                        if (importState.value.pending == null) navigate(Route.Home)
-                        else importState.update { it.copy(error = connectionVerificationMessage(error)) }
-                    } catch (failure: Exception) {
-                        importState.update { it.copy(storageReady = false, error = connectionImportMessage(failure)) }
-                    }
-                }
-            } finally { importState.update { it.copy(busy = false, activating = false) } }
-        }
-    }
-
-    fun discardPendingConnection(id: String) {
-        if (importState.value.loading || importState.value.busy || !importState.value.storageReady) return
-        importState.update { it.copy(busy = true, error = null) }
-        importOperation = viewModelScope.launch(start = CoroutineStart.UNDISPATCHED) {
-            try {
-                connectionImports.discard(id)
-                restorePendingConnection()
-                importState.update { it.copy(selectedUri = null) }
-            } catch (error: CancellationException) {
-                withContext(NonCancellable) {
-                    try { restorePendingConnection() }
-                    catch (failure: Exception) { importState.update { it.copy(storageReady = false, error = connectionImportMessage(failure)) } }
-                }
-                throw error
-            } catch (error: Exception) { importState.update { it.copy(error = connectionImportMessage(error)) } }
-            finally { importState.update { it.copy(busy = false) } }
-        }
-    }
-
-    private suspend fun restorePendingConnection() {
-        val pending = connectionImports.loadPending()
-        importState.update { it.copy(pending = pending.info, requirements = pending.requirements,
-            verification = null, storageReady = true) }
-    }
     fun selectSection(id: String) {
         val ready = state.value.catalog as? CatalogState.Ready ?: return
         val pharmacy = ready.catalog.pharmacy?.pharmacyId ?: return
         if (ready.catalog.sections.none { it.id == id && it.isActive }) return
         savedState["sectionPharmacy"] = pharmacy
         savedState["section"] = id
-        viewModelScope.launch { preferences.setSection(pharmacy, id) }
+        preferenceWriter.setSection(pharmacy, id)
     }
-    fun setTheme(theme: ThemeChoice) { viewModelScope.launch { preferences.setTheme(theme) } }
-    fun setAccent(accent: ThemeAccent) { viewModelScope.launch { preferences.setAccent(accent) } }
+    fun setTheme(theme: ThemeChoice) = preferenceWriter.setTheme(theme)
+    fun setAccent(accent: ThemeAccent) = preferenceWriter.setAccent(accent)
     fun setQuery(value: String) { savedState["query"] = value }
     fun toggleStatus(value: AvailabilityStatus) {
         val ready = state.value.catalog as? CatalogState.Ready ?: return
@@ -670,13 +458,13 @@ class CatalogViewModel @Inject constructor(
         savedState["extraFilters"] = ArrayList(if (key in current) current - key else current + key)
     }
     fun clearFilters() { savedState["statuses"] = arrayListOf<String>(); savedState["categories"] = arrayListOf<String>(); savedState["extraFilters"] = arrayListOf<String>() }
-    fun setSort(value: HomeSort) { viewModelScope.launch { preferences.setSort(value) } }
-    fun setGroupingEnabled(value: Boolean) { viewModelScope.launch { preferences.setGroupingEnabled(value) } }
-    fun setGrouping(value: HomeGrouping) { viewModelScope.launch { preferences.setGrouping(value) } }
-    fun setTwoColumns(value: Boolean) { viewModelScope.launch { preferences.setTwoColumns(value) } }
-    fun setSectionsAtBottom(value: Boolean) { viewModelScope.launch { preferences.setSectionsAtBottom(value) } }
-    fun setSearchAtBottom(value: Boolean) { viewModelScope.launch { preferences.setSearchAtBottom(value) } }
-    fun setLayout(value: CardLayout) { viewModelScope.launch { preferences.setLayout(value) } }
-    fun setSecondaryHijri(value: Boolean) { viewModelScope.launch { preferences.setSecondaryHijri(value) } }
-    fun setNames(value: NameDisplay) { viewModelScope.launch { preferences.setNames(value) } }
+    fun setSort(value: HomeSort) = preferenceWriter.setSort(value)
+    fun setGroupingEnabled(value: Boolean) = preferenceWriter.setGroupingEnabled(value)
+    fun setGrouping(value: HomeGrouping) = preferenceWriter.setGrouping(value)
+    fun setTwoColumns(value: Boolean) = preferenceWriter.setTwoColumns(value)
+    fun setSectionsAtBottom(value: Boolean) = preferenceWriter.setSectionsAtBottom(value)
+    fun setSearchAtBottom(value: Boolean) = preferenceWriter.setSearchAtBottom(value)
+    fun setLayout(value: CardLayout) = preferenceWriter.setLayout(value)
+    fun setSecondaryHijri(value: Boolean) = preferenceWriter.setSecondaryHijri(value)
+    fun setNames(value: NameDisplay) = preferenceWriter.setNames(value)
 }

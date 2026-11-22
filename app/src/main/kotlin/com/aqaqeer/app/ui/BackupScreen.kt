@@ -60,7 +60,7 @@ import java.time.format.DateTimeFormatter
                 AppButton(enabled = !busy && password.codePointCount(0, password.length) >= 8 && password == confirmation, onClick = {
                     exportSucceeded = false
                     secrets.clear(); secrets.password = password.toCharArray(); secrets.confirmation = confirmation.toCharArray(); password = ""; confirmation = ""
-                    val time = ZonedDateTime.now(ZoneId.of(ready.catalog.pharmacy?.timezone ?: "Asia/Damascus"))
+                    val time = ZonedDateTime.now(ZoneId.of(ready.catalog.pharmacy?.timezone ?: DEFAULT_PRESENTATION_TIMEZONE))
                     try { export.launch("aqaqeer-backup-${time.format(DateTimeFormatter.ofPattern("yyyy-MM-dd-HHmm"))}.aqbak") }
                     catch (_: Exception) { secrets.clear(); vm.adminMessage.value = uiText(R.string.backup_file_picker_failed_message) }
                 }) { Text(uiText(R.string.backup_choose_export_destination_action)) }

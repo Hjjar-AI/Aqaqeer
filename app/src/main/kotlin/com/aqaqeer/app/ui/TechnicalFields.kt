@@ -4,7 +4,6 @@ import com.aqaqeer.app.uiText
 import com.aqaqeer.app.R
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -25,22 +24,21 @@ import java.time.ZoneOffset
     if (open) {
         var query by rememberSaveable { mutableStateOf("") }
         val zones = remember(value) {
-            val pinned = listOf(value, ZoneId.systemDefault().id, "Asia/Damascus", "UTC").distinct()
+            val pinned = listOf(value, ZoneId.systemDefault().id, DEFAULT_PRESENTATION_TIMEZONE, "UTC").distinct()
             pinned + (ZoneId.getAvailableZoneIds() - pinned.toSet()).sorted()
         }
         val offsets = remember(zones) { val now = Instant.now(); zones.associateWith { ZoneId.of(it).rules.getOffset(now).id } }
         val visible = remember(query, zones) { zones.filter { it.contains(query.trim(), ignoreCase = true) || city(it).contains(query.trim(), ignoreCase = true) } }
-        AppDialog(onDismissRequest = { open = false }, title = { Text(uiText(R.string.shared_timezone_picker_title)) }, text = {
-            Column(verticalArrangement = Arrangement.spacedBy(UiSpacing.related)) {
-                FormField(uiText(R.string.shared_timezone_search_placeholder), query, { query = it }, ltr = true)
-                LazyColumn(Modifier.heightIn(max = viewportHeight(0.45f))) {
-                    items(visible, key = { it }) { zone ->
-                        AppButton(variant = AppButtonVariant.QUIET, onClick = { change(zone); open = false }, modifier = Modifier.fillMaxWidth()) { Column { Text(city(zone)); SupportingText(bidi("${zone} · UTC${offsets.getValue(zone).let { if (it == "Z") "+00:00" else it }}")) } }
-                    }
+        SearchableChoiceDialog(uiText(R.string.shared_timezone_picker_title), query, { query = it },
+            uiText(R.string.shared_timezone_search_placeholder), showSearch = true, empty = visible.isEmpty(),
+            emptyMessage = uiText(R.string.shared_timezone_no_matches_help), dismiss = { open = false },
+            searchLtr = true, viewportFraction = 0.85f, listFraction = 0.45f) {
+            items(visible, key = { it }) { zone ->
+                AppButton(variant = AppButtonVariant.QUIET, onClick = { change(zone); open = false }, modifier = Modifier.fillMaxWidth()) {
+                    Column { Text(city(zone)); SupportingText(bidi("${zone} · UTC${offsets.getValue(zone).let { if (it == "Z") "+00:00" else it }}")) }
                 }
-                if (visible.isEmpty()) Text(uiText(R.string.shared_timezone_no_matches_help))
             }
-        }, confirmButton = { AppButton(variant = AppButtonVariant.QUIET, onClick = { open = false }) { Text(uiText(R.string.shared_close_action)) } })
+        }
     }
 }
 

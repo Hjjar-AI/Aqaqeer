@@ -6,19 +6,11 @@ import com.aqaqeer.app.R
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.*
 import androidx.compose.ui.text.input.TextFieldValue
-import androidx.compose.animation.animateContentSize
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.*
-import androidx.compose.foundation.gestures.awaitEachGesture
-import androidx.compose.foundation.gestures.awaitFirstDown
-import androidx.compose.foundation.gestures.awaitHorizontalTouchSlopOrCancellation
-import androidx.compose.foundation.gestures.horizontalDrag
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.*
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.*
@@ -28,57 +20,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.layout.onSizeChanged
-import androidx.compose.ui.platform.LocalLayoutDirection
-import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.semantics.clearAndSetSemantics
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.disabled
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.style.TextOverflow
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.compose.LocalLifecycleOwner
-import androidx.lifecycle.repeatOnLifecycle
 import com.aqaqeer.app.data.*
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
-import java.time.Duration
 import java.time.Instant
-import java.time.ZoneId
 
-/** Refresh date-sensitive badges on resume and at pharmacy midnight, even without a DB edit. */
-@Composable internal fun rememberPresentationTime(timezone: String): Instant {
-    val lifecycle = LocalLifecycleOwner.current.lifecycle
-    return produceState(Instant.now(), lifecycle, timezone) {
-        lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
-            while (isActive) {
-                value = Instant.now()
-                val midnight = value.atZone(ZoneId.of(timezone)).toLocalDate().plusDays(1)
-                    .atStartOfDay(ZoneId.of(timezone)).toInstant()
-                // Wake at pharmacy midnight; at most one minute between clock-change checks.
-                delay((Duration.between(value, midnight).toMillis() + 1).coerceIn(1, 60_000))
-            }
-        }
-    }.value
-}
-
-/** Minute clock checks do not emit while the pharmacy date is unchanged. */
-@Composable internal fun rememberPresentationDate(timezone: String): Instant {
-    val lifecycle = LocalLifecycleOwner.current.lifecycle
-    fun dayStart() = Instant.now().atZone(ZoneId.of(timezone)).toLocalDate().atStartOfDay(ZoneId.of(timezone)).toInstant()
-    return produceState(dayStart(), lifecycle, timezone) {
-        lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
-            while (isActive) {
-                value = dayStart()
-                val next = value.atZone(ZoneId.of(timezone)).toLocalDate().plusDays(1).atStartOfDay(ZoneId.of(timezone)).toInstant()
-                delay((Duration.between(Instant.now(), next).toMillis() + 1).coerceIn(1, 60_000))
-            }
-        }
-    }.value
-}
+internal enum class HomeLeadingItem { BULK_HELP, OPERATION, NO_SECTION, SEARCH_SECTION, EMPTY }
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable internal fun HomeScreen(ready: CatalogState.Ready,
@@ -131,19 +78,13 @@ import java.time.ZoneId
     val active = remember(catalog.sections) { catalog.sections.filter { it.isActive } }
     val medicationIds = remember(catalog.medications) { catalog.medications.mapTo(HashSet()) { it.id } }
     val selected = active.firstOrNull { it.id == state.sectionId } ?: active.firstOrNull()
-    val canEdit = ready.admin && !ready.requiresUpdate && !ready.maintenancePaused && saveAvailability != null
-    var bulkMode by rememberSaveable(catalog.pharmacy.pharmacyId, selected?.id, canEdit) { mutableStateOf(false) }
-    var selectedIds by rememberSaveable(catalog.pharmacy.pharmacyId, selected?.id, canEdit,
-        stateSaver = Saver<Set<String>, ArrayList<String>>(save = { ArrayList(it) }, restore = { it.toSet() })) { mutableStateOf(emptySet<String>()) }
-    var editor by rememberSaveable(catalog.pharmacy.pharmacyId, selected?.id, canEdit, stateSaver = AvailabilitySelectionSaver) { mutableStateOf<AvailabilitySelection?>(null) }
-    SideEffect { if (editor?.restored == true) editor = editor?.resolve(catalog) }
-    val contextKey = "${catalog.pharmacy.pharmacyId}/${selected?.id}/${canEdit}"
-    var capturedContext by rememberSaveable { mutableStateOf(contextKey) }
-    val contextValid = capturedContext == contextKey
-    LaunchedEffect(contextKey) {
-        if (!contextValid) { bulkMode = false; selectedIds = emptySet(); editor = null; capturedContext = contextKey }
-    }
-    var bulkSheetOpen by rememberSaveable(contextKey) { mutableStateOf(false) }
+    val canEdit = ready.canEditCatalog && saveAvailability != null
+    val selectionState = rememberHomeSelectionState(catalog, selected, canEdit, availabilityInProgress, availabilitySavedId)
+    var bulkMode by selectionState.bulkModeState
+    var selectedIds by selectionState.selectedIdsState
+    var editor by selectionState.editorState
+    var bulkSheetOpen by selectionState.bulkSheetState
+    val contextValid = selectionState.contextValid
     var filtersOpen by rememberSaveable(catalog.pharmacy.pharmacyId) { mutableStateOf(false) }
     var noticeDialogOpen by remember(catalog.pharmacy.pharmacyId) { mutableStateOf(false) }
     val notifyModal by rememberUpdatedState(onModalVisibilityChanged)
@@ -158,36 +99,11 @@ import java.time.ZoneId
     if (filtersOpen) HomeFilterSheet(catalog, state.filters, toggleStatus, toggleCategory, clearFilters,
         ready.admin, toggleExtraFilter, showStatuses = ready.admin,
         toggleAvailable = toggleAvailableFilter) { filtersOpen = false }
-    LaunchedEffect(availabilitySavedId) {
-        if (availabilitySavedId != null && editor?.id == availabilitySavedId) {
-            editor = null; selectedIds = emptySet(); bulkMode = false; bulkSheetOpen = false
-        }
-    }
-    // Never silently shrink a confirmed selection when a refresh deletes a target.
+    // Deleted targets remain selected so confirmation cannot silently shrink the operation.
     val selectionValid = selectedIds.all { id -> id in medicationIds }
-    fun selection(ids: Set<String>): AvailabilitySelection? = selected?.let { section ->
-        AvailabilitySelection(catalog.pharmacy.pharmacyId, section, catalog.medications.filter { it.id in ids },
-            ids.associateWith { catalog.status(it, section.id) }, bulkMode,
-            formNames = catalog.forms.associate { it.id to it.nameAr },
-            categoryNames = catalog.categories.associate { it.id to it.nameAr })
-    }
-    fun changeBulkSelection(ids: Set<String>) {
-        if (availabilityInProgress()) return
-        val fresh = selection(ids) ?: return
-        val old = editor?.takeIf { it.bulk && contextValid }?.resolve(catalog)
-        selectedIds = ids
-        editor = fresh.copy(bulk = true, id = old?.id ?: fresh.id,
-            medications = ids.mapNotNull { id -> old?.medications?.find { it.id == id }
-                ?: fresh.medications.find { it.id == id } },
-            expected = fresh.expected.mapValues { (id, value) -> old?.expected?.get(id) ?: value },
-            formNames = fresh.formNames + old?.formNames.orEmpty(),
-            categoryNames = fresh.categoryNames + old?.categoryNames.orEmpty(),
-            originalFields = fresh.originalFields + old?.originalFields.orEmpty().filterKeys { it in ids })
-    }
-    fun exitBulk() { if (!availabilityInProgress()) { editor = null; selectedIds = emptySet(); bulkMode = false; bulkSheetOpen = false } }
-    LaunchedEffect(bulkMode, contextValid) {
-        if (bulkMode && contextValid && editor == null) changeBulkSelection(selectedIds)
-    }
+    fun selection(ids: Set<String>) = selectionState.capture(ids)
+    fun changeBulkSelection(ids: Set<String>) = selectionState.changeBulkSelection(ids)
+    fun exitBulk() = selectionState.exitBulk()
     BackHandler(bulkMode && !editorVisible && !filtersOpen && !bulkSheetOpen && canOpenHomeModal()) { exitBulk() }
     val today = MedicationPresentation.today(now, catalog.pharmacy.timezone)
     val projectionReady = projection.catalog == catalog && projection.sectionId == selected?.id &&
@@ -248,14 +164,19 @@ import java.time.ZoneId
         DisposableEffect(Unit) { onDispose { reportBottomHeight(0) } }
         val gridState = rememberLazyGridState()
         var collapsedGroups by rememberSaveable(catalog.pharmacy.pharmacyId, selected?.id, state.homePreferences.grouping) { mutableStateOf(emptyList<String>()) }
+        val leadingItems = buildList {
+            if (canEdit && selected != null && bulkMode && contextValid) add(HomeLeadingItem.BULK_HELP)
+            if (editor == null && (availabilityBusy || availabilityMessage != null)) add(HomeLeadingItem.OPERATION)
+            if (selected == null) add(HomeLeadingItem.NO_SECTION)
+            if (displayed != null && searching && selected != null) add(HomeLeadingItem.SEARCH_SECTION)
+            if (displayed != null && visible.isEmpty() && otherSectionResults.isEmpty()) add(HomeLeadingItem.EMPTY)
+        }
         LaunchedEffect(highlightedMedication, projectionReady) {
             if (highlightedMedication != null && projectionReady) {
                 val medicationIndex = visible.indexOfFirst { it.id == highlightedMedication }
                 if (medicationIndex >= 0) {
                     val containing = groups.firstOrNull { group -> group.medications.any { it.id == highlightedMedication } }?.key
                     if (containing != null) collapsedGroups = collapsedGroups - containing
-                    val leading = (if (bulkMode && canEdit && selected != null) 1 else 0) +
-                        (if (editor == null && (availabilityBusy || availabilityMessage != null)) 1 else 0) + (if (selected == null) 1 else 0) + (if (searching && selected != null) 1 else 0)
                     val groupedIndex = if (!state.homePreferences.groupingEnabled) medicationIndex else {
                         var offset = 0
                         for (group in groups) {
@@ -265,35 +186,13 @@ import java.time.ZoneId
                         }
                         offset
                     }
-                    gridState.animateScrollToItem(leading + groupedIndex)
+                    gridState.animateScrollToItem(leadingItems.size + groupedIndex)
                 }
             }
         }
-        val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
-        val swipeThreshold = with(LocalDensity.current) { LayoutTokens.swipeDistance.toPx() }
         val canSwipe = active.size > 1 && !bulkMode && editor == null && !filtersOpen && !bulkSheetOpen &&
             !availabilityBusy && canOpenHomeModal()
-        val drawerEdge = with(LocalDensity.current) { LayoutTokens.drawerEdge.toPx() }
-        val sectionSwipe = if (!canSwipe) Modifier else Modifier.pointerInput(active.map { it.id }, selected?.id, rtl, swipeThreshold, drawerEdge) {
-            awaitEachGesture {
-                val down = awaitFirstDown(requireUnconsumed = false)
-                val fromDrawerEdge = if (rtl) down.position.x >= size.width - drawerEdge else down.position.x <= drawerEdge
-                if (fromDrawerEdge) return@awaitEachGesture
-                var distance = 0f
-                val drag = awaitHorizontalTouchSlopOrCancellation(down.id) { change, overSlop ->
-                    distance += overSlop
-                    change.consume()
-                } ?: return@awaitEachGesture
-                val completed = horizontalDrag(drag.id) { change ->
-                    distance += change.position.x - change.previousPosition.x
-                    change.consume()
-                }
-                if (completed && kotlin.math.abs(distance) >= swipeThreshold) {
-                    val next = active.indexOf(selected) + if ((distance > 0) == rtl) 1 else -1
-                    active.getOrNull(next)?.let { selectSection(it.id) }
-                }
-            }
-        }
+        val sectionSwipe = Modifier.sectionSwipe(canSwipe, active, selected, selectSection)
         val card: @Composable LazyGridItemScope.(Medication) -> Unit = { medication ->
             MedicationCard(requireNotNull(displayed).rows.getValue(medication.id), selected?.id, state.homePreferences, today,
                 onQuickEdit = if (canEdit && !bulkMode && selected != null && !availabilityBusy && medication.id in medicationIds)
@@ -303,6 +202,7 @@ import java.time.ZoneId
                         }
                     }) else null,
                 reserveSelectionSpace = canEdit && saveBulk != null,
+                editableStatus = canEdit && !bulkMode && selected != null && medication.id in medicationIds,
                 quickMenuOpen = editorVisible && editor?.medications?.singleOrNull()?.id == medication.id,
                 dismissQuickMenu = { if (!availabilityInProgress()) editor = null },
                 chooseStatus = { status ->
@@ -345,34 +245,31 @@ import java.time.ZoneId
                         groupingEnabled = state.homePreferences.groupingEnabled, collapsedGroups = collapsedGroups,
                         toggleGroup = { group -> collapsedGroups = if (group in collapsedGroups) collapsedGroups - group else collapsedGroups + group },
                         leadingContent = {
-                        if (canEdit && selected != null && bulkMode && contextValid) item(span = { GridItemSpan(maxLineSpan) }) {
-                            SupportingText(uiText(R.string.home_bulk_selection_retention_help))
-                        }
-                        if (editor == null && (availabilityBusy || availabilityMessage != null)) item(span = { GridItemSpan(maxLineSpan) }) {
-                            InlineOperationStatus(availabilityBusy, availabilityMessage)
-                        }
-                        if (selected == null) item(span = { GridItemSpan(maxLineSpan) }) { InformationCard(uiText(R.string.home_no_active_sections_title), uiText(R.string.home_no_active_sections_help)) }
-                        if (displayed != null && searching && selected != null)
-                            item(key = "current_search_section_${selected.id}", span = { GridItemSpan(maxLineSpan) }) {
-                                ContentSection {
-                                    SectionHeading(selected.nameAr)
-                                    if (visible.isEmpty() && otherSectionResults.isNotEmpty())
-                                        SupportingText(uiText(R.string.review_no_results_in_section))
+                            leadingItems.forEach { leading ->
+                                item(key = if (leading == HomeLeadingItem.SEARCH_SECTION) "current_search_section_${selected?.id}" else "home_leading_${leading.name}", span = { GridItemSpan(maxLineSpan) }) {
+                                    when (leading) {
+                                        HomeLeadingItem.BULK_HELP -> SupportingText(uiText(R.string.home_bulk_selection_retention_help))
+                                        HomeLeadingItem.OPERATION -> InlineOperationStatus(availabilityBusy, availabilityMessage)
+                                        HomeLeadingItem.NO_SECTION -> InformationCard(uiText(R.string.home_no_active_sections_title), uiText(R.string.home_no_active_sections_help))
+                                        HomeLeadingItem.SEARCH_SECTION -> ContentSection {
+                                            SectionHeading(requireNotNull(selected).nameAr)
+                                            if (visible.isEmpty() && otherSectionResults.isNotEmpty())
+                                                SupportingText(uiText(R.string.review_no_results_in_section))
+                                        }
+                                        HomeLeadingItem.EMPTY -> GroupedCard(title = if (catalog.medications.isEmpty()) uiText(R.string.home_empty_catalog_title) else uiText(R.string.shared_no_matches_message)) {
+                                            EmptyCapsule(Modifier.size(if (compactHeight) Size.illustrationSmall else Size.illustrationLarge).align(Alignment.CenterHorizontally))
+                                            if (catalog.medications.isEmpty()) {
+                                                SupportingText(uiText(R.string.home_empty_catalog_help))
+                                                if (canEdit && openAddMedication != null) AppButton(onClick = openAddMedication) { Text(uiText(R.string.navigation_add_medication_title)) }
+                                            } else {
+                                                SupportingText(uiText(R.string.home_no_matches_help))
+                                                if (canEdit) AppButton(variant = AppButtonVariant.QUIET, onClick = { prefillMedication(searchText.text) }) { Text(uiText(R.string.home_add_search_name_action)) }
+                                                AppButton(variant = AppButtonVariant.QUIET, onClick = { changeSearch(TextFieldValue("")); clearFilters(); focus.clearFocus() }) { Text(uiText(R.string.home_clear_search_filters_action)) }
+                                            }
+                                        }
+                                    }
                                 }
                             }
-                        if (displayed != null && visible.isEmpty() && otherSectionResults.isEmpty()) item(span = { GridItemSpan(maxLineSpan) }) {
-                            GroupedCard(title = if (catalog.medications.isEmpty()) uiText(R.string.home_empty_catalog_title) else uiText(R.string.shared_no_matches_message)) {
-                                EmptyCapsule(Modifier.size(if (compactHeight) Size.illustrationSmall else Size.illustrationLarge).align(Alignment.CenterHorizontally))
-                                if (catalog.medications.isEmpty()) {
-                                    SupportingText(uiText(R.string.home_empty_catalog_help))
-                                    if (canEdit && openAddMedication != null) AppButton(onClick = openAddMedication) { Text(uiText(R.string.navigation_add_medication_title)) }
-                                } else {
-                                    SupportingText(uiText(R.string.home_no_matches_help))
-                                    if (canEdit) AppButton(variant = AppButtonVariant.QUIET, onClick = { prefillMedication(searchText.text) }) { Text(uiText(R.string.home_add_search_name_action)) }
-                                    AppButton(variant = AppButtonVariant.QUIET, onClick = { changeSearch(TextFieldValue("")); clearFilters(); focus.clearFocus() }) { Text(uiText(R.string.home_clear_search_filters_action)) }
-                                }
-                            }
-                        }
                         }, card = card, otherCard = { result, row ->
                             MedicationCard(row, result.section.id, otherSectionPreferences, today,
                                     onQuickEdit = null, bulkSelected = null, toggleSelection = {},
@@ -395,87 +292,13 @@ import java.time.ZoneId
                 reportHeight = { reportBottomHeight(it) }, search = searchControls, sections = browseHeading)
 
             if (bulkSheetOpen && canEdit && selected != null && bulkMode && contextValid) {
-                val savingNow by rememberUpdatedState(availabilityInProgress)
-                val sheet = rememberModalBottomSheetState(skipPartiallyExpanded = true,
-                    confirmValueChange = { it != SheetValue.Hidden || !savingNow() })
-                ModalBottomSheet(onDismissRequest = { if (!availabilityInProgress()) bulkSheetOpen = false }, sheetState = sheet) {
-                    Column(Modifier.fillMaxWidth().heightIn(max = viewportHeight()).verticalScroll(rememberScrollState()).padding(UiSpacing.page)) {
-                        editor?.takeIf { it.bulk && editorCurrent }?.let { captured ->
-                            BulkMedicationEditor(captured, catalog, availabilityBusy, availabilityMessage, dismiss = ::exitBulk,
-                                save = { changes ->
-                                    if (editor == captured && !availabilityInProgress() && !filtersOpen && canOpenHomeModal())
-                                        saveBulk?.invoke(captured, changes) {
-                                            if (editor == captured) { editor = null; selectedIds = emptySet(); bulkMode = false; bulkSheetOpen = false }
-                                        }
-                                },
-                                current = { changes -> captured.medications.all { before ->
-                                    catalog.medications.find { it.id == before.id }?.let { live ->
-                                        (changes.status == null || catalog.status(before.id, captured.section.id) == captured.expected[before.id]) &&
-                                            (changes.formId == null || live.formId == before.formId) &&
-                                            (changes.categoryId == null || live.categoryId == before.categoryId)
-                                    } == true
-                                } }, isSaving = availabilityInProgress)
-                        }
-                    }
-                }
+                HomeBulkSheet(editor?.takeIf { it.bulk && editorCurrent }, catalog, availabilityBusy, availabilityMessage,
+                    availabilityInProgress, { filtersOpen }, canOpenHomeModal, saveBulk, { editor == it },
+                    dismissSheet = { bulkSheetOpen = false }, exitBulk = ::exitBulk,
+                    complete = selectionState::clear)
             }
         }
 
-    }
-}
-
-@Composable internal fun DataTimesDialog(ready: CatalogState.Ready, dateAnchor: Instant, refresh: (() -> Unit)? = null, busy: Boolean = false, dismiss: () -> Unit) {
-    val uiText = rememberUiText()
-    val timezone = ready.catalog.pharmacy?.timezone ?: "Asia/Damascus"
-    val now = rememberPresentationTime(timezone)
-    val last = ready.lastSuccessfulRefreshAt
-    AppDialog(onDismissRequest = dismiss, title = { Text(uiText(R.string.home_data_times_title)) },
-        text = {
-            DialogBody {
-                LabeledValue(uiText(R.string.home_last_refresh_label), last?.let { relativeTime(it, now, text = uiText) } ?: uiText(R.string.home_never_refreshed_label))
-                LabeledValue(uiText(R.string.home_last_successful_refresh_label), last?.let { bidi(MedicationPresentation.timestamp(it, timezone)) } ?: uiText(R.string.home_not_yet_label))
-                LabeledValue(uiText(R.string.home_publication_time_label), ready.publishedAt?.let { bidi(MedicationPresentation.timestamp(it, timezone)) } ?: uiText(R.string.publication_no_verified_publication_message))
-                LabeledValue(uiText(R.string.home_pharmacy_timezone_label), bidi(timezone))
-            }
-        }, dismissButton = if (refresh != null) ({ AppButton(variant = AppButtonVariant.QUIET, enabled = !busy, onClick = refresh) { Text(uiText(R.string.review_refresh_now)) } }) else null,
-        confirmButton = { AppButton(variant = AppButtonVariant.QUIET, onClick = dismiss) { Text(uiText(R.string.shared_close_action)) } })
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable private fun HomeFilterSheet(catalog: CatalogSnapshot, filters: HomeFilters,
-    toggleStatus: (AvailabilityStatus) -> Unit, toggleCategory: (String) -> Unit, clear: () -> Unit,
-    admin: Boolean, toggleExtraFilter: (String) -> Unit, showStatuses: Boolean = true, toggleAvailable: () -> Unit = {}, dismiss: () -> Unit) {
-    val uiText = rememberUiText()
-    ModalBottomSheet(onDismissRequest = dismiss, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
-        Column(Modifier.fillMaxWidth().heightIn(max = viewportHeight()).padding(UiSpacing.page),
-            verticalArrangement = Arrangement.spacedBy(UiSpacing.related)) {
-            SectionHeading(uiText(R.string.home_filter_sheet_title))
-            Column(Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(UiSpacing.group)) {
-                if (showStatuses) ContentSection(title = uiText(R.string.home_availability_filter_heading)) {
-                    WrappingContent(Modifier.testTag("status_filters")) {
-                        if (admin) AppChip(
-                            selected = filters.statuses == setOf(AvailabilityStatus.AVAILABLE, AvailabilityStatus.LOW),
-                            onClick = toggleAvailable, label = { Text(uiText(R.string.review_available_only)) })
-                        MedicationPresentation.editableStatuses.forEach { status -> AppChip(selected = status in filters.statuses,
-                            onClick = { toggleStatus(status) }, label = { Text(statusLabel(status, text = uiText)) },
-                            modifier = Modifier.testTag("filter_${status.name}")) }
-                    }
-                }
-                ContentSection(title = uiText(R.string.catalog_category_label)) {
-                    WrappingContent(Modifier.testTag("category_filters")) {
-                        catalog.categories.forEach { category -> AppChip(selected = category.id in filters.categoryIds,
-                            onClick = { toggleCategory(category.id) }, label = { Text(category.nameAr) },
-                            modifier = Modifier.testTag("category_${category.id}")) }
-                    }
-                }
-                ContentSection(title = uiText(R.string.review_extra_filters)) {
-                    HomeExtraFilters(filters, admin, toggleExtraFilter)
-                }
-                FilterSummary(filters, clear)
-            }
-            AppButton(onClick = dismiss) { Text(uiText(R.string.home_show_results_action)) }
-        }
     }
 }
 
@@ -504,113 +327,10 @@ import java.time.ZoneId
 
 @Composable internal fun FilterSummary(filters: HomeFilters, clear: () -> Unit) {
     val uiText = rememberUiText()
-    if (filters.statuses.isEmpty() && filters.categoryIds.isEmpty() && !filters.expiringSoon && !filters.unpublishedOnly && !filters.fetchedOnly) return
+    if (!filters.hasAny) return
     ActionGroup(Modifier.testTag("filter_summary")) {
         Text(uiText(R.string.home_filter_summary_format, MedicationPresentation.displayDigits(filters.statuses.size.toString()), MedicationPresentation.displayDigits(filters.categoryIds.size.toString())))
-        if (filters.statuses.isNotEmpty() || filters.categoryIds.isNotEmpty() || filters.expiringSoon || filters.unpublishedOnly || filters.fetchedOnly)
+        if (filters.hasAny)
             AppButton(variant = AppButtonVariant.QUIET, onClick = clear, modifier = Modifier.testTag("clear_filters")) { Text(uiText(R.string.history_clear_filters_action)) }
-    }
-}
-
-/** One pinned entry point; expanding retains the existing notice actions and publication guards. */
-@Composable private fun HomeNoticeStrip(ready: CatalogState.Ready, state: AppUiState,
-    pageHeader: (@Composable (Set<String>) -> Unit)?, refresh: (() -> Unit)?, publicationBusy: Boolean, publicationBlockReason: String?,
-    maxHeight: androidx.compose.ui.unit.Dp, compact: Boolean = false, onDialogVisibilityChanged: (Boolean) -> Unit) {
-    val uiText = rememberUiText()
-    val clock = rememberPresentationTime(ready.catalog.pharmacy?.timezone ?: "Asia/Damascus")
-    val noticeScope = LocalNoticeScope.current
-    val allNotices = buildList {
-        if (ready.requiresUpdate) add(HomeNotice("update", uiText(R.string.home_update_required_notice)))
-        if (ready.maintenancePaused) add(HomeNotice("maintenance", uiText(R.string.home_maintenance_paused_notice)))
-        if (ready.restorePaused) add(HomeNotice("restore", uiText(R.string.home_restore_paused_notice)))
-        if (ready.admin && !ready.isDemo && (ready.pendingCount > 0 || ready.uncertain || publicationBusy) &&
-            !ready.requiresUpdate && !ready.maintenancePaused && !ready.restorePaused && publicationBlockReason != null)
-            add(HomeNotice("publication-block", publicationBlockReason))
-        if (refresh != null && state.refresh.error != null) add(HomeNotice("refresh-error", uiText(R.string.home_refresh_failed_notice), listOf(state.refresh.error.orEmpty())))
-        if (ready.admin && !ready.isDemo) {
-            if (publicationBusy) add(HomeNotice("publication-progress", uiText(R.string.home_publication_progress_notice)))
-            if (ready.uncertain) add(HomeNotice("uncertain", uiText(R.string.home_publication_review_notice)))
-            if (ready.backupReminderAt?.let { clock.toEpochMilli() >= it } == true) add(HomeNotice("backup", uiText(R.string.backup_reminder_title), listOf(ready.backupReminderAt.toString())))
-            if (ready.lifecycle == "LOCAL_DRAFT") add(HomeNotice("local-draft", uiText(R.string.publication_local_draft_label)))
-        }
-        if (!state.online) add(HomeNotice("offline", uiText(R.string.home_offline_notice)))
-        if (!ready.isDemo && ready.lifecycle == "SHARED") {
-            val last = ready.lastSuccessfulRefreshAt
-            if (last == null) add(HomeNotice("never-refreshed", uiText(R.string.home_never_refreshed_notice)))
-            else if (Duration.between(last, clock) >= Duration.ofHours(24)) add(HomeNotice("stale", uiText(R.string.home_stale_refresh_notice), listOf(last.toString())))
-        }
-        if (ready.isDemo) add(HomeNotice("demo", uiText(R.string.home_demo_data_label)))
-    }
-    val notices = allNotices.filterNot { UiSession.isDismissed(listOf(noticeScope, "home", it.kind), it.content) }
-    SideEffect { UiSession.reconcile(listOf(noticeScope, "home"), allNotices.associate { listOf(noticeScope, "home", it.kind) to it.content }) }
-    val notifyDialog by rememberUpdatedState(onDialogVisibilityChanged)
-    DisposableEffect(Unit) { onDispose { notifyDialog(false) } }
-    if (notices.isEmpty()) {
-        SideEffect { notifyDialog(false) }
-        return
-    }
-    var expanded by rememberSaveable(ready.catalog.pharmacy?.pharmacyId) { mutableStateOf(false) }
-    SideEffect { notifyDialog(expanded && compact) }
-    fun visible(kind: String) = notices.any { it.kind == kind }
-    val noticeDetails: @Composable ColumnScope.() -> Unit = {
-        if ((visible("stale") || visible("never-refreshed")) && compact && refresh != null && !ready.isDemo && ready.lifecycle == "SHARED" &&
-            (ready.lastSuccessfulRefreshAt == null || Duration.between(ready.lastSuccessfulRefreshAt, clock) >= Duration.ofHours(24)))
-            NoticeStrip(Notice(uiText(R.string.home_stale_refresh_notice), NoticeSeverity.WARNING,
-                uiText(R.string.review_refresh_now), refresh), enabled = !state.refresh.busy)
-        if (visible("update")) InformationCard(uiText(R.string.home_update_required_title), uiText(R.string.home_update_required_help))
-        if (visible("refresh-error") && refresh != null) RefreshControls(state.refresh, refresh)
-        if (visible("offline")) SupportingText(uiText(R.string.home_offline_notice))
-        if (!ready.isDemo && ready.lifecycle == "SHARED") {
-            if (visible("never-refreshed")) SupportingText(uiText(R.string.home_never_refreshed_notice))
-            else if (visible("stale"))
-                SupportingText(uiText(R.string.home_stale_refresh_notice))
-        }
-
-        pageHeader?.invoke(notices.map { it.kind }.toSet())
-        if (visible("demo")) DemoNotice()
-    }
-    if (expanded && compact) AppDialog(onDismissRequest = { expanded = false }, text = {
-        Column(Modifier.heightIn(max = viewportHeight(0.7f)).verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(UiSpacing.related), content = noticeDetails)
-    }, confirmButton = {
-        AppButton(variant = AppButtonVariant.QUIET, onClick = { expanded = false }) { Text(uiText(R.string.shared_close_action)) }
-    })
-    Surface(color = if (visible("update") || visible("refresh-error")) MaterialTheme.colorScheme.errorContainer
-        else if (visible("stale"))
-            LocalStatusColors.current.low.container else MaterialTheme.colorScheme.surfaceVariant,
-        modifier = Modifier.fillMaxWidth().heightIn(max = maxHeight).animateContentSize(tween(Motion.standard))) {
-        Column(Modifier.padding(horizontal = UiSpacing.page, vertical = UiSpacing.hair)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-            AppButton(variant = AppButtonVariant.QUIET, onClick = { expanded = !expanded }, modifier = Modifier.weight(1f)) {
-                AppIcon(if (visible("update") || visible("refresh-error")) UiIcon.WARNING else UiIcon.INFO)
-                Text(notices.first().text + if (notices.size > 1) uiText(R.string.home_notice_count_suffix, MedicationPresentation.displayDigits(notices.size.toString())) else "",
-                    modifier = Modifier.weight(1f), maxLines = if (compact) 1 else 2, overflow = TextOverflow.Ellipsis)
-                ExpansionChevron(expanded)
-            }
-            IconButton(onClick = {
-                val notice = notices.first()
-                UiSession.dismiss(listOf(noticeScope, "home", notice.kind), notice.content)
-                expanded = false
-            }) { AppIcon(UiIcon.CLOSE, description = uiText(R.string.notice_dismiss)) }
-            }
-            if ((visible("stale") || visible("never-refreshed")) && !compact && refresh != null && !ready.isDemo && ready.lifecycle == "SHARED" &&
-                (ready.lastSuccessfulRefreshAt == null || Duration.between(ready.lastSuccessfulRefreshAt, clock) >= Duration.ofHours(24)))
-                NoticeStrip(Notice(uiText(R.string.home_stale_refresh_notice), NoticeSeverity.WARNING,
-                    uiText(R.string.review_refresh_now), refresh), enabled = !state.refresh.busy)
-            if (expanded && !compact) Column(Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(UiSpacing.related), content = noticeDetails)
-        }
-    }
-}
-
-internal fun relativeTime(at: Instant, now: Instant, text: UiText? = null): String {
-    val uiText = text ?: UiText(com.aqaqeer.app.AppStrings.resources)
-    val seconds = Duration.between(at, now).seconds
-    return when {
-        seconds < 0 -> uiText(R.string.shared_relative_time_future_message)
-        seconds < 60 -> uiText(R.string.shared_relative_time_now_label)
-        seconds < 3600 -> uiText(R.string.shared_relative_time_minutes_format, MedicationPresentation.displayDigits((seconds / 60).toString()))
-        seconds < 86400 -> uiText(R.string.shared_relative_time_hours_format, MedicationPresentation.displayDigits((seconds / 3600).toString()))
-        else -> uiText(R.string.shared_relative_time_days_format, MedicationPresentation.displayDigits((seconds / 86400).toString()))
     }
 }

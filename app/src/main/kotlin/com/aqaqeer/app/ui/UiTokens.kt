@@ -16,6 +16,14 @@ internal object Space {
     val xxxl = 48.dp
 }
 internal object Size {
+    val checkbox = 24.dp
+    val stripeSpacing = 16.dp
+    val tabIconSlot = 16.dp
+    val dotS = 8.dp
+    val dotM = 12.dp
+    val dotL = 16.dp
+    val drawerMin = 1.dp
+    val layoutPreviewDivider = 72.dp
     val badgePadding = 10.dp
     val iconXS = 12.dp
     val iconS = 14.dp
@@ -78,6 +86,8 @@ internal object LayoutTokens {
     val compactHeight = 480.dp
     val welcomeCompactHeight = 640.dp
     val pickerStackWidth = 480.dp
+    val searchControlsCompactWidth = 480.dp
+    val bulkHeaderStackWidth = 480.dp
     val mediumWidth = 600.dp
     val expandedWidth = 840.dp
     val contentMaxWidth = 840.dp

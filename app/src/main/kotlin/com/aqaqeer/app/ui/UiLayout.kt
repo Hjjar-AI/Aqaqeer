@@ -116,6 +116,4 @@ internal val LocalFormFocus = staticCompositionLocalOf<FormFocusController?> { n
 
 /** Uses the actual window and font-aware scroll containers rather than a fixed pixel-height cap. */
 @Composable internal fun viewportHeight(fraction: Float = 0.85f): Dp =
-    with(androidx.compose.ui.platform.LocalDensity.current) {
-        androidx.compose.ui.platform.LocalWindowInfo.current.containerSize.height.toDp() * fraction
-    }
+    LocalLayoutMetrics.current.height * fraction

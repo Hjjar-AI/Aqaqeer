@@ -4,14 +4,9 @@
 
 ## Evidence by revision and environment
 
-| Evidence | Recorded scope | Limit |
-| --- | --- | --- |
-| 2026-11-16, `f1293ba`, workflow 03 | Standard and demo each passed 545 JVM cases, with zero failures/errors/skips; public JDK vectors passed. Both compiler logs have zero Kotlin source warnings. | Predates the test-worker CDS flag added in `528830a`; does not establish Android runtime acceptance. |
-| 2026-11-16, `68cb2fb`, workflow 10 | Standard/demo debug APK build, signing and publication passed. | Predates the signing-only Gradle opt-out; production signing/update continuity is separate. |
-| [2026-11-14 hosted evidence](validation.md#current-hosted-evidence--2026-11-14) | Earlier 520-case JVM result per flavor and 42 selected Android invocations. | Historical revisions/selections; preserve their passes without applying them to later source. |
-| [2026-11-13 user report](validation.md#user-reported-completion--2026-11-13) | Broader demo startup/refresh and browsing marked complete by the user. | User-reported evidence, distinct from independently inspected per-case results. |
+Use the [current checkpoint](validation.md#current-verification-checkpoint--2026-11-16) for the latest recorded revision/environment, the [hosted evidence](validation.md#current-hosted-evidence--2026-11-14) for historical JVM/Android selections, and the [dated user report](validation.md#user-reported-completion--2026-11-13) for reported completion without fresh per-case evidence. Compilation, execution, source inventory and user acceptance remain separate.
 
-The current workflow-07 selector contains 7 demo invocations per API and 64 standard invocations. These are source selections, not a new pass count. Android compilation/execution of later UI/session changes and the offline Python reservation cases remain pending. The [current checkpoint](validation.md#current-verification-checkpoint--2026-11-16) links the evidence and its limits.
+[Build](build.md#hosted-emulator-screenshots-and-recordings) owns the current workflow-07 selection and invocation counts. A selector is not a new pass count. Later UI/session/source changes and offline Python reservation cases still need applicable compilation/execution evidence; the [backup/restore audit](validation.md#backuprestore-requirement-to-evidence-audit--2026-11-22) maps recorded results to current obligations without inspecting test source.
 
 <a id="recoveryresource-extension"></a>
 

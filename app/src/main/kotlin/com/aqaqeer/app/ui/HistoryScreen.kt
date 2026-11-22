@@ -33,7 +33,7 @@ import java.time.LocalDate
     if (filtersOpen) ModalBottomSheet(onDismissRequest = { filtersOpen = false },
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
         DialogBody(Modifier.padding(UiSpacing.page)) {
-            HistoryFilters(state.request.filter, medicationId, page?.medications.orEmpty(), ready.catalog.pharmacy?.timezone ?: "Asia/Damascus") {
+            HistoryFilters(state.request.filter, medicationId, page?.medications.orEmpty(), ready.catalog.pharmacy?.timezone ?: DEFAULT_PRESENTATION_TIMEZONE) {
                 vm.filterHistory(it); filtersOpen = false
             }
         }
@@ -55,7 +55,7 @@ import java.time.LocalDate
         if (!state.loading && state.error == null && page?.entries?.isEmpty() == true) item {
             EmptyState(uiText(R.string.history_empty_title), uiText(R.string.history_empty_help))
         }
-        val zone = java.time.ZoneId.of(page?.timezone ?: ready.catalog.pharmacy?.timezone ?: "Asia/Damascus")
+        val zone = java.time.ZoneId.of(page?.timezone ?: ready.catalog.pharmacy?.timezone ?: DEFAULT_PRESENTATION_TIMEZONE)
         val today = java.time.Instant.now().atZone(zone).toLocalDate()
         page?.entries.orEmpty().groupBy { (it.editedAt ?: it.observedAt)?.atZone(zone)?.toLocalDate() }.forEach { (day, entries) ->
             item(key = "day_$day") { SectionHeading(when (day) {

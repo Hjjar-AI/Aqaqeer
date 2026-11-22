@@ -2,8 +2,7 @@
 
 # Aqaqeer build, signing and release guide
 
-The one-time 2026-11-16 initial-baseline reset set the local last-reserved code to 0, making the next normal reservation code 1 (`0.0.1`). Read the current counter/registry before later distribution; do not repeat the reset. Hosted reservations use the fresh `android-initial-build-N` namespace. Old `android-build-N` tags are preserved and excluded from this new sequence. This is a one-time authorized baseline reset, not recovery from a failed build; subsequent reservations remain monotonic and consumed codes stay consumed. No build or remote reservation was executed for the reset.
-
+Use the pinned wrapper and preserve permanent signing identities and consumed version codes. [Numbering](#numbering-and-installation-continuity) owns the current reservation rules; the [initial-baseline record](validation.md#initial-attribution-free-baseline--2026-11-16) documents the one-time reset, which must not be repeated.
 
 ## Compact summary
 
@@ -153,6 +152,10 @@ Titles show the suggested review order: **01–05 Checks → 06 Build → 07–0
 | [09 - Maintenance - Clear workflow runs and logs](../.github/workflows/cleanup-evidence.yml) | Daily seven-day completed-run retention, plus manual preview/clear; includes run APK artifacts |
 | [10 - Publish - Debug APKs to GitHub Releases](../.github/workflows/publish-debug.yml) | Build selected standard/demo/both debug APKs, then attach them to a regular release, prerelease or draft |
 | [11 - Publish - Release APK to GitHub Releases](../.github/workflows/publish-release.yml) | Reserve a production code, build standard release, sign/inspect it, then publish a release/prerelease/draft |
+| [12 - Checks - Build tooling](../.github/workflows/build-tooling.yml) | Two `help` invocations/configuration-cache reuse check and packaging dry-run; counter must remain unchanged |
+| [13 - Checks - Secret history](../.github/workflows/secret-history.yml) | Pinned full-history Gitleaks scan; public output contains counts only, never a raw findings artifact |
+| [14 - Maintenance - Debug release cleanup](../.github/workflows/cleanup-debug.yml) | Preview by default; explicit deletion of identifiable publisher-owned debug releases/tags only |
+| [15 - Maintenance - Actionlint updates](../.github/workflows/actionlint-updates.yml) | Stable upstream version/SHA-256 proposal as a patch; never executes or applies the candidate |
 
 Workflow 06's **Run workflow → flavor** choice defaults to `standard`; choose `demo` or `both` explicitly. Both expands to independent standard/demo jobs, `fail-fast=false`, serialized with `max-parallel=1`. Each job calls the same local selector for its single flavor, publishes only that APK and retains separately named flavor diagnostics. A demo compilation failure does not prevent a standard job from producing its APK. Other workflows keep their existing scope.
 
@@ -541,19 +544,13 @@ All debug release/prerelease/draft choices set Latest to false. Release records 
 
 ### Manual workflows added
 
-| Workflow | Filename | Purpose |
-| --- | --- | --- |
-| 12 - Checks - Build tooling | [build-tooling.yml](../.github/workflows/build-tooling.yml) | Two `help` invocations with configuration cache, reuse check and packaging dry-run; counter must remain unchanged |
-| 13 - Checks - Secret history | [secret-history.yml](../.github/workflows/secret-history.yml) | Full-history pinned Gitleaks scan; public output contains counts only; no raw findings artifact |
-| 14 - Maintenance - Debug release cleanup | [cleanup-debug.yml](../.github/workflows/cleanup-debug.yml) | Preview by default; explicit deletion choice; only identifiable publisher-owned debug releases/tags |
-| 15 - Maintenance - Actionlint updates | [actionlint-updates.yml](../.github/workflows/actionlint-updates.yml) | Stable upstream version/SHA-256 proposal as a patch; never executes the candidate or applies it |
+[Workflows 12–15 in the complete directory](#manual-quality-and-security-workflows) remain independent manual, public-only, bounded Ubuntu jobs with full action pins and one-day artifacts where appropriate. Their exact inputs/defaults come from the linked YAML. Only run cleanup is scheduled.
 
-Workflow 03 accepts `scope=jvm` for only the two JVM flavor jobs plus public JDK vectors, or `scope=all` (default) to also compile debug/instrumentation/release sources. `coverage=false` remains the default. It offers opt-in per-flavor unit coverage with AGP JaCoCo 0.8.16. Reports have no percentage threshold and do not run device tests. Verification APK workflows 07/08 are also default-branch-only. Workflow 08 generates/inspects the three production outputs and separately opens the universal APK on an owned GitHub-hosted API 35 emulator with a throwaway signer. Its 30-second process observation is startup evidence only. The helper treats an empty Android `pm path` exit-1 result as expected package absence, while transport errors remain failures; progress/failure JSON identifies the failing phase. No local emulators or production signing credentials are involved.
+[Workflow 03 scopes and coverage](#tests-and-compilation-without-a-device) are canonical above. Optional per-flavor JVM coverage uses AGP JaCoCo 0.8.16, with no percentage threshold or device execution. JVM Test workers alone use `-Xshare:off`; daemon/APK flags and existing heap/parallelism settings stay unchanged. The build-script edit changes the next basic-cache key without deleting old entries.
 
-JVM `Test` tasks use `-Xshare:off` to disable class-data sharing only in test workers, avoiding the bootstrap-classpath notice from mocking instrumentation. This does not set Gradle-daemon or APK runtime flags; existing test heap/parallelism settings remain. As with other build-script edits, the basic CI cache key changes for the next run; previous cache entries are preserved.
+Verification APK workflows 07/08 are default-branch-only. Workflow 08 inspects the three production outputs and separately opens the universal APK on an owned hosted API 35 emulator with a throwaway signer. Its 30-second process observation is startup evidence only. Empty Android `pm path` exit-1 is expected absence; transport errors remain failures, and phase progress/failure JSON identifies the boundary. No local emulator or production signing credential is used.
 
-
-The pinned setup-gradle action already validates wrapper JARs; policy forbids disabling this. Workflow YAML checks reject expressions inside shell bodies and permit secrets only in explicit signing-step environments. All new workflows are manual, public-only, bounded Ubuntu jobs with full action pins and one-day artifacts where appropriate. Only the existing run-cleanup workflow has a schedule.
+The pinned setup-gradle action validates wrapper JARs; policy forbids disabling it. Workflow checks reject expressions inside shell bodies and permit secrets only in explicit signing-step environments. Keep raw secret findings private and unsigned inspection separate from distribution/update acceptance.
 
 ### Why hosted retries can download Gradle again
 

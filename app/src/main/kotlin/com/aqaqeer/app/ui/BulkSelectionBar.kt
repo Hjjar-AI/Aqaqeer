@@ -18,10 +18,21 @@ import com.aqaqeer.app.data.MedicationPresentation
     Surface(color = MaterialTheme.colorScheme.primaryContainer, contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
         shape = MaterialTheme.shapes.medium, modifier = Modifier.fillMaxWidth().testTag("bulk_selection_bar")) {
         ContentSection(modifier = Modifier.padding(UiSpacing.related)) {
-            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                Text(uiText(R.string.availability_selection_count_format, MedicationPresentation.displayDigits(count.toString()), section), Modifier.weight(1f))
-                AppButton(variant = AppButtonVariant.QUIET, enabled = !busy && visibleCount > 0, onClick = selectVisible) { Text(uiText(R.string.availability_select_visible_action)) }
-                IconButton(enabled = !busy, onClick = cancel) { AppIcon(UiIcon.CLOSE, description = uiText(R.string.availability_finish_selection_description)) }
+            BoxWithConstraints(Modifier.fillMaxWidth()) {
+                val countText = uiText(R.string.availability_selection_count_format, MedicationPresentation.displayDigits(count.toString()), section)
+                val actions: @Composable () -> Unit = {
+                    AppButton(variant = AppButtonVariant.QUIET, enabled = !busy && visibleCount > 0, onClick = selectVisible) { Text(uiText(R.string.availability_select_visible_action)) }
+                    IconButton(enabled = !busy, onClick = cancel) { AppIcon(UiIcon.CLOSE, description = uiText(R.string.availability_finish_selection_description)) }
+                }
+                if (maxWidth < LayoutTokens.bulkHeaderStackWidth * maxOf(1f, LocalLayoutMetrics.current.fontScale)) {
+                    Column {
+                        Text(countText, Modifier.fillMaxWidth())
+                        ActionGroup { actions() }
+                    }
+                } else Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    Text(countText, Modifier.weight(1f))
+                    actions()
+                }
             }
             if (!valid) Text(uiText(R.string.availability_deleted_selection_error), color = MaterialTheme.colorScheme.error)
             content()

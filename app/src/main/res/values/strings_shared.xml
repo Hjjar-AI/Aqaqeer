@@ -68,4 +68,7 @@
     <string name="shared_update_editing_blocked_help" formatted="false">"يلزم إصدار متوافق للتعديل والنشر؛ السجل والنسخ الاحتياطي متاحان."</string>
     <string name="shared_view_action" formatted="false">"عرض"</string>
     <string name="shared_yes_label" formatted="false">"نعم"</string>
+    <string name="shared_step_completed">مكتملة</string>
+    <string name="shared_step_current">الخطوة الحالية</string>
+    <string name="shared_step_pending">لم تكتمل بعد</string>
 </resources>

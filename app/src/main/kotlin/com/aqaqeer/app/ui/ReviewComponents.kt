@@ -13,7 +13,6 @@ import androidx.compose.ui.Modifier
 import android.content.ClipData
 import androidx.compose.ui.platform.ClipEntry
 import androidx.compose.ui.platform.LocalClipboard
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.*
 import kotlinx.coroutines.launch
 import androidx.compose.ui.unit.Dp
@@ -23,13 +22,8 @@ import com.aqaqeer.app.uiText
 /** Screen-owned expansion lets drawers, accordions and settings use different policies. */
 @Composable internal fun CollapsibleGroup(title: String, expanded: Boolean, toggle: () -> Unit,
     modifier: Modifier = Modifier, contentSpacing: Dp = UiSpacing.related, content: @Composable ColumnScope.() -> Unit) {
-    val uiText = rememberUiText()
     Column(modifier.fillMaxWidth().animateContentSize()) {
-        AppButton(variant = AppButtonVariant.QUIET, onClick = toggle, modifier = Modifier.fillMaxWidth().heightIn(min = UiSpacing.touch)
-            .semantics { stateDescription = uiText(if (expanded) R.string.shared_expanded_state_label else R.string.shared_collapsed_state_label) }) {
-            Text(title, Modifier.weight(1f))
-            ExpansionChevron(expanded)
-        }
+        DisclosureHeader(title, expanded, toggle)
         if (expanded) ContentSection(spacing = contentSpacing, content = content)
     }
 }
@@ -59,21 +53,29 @@ internal data class Notice(val text: String, val severity: NoticeSeverity = Noti
 
 @Composable internal fun StepHeader(steps: List<String>, current: Int) {
     require(steps.isNotEmpty() && current in steps.indices)
+    val uiText = rememberUiText()
+    fun stepState(index: Int) = uiText(when {
+        index < current -> R.string.shared_step_completed
+        index == current -> R.string.shared_step_current
+        else -> R.string.shared_step_pending
+    })
     Column(verticalArrangement = Arrangement.spacedBy(UiSpacing.hair)) {
         Text("${current + 1} / ${steps.size} · ${steps[current]}", style = MaterialTheme.typography.titleMedium)
-        val compactHeight = LocalLayoutMetrics.current.compact(viewportHeight(1f))
+        val compactHeight = compactHeight()
         if (compactHeight) {
             Row(Modifier.semantics {
-                contentDescription = steps.mapIndexed { index, label -> "${index + 1}. $label" }.joinToString("; ")
+                contentDescription = steps.mapIndexed { index, label -> "${index + 1}. $label · ${stepState(index)}" }.joinToString("; ")
             }, horizontalArrangement = Arrangement.spacedBy(UiSpacing.related)) {
                 steps.forEachIndexed { index, _ ->
-                    Box(Modifier.size(Space.sm).background(
+                    Box(Modifier.size(Size.dotS).background(
                         if (index <= current) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant,
                         CircleShape))
                 }
             }
         } else steps.forEachIndexed { index, label ->
-            SupportingText("${if (index < current) "✓" else if (index == current) "●" else "○"} $label")
+            Box(Modifier.clearAndSetSemantics { contentDescription = label; stateDescription = stepState(index) }) {
+                SupportingText("${if (index < current) "✓" else if (index == current) "●" else "○"} $label")
+            }
         }
     }
 }
@@ -89,7 +91,7 @@ internal data class Notice(val text: String, val severity: NoticeSeverity = Noti
 }
 
 @Composable internal fun EmptyState(title: String, body: String? = null, actions: (@Composable () -> Unit)? = null) {
-    val compactHeight = LocalLayoutMetrics.current.compact(viewportHeight(1f))
+    val compactHeight = compactHeight()
     Column(Modifier.fillMaxWidth().padding(if (compactHeight) UiSpacing.section else UiSpacing.group), horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(UiSpacing.section)) {
         EmptyCapsule(Modifier.size(if (compactHeight) Size.illustrationSmall else Size.illustrationLarge))
@@ -122,9 +124,10 @@ internal data class Notice(val text: String, val severity: NoticeSeverity = Noti
 /** Anchored menu; the screen freezes and validates its selection when opening it. */
 @Composable internal fun EditableStatusPill(status: com.aqaqeer.app.data.AvailabilityStatus,
     onOpen: (() -> Unit)?, expanded: Boolean, dismiss: () -> Unit,
-    choose: (com.aqaqeer.app.data.AvailabilityStatus) -> Unit, enabled: Boolean = true, dense: Boolean = false) {
+    choose: (com.aqaqeer.app.data.AvailabilityStatus) -> Unit, enabled: Boolean = true, dense: Boolean = false,
+    editable: Boolean = onOpen != null) {
     val uiText = rememberUiText()
-    Box(Modifier.heightIn(min = UiSpacing.touch), contentAlignment = Alignment.Center) {
+    Box(if (editable) Modifier.sizeIn(minWidth = UiSpacing.touch, minHeight = UiSpacing.touch) else Modifier, contentAlignment = Alignment.Center) {
         StatusBadge(status, if (enabled) onOpen else null, dense = dense)
         DropdownMenu(expanded = expanded, onDismissRequest = dismiss) {
             com.aqaqeer.app.data.MedicationPresentation.editableStatuses.forEach { candidate ->
@@ -136,17 +139,10 @@ internal data class Notice(val text: String, val severity: NoticeSeverity = Noti
 }
 
 @Composable internal fun SettingsGroup(title: String, initiallyExpanded: Boolean = false, content: @Composable ColumnScope.() -> Unit) {
-    val uiText = rememberUiText()
     var expanded by rememberSaveable(title) { mutableStateOf(initiallyExpanded) }
     GroupedCard {
         Column(Modifier.fillMaxWidth().animateContentSize()) {
-            AppButton(variant = AppButtonVariant.QUIET, onClick = { expanded = !expanded },
-                modifier = Modifier.fillMaxWidth().heightIn(min = UiSpacing.touch).semantics {
-                    stateDescription = uiText(if (expanded) R.string.shared_expanded_state_label else R.string.shared_collapsed_state_label)
-                }, contentPadding = PaddingValues(Space.none), shape = MaterialTheme.shapes.medium) {
-                Text(title, Modifier.weight(1f).semantics { heading() }, style = MaterialTheme.typography.titleMedium)
-                ExpansionChevron(expanded)
-            }
+            DisclosureHeader(title, expanded, { expanded = !expanded }, style = DisclosureStyle.SETTINGS)
             if (expanded) ContentSection(modifier = Modifier.padding(top = UiSpacing.related), spacing = UiSpacing.group, content = content)
         }
     }
@@ -162,7 +158,7 @@ internal data class Notice(val text: String, val severity: NoticeSeverity = Noti
         RadioChoiceRows(choices, selected, select, label, choiceModifier = choiceModifier) { choice ->
             Row(verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(UiSpacing.related)) {
-                swatch?.let { Box(Modifier.size(Space.lg).background(it(choice), CircleShape)) }
+                swatch?.let { Box(Modifier.size(Size.dotL).background(it(choice), CircleShape)) }
                 Text(label(choice), Modifier.weight(1f))
             }
         }
@@ -183,7 +179,7 @@ internal data class Notice(val text: String, val severity: NoticeSeverity = Noti
     AppChip(selected == layout, onClick = { change(layout) }, modifier = Modifier.fillMaxWidth(), shape = MaterialTheme.shapes.medium, label = {
         Column { Text(uiText(if (layout == com.aqaqeer.app.data.CardLayout.COMPACT) R.string.settings_card_compact_label else R.string.settings_card_expanded_label))
             repeat(if (layout == com.aqaqeer.app.data.CardLayout.COMPACT) 2 else 4) {
-                HorizontalDivider(Modifier.width(Size.drawerOutside).padding(vertical = AppStroke.emphasis))
+                HorizontalDivider(Modifier.width(Size.layoutPreviewDivider).padding(vertical = Space.xxs))
             }
         }
     })
@@ -214,7 +210,10 @@ internal data class Notice(val text: String, val severity: NoticeSeverity = Noti
         Triple(R.string.review_check_backup, ready.hasBackup, Route.Backup))
     if (!hidden && !ready.requiresUpdate && !ready.maintenancePaused && !ready.restorePaused) GroupedCard(title = uiText(R.string.review_setup_checklist)) {
         tasks.forEach { (label, complete, route) ->
-            AppButton(variant = AppButtonVariant.QUIET, onClick = { navigate(route) }, enabled = !complete) { Text("${if (complete) "✓" else "○"} ${uiText(label)}") }
+            AppButton(variant = AppButtonVariant.QUIET, onClick = { navigate(route) }, enabled = !complete,
+                modifier = Modifier.semantics { stateDescription = uiText(if (complete) R.string.shared_step_completed else R.string.shared_step_pending) }) {
+                Text("${if (complete) "✓" else "○"} ${uiText(label)}", Modifier.clearAndSetSemantics { contentDescription = uiText(label) })
+            }
         }
         if (tasks.all { it.second }) AppButton(variant = AppButtonVariant.QUIET, onClick = { prefs.edit().putBoolean(pharmacy, true).apply(); hidden = true }) {
             Text(uiText(R.string.review_hide_checklist))
