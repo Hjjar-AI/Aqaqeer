@@ -237,7 +237,7 @@ Exact/relative refresh and publication information is available in the drawer's 
 
 ### Navigation and publication controls
 
-After the splash, open Home for an onboarded pharmacy, subject to existing recovery/update routing; otherwise retain onboarding. Use a compact toolbar with the hamburger at logical start (right in Arabic), then the revised gold/teal emblem and pharmacy name with the authenticated data publication timestamp below it. Display it in pharmacy time; absent publication, local draft and demo states must be explicit.
+After the splash, open Home for an onboarded pharmacy, subject to existing recovery/update routing; otherwise retain onboarding. Use a compact toolbar with the hamburger at logical start (right in Arabic), then the violet and emerald emblem and pharmacy name with the authenticated data publication timestamp below it. Display it in pharmacy time; absent publication, local draft and demo states must be explicit.
 
 Tapping the title/time area opens the existing detailed refresh/publication times dialog. Keep sufficient height for both text lines, title/drawer access to data times without a duplicate info icon. Long-press enters bulk selection; the contextual bar appears at the bottom with 16 dp side margins.
 
@@ -341,17 +341,17 @@ All displayed digits, including counts/days, use Western 123. Bidi-isolate Engli
 
 Use Western digits throughout and Arabic Hijri month names; preserve the civil convention, optional Hijri policy, current fonts and accents.
 
-Light mode uses white card surfaces and near-white app backgrounds with a very light tint from the selected local accent: warm gold, cool blue, pale green, pink or crimson. Keep neutral surface elevations subtle and disable extra tonal tint so the base stays close to white; preserve readable foregrounds and semantic status colors. SYSTEM applies the same light presentation when the device is in light mode. Splash backgrounds follow the same palette.
+Light mode uses white card surfaces and near-white app backgrounds with a very light tint from the selected local accent: violet, blue, green or rose. Keep neutral surface elevations subtle and disable extra tonal tint so the base stays close to white; preserve readable foregrounds and semantic status colors. SYSTEM applies the same light presentation when the device is in light mode. Splash backgrounds follow the same palette.
 
 ### Appearance preferences
 
-Settings includes a separate installation-local «أسود» AMOLED mode alongside system/light/dark. AMOLED always uses dark foreground/status/accent variants and pure #000000 content backgrounds and card surfaces. Interactive and elevated container roles use subtle near-black levels (#0E0E0E–#141414) so nested tips, sheets and dialogs remain distinguishable; suppress additional tonal surface tint. Retain readable foregrounds/outlines and semantic colored badges/selection controls. Existing stored modes and default system behavior remain. Crimson uses cool ruby accents/rose-neutral surfaces and matching tertiary roles, clearly separate from gold’s amber palette.
+Settings includes a separate installation-local «أسود» AMOLED mode alongside system/light/dark. AMOLED always uses dark foreground/status/accent variants and pure #000000 content backgrounds and card surfaces. Interactive and elevated container roles use subtle near-black levels (#0E0E0E–#141414) so nested tips, sheets and dialogs remain distinguishable; suppress additional tonal surface tint. Retain readable foregrounds/outlines and semantic colored badges/selection controls. Existing stored modes and default system behavior remain.
 
-Design: Material 3 with deep-gold light accent #7A5A12, warm near-white surfaces and gold selection; dark accent #E8C66D on ink surfaces. Gold is the default primary accent. Settings offers five one-word Arabic color choices: ذهبي، أزرق، أخضر، أرجواني، قرمزي.
+Use Material 3 with Violet as the default primary accent. Settings offers four Arabic color choices (بنفسجي، أزرق، أخضر، وردي).
 
-Save the selected primary accent installation-locally, independently of system/light/dark/AMOLED mode; apply it immediately and restore across restart. Missing/unknown values fall back to gold. Each choice supplies matching light/dark primary and secondary selection colors, foregrounds, containers, inverse-primary and tint colors.
+Save the selected primary accent installation-locally, independently of system/light/dark/AMOLED mode; apply it immediately and restore across restart. Unset, unknown and former Gold selections resolve to Violet. Former Crimson selections resolve to Rose. Each choice supplies matching light/dark primary and secondary selection colors, foregrounds, containers, inverse-primary and tint colors.
 
-Keep the five hues clearly separated: amber gold, cyan blue, emerald green, magenta pink and red crimson; branding artwork and semantic status colors remain independent. Accent preferences are not synchronized or included in shared pharmacy/explicit backup contracts. Preserve the bundled Noto Sans Arabic for controls/body text and Noto Naskh Arabic for medication headings and Latin sans-serif fonts.
+Keep violet, blue, emerald green and rose visually distinct. Branding artwork and semantic status colors use their own palettes. Accent preferences are not synchronized or included in shared pharmacy/explicit backup contracts. Preserve the bundled Noto Sans Arabic for controls/body text and Noto Naskh Arabic for medication headings and Latin sans-serif fonts.
 
 Statuses retain independent green/amber/red/neutral tones, icons and labels; expiry reuses amber/red. Medication cards use a status-colored edge and tonal fill; major groups use 24 dp spacing. Action-blocking text is at least 14 sp.
 
@@ -363,13 +363,13 @@ Bottom snackbars expose a close action and explicit finite Material durations: L
 
 Use focused reusable composables where they fit; create distinct components when responsibilities differ rather than forcing unrelated elements into a generic API to reduce component count. Screens/ViewModels retain workflow state, validation, authorization and callbacks. Routine UI details are implementation choices within this settled design: use standard Material 3 spacing, component sizing, and interaction patterns; adapt layout for narrow screens and system text scaling while retaining the chosen visible controls and readable medication content.
 
-Keep the launcher a transparent, non-adaptive bitmap; the approved gold/teal/navy revision refines colors and outlines while retaining the chemical wordmark. Record meaningful visual defaults and adjustments in implementation documentation; they do not require reopening the approved navigation, search, filters, cards, quick editor, publication banner, Splash, or About requirements.
+Keep the launcher a transparent, non-adaptive bitmap; the violet and emerald artwork retains the chemical wordmark and navy outline. Record meaningful visual defaults and adjustments in implementation documentation; they do not require reopening the approved navigation, search, filters, cards, quick editor, publication banner, Splash, or About requirements.
 
 Use the existing vector capsule in the empty wide-screen detail pane, preserving the selected logo artwork in existing branded empty states. Representative source previews cover RTL, themes and large text. No gesture hints, alphabet rail or role chip.
 
 ### Branding and startup
 
-Branding: use the selected current gold/teal/navy bitmap for launcher and splash. About and other in-app emblems retain their existing gold/teal bitmap. The selected launcher artwork retains rich, bright warm gold with only slight softening, restrained teal details and a thinner slate-navy outline with a flatter finish embedded in the transparent, non-adaptive RGBA bitmap, without backing shapes or monochrome/adaptive layers. Use teal round tablet dots with bold slate score lines and the selected size after the 5% reduction from the enlarged trial.
+Use the selected Electric Violet and Vivid Emerald Green logo on the launcher, splash, in-app branding and PDF headers. Retain the Arabic wordmark, complementary ring bonds, emerald tablet dots with dark score lines, and the outlined capsule. The launcher uses the transparent RGBA bitmap without a backing shape or monochrome or adaptive layers.
 
 The first ring in Arabic reading order (right) uses the alternate three internal-bond sides to the left ring; this orientation is fixed artwork, not rotation animation. Home shows the pharmacy name with a small original emblem; onboarding includes the original emblem and prioritizes joining over creating. Medication-detail titles use the scientific name. See [branding](branding.md).
 
@@ -408,7 +408,7 @@ Availability and mixed bulk saves offer memory-only Undo. Undo rechecks pharmacy
 
 Back returns to the actual caller using a saveable Home-rooted stack, including Settings → Backup and medication → edit/history. Route/expansion transitions use 180 ms animations respecting system scaling. Large choice lists are searchable and lazy. History filters use a sheet with existing Gregorian date controls; page/filter changes reset scroll. Shared dialogs/sheets adapt to viewport height. Keep at least 48 dp interactive targets, card outlines, clipped indications, readable count/time formatting, and explicit settings/data-information affordances. Arabic UI copy belongs in resources.
 
-Empty states use a dedicated transparent gold/teal capsule illustration at 30% opacity, independent of the app logo; shrink decoration on short screens. Compact workflow steps on short screens while keeping all step names accessible. Search disables autocorrect and automatic capitalization; picker search/selection retains stable item identities and adapts to the dialog’s available height. Predictive back provides subtle feedback with cancellation and busy/modal guards; keep the 180 ms route fade. Use explicit haptic feedback only when entering bulk selection.
+Empty states use a dedicated open violet and emerald capsule illustration with two empty shells at 30% opacity, independent of the app logo; shrink decoration on short screens. Compact workflow steps on short screens while keeping all step names accessible. Search disables autocorrect and automatic capitalization; picker search/selection retains stable item identities and adapts to the dialog’s available height. Predictive back provides subtle feedback with cancellation and busy/modal guards; keep the 180 ms route fade. Use explicit haptic feedback only when entering bulk selection.
 
 
 ## 10. History, import, exports, updates
@@ -439,7 +439,7 @@ Admin CSV/PDF presets: out-of-stock per section or across all active sections, f
 
 PDFs use a compact A5 portrait table grouped by stored category order, preserving scientific-name order within each category. Medication identity/details occupy the RTL-leading column; each selected section has its own labeled status column, with full section names and closed-section markers in a legend. Keep every exported detail, including optional commercial names, brand, expiry and notes; long rows continue across pages with repeated section statuses and a medication continuation reference. Repeat metadata/category/table headings and page numbers.
 
-PDFs retain the original emblem and thin gold header rule; preview availability uses labeled status chips. Render Arabic PDF using Android text layout/Canvas with bundled font and verify actual shaping, bidi, wrapping, and page breaks on device; font bundling alone is insufficient.
+PDFs use the current emblem and a thin gold header rule; preview availability uses labeled status chips. Render Arabic PDF using Android text layout/Canvas with bundled font and verify actual shaping, bidi, wrapping, and page breaks on device; font bundling alone is insufficient.
 
 About shows the app icon, app name, installed version, a short Arabic description of the app's existing availability-information purpose, manual-update instructions, a developer credit, and a contact link. Use the exact confirmed developer display name محمد علي حجار and show hjjarmhmmdali@gmail.com as the email contact, with bidi isolation for the address. The contact action opens `mailto:hjjarmhmmdali@gmail.com` in an external email composer on user activation; it does not send email automatically. If no email app can handle it, retain the visible address and show a clear explanatory message. This is an informational contact link, not an in-app support/messaging service. About remains accessible through Settings to readers and admins under the existing viewing/recovery rules.
 

@@ -71,93 +71,58 @@ private val ArabicTypography = Typography(
     labelSmall = BaseTypography.labelSmall.copy(fontFamily = ArabicFont, fontSize = 12.sp, lineHeight = Leading.small),
 )
 private val LightColors = lightColorScheme(
-    primary = Color(0xFF7A5A12), onPrimary = Color.White,
-    primaryContainer = Color(0xFFF5E7BE), onPrimaryContainer = Color(0xFF3B2A06),
-    secondary = Color(0xFF6D613E), onSecondary = Color.White,
-    secondaryContainer = Color(0xFFEFE8D5), onSecondaryContainer = Color(0xFF302B1B),
-    tertiary = Color(0xFF92400E), onTertiary = Color.White,
-    tertiaryContainer = Color(0xFFFEF3C7), onTertiaryContainer = Color(0xFF78350F),
-    surfaceTint = Color(0xFF7A5A12),
-    surfaceContainerLowest = Color(0xFFFFFEFA), surfaceContainerLow = Color(0xFFF8F4E9),
-    surfaceContainer = Color(0xFFF3EFE4), surfaceContainerHigh = Color(0xFFEDE7D8),
-    surfaceContainerHighest = Color(0xFFE7DFCE),
-    background = Color(0xFFFAF8F1), onBackground = Color(0xFF171914),
-    surface = Color(0xFFFFFEFA), onSurface = Color(0xFF171914),
-    surfaceVariant = Color(0xFFF3EFE4), onSurfaceVariant = Color(0xFF625C4C),
-    outline = Color(0xFF7C725C), outlineVariant = Color(0xFFDED7C5),
+    onBackground = Color(0xFF1C1A23), onSurface = Color(0xFF1C1A23),
+    onSurfaceVariant = Color(0xFF4E4859), outline = Color(0xFF777083),
+    outlineVariant = Color(0xFFD8D2E1),
+    tertiary = Color(0xFF376468), onTertiary = Color.White,
+    tertiaryContainer = Color(0xFFCFEDEF), onTertiaryContainer = Color(0xFF173E42),
+    inverseSurface = Color(0xFF302C38), inverseOnSurface = Color(0xFFF6EFFB),
 )
 private val DarkColors = darkColorScheme(
-    primary = Color(0xFFE8C66D), onPrimary = Color(0xFF302200),
-    primaryContainer = Color(0xFF3B2A06), onPrimaryContainer = Color(0xFFF5E7BE),
-    secondary = Color(0xFFD5C7A0), onSecondary = Color(0xFF302B1B),
-    secondaryContainer = Color(0xFF4B432D), onSecondaryContainer = Color(0xFFF1E8CB),
-    tertiary = Color(0xFFF6CD84), onTertiary = Color(0xFF452000),
-    tertiaryContainer = Color(0xFF78350F), onTertiaryContainer = Color(0xFFFEF3C7),
-    surfaceTint = Color(0xFFE8C66D),
-    surfaceContainerLowest = Color(0xFF12140F), surfaceContainerLow = Color(0xFF1D1F18),
-    surfaceContainer = Color(0xFF24251E), surfaceContainerHigh = Color(0xFF2D2F25),
-    surfaceContainerHighest = Color(0xFF37392E),
-    background = Color(0xFF171914), onBackground = Color(0xFFF3EFE4),
-    surface = Color(0xFF24251E), onSurface = Color(0xFFF3EFE4),
-    surfaceVariant = Color(0xFF3B3C31), onSurfaceVariant = Color(0xFFD5D1C3),
-    outline = Color(0xFFA9A18C), outlineVariant = Color(0xFF3B3C31),
+    onBackground = Color(0xFFF0EBF6), surface = Color(0xFF201E27), onSurface = Color(0xFFF0EBF6),
+    surfaceDim = Color(0xFF16151C), surfaceBright = Color(0xFF393541),
+    surfaceContainerLowest = Color(0xFF121017), surfaceContainerLow = Color(0xFF1D1B24),
+    surfaceContainer = Color(0xFF24212C), surfaceContainerHigh = Color(0xFF2D2936),
+    surfaceContainerHighest = Color(0xFF373242), surfaceVariant = Color(0xFF373242),
+    onSurfaceVariant = Color(0xFFD0C8DB), outline = Color(0xFF9A90A8),
+    outlineVariant = Color(0xFF51485E),
+    tertiary = Color(0xFF9BD3D7), onTertiary = Color(0xFF12363A),
+    tertiaryContainer = Color(0xFF254B50), onTertiaryContainer = Color(0xFFCFEDEF),
+    inverseSurface = Color(0xFFF0EBF6), inverseOnSurface = Color(0xFF302C38),
 )
 
-private data class TertiaryPalette(val color: Color, val onColor: Color, val container: Color, val onContainer: Color)
-private val LightTertiary = TertiaryPalette(LightColors.tertiary, LightColors.onTertiary, LightColors.tertiaryContainer, LightColors.onTertiaryContainer)
-private val DarkTertiary = TertiaryPalette(DarkColors.tertiary, DarkColors.onTertiary, DarkColors.tertiaryContainer, DarkColors.onTertiaryContainer)
-private data class AccentPalette(val primary: Color, val container: Color, val onContainer: Color, val darkPrimary: Color,
-    val lightTertiary: TertiaryPalette = LightTertiary, val darkTertiary: TertiaryPalette = DarkTertiary) {
-    val darkOnPrimary get() = onContainer
-}
-private val AccentPalettes = mapOf(
-    ThemeAccent.BLUE to AccentPalette(Color(0xFF00658A), Color(0xFFCBF0FF), Color(0xFF002F40), Color(0xFF66D9F2)),
-    ThemeAccent.GREEN to AccentPalette(Color(0xFF006B3C), Color(0xFFB9F6CE), Color(0xFF00391D), Color(0xFF5DE5A0)),
-    ThemeAccent.PURPLE to AccentPalette(Color(0xFF8E247A), Color(0xFFFFD6F5), Color(0xFF49003D), Color(0xFFF3A7ED)),
-    ThemeAccent.CRIMSON to AccentPalette(Color(0xFFC00038), Color(0xFFFFD9E3), Color(0xFF4A0014), Color(0xFFFF7096),
-        lightTertiary = TertiaryPalette(Color(0xFFC00038), Color.White, Color(0xFFFFD9E3), Color(0xFF4A0014)),
-        darkTertiary = TertiaryPalette(Color(0xFFFF7096), Color(0xFF4A0014), Color(0xFFC00038), Color(0xFFFFD9E3))),
+private data class AccentPalette(
+    val primary: Color,
+    val lightContainer: Color,
+    val deep: Color,
+    val darkPrimary: Color,
+    val darkContainer: Color,
 )
 
 private fun accentColors(accent: ThemeAccent, dark: Boolean, resources: Resources): ColorScheme {
+    val palette = when (accent) {
+        ThemeAccent.PURPLE -> AccentPalette(launchColor(resources, R.color.accent_violet_light),
+            Color(0xFFECE1FF), Color(0xFF2C1553), Color(0xFFD1B6FF), Color(0xFF452677))
+        ThemeAccent.BLUE -> AccentPalette(Color(0xFF155B99),
+            Color(0xFFDCEEFF), Color(0xFF002D54), Color(0xFFA1CDFF), Color(0xFF164575))
+        ThemeAccent.GREEN -> AccentPalette(Color(0xFF006548),
+            Color(0xFFC9F5E2), Color(0xFF003826), Color(0xFF76DCB5), Color(0xFF064C37))
+        ThemeAccent.ROSE -> AccentPalette(Color(0xFF94365F),
+            Color(0xFFFFDEEB), Color(0xFF470D2B), Color(0xFFFFB1D0), Color(0xFF672847))
+    }
     val base = if (dark) DarkColors.copy(background = launchColor(resources, R.color.launch_dark)) else LightColors
-    val palette = AccentPalettes[accent] ?: return base
-    val tertiary = if (dark) palette.darkTertiary else palette.lightTertiary
-    val colors = base.copy(
-        tertiary = tertiary.color, onTertiary = tertiary.onColor,
-        tertiaryContainer = tertiary.container, onTertiaryContainer = tertiary.onContainer,
-        primary = if (dark) palette.darkPrimary else palette.primary,
-        onPrimary = if (dark) palette.darkOnPrimary else Color.White,
-        primaryContainer = if (dark) palette.primary else palette.container,
-        onPrimaryContainer = if (dark) palette.container else palette.onContainer,
-        secondary = if (dark) palette.darkPrimary else palette.primary,
-        onSecondary = if (dark) palette.darkOnPrimary else Color.White,
-        secondaryContainer = if (dark) palette.primary else palette.container,
-        onSecondaryContainer = if (dark) palette.container else palette.onContainer,
+    val primary = if (dark) palette.darkPrimary else palette.primary
+    val onPrimary = if (dark) palette.deep else Color.White
+    val container = if (dark) palette.darkContainer else palette.lightContainer
+    val onContainer = if (dark) palette.lightContainer else palette.deep
+    return base.copy(
+        primary = primary, onPrimary = onPrimary,
+        primaryContainer = container, onPrimaryContainer = onContainer,
+        secondary = primary, onSecondary = onPrimary,
+        secondaryContainer = container, onSecondaryContainer = onContainer,
         inversePrimary = if (dark) palette.primary else palette.darkPrimary,
-        surfaceTint = if (dark) palette.darkPrimary else palette.primary,
+        surfaceTint = primary,
     )
-    if (accent != ThemeAccent.CRIMSON) return colors
-    val crimson = if (dark) colors.copy(
-        background = launchColor(resources, R.color.launch_crimson_dark), onBackground = Color(0xFFFFEFF5),
-        surface = Color(0xFF1C1016), onSurface = Color(0xFFFFEFF5),
-        surfaceDim = Color(0xFF12090D), surfaceBright = Color(0xFF35252D),
-        surfaceContainerLowest = Color(0xFF0C0508), surfaceContainerLow = Color(0xFF1C1016),
-        surfaceContainer = Color(0xFF25171E), surfaceContainerHigh = Color(0xFF30212A),
-        surfaceContainerHighest = Color(0xFF3B2A34),
-        surfaceVariant = Color(0xFF3B2A34), onSurfaceVariant = Color(0xFFE6BFCF),
-        outline = Color(0xFFB48C9D), outlineVariant = Color(0xFF59404D),
-    ) else colors.copy(
-        background = Color(0xFFFFF8FA), onBackground = Color(0xFF211019),
-        surface = Color(0xFFFFFBFC), onSurface = Color(0xFF211019),
-        surfaceDim = Color(0xFFE8CDD9), surfaceBright = Color(0xFFFFFBFC),
-        surfaceContainerLowest = Color.White, surfaceContainerLow = Color(0xFFFBEFF3),
-        surfaceContainer = Color(0xFFF5E4EA), surfaceContainerHigh = Color(0xFFEED8E1),
-        surfaceContainerHighest = Color(0xFFE8CDD9),
-        surfaceVariant = Color(0xFFF5E4EA), onSurfaceVariant = Color(0xFF674953),
-        outline = Color(0xFF8E6575), outlineVariant = Color(0xFFE5C5D3),
-    )
-    return crimson
 }
 
 /** Black backgrounds/cards with subtly lifted interactive and elevated containers. */
@@ -193,11 +158,10 @@ internal fun themeIsDark(choice: ThemeChoice, systemDark: Boolean): Boolean =
 /** Near-white backgrounds keep a faint accent tint; cards remain white. */
 private fun launchColor(resources: Resources, id: Int): Color = Color(resources.getColor(id, null))
 internal fun lightBackground(accent: ThemeAccent, resources: Resources): Color = launchColor(resources, when (accent) {
-    ThemeAccent.GOLD -> R.color.launch_gold
     ThemeAccent.BLUE -> R.color.launch_blue
     ThemeAccent.GREEN -> R.color.launch_green
-    ThemeAccent.PURPLE -> R.color.launch_pink
-    ThemeAccent.CRIMSON -> R.color.launch_crimson
+    ThemeAccent.PURPLE -> R.color.launch_violet
+    ThemeAccent.ROSE -> R.color.launch_rose
 })
 
 private fun lightModeColors(colors: ColorScheme, accent: ThemeAccent, resources: Resources): ColorScheme = colors.copy(
@@ -221,7 +185,7 @@ internal fun appColorScheme(choice: ThemeChoice, accent: ThemeAccent, systemDark
     }
 }
 
-@Composable fun AqaqeerTheme(choice: ThemeChoice, accent: ThemeAccent = ThemeAccent.GOLD, content: @Composable () -> Unit) {
+@Composable fun AqaqeerTheme(choice: ThemeChoice, accent: ThemeAccent = ThemeAccent.PURPLE, content: @Composable () -> Unit) {
     val systemDark = isSystemInDarkTheme()
     val dark = themeIsDark(choice, systemDark)
     val context = LocalContext.current

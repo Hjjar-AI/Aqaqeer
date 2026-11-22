@@ -51,11 +51,9 @@ class MainActivity : ComponentActivity() {
         val dark = themeIsDark(launchTheme, systemDark)
         setTheme(when {
             launchTheme == ThemeChoice.AMOLED -> R.style.Theme_Aqaqeer_Starting_Black
-            launchAccent == ThemeAccent.CRIMSON && dark -> R.style.Theme_Aqaqeer_Starting_CrimsonDark
-            !dark && launchAccent == ThemeAccent.CRIMSON -> R.style.Theme_Aqaqeer_Starting_CrimsonLight
+            !dark && launchAccent == ThemeAccent.ROSE -> R.style.Theme_Aqaqeer_Starting_RoseLight
             !dark && launchAccent == ThemeAccent.BLUE -> R.style.Theme_Aqaqeer_Starting_BlueLight
             !dark && launchAccent == ThemeAccent.GREEN -> R.style.Theme_Aqaqeer_Starting_GreenLight
-            !dark && launchAccent == ThemeAccent.PURPLE -> R.style.Theme_Aqaqeer_Starting_PinkLight
             dark -> R.style.Theme_Aqaqeer_Starting_Dark
             else -> R.style.Theme_Aqaqeer_Starting_Light
         })

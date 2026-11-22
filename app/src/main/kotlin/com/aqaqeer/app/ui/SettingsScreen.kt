@@ -47,8 +47,12 @@ import com.aqaqeer.app.data.*
                     ThemeChoice.DARK -> R.string.settings_theme_dark_label; ThemeChoice.AMOLED -> R.string.settings_theme_amoled_label })
             }, choiceModifier = { Modifier.testTag("theme_${it.name}") })
             SettingsChoiceRows(uiText(R.string.settings_primary_accent_label), ThemeAccent.entries, accent, setAccent, {
-                uiText(when (it) { ThemeAccent.GOLD -> R.string.settings_accent_gold_label; ThemeAccent.BLUE -> R.string.settings_accent_blue_label
-                    ThemeAccent.GREEN -> R.string.settings_accent_green_label; ThemeAccent.PURPLE -> R.string.settings_accent_purple_label; ThemeAccent.CRIMSON -> R.string.settings_accent_crimson_label })
+                uiText(when (it) {
+                    ThemeAccent.PURPLE -> R.string.settings_accent_purple_label
+                    ThemeAccent.BLUE -> R.string.settings_accent_blue_label
+                    ThemeAccent.GREEN -> R.string.settings_accent_green_label
+                    ThemeAccent.ROSE -> R.string.settings_accent_rose_label
+                })
             }, swatch = { appColorScheme(theme, it, systemDark, resources).primary })
         } }
         item { SettingsGroup(uiText(R.string.review_list_display)) {

@@ -1,10 +1,9 @@
 <resources>
-    <color name="launch_gold">#FFFEFA</color>
-    <color name="launch_blue">#FAFDFF</color>
-    <color name="launch_green">#FAFFFC</color>
-    <color name="launch_pink">#FFFAFE</color>
-    <color name="launch_crimson">#FFFAFB</color>
-    <color name="launch_dark">#171914</color>
-    <color name="launch_crimson_dark">#12090D</color>
+    <color name="accent_violet_light">#6333B6</color>
+    <color name="launch_violet">#FAF8FF</color>
+    <color name="launch_blue">#F6FAFF</color>
+    <color name="launch_green">#F5FCF8</color>
+    <color name="launch_rose">#FFF8FB</color>
+    <color name="launch_dark">#16151C</color>
     <color name="launch_black">#000000</color>
 </resources>

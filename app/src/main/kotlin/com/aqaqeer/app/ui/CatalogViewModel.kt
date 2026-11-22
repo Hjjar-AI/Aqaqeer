@@ -48,7 +48,7 @@ data class AppUiState(
     val filters: HomeFilters = HomeFilters(),
     val refresh: RefreshUiState = RefreshUiState(),
     val fetchedIds: Set<String> = emptySet(),
-    val accent: ThemeAccent = ThemeAccent.GOLD,
+    val accent: ThemeAccent = ThemeAccent.PURPLE,
     val online: Boolean = true,
 ) {
     val destination: Route = RouteStorage.decode(route)

@@ -15,7 +15,14 @@ import java.io.IOException
 
 private val Context.displayDataStore by preferencesDataStore("display")
 enum class ThemeChoice { SYSTEM, LIGHT, DARK, AMOLED }
-enum class ThemeAccent { GOLD, BLUE, GREEN, PURPLE, CRIMSON }
+enum class ThemeAccent {
+    PURPLE, BLUE, GREEN, ROSE;
+
+    companion object {
+        internal fun fromStoredName(name: String?): ThemeAccent =
+            if (name == "CRIMSON") ROSE else entries.firstOrNull { it.name == name } ?: PURPLE
+    }
+}
 
 /** Only presentation preferences go here. No keys, credentials, PINs, or admin mode. */
 class DisplayPreferences(private val context: Context) {
@@ -24,7 +31,7 @@ class DisplayPreferences(private val context: Context) {
     // Non-secret launch hints; DataStore remains authoritative. Each flow updates only its own key.
     val theme: Flow<ThemeChoice> = data.map { prefs -> ThemeChoice.entries.firstOrNull { it.name == prefs[THEME] } ?: ThemeChoice.SYSTEM }
         .onEach { cacheStartupValue("theme", it.name) }.flowOn(Dispatchers.IO)
-    val accent: Flow<ThemeAccent> = data.map { prefs -> ThemeAccent.entries.firstOrNull { it.name == prefs[ACCENT] } ?: ThemeAccent.GOLD }
+    val accent: Flow<ThemeAccent> = data.map { prefs -> ThemeAccent.fromStoredName(prefs[ACCENT]) }
         .onEach { cacheStartupValue("accent", it.name) }.flowOn(Dispatchers.IO)
     private fun cacheStartupValue(key: String, value: String) {
         val cache = context.getSharedPreferences(STARTUP_CACHE, Context.MODE_PRIVATE)
@@ -66,7 +73,7 @@ class DisplayPreferences(private val context: Context) {
         internal fun startupPresentation(context: Context): Pair<ThemeChoice, ThemeAccent> {
             val cache = context.getSharedPreferences(STARTUP_CACHE, Context.MODE_PRIVATE)
             return (ThemeChoice.entries.firstOrNull { it.name == cache.getString("theme", null) } ?: ThemeChoice.SYSTEM) to
-                (ThemeAccent.entries.firstOrNull { it.name == cache.getString("accent", null) } ?: ThemeAccent.GOLD)
+                ThemeAccent.fromStoredName(cache.getString("accent", null))
         }
 
         private val TWO_COLUMNS = booleanPreferencesKey("home_two_columns")
