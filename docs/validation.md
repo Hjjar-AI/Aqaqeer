@@ -2,6 +2,28 @@
 
 [Requirements](requirements.md) define acceptance; [plan](plan.md) owns remaining work. The evidence manifest (local-only: `../local/verification/manifest.json`) retains original results, public hashes and provenance. Ignored evidence may be absent in fresh checkouts. Source checks, compilation, runtime results and human acceptance remain distinct.
 
+## Hosted workflow 03 — 2026-11-23
+
+User-authorized dispatch of [run 45072590242](https://github.com/Hjjar-AI/Aqaqeer/actions/runs/45072590242), `Final` / `1cb192c62fdf8dafb33f5fef33120f673aea916c`, with `scope=all`, `coverage=false`. Local/remote source matched and the worktree was clean before dispatch. Monitored at approximately one-minute intervals; run completed **failed** from 00:31:39 to 00:34:03 Asia/Damascus (21:31:39–21:34:03 UTC on November 22). No rerun was dispatched.
+
+| Job | Observed result |
+| --- | --- |
+| Public crypto vectors (JDK) | Passed. |
+| Release compilation | Passed; compilation only, no APK packaging/signing/update acceptance. |
+| Standard JVM tests | 545 executed: 477 passed, 68 assertion failures, zero errors/skips; 36 XML suites reconciled. |
+| Demo JVM tests | 545 executed: 477 passed, 68 assertion failures, zero errors/skips; 36 XML suites reconciled. |
+| Debug/instrumentation compilation | Production debug code compiled (also required by the executed JVM jobs); both standard/demo Android-test Kotlin compilations failed. Android tests did not execute. |
+
+All 68 failures in each flavor belong to CatalogSearchMatrixTest; the reported mismatches include expected medication IDs versus empty results. This identifies a failing assertion boundary, not whether production or expectations are wrong. Compiler logs identify old HomeScreen call signatures/missing actions in HomeBarPlacementUiTest.kt, HomeFixtureUiTest.kt, RefreshUiTest.kt and UiEnhancementTest.kt. Production compilation also reports one distinct deprecation at HomeBrowseBars.kt:119 for rememberPlainTooltipPositionProvider. No source/fixture/assertion repair was attempted.
+
+Retained all five artifact bundles, complete/failed-job logs, run/job metadata and original XML/HTML reports under local-only `../local/verification/github-run-45072590242/`. The manifest's hostedVerification45072590242 entry inventories public-file hashes and review.json. These 1,090 flavor executions are not 1,090 unique semantic scenarios. Earlier valid results remain dated evidence; this run is not a green regression or Android acceptance result. No local builds/lint/device/live work, migrations, packaging/version changes or additional workflow dispatch occurred. [Remaining work](plan.md#ordered-delivery-backlog) preserves the independent passes and failure checkpoint.
+
+### Repair source follow-up — 2026-11-23
+
+The user subsequently authorized fixing, pushing and re-running workflow 03. The XML failure at CatalogSearchMatrixTest.kt:41 is the grouped-row equality assertion: its fixture used HomePreferences with grouping disabled by default. The repair explicitly enables grouping for the original assertions and additionally checks default-off empty groups plus equal visible rows/row data. No assertion was removed or weakened. Thirteen HomeScreen calls in the four logged Android-test files now use rememberHomeActions/HomeCallbacks, preserving existing callback bodies, fixtures and assertions outside those calls. Test method/parameter counts and workflow selectors are unchanged.
+
+Focused call-boundary comparison, lexical delimiters and whitespace passed. Production code, role restrictions and grouping defaults are unchanged; the tooltip deprecation is not part of this failure repair. No local Gradle/compilation/test/lint/device work occurred. A new workflow-03 dispatch is required after the push because GitHub reruns retain the original source SHA; the original independent passes remain evidence rather than being discarded.
+
 ## Backup/restore requirement-to-evidence audit — 2026-11-22
 
 Documentation audit of [requirements §11](requirements.md#11-backup-and-restore), related [§5](requirements.md#5-local-storage-and-persistent-admin-authorization), [§6](requirements.md#6-file-formats), [§10](requirements.md#10-history-import-exports-updates) and [§12](requirements.md#12-credential-maintenance), and the [format/reader contracts](crypto/FORMATS.md). Reviewed the recorded evidence below, not test source or private campaign files. **No new compilation or application execution occurred.** Source descriptions are not runtime proof; older schema/UI evidence is limited to unchanged mechanisms. No row is a blanket current-version pass.
@@ -123,14 +145,16 @@ Production constructor/call-site/transaction/draft review and delimiter/XML/refe
 
 <a id="current-verification-checkpoint--2026-11-16"></a>
 
-## Current verification checkpoint — 2026-11-22
+<a id="current-verification-checkpoint--2026-11-22"></a>
+
+## Current verification checkpoint — 2026-11-23
 
 Evidence applies to the recorded source revision and environment. A later source change or a selected check does not inherit an earlier pass automatically.
 
 | Area | Latest inspected evidence | Still pending |
 | --- | --- | --- |
-| Latest source/UI refactor | `f79fd18` plus the November 22 working-tree source batch; [static evidence](#validated-ui-refactoring--2026-11-22). | Current production/test compilation and relevant Android acceptance remain unverified. |
-| JVM regressions and source warnings | [Workflow 03](https://github.com/Hjjar-AI/Aqaqeer/actions/runs/43906281538), `f1293ba`: both flavors passed 545 cases each; JDK vectors passed; zero Kotlin source warnings. | The subsequent test-only CDS option has source checks only. |
+| Latest source/UI refactor | `1cb192c`; [workflow 03](#hosted-workflow-03--2026-11-23) compiled standard/demo production debug and standard release sources. | Both instrumentation variants fail test-source compilation; Android runtime acceptance remains unverified. |
+| JVM regressions and source warnings | [Workflow 03 run 45072590242](#hosted-workflow-03--2026-11-23), `1cb192c`: 477/545 passed and 68 failed per flavor; JDK vectors passed. | Search-matrix failures need diagnosis; one production tooltip deprecation remains. Prior `f1293ba` passes remain historical. |
 | Debug distribution and hosted numbering | [Workflow 10](https://github.com/Hjjar-AI/Aqaqeer/actions/runs/44099085893), `eb539b9`: code 9, both debug flavors compiled, packaged, signing/publication jobs succeeded. Two distinct redundant-cast warnings were corrected afterward in source only; native strip diagnostics remain. | Compile all later source changes when authorized; device/update installation, native diagnostic detail, local/hosted coordination and production signing continuity. |
 | Signing-cache optimization | [Workflow 10](https://github.com/Hjjar-AI/Aqaqeer/actions/runs/43967349302) restored/saved build-job caches; both signing jobs recorded `setup-gradle: false` and skipped Gradle setup. | No performance improvement is quantified by this comparison. |
 | Room export and fresh storage | Production models define attribution-free version 1; historical export is explicitly labeled. | Retain/review a regenerated export; fresh initialization and non-destructive incompatible-database acceptance. |

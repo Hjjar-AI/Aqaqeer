@@ -32,8 +32,15 @@ class HomeBarPlacementUiTest {
             CompositionLocalProvider(LocalDensity provides Density(density.density, 1f)) {
                 AqaqeerTheme(ThemeChoice.LIGHT) { Box(Modifier.width(320.dp).height(560.dp).imePadding()) {
                     HomeScreen(CatalogState.Ready(catalog, false), state, F.time,
-                        { state = state.copy(sectionId = it) }, { state = state.copy(query = it, appliedQuery = it) },
-                        {}, {}, {}, {}, {}, projection = homeProjection(catalog, state))
+                        projection = homeProjection(catalog, state),
+                        actions = rememberHomeActions(HomeCallbacks(
+                            selectSection = { state = state.copy(sectionId = it) },
+                            setQuery = { state = state.copy(query = it, appliedQuery = it) },
+                            toggleStatus = {},
+                            toggleCategory = {},
+                            clearFilters = {},
+                            openMedication = {},
+                            openSettings = {})))
                 } }
             }
         }
@@ -63,8 +70,16 @@ class HomeBarPlacementUiTest {
         var state by mutableStateOf(AppUiState(sectionId = second.id, query = "Fixture", appliedQuery = "Fixture",
             filters = HomeFilters(statuses = setOf(AvailabilityStatus.AVAILABLE))))
         compose.setContent { AqaqeerTheme(ThemeChoice.LIGHT) { Box(Modifier.width(320.dp).height(560.dp)) {
-            HomeScreen(CatalogState.Ready(catalog, false), state, F.time, {}, {}, {}, {}, {}, {}, {},
-                projection = homeProjection(catalog, state))
+            HomeScreen(CatalogState.Ready(catalog, false), state, F.time,
+                projection = homeProjection(catalog, state),
+                actions = rememberHomeActions(HomeCallbacks(
+                    selectSection = {},
+                    setQuery = {},
+                    toggleStatus = {},
+                    toggleCategory = {},
+                    clearFilters = {},
+                    openMedication = {},
+                    openSettings = {})))
         } } }
         for ((sections, search) in listOf(true to true, false to true, true to false, false to false)) {
             compose.runOnIdle { state = state.copy(homePreferences = state.homePreferences.copy(
@@ -87,8 +102,15 @@ class HomeBarPlacementUiTest {
             SideEffect { keyboardVisible.set(ime) }
             AqaqeerTheme(ThemeChoice.LIGHT) { Box(Modifier.fillMaxSize().imePadding()) {
                 HomeScreen(CatalogState.Ready(catalog, false), state, F.time,
-                    { state = state.copy(sectionId = it) }, { state = state.copy(query = it, appliedQuery = it) },
-                    {}, {}, {}, {}, {}, projection = homeProjection(catalog, state))
+                    projection = homeProjection(catalog, state),
+                    actions = rememberHomeActions(HomeCallbacks(
+                        selectSection = { state = state.copy(sectionId = it) },
+                        setQuery = { state = state.copy(query = it, appliedQuery = it) },
+                        toggleStatus = {},
+                        toggleCategory = {},
+                        clearFilters = {},
+                        openMedication = {},
+                        openSettings = {})))
             } }
         }
         compose.onNodeWithTag("section_${second.id}").assertIsSelected()
@@ -109,8 +131,16 @@ class HomeBarPlacementUiTest {
             availability = emptyList())
         val state = AppUiState(sectionId = second.id, homePreferences = HomePreferences(groupingEnabled = false))
         compose.setContent { AqaqeerTheme(ThemeChoice.LIGHT) { Box(Modifier.width(320.dp).height(300.dp)) {
-            HomeScreen(CatalogState.Ready(large, false), state, F.time, {}, {}, {}, {}, {}, {}, {},
-                projection = homeProjection(large, state))
+            HomeScreen(CatalogState.Ready(large, false), state, F.time,
+                projection = homeProjection(large, state),
+                actions = rememberHomeActions(HomeCallbacks(
+                    selectSection = {},
+                    setQuery = {},
+                    toggleStatus = {},
+                    toggleCategory = {},
+                    clearFilters = {},
+                    openMedication = {},
+                    openSettings = {})))
         } } }
         compose.onNodeWithTag("home").performScrollToNode(hasTestTag("med_Medication 9"))
         compose.onNodeWithTag("section_${second.id}").assertIsDisplayed().assertIsSelected()
@@ -125,8 +155,16 @@ class HomeBarPlacementUiTest {
         val state = AppUiState(sectionId = second.id, homePreferences = HomePreferences(groupingEnabled = false,
             sectionsAtBottom = false, searchAtBottom = false))
         compose.setContent { AqaqeerTheme(ThemeChoice.LIGHT) { Box(Modifier.width(320.dp).height(300.dp)) {
-            HomeScreen(CatalogState.Ready(large, false), state, F.time, {}, {}, {}, {}, {}, {}, {},
-                projection = homeProjection(large, state))
+            HomeScreen(CatalogState.Ready(large, false), state, F.time,
+                projection = homeProjection(large, state),
+                actions = rememberHomeActions(HomeCallbacks(
+                    selectSection = {},
+                    setQuery = {},
+                    toggleStatus = {},
+                    toggleCategory = {},
+                    clearFilters = {},
+                    openMedication = {},
+                    openSettings = {})))
         } } }
         compose.onNodeWithTag("section_${second.id}").assertIsDisplayed()
         compose.onNodeWithTag("home").performScrollToNode(hasTestTag("med_Medication 9"))
@@ -143,8 +181,16 @@ class HomeBarPlacementUiTest {
             val density = LocalDensity.current
             CompositionLocalProvider(LocalDensity provides Density(density.density, 1.6f)) {
                 AqaqeerTheme(ThemeChoice.DARK) { Box(Modifier.width(420.dp).height(640.dp)) {
-                    HomeScreen(CatalogState.Ready(catalog, false), state, F.time, {}, {}, {}, {}, {}, {}, {},
-                        projection = homeProjection(catalog, state))
+                    HomeScreen(CatalogState.Ready(catalog, false), state, F.time,
+                        projection = homeProjection(catalog, state),
+                        actions = rememberHomeActions(HomeCallbacks(
+                            selectSection = {},
+                            setQuery = {},
+                            toggleStatus = {},
+                            toggleCategory = {},
+                            clearFilters = {},
+                            openMedication = {},
+                            openSettings = {})))
                 } }
             }
         }

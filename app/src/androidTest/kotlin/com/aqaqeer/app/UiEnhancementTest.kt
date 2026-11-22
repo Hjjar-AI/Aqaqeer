@@ -68,9 +68,18 @@ class UiEnhancementTest {
     @Test fun selectionStaysPinnedAndPreviewIncludesHiddenSelection() {
         val c = many(); var state by mutableStateOf(AppUiState())
         compose.setContent { AqaqeerTheme(ThemeChoice.LIGHT) {
-            HomeScreen(CatalogState.Ready(c,false,admin=true),state,F.time,
-                { state = state.copy(sectionId=it) }, {}, {}, {}, {}, {}, {},
-                saveAvailability = { _,_,_ -> }, saveBulk = { _,_,_ -> }, projection = homeProjection(c, state))
+            HomeScreen(CatalogState.Ready(c,false,admin=true), state, F.time,
+                projection = homeProjection(c, state),
+                actions = rememberHomeActions(HomeCallbacks(
+                    selectSection = { state = state.copy(sectionId=it) },
+                    setQuery = {},
+                    toggleStatus = {},
+                    toggleCategory = {},
+                    clearFilters = {},
+                    openMedication = {},
+                    openSettings = {},
+                    saveAvailability = { _,_,_ -> },
+                    saveBulk = { _,_,_ -> })))
         } }
         compose.onNodeWithTag("home").performScrollToNode(hasTestTag("med_Item 00"))
         compose.onNodeWithTag("med_Item 00").performTouchInput { longClick() }
@@ -89,8 +98,18 @@ class UiEnhancementTest {
     @Test fun sectionChangeClearsSelectionAndRestrictedReaderHasNoBulkAction() {
         val c = many(); var state by mutableStateOf(AppUiState()); var admin by mutableStateOf(true)
         compose.setContent { AqaqeerTheme(ThemeChoice.LIGHT) {
-            HomeScreen(CatalogState.Ready(c,false,admin=admin),state,F.time,
-                { state = state.copy(sectionId=it) }, {}, {}, {}, {}, {}, {}, saveAvailability = { _,_,_ -> }, saveBulk = { _,_,_ -> }, projection = homeProjection(c, state))
+            HomeScreen(CatalogState.Ready(c,false,admin=admin), state, F.time,
+                projection = homeProjection(c, state),
+                actions = rememberHomeActions(HomeCallbacks(
+                    selectSection = { state = state.copy(sectionId=it) },
+                    setQuery = {},
+                    toggleStatus = {},
+                    toggleCategory = {},
+                    clearFilters = {},
+                    openMedication = {},
+                    openSettings = {},
+                    saveAvailability = { _,_,_ -> },
+                    saveBulk = { _,_,_ -> })))
         } }
         compose.onNodeWithTag("home").performScrollToNode(hasTestTag("med_Item 00"))
         compose.onNodeWithTag("med_Item 00").performTouchInput { longClick() }

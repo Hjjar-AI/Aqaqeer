@@ -46,8 +46,15 @@ class HomeFixtureUiTest {
             CompositionLocalProvider(LocalDensity provides Density(density.density, 1.3f)) {
                 AqaqeerTheme(ThemeChoice.LIGHT) { Box(Modifier.width(320.dp)) {
                     HomeScreen(CatalogState.Ready(catalog, false), state, now,
-                        { state = state.copy(sectionId = it) }, {}, {},
-                        { state = state.copy(filters = HomeFilters(categoryIds = setOf(it))) }, {}, {}, {}, projection = homeProjection(catalog, state))
+                        projection = homeProjection(catalog, state),
+                        actions = rememberHomeActions(HomeCallbacks(
+                            selectSection = { state = state.copy(sectionId = it) },
+                            setQuery = {},
+                            toggleStatus = {},
+                            toggleCategory = { state = state.copy(filters = HomeFilters(categoryIds = setOf(it))) },
+                            clearFilters = {},
+                            openMedication = {},
+                            openSettings = {})))
                 } }
             }
         }
@@ -72,7 +79,16 @@ class HomeFixtureUiTest {
         var now by mutableStateOf(Instant.parse("2026-11-09T20:59:59Z"))
         compose.setContent {
             AqaqeerTheme(ThemeChoice.DARK) {
-                HomeScreen(CatalogState.Ready(catalog, false), AppUiState(), now, {}, {}, {}, {}, {}, {}, {}, projection = homeProjection(catalog, now = now))
+                HomeScreen(CatalogState.Ready(catalog, false), AppUiState(), now,
+                    projection = homeProjection(catalog, now = now),
+                    actions = rememberHomeActions(HomeCallbacks(
+                        selectSection = {},
+                        setQuery = {},
+                        toggleStatus = {},
+                        toggleCategory = {},
+                        clearFilters = {},
+                        openMedication = {},
+                        openSettings = {})))
             }
         }
         compose.onNodeWithTag("home").performScrollToNode(hasTestTag("med_English only"))
@@ -84,8 +100,16 @@ class HomeFixtureUiTest {
     @Test fun futureCompatibilityNoticeKeepsCachedMedicationAndBrowsingAvailable() {
         compose.setContent {
             AqaqeerTheme(ThemeChoice.SYSTEM) {
-                HomeScreen(CatalogState.Ready(catalog(),false,requiresUpdate=true),AppUiState(),
-                    Instant.parse("2026-11-09T10:00:00Z"),{}, {}, {}, {}, {}, {}, {}, projection = homeProjection(catalog()))
+                HomeScreen(CatalogState.Ready(catalog(),false,requiresUpdate=true), AppUiState(), Instant.parse("2026-11-09T10:00:00Z"),
+                    projection = homeProjection(catalog()),
+                    actions = rememberHomeActions(HomeCallbacks(
+                        selectSection = {},
+                        setQuery = {},
+                        toggleStatus = {},
+                        toggleCategory = {},
+                        clearFilters = {},
+                        openMedication = {},
+                        openSettings = {})))
             }
         }
         compose.waitUntil(15_000) {

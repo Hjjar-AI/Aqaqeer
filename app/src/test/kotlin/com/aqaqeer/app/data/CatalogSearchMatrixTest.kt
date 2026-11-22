@@ -36,10 +36,16 @@ class CatalogSearchMatrixTest(private val label: String, private val query: Stri
         val visible = index.browse(section, query, HomeFilters(statuses, categories), sort)
         assertEquals(label, expected, visible.map { it.id }.toSet())
         assertEquals(visible, CatalogSearchIndex(catalog.copy(medications = catalog.medications.reversed())).browse(section, query, HomeFilters(statuses, categories), sort))
-        val projected = index.project(section, query, HomeFilters(statuses, categories), HomePreferences(sort = sort), setOf(a.id))
+        val projected = index.project(section, query, HomeFilters(statuses, categories), HomePreferences(sort = sort, groupingEnabled = true), setOf(a.id))
         assertEquals(visible, projected.visible); assertEquals(expected, projected.rows.keys)
         assertEquals(expected, projected.groups.flatMap { it.medications }.map { it.id }.toSet())
         projected.rows.values.forEach { assertEquals(it.medication.id == a.id, it.unpublished) }
+        val defaults = HomePreferences(sort = sort)
+        assertFalse(defaults.groupingEnabled)
+        val ungrouped = index.project(section, query, HomeFilters(statuses, categories), defaults, setOf(a.id))
+        assertTrue(ungrouped.groups.isEmpty())
+        assertEquals(projected.visible, ungrouped.visible)
+        assertEquals(projected.rows, ungrouped.rows)
         assertEquals(3, catalog.medications.size)
     }
 }

@@ -20,8 +20,17 @@ class RefreshUiTest {
         var state by mutableStateOf(AppUiState(refresh=RefreshUiState(error="تعذر الاتصال؛ احتُفظ بالبيانات")))
         var calls=0
         compose.setContent { AqaqeerTheme(ThemeChoice.SYSTEM) {
-            HomeScreen(CatalogState.Ready(F.catalog(),false),state,F.time,{}, {}, {}, {}, {}, {}, {},
-                refresh={ calls++; state=state.copy(refresh=RefreshUiState(busy=true)) }, projection=homeProjection(F.catalog(), state))
+            HomeScreen(CatalogState.Ready(F.catalog(),false), state, F.time,
+                projection=homeProjection(F.catalog(), state),
+                actions = rememberHomeActions(HomeCallbacks(
+                    selectSection = {},
+                    setQuery = {},
+                    toggleStatus = {},
+                    toggleCategory = {},
+                    clearFilters = {},
+                    openMedication = {},
+                    openSettings = {},
+                    refresh = { calls++; state=state.copy(refresh=RefreshUiState(busy=true)) })))
         } }
         awaitHome()
         compose.onNodeWithTag("refresh_error").performScrollTo()
@@ -37,7 +46,17 @@ class RefreshUiTest {
     @Test fun pullingTheCachedListRequestsRefresh() {
         var calls=0
         compose.setContent { AqaqeerTheme(ThemeChoice.SYSTEM) {
-            HomeScreen(CatalogState.Ready(F.catalog(),false),AppUiState(),F.time,{}, {}, {}, {}, {}, {}, {},refresh={ calls++ }, projection=homeProjection(F.catalog()))
+            HomeScreen(CatalogState.Ready(F.catalog(),false), AppUiState(), F.time,
+                projection=homeProjection(F.catalog()),
+                actions = rememberHomeActions(HomeCallbacks(
+                    selectSection = {},
+                    setQuery = {},
+                    toggleStatus = {},
+                    toggleCategory = {},
+                    clearFilters = {},
+                    openMedication = {},
+                    openSettings = {},
+                    refresh = { calls++ })))
         } }
         awaitHome()
         compose.onNodeWithTag("home").performTouchInput { swipeDown(startY=10f,endY=height.toFloat()-10f,durationMillis=500) }
