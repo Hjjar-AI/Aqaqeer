@@ -153,7 +153,10 @@ class SnapshotRefreshRepository @Inject constructor(private val factory: Databas
                 }.map { it.id }.toSet() +
                     (oldPairs.keys + newPairs.keys).filter { oldPairs[it]?.status != newPairs[it]?.status }.map { it.first }
                 kotlinx.coroutines.withContext(kotlinx.coroutines.NonCancellable) {
-                    FetchedChanges.record(context, requireNotNull(incoming.catalog.pharmacy).pharmacyId, changed.intersect(incoming.catalog.medications.map { it.id }.toSet()))
+                    kotlinx.coroutines.withContext(FetchedChanges.sessionDispatcher) {
+                        FetchedChanges.record(context, requireNotNull(incoming.catalog.pharmacy).pharmacyId,
+                            changed.intersect(incoming.catalog.medications.map { it.id }.toSet()))
+                    }
                 }
             }
             return outcome

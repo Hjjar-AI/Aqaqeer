@@ -1,6 +1,0 @@
-<!-- The inset scales the transparent logo for the native splash icon mask. -->
-<inset xmlns:android="http://schemas.android.com/apk/res/android"
-    android:insetLeft="17%" android:insetTop="17%"
-    android:insetRight="17%" android:insetBottom="17%">
-    <bitmap android:src="@drawable/aqaqeer_launcher" android:gravity="fill" />
-</inset>

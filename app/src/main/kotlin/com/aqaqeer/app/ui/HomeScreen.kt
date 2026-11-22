@@ -123,7 +123,8 @@ internal enum class HomeLeadingItem { BULK_HELP, OPERATION, NO_SECTION, SEARCH_S
     val otherSectionResults = if (!bulkMode) displayed?.otherSectionResults.orEmpty() else emptyList()
     val otherSectionPreferences = remember(state.homePreferences) { state.homePreferences.copy(groupingEnabled = false) }
     val displayQuery = displayed?.query.orEmpty()
-    val searching = MedicationPresentation.normalizedSearch(displayQuery).isNotEmpty()
+    val normalizedDisplayQuery = remember(displayQuery) { MedicationPresentation.normalizedSearch(displayQuery) }
+    val searching = normalizedDisplayQuery.isNotEmpty()
     val editorSelectionValid = editor?.let { captured -> captured.expected.all { (id, before) ->
         id in medicationIds && catalog.status(id, captured.section.id) == before
     } } == true
@@ -162,6 +163,14 @@ internal enum class HomeLeadingItem { BULK_HELP, OPERATION, NO_SECTION, SEARCH_S
         SideEffect { if (!showBottomBars) reportBottomHeight(0) }
         DisposableEffect(Unit) { onDispose { reportBottomHeight(0) } }
         val gridState = rememberLazyGridState()
+        var lastGridQuery by rememberSaveable(catalog.pharmacy.pharmacyId) { mutableStateOf<String?>(null) }
+        SideEffect {
+            if (projectionReady && normalizedDisplayQuery != lastGridQuery) {
+                // Override the grid's keyed scroll anchor as the replacement results are measured.
+                if (lastGridQuery != null) gridState.requestScrollToItem(0)
+                lastGridQuery = normalizedDisplayQuery
+            }
+        }
         var collapsedGroups by rememberSaveable(catalog.pharmacy.pharmacyId, selected?.id, state.homePreferences.grouping) { mutableStateOf(emptyList<String>()) }
         val leadingItems = buildList {
             if (canEdit && selected != null && bulkMode && contextValid) add(HomeLeadingItem.BULK_HELP)
@@ -170,8 +179,9 @@ internal enum class HomeLeadingItem { BULK_HELP, OPERATION, NO_SECTION, SEARCH_S
             if (displayed != null && searching && selected != null) add(HomeLeadingItem.SEARCH_SECTION)
             if (displayed != null && visible.isEmpty() && otherSectionResults.isEmpty()) add(HomeLeadingItem.EMPTY)
         }
+        var didScrollToHighlight by remember(catalog.pharmacy.pharmacyId, highlightedMedication) { mutableStateOf(false) }
         LaunchedEffect(highlightedMedication, projectionReady) {
-            if (highlightedMedication != null && projectionReady) {
+            if (highlightedMedication != null && projectionReady && !didScrollToHighlight) {
                 val medicationIndex = visible.indexOfFirst { it.id == highlightedMedication }
                 if (medicationIndex >= 0) {
                     val containing = groups.firstOrNull { group -> group.medications.any { it.id == highlightedMedication } }?.key
@@ -185,6 +195,7 @@ internal enum class HomeLeadingItem { BULK_HELP, OPERATION, NO_SECTION, SEARCH_S
                         }
                         offset
                     }
+                    didScrollToHighlight = true
                     gridState.animateScrollToItem(leadingItems.size + groupedIndex)
                 }
             }

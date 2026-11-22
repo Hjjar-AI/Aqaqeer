@@ -1,17 +1,35 @@
 package com.aqaqeer.app.data
 
 import android.content.Context
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
+import java.util.concurrent.Executors
 
 /** Installation-local presentation state, excluded from explicit catalog backups and shared files. */
 internal object FetchedChanges {
+    // Order launch/finish events and post-refresh commits without blocking activity creation.
+    val sessionDispatcher: CoroutineDispatcher = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
+    private val sessionScope = CoroutineScope(SupervisorJob() + sessionDispatcher)
     private val mutable = MutableStateFlow<Map<String, Set<String>>>(emptyMap())
     val ids = mutable.asStateFlow()
     private var active = false
     private var session = 0L
     private var preferences: android.content.SharedPreferences? = null
     private val retained = mutableMapOf<Pair<String, String>, Long>()
+
+    fun scheduleSessionStart(context: Context) {
+        val application = context.applicationContext
+        sessionScope.launch { beginSession(application) }
+    }
+
+    fun scheduleTaskFinish() {
+        sessionScope.launch { finishTask() }
+    }
 
     @Synchronized fun beginSession(context: Context) {
         if (active) return

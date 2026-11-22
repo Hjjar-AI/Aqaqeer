@@ -203,6 +203,8 @@ Search: 250 ms debounce, match AR/EN names, generics, brand and strength, with W
 
 Search-only expansion must not broaden taxonomy uniqueness or duplicate detection. Queries reduced to empty text restore ordinary browsing immediately and produce no highlights. Preserve stored spelling.
 
+When a different normalized query takes effect, show the start of the updated results. Keeping the same query preserves the scroll position during ordinary result refreshes.
+
 Split query into tokens; all tokens must match searchable fields. Rank by best matching field scientific name (both languages share priority), commercial AR name, commercial EN name, then brand/strength; within field exact before prefix before substring. Stable ties use scientific-name ordering below.
 
 Highlight scientific-name matches by mapping normalized offsets back to the original text, preserving diacritics and bidi runs. Missing optional names do not match search tokens. Matching examples: مسؤول/مسول, رئيس/رييس, دواء/دوا, أَسْبِرِين/اسبرين, دوـاء/دوا, على/علي and حبة/حبه; different base letters such as باراسيتامول/باراسيتامون remain distinct.
@@ -373,9 +375,9 @@ Use the selected Electric Violet and Vivid Emerald Green logo on the launcher, s
 
 The first ring in Arabic reading order (right) uses the alternate three internal-bond sides to the left ring; this orientation is fixed artwork, not rotation animation. Home shows the pharmacy name with a small original emblem; onboarding includes the original emblem and prioritizes joining over creating. Medication-detail titles use the scientific name. See [branding](branding.md).
 
-V1 explicitly includes a launch splash screen and an About screen. Use a simple branded splash using the logo, whose lettering includes عقاقير, with a background and system-bar icon contrast matching the saved local theme/accent (pure black in AMOLED), preserving the selected artwork. The platform starting frame may precede local-preference availability; use system-mode resource fallbacks without blocking startup to read DataStore.
+V1 includes a branded launch animation and an About screen. Use the selected عقاقير logo for the in-app launch animation. The Android starting window uses a solid theme background with a transparent icon. The app matches the saved local theme and system-bar contrast (pure black in AMOLED); Android can draw the preceding window using system-mode fallbacks before local preferences are available.
 
-Continue into the existing Home/onboarding/recovery routing as soon as essential local startup is ready. Do not add a forced minimum display duration or wait for Telegram refresh. During the 150 ms exit, the complete logo grows from its native splash size to 2.4× while the splash layer fades, giving the impression of moving toward the viewer. Scale the logo as one piece around a fixed center. Keep the animation within launch routing and respect disabled system animations.
+Draw the app while local data opens and keep the existing loading state until the Home, onboarding or recovery route is ready. On launch, the logo pulses once over the first app screen, growing from 1× to 1.55× and returning to 1× with a fade over 260 ms. The animation is decorative, respects disabled system animations, and imposes no wait on content or Telegram refresh.
 
 Required startup failures lead to their recovery screen. About uses the existing Arabic interface and the app-information/developer-credit/contact requirements in section 10.
 

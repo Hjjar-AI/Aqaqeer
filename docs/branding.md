@@ -4,11 +4,9 @@ The [Aqaqeer logo](../assets/branding/aqaqeer-icon-violet-emerald.png) uses Elec
 
 ## Splash artwork and motion
 
-The splash uses the violet and emerald logo with 17% transparent insets, about a 190 dp bitmap edge. App-controlled startup and exit backgrounds follow the saved local theme/accent palette, including pure black for AMOLED. DisplayPreferences mirrors only theme/accent launch hints into private SharedPreferences; DataStore stays authoritative, refreshes those hints off-main and supplies the actual palette at exit. With no hint, follow system mode and use Violet. Android can show a system-themed starting frame before activity code runs, especially on Android 12+; exact OEM behavior is not verified. Light/dark resource fallbacks and matching system-bar icons replace the fixed ink presentation.
+Android’s starting window uses a solid background and transparent icon. With no saved launch hint available, the starting window follows system mode and uses Violet in light mode. The app applies the saved theme and system-bar contrast, including pure black in AMOLED.
 
-The 150 ms exit starts at the native inset bitmap’s size and center. The complete logo accelerates from 1× to 2.4× around that center as the splash layer fades to reveal the ready app. SplashArtwork decodes the same packaged PNG as the launcher on IO, and a standard ImageView renders the intact bitmap.
-
-The exit waits for valid decor dimensions instead of abandoning animation on a zero-size callback. Its decorative layer is an ordinary attached view with standard invalidation; it consumes no input and is removed on completion/cancellation. Disabled system animations skip it; activity destruction cancels the exit. Essential local database readiness still gates native dismissal, without a timer or network wait. Android rendering of this revision and the cause of the user’s previously missing animation remain unverified.
+The violet and emerald logo pulses once over the first app screen. It grows from 1× to 1.55× around the center, then returns to 1× and fades over a total of 260 ms. A sampled decode of the packaged launcher PNG supplies the artwork. The overlay is decorative and leaves the underlying app visible, including the loading indicator if the catalog is still opening. It is skipped if system animations are disabled, the activity is recreated, or the bitmap exceeds the 120 ms preparation budget.
 
 ## In-app placement
 
