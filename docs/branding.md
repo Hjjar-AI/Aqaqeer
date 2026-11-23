@@ -1,6 +1,6 @@
 # Branding
 
-The [launcher and splash artwork](../assets/branding/aqaqeer-launcher-calm-emerald.png) keeps the electric violet Arabic wordmark and navy outlines. Its calmer emerald targets #20BA82 on the tablet dots, ring bonds and green half of the capsule. Wider ring bonds and tablet score lines help those details read at small sizes. The two rings retain their complementary bond orientations. The normal and round launcher icons and both splash stages use the same [transparent, non-adaptive bitmap](../app/src/main/res/drawable-nodpi/aqaqeer_launcher.png). The [in-app and PDF emblem](../app/src/main/res/drawable-nodpi/aqaqeer_logo.png) uses the original artwork. [Generation provenance and prompt](../assets/branding/launcher-revision.md).
+The [launcher and splash artwork](../assets/branding/aqaqeer-launcher-calm-emerald.png) uses a matte violet fill targeting #8054DA for the Arabic wordmark and keeps the navy outlines. Its calmer emerald targets #20BA82 on the tablet dots, ring bonds and green half of the capsule. Wider ring bonds and tablet score lines help those details read at small sizes. The two rings retain their complementary bond orientations. The normal and round launcher icons and both splash stages use the same [transparent, non-adaptive bitmap](../app/src/main/res/drawable-nodpi/aqaqeer_launcher.png). The [in-app and PDF emblem](../app/src/main/res/drawable-nodpi/aqaqeer_logo.png) uses the original artwork. [Generation provenance and prompt](../assets/branding/launcher-revision.md).
 
 ## Splash artwork and motion
 

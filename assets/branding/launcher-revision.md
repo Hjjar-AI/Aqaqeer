@@ -4,9 +4,11 @@ The selected masters and prompts are retained here. [Branding](../../docs/brandi
 
 ## Current launcher and splash — 2026-11-23
 
-Built-in imagegen edited the previous [violet and emerald master](aqaqeer-icon-violet-emerald.png) using the [exact selected edit prompt](launcher-calm-emerald-prompt.txt). The [selected result](aqaqeer-launcher-calm-emerald.png) targets #20BA82 with tonal variation and widens the tablet score lines and ring bonds. It retains the visible Arabic wordmark, the complementary bond orientations and the closed capsule. The generated edit retains the framing approximately.
+Built-in imagegen softened the violet fill in the previous launcher artwork using the [exact matte edit prompt](launcher-matte-violet-prompt.txt). The [selected result](aqaqeer-launcher-calm-emerald.png) targets #8054DA. It retains the visible Arabic wordmark, wider tablet scores and ring bonds, complementary bond orientations and closed capsule. The generated edit has slight variations in emerald and framing.
 
-The **1254 × 1254 RGBA PNG** with transparent corners and ring openings is copied byte-for-byte to the [launcher and splash resource](../../app/src/main/res/drawable-nodpi/aqaqeer_launcher.png). Master and packaged PNG SHA-256: `32b8e126df7ab3335b785442aeebbf14f36bff7b348a9ca1364efb4fab24761a`.
+The **1254 × 1254 RGBA PNG** with transparent corners and ring openings is copied byte-for-byte to the [launcher and splash resource](../../app/src/main/res/drawable-nodpi/aqaqeer_launcher.png). Master and packaged PNG SHA-256: `2db1c754eb9aab760b2a70039f827a66494ee67203a22705e8698c32a01e59aa`.
+
+The preceding calmer emerald master at `c89025f` used the [emerald and wider score edit prompt](launcher-calm-emerald-prompt.txt) and had SHA-256 `32b8e126df7ab3335b785442aeebbf14f36bff7b348a9ca1364efb4fab24761a`.
 
 ## Current in-app and PDF emblem — 2026-11-23
 
