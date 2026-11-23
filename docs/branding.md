@@ -1,6 +1,6 @@
 # Branding
 
-The [Aqaqeer logo](../assets/branding/aqaqeer-icon-violet-emerald.png) uses Electric Violet for the Arabic wordmark and Vivid Emerald Green for the tablet dots, ring bonds and half of the capsule. The dark navy contours and score lines are embedded in the transparent PNG. The two rings keep their complementary bond orientations. The normal and round launcher icons reference the same [non-adaptive bitmap](../app/src/main/res/drawable-nodpi/aqaqeer_launcher.png). The [in-app and PDF resource](../app/src/main/res/drawable-nodpi/aqaqeer_logo.png) carries identical artwork. [Generation provenance and prompt](../assets/branding/launcher-revision.md).
+The [launcher and splash artwork](../assets/branding/aqaqeer-launcher-calm-emerald.png) keeps the electric violet Arabic wordmark and navy outlines. Its calmer emerald targets #20BA82 on the tablet dots, ring bonds and green half of the capsule. Wider ring bonds and tablet score lines help those details read at small sizes. The two rings retain their complementary bond orientations. The normal and round launcher icons and both splash stages use the same [transparent, non-adaptive bitmap](../app/src/main/res/drawable-nodpi/aqaqeer_launcher.png). The [in-app and PDF emblem](../app/src/main/res/drawable-nodpi/aqaqeer_logo.png) uses the original artwork. [Generation provenance and prompt](../assets/branding/launcher-revision.md).
 
 ## Splash artwork and motion
 

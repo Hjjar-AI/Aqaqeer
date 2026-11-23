@@ -1,12 +1,18 @@
 # Selected artwork provenance
 
-The selected master and prompts are retained here. [Branding](../../docs/branding.md) owns placement and identifies the resources currently used by the app.
+The selected masters and prompts are retained here. [Branding](../../docs/branding.md) owns placement and identifies the resources currently used by the app.
 
-## Current artwork — 2026-11-23
+## Current launcher and splash — 2026-11-23
+
+Built-in imagegen edited the previous [violet and emerald master](aqaqeer-icon-violet-emerald.png) using the [exact selected edit prompt](launcher-calm-emerald-prompt.txt). The [selected result](aqaqeer-launcher-calm-emerald.png) targets #20BA82 with tonal variation and widens the tablet score lines and ring bonds. It retains the visible Arabic wordmark, the complementary bond orientations and the closed capsule. The generated edit retains the framing approximately.
+
+The **1254 × 1254 RGBA PNG** with transparent corners and ring openings is copied byte-for-byte to the [launcher and splash resource](../../app/src/main/res/drawable-nodpi/aqaqeer_launcher.png). Master and packaged PNG SHA-256: `32b8e126df7ab3335b785442aeebbf14f36bff7b348a9ca1364efb4fab24761a`.
+
+## Current in-app and PDF emblem — 2026-11-23
 
 The [violet and emerald master](aqaqeer-icon-violet-emerald.png) was produced with built-in imagegen using the previous launcher bitmap as input and the user's light/dark preview as the palette reference. The [exact edit prompt](launcher-violet-emerald-prompt.txt) targets #8048F2 and #10CC80. The generated artwork has tonal variation and preserves the visible wordmark, bond orientations, tablet score lines and outline.
 
-The master is a **1254 × 1254 RGBA PNG** with transparent corners and ring openings. The [launcher and splash resource](../../app/src/main/res/drawable-nodpi/aqaqeer_launcher.png) and [in-app and PDF resource](../../app/src/main/res/drawable-nodpi/aqaqeer_logo.png) are byte-identical copies.
+The master is a **1254 × 1254 RGBA PNG** with transparent corners and ring openings. The [in-app and PDF resource](../../app/src/main/res/drawable-nodpi/aqaqeer_logo.png) is a byte-identical copy. The launcher and splash also used this master before the calmer emerald revision.
 
 Master and packaged PNG SHA-256: `97e2288a582311d8f1df926b81b2e9a0a3ff5b9d6edfcc402af6e51649547577`.
 

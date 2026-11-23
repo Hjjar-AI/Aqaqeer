@@ -170,6 +170,8 @@ Evidence applies to the recorded source revision and environment. A later source
 
 At base `a0dbc94`, static palette checks confirmed greater Violet–Blue hue separation in light and dark mode and higher Rose saturation. Checked text and selection pairs for the two revised accents measured at least 5.92:1. Android rendering remains unverified.
 
+At base `db1ec06`, the revised launcher/splash PNG was reviewed at 190 px on light, dark and AMOLED backgrounds and at 32 and 48 px including a colored wallpaper sample. Source checks covered artwork transparency, master/package equality, the shared launcher and splash references, and the retained in-app and PDF asset. Android rendering and launch continuity remain unverified. [Artwork provenance](../assets/branding/launcher-revision.md).
+
 Remaining scope and activity stops are in [plan](plan.md); [verification scope](test-coverage.md) separates source selections, automated results and human acceptance. Historical receipts and original failures are preserved below.
 
 <a id="initial-attribution-free-baseline--2026-11-16"></a>

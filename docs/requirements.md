@@ -371,7 +371,7 @@ Use the existing vector capsule in the empty wide-screen detail pane, preserving
 
 ### Branding and startup
 
-Use the selected Electric Violet and Vivid Emerald Green logo on the launcher, splash, in-app branding and PDF headers. Retain the Arabic wordmark, complementary ring bonds, emerald tablet dots with dark score lines, and the outlined capsule. The launcher uses the transparent RGBA bitmap without a backing shape or monochrome or adaptive layers.
+Use the same electric violet artwork for the launcher and splash, with a calmer emerald target of #20BA82 and thicker tablet score lines and ring bonds. Retain the Arabic wordmark, complementary bond orientations and outlined capsule. The launcher remains a transparent RGBA bitmap without a backing shape or monochrome or adaptive layers. In-app branding and PDF headers use the original violet and emerald emblem.
 
 The first ring in Arabic reading order (right) uses the alternate three internal-bond sides to the left ring; this orientation is fixed artwork, not rotation animation. Home shows the pharmacy name with a small original emblem; onboarding includes the original emblem and prioritizes joining over creating. Medication-detail titles use the scientific name. See [branding](branding.md).
 
