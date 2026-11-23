@@ -17,6 +17,7 @@ import androidx.compose.ui.platform.LocalDensity
 import com.aqaqeer.app.R
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import java.lang.ref.WeakReference
 
 /** The original artwork stays intact. Bounded sampled decodes are shared by the in-app emblems. */
 internal object BrandAssets {
@@ -25,6 +26,18 @@ internal object BrandAssets {
         requireNotNull(BitmapFactory.decodeResource(resources, R.drawable.aqaqeer_logo,
             BitmapFactory.Options().apply { inSampleSize = sample; inScaled = false }))
             .also { samples.put(sample, it) }
+}
+
+/** Reuse unchanged launcher pixels without retaining a full-size bitmap under memory pressure. */
+internal object LauncherArtwork {
+    @Volatile private var decoded = WeakReference<ImageBitmap>(null)
+    fun cached(): ImageBitmap? = decoded.get()
+    suspend fun load(resources: Resources): ImageBitmap = withContext(Dispatchers.IO) {
+        synchronized(this@LauncherArtwork) {
+            decoded.get() ?: requireNotNull(BitmapFactory.decodeResource(resources, R.drawable.aqaqeer_launcher,
+                BitmapFactory.Options().apply { inScaled = false })).asImageBitmap().also { decoded = WeakReference(it) }
+        }
+    }
 }
 
 @Composable internal fun BrandEmblem(modifier: Modifier, description: String? = uiText(R.string.navigation_brand_logo_description)) {

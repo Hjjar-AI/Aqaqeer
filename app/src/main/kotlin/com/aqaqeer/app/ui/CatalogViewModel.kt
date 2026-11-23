@@ -73,7 +73,6 @@ class CatalogViewModel @Inject constructor(
     @ApplicationContext context: Context,
 
 ) : ViewModel() {
-    init { viewModelScope.launch { runCatching { backups.cleanupAbandoned() } } }
     internal val demoFiles = com.aqaqeer.app.admin.DemoFiles(context)
     internal val feedback = MutableStateFlow<UiFeedback?>(null)
     internal var newMedicationName: String = ""
@@ -292,6 +291,7 @@ class CatalogViewModel @Inject constructor(
     }
     internal val shellState = state.map { it.copy(query = "", appliedQuery = "", filters = HomeFilters(), refresh = RefreshUiState()) }.distinctUntilChanged()
         .stateIn(viewModelScope, SharingStarted.Eagerly, state.value)
+    internal val refreshUiState = refreshState.asStateFlow()
     internal val drawerFilters = state.map { it.filters }.distinctUntilChanged()
         .stateIn(viewModelScope, SharingStarted.Eagerly, HomeFilters())
     private val searchIndex = state.map { (it.catalog as? CatalogState.Ready)?.catalog }.distinctUntilChanged()
@@ -421,7 +421,20 @@ class CatalogViewModel @Inject constructor(
     }
     fun back() = navigation.back()
 
-    init { reloadConnectionImport(); connectivity.registerDefaultNetworkCallback(networkObserver) }
+    init {
+        connectivity.registerDefaultNetworkCallback(networkObserver)
+        viewModelScope.launch {
+            // Required catalog recovery owns first storage access. Housekeeping and pending
+            // connection discovery can start after it resolves, independently of each other.
+            state.first { it.catalog != CatalogState.Loading }
+            launch {
+                try { backups.cleanupAbandoned() }
+                catch (error: CancellationException) { throw error }
+                catch (_: Exception) { /* Owned staging is checked again by the next backup operation. */ }
+            }
+            reloadConnectionImport()
+        }
+    }
 
     fun openConnectionImport(uri: Uri? = null) = connectionController.openConnectionImport(uri)
     fun reloadConnectionImport() = connectionController.reloadConnectionImport()

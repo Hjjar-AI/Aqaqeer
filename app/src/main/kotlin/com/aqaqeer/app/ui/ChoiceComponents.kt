@@ -94,7 +94,8 @@ import androidx.compose.ui.unit.LayoutDirection
 }
 
 @Composable internal fun <T> ChoicePicker(label: String, values: List<T>, selected: T?, name: (T) -> String,
-    enabled: Boolean = true, itemKey: (T) -> String = { it.toString() }, choose: (T) -> Unit) {
+    enabled: Boolean = true, itemKey: (T) -> String = { it.toString() },
+    choiceEnabled: (T) -> Boolean = { true }, choose: (T) -> Unit) {
     val uiText = rememberUiText()
     var expanded by remember { mutableStateOf(false) }
     Box(Modifier.fillMaxWidth()) {
@@ -122,7 +123,8 @@ import androidx.compose.ui.unit.LayoutDirection
                 showSearch = values.size > 8, empty = visible.isEmpty(), emptyMessage = uiText(R.string.shared_no_matches_message),
                 dismiss = { expanded = false }) {
                 items(visible, key = { itemKey(it.first) }) { (value, text, _) ->
-                    AppButton(variant = AppButtonVariant.QUIET, onClick = { choose(value); expanded = false }, modifier = Modifier.fillMaxWidth()) {
+                    AppButton(variant = AppButtonVariant.QUIET, enabled = choiceEnabled(value),
+                        onClick = { choose(value); expanded = false }, modifier = Modifier.fillMaxWidth()) {
                         Text(text, modifier = Modifier.weight(1f))
                         if (value == selected) AppIcon(UiIcon.CHECK)
                     }

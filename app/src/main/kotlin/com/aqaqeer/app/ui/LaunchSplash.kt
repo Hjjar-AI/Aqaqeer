@@ -22,13 +22,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.unit.dp
-import com.aqaqeer.app.R
 import kotlinx.coroutines.isActive
 
 @Composable
-internal fun LaunchSplash(waitingForStartup: Boolean, onDismiss: () -> Unit) {
+internal fun LaunchSplash(waitingForStartup: Boolean, artwork: ImageBitmap, onDismiss: () -> Unit) {
     val animate = ValueAnimator.areAnimatorsEnabled()
     val scale = remember { Animatable(1f) }
     val opacity = remember { Animatable(1f) }
@@ -62,7 +61,7 @@ internal fun LaunchSplash(waitingForStartup: Boolean, onDismiss: () -> Unit) {
             contentAlignment = Alignment.Center,
         ) {
             Image(
-                painter = painterResource(R.drawable.aqaqeer_launcher),
+                bitmap = artwork,
                 contentDescription = null,
                 modifier = Modifier.size(190.dp).graphicsLayer {
                     scaleX = if (animate) scale.value else 1f

@@ -103,7 +103,11 @@ class PharmacySharing @Inject internal constructor(private val admin: AdminRepos
         }
         mutable.value = SharingStatus(busy = true)
         try {
-            val published = if (BuildConfig.IS_DEMO) { DemoSession.publish(); true } else publishLocked(choices, recoverPin)
+            // Suspend transport calls resume their caller's dispatcher. Keep the intervening
+            // protected reads, full-catalog merge/JSON work and encryption off the UI thread too.
+            val published = withContext(Dispatchers.IO) {
+                if (BuildConfig.IS_DEMO) { DemoSession.publish(); true } else publishLocked(choices, recoverPin)
+            }
             mutable.value = if (published) SharingStatus(message = "تم التحقق من النشر", verified = true)
                 else SharingStatus(message = "لا توجد تعديلات للنشر")
         } catch (e: CancellationException) { throw e }
@@ -112,6 +116,15 @@ class PharmacySharing @Inject internal constructor(private val admin: AdminRepos
             retryAt = android.os.SystemClock.elapsedRealtime() + maxOf(2, e.retryAfter) * 1000L
             mutable.value = SharingStatus(message = "تعذر إتمام النشر؛ احتُفظ بالعمل. تحقق من الاتصال وصلاحيات البوت ثم أعد المحاولة.",
                 retryable = e.code == 0 || e.code == 429 || e.code >= 500, retryAfterSeconds = maxOf(2, e.retryAfter))
+        } catch (e: SnapshotReadException) {
+            val retryable = e.error == SnapshotReadError.NETWORK || e.error == SnapshotReadError.RATE_LIMITED
+            val seconds = if (retryable) maxOf(2, e.retryAfterSeconds) else 0
+            if (retryable) retryAt = android.os.SystemClock.elapsedRealtime() + seconds * 1000L
+            mutable.value = SharingStatus(message = if (e.error == SnapshotReadError.RATE_LIMITED)
+                uiText(R.string.connection_import_rate_limit_error) + uiText(R.string.logic_retry_after,
+                    MedicationPresentation.displayDigits(seconds.toString()))
+                else uiText(R.string.publication_resume_failed_message),
+                retryable = retryable, retryAfterSeconds = seconds)
         } catch (e: AdminProblem) {
             mutable.value = SharingStatus(message = e.reason)
         } catch (_: Exception) {

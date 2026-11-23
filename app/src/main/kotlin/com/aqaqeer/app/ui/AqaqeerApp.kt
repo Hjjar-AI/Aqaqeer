@@ -10,6 +10,7 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalDensity
@@ -25,7 +26,7 @@ import com.aqaqeer.app.data.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.collect
 
-@Composable fun AqaqeerApp(viewModel: CatalogViewModel) {
+@Composable fun AqaqeerApp(viewModel: CatalogViewModel, onFirstFrameReady: (Boolean) -> Unit = {}) {
     val state by viewModel.shellState.collectAsStateWithLifecycle()
     AqaqeerTheme(state.theme, accent = state.accent) {
         CompositionLocalProvider(LocalNoticeScope provides ((state.catalog as? CatalogState.Ready)?.catalog?.pharmacy?.pharmacyId ?: "unconfigured")) {
@@ -33,10 +34,25 @@ import kotlinx.coroutines.flow.collect
             var startupResolved by remember { mutableStateOf(!catalogLoading) }
             var showSplash by remember { mutableStateOf(catalogLoading) }
             val waitingForStartup = !startupResolved && catalogLoading
-            SideEffect { if (!catalogLoading) startupResolved = true }
+            val resources = LocalContext.current.resources
+            val artwork by produceState<ImageBitmap?>(LauncherArtwork.cached(), showSplash, resources) {
+                if (!showSplash) value = null
+                else if (value == null) {
+                    try { value = LauncherArtwork.load(resources) }
+                    catch (error: kotlinx.coroutines.CancellationException) { throw error }
+                    catch (_: Exception) { /* The native logo remains until the destination is ready. */ }
+                }
+            }
+            SideEffect {
+                if (!catalogLoading) startupResolved = true
+                // Never hold a ready destination for artwork. While loading, the native
+                // branded window covers asynchronous decoding without an empty app frame.
+                onFirstFrameReady(!waitingForStartup || artwork != null)
+                if (!waitingForStartup && artwork == null) showSplash = false
+            }
             Box(Modifier.fillMaxSize()) {
                 if (!waitingForStartup) AppShell(state, viewModel)
-                if (showSplash) LaunchSplash(waitingForStartup) { showSplash = false }
+                if (showSplash) artwork?.let { LaunchSplash(waitingForStartup, it) { showSplash = false } }
             }
         }
     }
@@ -157,8 +173,10 @@ import kotlinx.coroutines.flow.collect
         } finally { backProgress = 0f }
     }
     BackHandler(drawerState.isOpen) { scope.launch { drawerState.close() } }
-    if (dataTimesOpen && drawerEligible && !homeModalOpen)
-        DataTimesDialog(readyForTitle, now, refresh = if (readyForTitle.canRefreshCatalog) ({ viewModel.refreshCatalog() }) else null, busy = state.refresh.busy) { dataTimesOpen = false }
+    if (dataTimesOpen && drawerEligible && !homeModalOpen) {
+        val refresh by viewModel.refreshUiState.collectAsStateWithLifecycle()
+        DataTimesDialog(readyForTitle, now, refresh = if (readyForTitle.canRefreshCatalog) ({ viewModel.refreshCatalog() }) else null, busy = refresh.busy) { dataTimesOpen = false }
+    }
     ModalNavigationDrawer(drawerState = drawerState,
         gesturesEnabled = drawerEligible && !homeModalOpen && !dataTimesOpen,
         drawerContent = {

@@ -100,7 +100,7 @@ import kotlinx.coroutines.launch
             }
         }
         val displayedDestination = appDestinationKey(displayed.destination, dualPane)
-        if (displayedDestination == Route.Home || displayed.destination is Route.EditMedication)
+        if (displayedDestination == Route.Home || displayedDestination == Route.Taxonomy || displayed.destination is Route.EditMedication)
             destinationStates.SaveableStateProvider(viewModel.destinationStateKey(displayedDestination), destinationContent)
         else destinationContent()
     }

@@ -26,6 +26,7 @@ import dagger.hilt.android.AndroidEntryPoint
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     private val viewModel: CatalogViewModel by viewModels()
+    private var appFrameReady = false
     override fun attachBaseContext(newBase: Context) {
         val configuration = Configuration(newBase.resources.configuration).apply {
             setLocales(LocaleList.forLanguageTags("ar"))
@@ -47,8 +48,10 @@ class MainActivity : ComponentActivity() {
             dark -> R.style.Theme_Aqaqeer_Starting_Dark
             else -> R.style.Theme_Aqaqeer_Starting_Light
         })
-        installSplashScreen()
+        val splash = installSplashScreen()
         super.onCreate(savedInstanceState)
+        splash.setKeepOnScreenCondition { !appFrameReady }
+        splash.setOnExitAnimationListener { it.remove() }
         enableEdgeToEdge()
         val launchBackground = appColorScheme(launchTheme, launchAccent, systemDark, resources).background.toArgb()
         window.setBackgroundDrawable(ColorDrawable(launchBackground))
@@ -56,11 +59,12 @@ class MainActivity : ComponentActivity() {
             isAppearanceLightStatusBars = !dark
             isAppearanceLightNavigationBars = !dark
         }
-        setContent { AqaqeerApp(viewModel) }
+        setContent { AqaqeerApp(viewModel) { appFrameReady = it } }
         if (savedInstanceState == null) receiveConnectionIntent(intent)
     }
 
     override fun onDestroy() {
+        appFrameReady = true
         if (isFinishing) {
             FetchedChanges.scheduleTaskFinish()
             com.aqaqeer.app.ui.UiSession.finish()

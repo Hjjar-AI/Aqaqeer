@@ -43,6 +43,8 @@ interface CatalogDao {
     @Query("SELECT * FROM local_control WHERE slot = 1") suspend fun control(): LocalControl?
     @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun control(value: LocalControl)
     @Query("SELECT * FROM pending_operations ORDER BY rowid") suspend fun pending(): List<PendingOperation>
+    @Query("SELECT DISTINCT targetId FROM pending_operations WHERE entityType IN ('medication', 'availability')")
+    suspend fun unpublishedMedicationTargets(): List<String>
     @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun putPending(value: List<PendingOperation>)
     @Query("DELETE FROM pending_operations WHERE id IN (:ids)") suspend fun deletePendingBatch(ids: List<String>)
     @Transaction suspend fun deletePending(ids: List<String>) {

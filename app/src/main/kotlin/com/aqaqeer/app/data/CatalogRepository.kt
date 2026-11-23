@@ -130,9 +130,14 @@ class CatalogRepository @Inject constructor(private val factory: DatabaseFactory
             if (error is kotlinx.coroutines.CancellationException) throw error
             maintenanceRecovery = true; null
         }
-        val initialControl = requireNotNull(dao.control())
-        if (dao.deviceIdentity()?.adminMode == true && initialControl.firstAdminAt == null)
-            dao.control(initialControl.copy(firstAdminAt = System.currentTimeMillis()))
+        // Recovery above may replace control/identity. Reuse only their post-recovery values
+        // inside this transaction, never cached values from before activation/leave.
+        var control = dao.control() ?: throw StorageRecoveryRequired()
+        val authorized = dao.deviceIdentity()?.adminMode == true
+        if (authorized && control.firstAdminAt == null) {
+            control = control.copy(firstAdminAt = System.currentTimeMillis())
+            dao.control(control)
+        }
         val snapshot = if (cache.cachedCatalog == null || activating || changed.any { it in contentTables }) {
             CatalogSnapshot(dao.pharmacy(), dao.categories(), dao.forms(),
                 dao.sections(), dao.medications(), dao.availability(), dao.tombstones()).also {
@@ -144,18 +149,21 @@ class CatalogRepository @Inject constructor(private val factory: DatabaseFactory
         // Never substitute a medication update time or the local launch time.
         val state = dao.snapshotMetadata()
         val pharmacy = snapshot.pharmacy
-        val control = dao.control() ?: throw StorageRecoveryRequired()
         val lifecycle = control.lifecycle
         check(lifecycle in setOf("UNCONFIGURED", "LOCAL_DRAFT", "SHARED"))
         check((pharmacy == null) == (lifecycle == "UNCONFIGURED"))
+        val activeConnection = if (pharmacy != null && lifecycle == "SHARED" &&
+            (!BuildConfig.IS_DEMO || control.restorePaused)) active.info() else null
+        val setupConnection = if (pharmacy != null && lifecycle != "SHARED")
+            PendingConnectionStore(secureStore, "setup-connection").info() else null
         val known = if (!BuildConfig.IS_DEMO && pharmacy != null && lifecycle == "SHARED") {
-            val connection = active.info() ?: throw StorageRecoveryRequired()
+            val connection = activeConnection ?: throw StorageRecoveryRequired()
             if (connection.pharmacyId != pharmacy.pharmacyId) throw StorageRecoveryRequired()
             requirements.read(pharmacy.pharmacyId) ?: throw StorageRecoveryRequired()
         } else pharmacy?.let { requirements.read(it.pharmacyId) }
         val publishedAt = state?.publishedAt?.let(Instant::parse)
-        val authorized = dao.deviceIdentity()?.adminMode == true
-        val visible = if (!authorized && !control.restorePaused && dao.pendingCount() > 0 && state?.publishId != null) {
+        val pendingCount = dao.pendingCount()
+        val visible = if (!authorized && !control.restorePaused && pendingCount > 0 && state?.publishId != null) {
             val key = state.publishId to state.publishedAt
             if (cache.confirmedKey != key || cache.confirmedCatalog == null || activating) {
                 cache.confirmedCatalog = Json.decodeFromString<SnapshotWire>(requireNotNull(dao.snapshotState()?.confirmedPayloadJson)).supported().catalog
@@ -165,17 +173,15 @@ class CatalogRepository @Inject constructor(private val factory: DatabaseFactory
         } else snapshot
         return CatalogState.Ready(visible, BuildConfig.IS_DEMO, state?.lastSuccessfulSyncAt,
             publishedAt, known?.requiresUpdate(BuildConfig.VERSION_CODE) == true, lifecycle,
-            authorized, dao.pendingCount(), dao.attemptCount() != 0, control.restorePaused, control.restoreConnectionConfirmed,
+            authorized, pendingCount, dao.attemptCount() != 0, control.restorePaused, control.restoreConnectionConfirmed,
             if (authorized) com.aqaqeer.app.backup.BackupReminder(control.firstAdminAt, control.lastBackupAt,
                 control.backupDismissedAt).nextAt() else null,
-            control.restorePaused && (if (lifecycle == "SHARED") active.info() != null
-                else PendingConnectionStore(secureStore, "setup-connection").info() != null),
+            control.restorePaused && (if (lifecycle == "SHARED") activeConnection != null else setupConnection != null),
             hasPublicationConnection = pharmacy != null && (lifecycle == "SHARED" ||
-                PendingConnectionStore(secureStore, "setup-connection").info()?.pharmacyId == pharmacy.pharmacyId),
+                setupConnection?.pharmacyId == pharmacy.pharmacyId),
             maintenancePaused = maintenance != null || maintenanceRecovery, maintenanceRecoveryRequired = maintenanceRecovery,
-            unpublishedMedicationIds = if (authorized) dao.pending().filter {
-                it.entityType in setOf("medication", "availability")
-            }.map { it.targetId.substringBefore('/') }.toSet() else emptySet(), hasBackup = control.lastBackupAt != null)
+            unpublishedMedicationIds = if (authorized) dao.unpublishedMedicationTargets()
+                .mapTo(HashSet()) { it.substringBefore('/') } else emptySet(), hasBackup = control.lastBackupAt != null)
     }
 
     /** Same initialization/recovery/integrity boundary as observation, without an invalidation flow. */
