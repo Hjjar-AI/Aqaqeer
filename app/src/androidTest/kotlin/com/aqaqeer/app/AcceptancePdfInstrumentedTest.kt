@@ -37,7 +37,7 @@ class AcceptancePdfInstrumentedTest {
                 expiryDate=today.plusDays(20))
             val duplicates = MedicationDuplicates.find(medication, MedicationDuplicates.index(profile.ready().catalog.medications)).toSet()
             profile.admin.saveMedication(medication, confirmedDuplicates = duplicates)
-            profile.admin.availability(medication.id,section.id,if(i%2==0) AvailabilityStatus.OUT else AvailabilityStatus.UNKNOWN)
+            profile.admin.availability(medication.id,section.id,if(i%2==0) AvailabilityStatus.OUT else AvailabilityStatus.LOW)
         }
         val reports=ReportRepository(profile.admin,DocumentOutput(profile.context),PdfReports(profile.context))
         val results=buildJsonArray {

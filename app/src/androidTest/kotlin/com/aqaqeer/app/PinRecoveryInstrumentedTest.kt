@@ -55,7 +55,7 @@ class PinRecoveryInstrumentedTest {
         assertTrue(publisher.status.value.verified)
         assertEquals("reviewed local edit", p.ready().catalog.medications.single().note)
         assertEquals(0, p.ready().pendingCount); assertFalse(p.ready().uncertain)
-        assertEquals(2, remote.backing.writes)
+        assertEquals(2, remote.backing.writes); assertEquals(listOf(20L), remote.unpinned)
     }
 
     @Test fun changedPinInvalidatesEarlierRecoveryConfirmationWithoutUploading(): Unit = runBlocking {
@@ -161,6 +161,77 @@ class PinRecoveryInstrumentedTest {
         assertEquals(0, remote.observations); assertEquals(1, remote.backing.uploads)
     }
 
+    @Test fun unpinFailureRetainsAttemptAndNeverPinsReplacement(): Unit = runBlocking {
+        remote.hideSnapshot = true; remote.unrelatedPin = humanPin(20); remote.rejectUnpin = true
+        val original = state(); val publisher = sharing(); publisher.publish(recoverPin = true)
+        publisher.publish(confirm(publisher), recoverPin = true)
+        assertFalse(publisher.status.value.verified); assertEquals(original, state())
+        assertEquals(humanPin(20), remote.unrelatedPin); assertTrue(remote.unpinned.isEmpty())
+        assertEquals(1, remote.backing.writes)
+        assertEquals("WRITE_STARTED", p.admin.transaction { it.attempts().single().transportPhase })
+    }
+
+    @Test fun revealingOlderPinStopsBeforeReplacementAndRetainsReviewedAttempt(): Unit = runBlocking {
+        remote.hideSnapshot = true; remote.unrelatedPin = humanPin(20)
+        remote.afterUnpin = { remote.unrelatedPin = humanPin(19) }
+        val original = state(); val publisher = sharing(); publisher.publish(recoverPin = true)
+        publisher.publish(confirm(publisher), recoverPin = true)
+        assertEquals(listOf(20L), remote.unpinned); assertEquals(humanPin(19), remote.unrelatedPin)
+        assertFalse(publisher.status.value.verified); assertEquals(original, state())
+        assertEquals(1, remote.backing.writes); assertEquals(2, remote.backing.uploads)
+        assertEquals("WRITE_STARTED", p.admin.transaction { it.attempts().single().transportPhase })
+    }
+
+    @Test fun lostUnpinResponseRequiresFreshReviewWithoutRepeatingOldUnpin(): Unit = runBlocking {
+        remote.hideSnapshot = true; remote.unrelatedPin = humanPin(20); remote.loseUnpinResponse = true
+        val publisher = sharing(); publisher.publish(recoverPin = true)
+        publisher.publish(confirm(publisher), recoverPin = true)
+        assertFalse(publisher.status.value.verified); assertNull(remote.unrelatedPin)
+        assertEquals(listOf(20L), remote.unpinned); assertEquals(1, remote.backing.writes)
+        val retry = sharing(); retry.publish(recoverPin = true)
+        val retainedChoice = confirm(retry); assertTrue(retainedChoice.isNotEmpty())
+        retry.publish(retainedChoice, recoverPin = true)
+        assertTrue(retry.status.value.conflicts.single().key.startsWith("uncertain:"))
+        retry.publish(retainedChoice + confirm(retry), recoverPin = true)
+        assertTrue(retry.status.value.verified); assertEquals(listOf(20L), remote.unpinned)
+        assertTrue(p.admin.transaction { it.attempts() }.isEmpty())
+    }
+
+    @Test fun draftSetupUnpinsOnlyReviewedMessageWithoutSavingOrPublishing(): Unit = runBlocking {
+        val draft = SuiteProfile()
+        try {
+            draft.create(); val fake = RecoveryRemote().apply { hideSnapshot = true; unrelatedPin = humanPin(30) }
+            val service = PharmacySharing(draft.admin, draft.secure, draft.requirements,
+                SnapshotReadClient(fake, EnvelopeReader(draft.root)), fake, fake, draft.context)
+            val before = draft.admin.transaction { Triple(it.catalog(), it.pending(), it.snapshotState()) }
+            val observed = service.inspectSetupGroup(M3Fixtures.token, M3Fixtures.groupId)
+            assertNull(service.clearSetupPin(M3Fixtures.token, M3Fixtures.groupId, observed).pin)
+            assertEquals(listOf(30L), fake.unpinned); assertEquals(0, fake.backing.uploads); assertEquals(0, fake.backing.writes)
+            assertEquals(before, draft.admin.transaction { Triple(it.catalog(), it.pending(), it.snapshotState()) })
+            service.saveSetup(M3Fixtures.token, M3Fixtures.groupId, fake.backing.title)
+            service.publish(); assertTrue(service.status.value.verified)
+        } finally { draft.close() }
+    }
+
+    @Test fun changedSetupPinAndBotOwnedDocumentRejectWithoutUnpinning(): Unit = runBlocking {
+        val draft = SuiteProfile()
+        try {
+            draft.create(); val fake = RecoveryRemote().apply { hideSnapshot = true; unrelatedPin = humanPin(30) }
+            val service = PharmacySharing(draft.admin, draft.secure, draft.requirements,
+                SnapshotReadClient(fake, EnvelopeReader(draft.root)), fake, fake, draft.context)
+            val observed = service.inspectSetupGroup(M3Fixtures.token, M3Fixtures.groupId)
+            fake.unrelatedPin = humanPin(31)
+            assertThrows(AdminProblem::class.java) { runBlocking { service.clearSetupPin(M3Fixtures.token, M3Fixtures.groupId, observed) } }
+            fake.unrelatedPin = buildJsonObject {
+                put("message_id", 32); put("from", buildJsonObject { put("id", 123456); put("is_bot", true) })
+                put("document", buildJsonObject { put("file_id", "damaged-bot-document") })
+            }.toString()
+            val botOwned = service.inspectSetupGroup(M3Fixtures.token, M3Fixtures.groupId)
+            assertThrows(AdminProblem::class.java) { runBlocking { service.clearSetupPin(M3Fixtures.token, M3Fixtures.groupId, botOwned) } }
+            assertTrue(fake.unpinned.isEmpty()); assertEquals(0, fake.backing.uploads); assertEquals(0, fake.backing.writes)
+        } finally { draft.close() }
+    }
+
     private fun humanPin(id: Long) = buildJsonObject {
         put("message_id", id); put("from", buildJsonObject { put("id", 999); put("is_bot", false) })
         put("text", "Public unrelated pin fixture")
@@ -171,6 +242,10 @@ class PinRecoveryInstrumentedTest {
         var hideSnapshot = false
         var unrelatedPin: String? = null
         var failure: SnapshotReadError? = null
+        val unpinned = mutableListOf<Long>()
+        var afterUnpin: (() -> Unit)? = null
+        var rejectUnpin = false
+        var loseUnpinResponse = false
         var observations = 0
         override suspend fun validate(token: String, groupId: Long) = inspect(token, groupId)
         override suspend fun discover(token: String, challenge: String) = listOf(inspect(token, M3Fixtures.groupId))
@@ -180,6 +255,14 @@ class PinRecoveryInstrumentedTest {
         }
         override suspend fun upload(token: String, group: Long, bytes: ByteArray, caption: String) = backing.upload(token, group, bytes, caption)
         override suspend fun replace(token: String, group: Long, message: Long, file: String, caption: String) = backing.replace(token, group, message, file, caption)
+        override suspend fun unpin(token: String, group: Long, message: Long) {
+            check(group == M3Fixtures.groupId)
+            check(SetupGroup(group, backing.title, unrelatedPin).pinnedMessageId() == message)
+            if (rejectUnpin) throw TelegramFailure(code = 403)
+            unpinned += message; unrelatedPin = null
+            afterUnpin?.invoke()
+            if (loseUnpinResponse) { loseUnpinResponse = false; throw TelegramFailure() }
+        }
         override suspend fun pin(token: String, group: Long, message: Long) {
             try { backing.pin(token, group, message) }
             finally { if (backing.current?.messageId == message) { hideSnapshot = false; unrelatedPin = null } }

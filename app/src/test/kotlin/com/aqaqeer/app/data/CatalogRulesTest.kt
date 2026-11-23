@@ -27,9 +27,9 @@ class CatalogRulesTest {
         assertEquals(CatalogSeeds.OTHER_FORM_ID, seed.forms.single { it.isSystem }.id)
         assertEquals(1, seed.sections.size)
     }
-    @Test fun missingAvailabilityIsUnknownAndIsNotOut() {
-        assertEquals(AvailabilityStatus.UNKNOWN, seed.status(medication().id, seed.sections.single().id))
-        assertNotEquals(AvailabilityStatus.OUT, seed.status(medication().id, seed.sections.single().id))
+    @Test fun missingAvailabilityDefaultsToOutWithoutInventingARow() {
+        assertEquals(AvailabilityStatus.OUT, seed.status(medication().id, seed.sections.single().id))
+        assertNull(seed.availability(medication().id, seed.sections.single().id))
     }
     @Test fun englishOnlyMedicationIsValidWithoutInventedArabicName() {
         CatalogRules.validate(seed.copy(medications = listOf(medication())))

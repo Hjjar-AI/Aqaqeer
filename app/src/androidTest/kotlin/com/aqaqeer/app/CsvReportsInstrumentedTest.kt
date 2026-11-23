@@ -68,20 +68,20 @@ class CsvReportsInstrumentedTest {
         assertEquals(2, results.size); assertTrue(results.all { it.outcome == CsvOutcome.CREATED })
         assertEquals(listOf("First", "Second"), p.ready().catalog.medications.map { it.genericEn })
     }
-    @Test fun reportsDefaultToPublishedAndOutNeverIncludesUnknown(): Unit = runBlocking {
-        val a = p.medication("Published"); p.medication("Unknown")
+    @Test fun reportsDefaultToPublishedAndOutIncludesMissingAvailability(): Unit = runBlocking {
+        val a = p.medication("Published"); p.medication("Missing availability")
         val section = p.ready().catalog.sections.single().id
         p.admin.availability(a.id, section, AvailabilityStatus.OUT)
         p.admin.transaction { dao -> dao.deleteAvailability(dao.availability().filter { it.medicationId != a.id }) }
         p.publish(SuiteRemote()); p.admin.saveMedication(a.copy(nameEn = "Draft change"))
         val repo = reports(); val published = repo.capture(ReportRequest(ReportPreset.OUT, section))
-        assertEquals(listOf("Published"), published.medications.map { it.nameEn })
+        assertEquals(setOf("Published", "Missing availability"), published.medications.map { it.nameEn }.toSet())
         val draft = repo.capture(ReportRequest(ReportPreset.FULL, includeUnpublished = true))
         assertTrue(draft.medications.any { it.nameEn == "Draft change" })
-        assertEquals(AvailabilityStatus.UNKNOWN, draft.status(draft.medications.single { it.nameEn == "Unknown" }.id, section))
+        assertEquals(AvailabilityStatus.OUT, draft.status(draft.medications.single { it.nameEn == "Missing availability" }.id, section))
         val destination = document(); repo.csv(destination, draft)
         val text = p.context.contentResolver.openInputStream(destination)!!.reader(Charsets.UTF_8).use { it.readText() }
-        assertTrue(text.contains("UNKNOWN")); assertTrue(text.contains("includeUnpublished"))
+        assertTrue(text.contains("OUT")); assertFalse(text.contains("UNKNOWN")); assertTrue(text.contains("includeUnpublished"))
     }
     @Test fun draftsRequireOptInAndExpiryPresetExcludesExpired(): Unit = runBlocking {
         val repo = reports()
@@ -189,16 +189,16 @@ class CsvReportsInstrumentedTest {
         assertEquals(CsvOutcome.FAILED, results.single().outcome)
         assertEquals(before, p.admin.transaction { Triple(it.catalog(), it.pending(), it.historyCount()) })
     }
-    @Test fun allSectionShortagesExcludeInactiveOnlyAndUnknownMedication(): Unit = runBlocking {
+    @Test fun allSectionShortagesIncludeMissingAvailabilityButExcludeInactiveOnly(): Unit = runBlocking {
         val active = p.ready().catalog.sections.single().id
         p.admin.saveTaxonomy("section", null, "مغلق", "Closed", active = false)
         val closed = p.ready().catalog.sections.single { !it.isActive }.id
-        val a = p.medication("Active shortage"); val b = p.medication("Inactive shortage"); val c = p.medication("Unknown")
+        val a = p.medication("Active shortage"); val b = p.medication("Inactive shortage"); val c = p.medication("Missing availability")
         p.admin.availability(a.id, active, AvailabilityStatus.OUT)
         p.admin.availability(b.id, closed, AvailabilityStatus.OUT)
         p.admin.transaction { dao -> dao.deleteAvailability(dao.availability().filter { it.medicationId == c.id }) }
         val report = reports().capture(ReportRequest(ReportPreset.OUT, includeUnpublished = true, allSections = true))
-        assertEquals(listOf(a.id), report.medications.map { it.id })
+        assertEquals(setOf(a.id, c.id), report.medications.map { it.id }.toSet())
         assertEquals(listOf(active), report.sections.map { it.id })
     }
     @Test fun emptyA5ReportStillProducesRenderablePage(): Unit = runBlocking {

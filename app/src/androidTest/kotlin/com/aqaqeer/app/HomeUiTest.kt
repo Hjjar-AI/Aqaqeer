@@ -18,10 +18,12 @@ class HomeUiTest {
     private val preferences get() = DisplayPreferences(compose.activity.applicationContext)
     private lateinit var original: HomePreferences
     @Before fun start() {
+        if (BuildConfig.IS_DEMO) { com.aqaqeer.app.admin.DemoSession.reset(); com.aqaqeer.app.admin.DemoSession.setAdmin(false) }
         original = runBlocking { preferences.home.first() }
         compose.waitUntil(15_000) { compose.onAllNodesWithTag("home").fetchSemanticsNodes().isNotEmpty() }
     }
     @After fun reset(): Unit = runBlocking {
+        if (BuildConfig.IS_DEMO) { com.aqaqeer.app.admin.DemoSession.reset(); com.aqaqeer.app.admin.DemoSession.setAdmin(false) }
         if (::original.isInitialized) {
             preferences.setSort(original.sort); preferences.setLayout(original.layout); preferences.setNames(original.names)
         }
@@ -48,11 +50,13 @@ class HomeUiTest {
         compose.onNodeWithTag("clear_search").performClick()
         show(other); compose.onNodeWithTag("search").assertIsDisplayed()
     }
-    @Test fun filterSheetExcludesUnknownAndAppliesOrWithinStatuses() {
+    @Test fun adminFilterSheetOffersOnlyThreeStatesAndAppliesOrWithinStatuses() {
         org.junit.Assume.assumeTrue(BuildConfig.IS_DEMO)
+        compose.runOnIdle { com.aqaqeer.app.admin.DemoSession.setAdmin(true) }
         val catalog = BuildSeed.catalog(); val section = catalog.sections.first().id
         compose.onNodeWithTag("section_$section").performClick()
         compose.onNodeWithContentDescription("الفلاتر", substring = true).performClick()
+        compose.waitUntil(5_000) { compose.onAllNodesWithTag("filter_OUT").fetchSemanticsNodes().isNotEmpty() }
         compose.onNodeWithTag("filter_UNKNOWN").assertDoesNotExist()
         compose.onNodeWithTag("filter_OUT").performScrollTo().performClick()
         compose.onNodeWithTag("filter_LOW").performScrollTo().performClick()

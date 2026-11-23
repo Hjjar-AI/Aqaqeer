@@ -22,4 +22,16 @@ class PinRecoveryClassificationTest {
         for (pin in listOf(null, "unrelated", "{}", "{\"from\":{}}", "{\"from\":{\"id\":0}}"))
             assertFalse(SetupGroup(-100, "Public fixture", pin).hasUnrelatedPin(123))
     }
+    @Test fun targetedPinIdentityPreservesLongMessageIds() {
+        val pin = buildJsonObject { put("message_id", Long.MAX_VALUE) }.toString()
+        assertEquals(Long.MAX_VALUE, SetupGroup(-100, "Public fixture", pin).pinnedMessageId())
+    }
+    @Test fun absentOrNonpositiveMessageIdentityCannotSelectAnUnpinTarget() {
+        assertNull(SetupGroup(-100, "Public fixture", null).pinnedMessageId())
+        assertNull(SetupGroup(-100, "Public fixture", "{}").pinnedMessageId())
+        for (id in listOf(0L, -1L)) {
+            val pin = buildJsonObject { put("message_id", id) }.toString()
+            assertNull(SetupGroup(-100, "Public fixture", pin).pinnedMessageId())
+        }
+    }
 }

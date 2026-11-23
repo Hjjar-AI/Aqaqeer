@@ -78,13 +78,13 @@ class BulkMedicationRegressionInstrumentedTest {
         assertEquals("keep", actual.note); assertEquals(CatalogSeeds.TABLET_FORM_ID, actual.formId)
         assertEquals(AvailabilityStatus.AVAILABLE, p.ready().catalog.status(a.id, section()))
     }
-    @Test fun undoRestoresMissingLegacyPairAsAbsence(): Unit = runBlocking {
+    @Test fun undoRestoresMissingPairAsAbsenceWithOutFallback(): Unit = runBlocking {
         val a = p.medication(); p.admin.transaction { it.clearAvailability() }
-        val receipt = p.admin.bulkMedicationChanges(setOf(a.id), section(), BulkMedicationChanges(status = AvailabilityStatus.OUT), expected(a), pharmacy())!!
+        val receipt = p.admin.bulkMedicationChanges(setOf(a.id), section(), BulkMedicationChanges(status = AvailabilityStatus.LOW), expected(a), pharmacy())!!
         assertEquals(setOf(a.id), receipt.missingBefore)
         p.admin.undoAvailability(receipt)
         assertNull(p.ready().catalog.availability(a.id, section()))
-        assertEquals(AvailabilityStatus.UNKNOWN, p.ready().catalog.status(a.id, section()))
+        assertEquals(AvailabilityStatus.OUT, p.ready().catalog.status(a.id, section()))
     }
     @Test fun wrongPharmacyRejectsBeforeAnyMutation(): Unit = runBlocking {
         val a = p.medication(); val expected = expected(a); val before = state()

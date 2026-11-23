@@ -121,11 +121,12 @@ class UiEnhancementTest {
     }
 
     @Test fun filterSummaryCountsSelectionsAndResetClearsBothGroups() {
-        var filters by mutableStateOf(HomeFilters(setOf(AvailabilityStatus.OUT, AvailabilityStatus.UNKNOWN),setOf("a")))
+        var filters by mutableStateOf(HomeFilters(setOf(AvailabilityStatus.OUT, AvailabilityStatus.LOW),setOf("a")))
         compose.setContent { AqaqeerTheme(ThemeChoice.LIGHT) { FilterSummary(filters) { filters=HomeFilters() } } }
-        compose.onNodeWithText("الحالات المحددة: ٢ · التصنيفات المحددة: ١").assertIsDisplayed()
+        compose.onNodeWithText("الحالات المحددة: 2 · التصنيفات المحددة: 1").assertIsDisplayed()
         compose.onNodeWithTag("clear_filters").performClick()
-        compose.onNodeWithText("الحالات المحددة: ٠ · التصنيفات المحددة: ٠").assertIsDisplayed()
+        assertEquals(HomeFilters(), filters)
+        compose.onNodeWithTag("filter_summary").assertDoesNotExist()
         compose.onNodeWithTag("clear_filters").assertDoesNotExist()
     }
 
@@ -166,7 +167,7 @@ class UiEnhancementTest {
     @Test fun longDialogPreviewScrollsWhileSaveAndCancelStayReachable() {
         val c=many();var saves=0;var cancellations=0
         val selection=AvailabilitySelection(F.pharmacyId,c.sections.first(),c.medications,
-            c.medications.associate { it.id to AvailabilityStatus.UNKNOWN },true)
+            c.medications.associate { it.id to AvailabilityStatus.AVAILABLE },true)
         compose.setContent {
             val d=LocalDensity.current
             CompositionLocalProvider(LocalDensity provides Density(d.density,2f)) {

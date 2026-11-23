@@ -6,6 +6,9 @@ import kotlinx.coroutines.*
 import kotlinx.serialization.json.*
 import org.junit.Assert.*
 import org.junit.Test
+import org.junit.Before
+import org.junit.Assume
+import com.aqaqeer.app.BuildConfig
 import java.io.*
 import java.net.URL
 import java.security.Principal
@@ -14,6 +17,7 @@ import java.util.ArrayDeque
 import javax.net.ssl.HttpsURLConnection
 
 class TelegramSnapshotReadTransportTest {
+    @Before fun standardTransportOnly() { Assume.assumeFalse("Demo deliberately refuses every real HTTP adapter", BuildConfig.IS_DEMO) }
     private val doc get() = SnapshotDocument(F.groupId,12,"public-file","public-unique",SnapshotPublication(1,F.publishId,F.time))
     private class Response(val bytes: ByteArray, val status: Int = 200, val encoding: String? = null, val failure: Boolean = false,
         val stream: InputStream? = null)

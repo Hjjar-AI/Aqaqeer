@@ -26,11 +26,11 @@ class AdminHistoryInstrumentedTest {
         p.admin.bulkAvailability(setOf(a.id, b.id), section, AvailabilityStatus.OUT)
         assertTrue(p.ready().catalog.availability.all { it.status == AvailabilityStatus.OUT })
     }
-    @Test fun unchangedUnknownSaveCreatesNoHistoryOrPendingWork(): Unit = runBlocking {
+    @Test fun unchangedMissingOutSaveCreatesNoHistoryOrPendingWork(): Unit = runBlocking {
         val a = p.medication(); val section = p.ready().catalog.sections.single().id
         p.admin.transaction { it.clearAvailability() }
         val before = p.admin.transaction { it.historyCount() to it.pending() }
-        p.admin.availability(a.id, section, AvailabilityStatus.UNKNOWN)
+        p.admin.availability(a.id, section, AvailabilityStatus.OUT)
         assertEquals(before, p.admin.transaction { it.historyCount() to it.pending() })
     }
     @Test fun categoryDeletionReassignsAndSystemEntitiesAndLastSectionAreProtected(): Unit = runBlocking {

@@ -30,7 +30,7 @@ class CatalogSearchMatrixTest(private val label: String, private val query: Stri
                 Availability(b.id, section, AvailabilityStatus.AVAILABLE, F.time)))
         val matchingQuery = when (query) { "" -> setOf(a.id, b.id, c.id); "ALPHA", "٥٠٠", "alpha brand" -> setOf(a.id, c.id); else -> emptySet() }
         val expected = matchingQuery.filter { id ->
-            (categories.isEmpty() || id == a.id) && (statuses.isEmpty() || (if (id == a.id) AvailabilityStatus.OUT else if (id == b.id) AvailabilityStatus.AVAILABLE else AvailabilityStatus.UNKNOWN) in statuses)
+            (categories.isEmpty() || id == a.id) && (statuses.isEmpty() || (if (id == a.id) AvailabilityStatus.OUT else if (id == b.id) AvailabilityStatus.AVAILABLE else AvailabilityStatus.OUT) in statuses)
         }.toSet()
         val index = CatalogSearchIndex(catalog)
         val visible = index.browse(section, query, HomeFilters(statuses, categories), sort)

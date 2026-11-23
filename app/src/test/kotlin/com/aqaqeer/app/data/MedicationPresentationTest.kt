@@ -52,7 +52,7 @@ class MedicationPresentationTest {
         assertEquals(listOf("b", "a"), browse(listOf(a, b), "alpha"))
         assertEquals(listOf("a", "b"), browse(listOf(b, a), " "))
     }
-    @Test fun filtersUseOrWithinAndAcrossTypesAndMissingStatusIsUnknown() {
+    @Test fun filtersUseOrWithinAndAcrossTypesAndMissingStatusIsOut() {
         val section = seed.sections.single().id
         val meds = listOf(med("1"), med("2").copy(categoryId = "other"), med("3"), med("4"))
         val availability = listOf(Availability("1", section, AvailabilityStatus.OUT, Instant.EPOCH),
@@ -61,20 +61,23 @@ class MedicationPresentationTest {
         val catalog = seed.copy(medications = meds, availability = availability)
         fun filtered(statuses: Set<AvailabilityStatus>, categories: Set<String>) = MedicationPresentation.browse(
             catalog, section, "", HomeFilters(statuses, categories), HomeSort.ENGLISH_NAME).map { it.id }
-        assertEquals(listOf("1", "2"), filtered(setOf(AvailabilityStatus.OUT, AvailabilityStatus.LOW), emptySet()))
-        assertEquals(listOf("1"), filtered(setOf(AvailabilityStatus.OUT, AvailabilityStatus.LOW), setOf(CatalogSeeds.UNCATEGORIZED_ID)))
+        assertEquals(listOf("1", "2", "4"), filtered(setOf(AvailabilityStatus.OUT, AvailabilityStatus.LOW), emptySet()))
+        assertEquals(listOf("1", "4"), filtered(setOf(AvailabilityStatus.OUT, AvailabilityStatus.LOW), setOf(CatalogSeeds.UNCATEGORIZED_ID)))
         assertEquals(listOf("1", "2", "3", "4"), filtered(emptySet(), setOf(CatalogSeeds.UNCATEGORIZED_ID, "other")))
-        assertEquals(listOf("4"), filtered(setOf(AvailabilityStatus.UNKNOWN), emptySet()))
+        assertEquals(listOf("1", "4"), filtered(setOf(AvailabilityStatus.OUT), emptySet()))
     }
     @Test fun availabilityOrderReappliesToSelectedSectionAndUsesArabicFallback() {
         val section = seed.sections.single().id
-        val meds = listOf(med("available"), med("unknown"), med("low"), med("out"))
-        val statuses = listOf(AvailabilityStatus.AVAILABLE, AvailabilityStatus.UNKNOWN, AvailabilityStatus.LOW, AvailabilityStatus.OUT)
-        val availability = meds.zip(statuses).map { (m, status) -> Availability(m.id, section, status, Instant.EPOCH) } +
-            meds.zip(statuses.reversed()).map { (m, status) -> Availability(m.id, "second", status, Instant.EPOCH) }
-        val catalog = seed.copy(medications = meds, availability = availability)
-        assertEquals(listOf("out", "low", "unknown", "available"), MedicationPresentation.browse(catalog, section, "", HomeFilters(), HomeSort.AVAILABILITY).map { it.id })
-        assertEquals(listOf("available", "unknown", "low", "out"), MedicationPresentation.browse(catalog, "second", "", HomeFilters(), HomeSort.AVAILABILITY).map { it.id })
+        val meds = listOf(med("available"), med("missing"), med("low"), med("out"))
+        val catalog = seed.copy(medications = meds, availability = listOf(
+            Availability("available", section, AvailabilityStatus.AVAILABLE, Instant.EPOCH),
+            Availability("low", section, AvailabilityStatus.LOW, Instant.EPOCH),
+            Availability("out", section, AvailabilityStatus.OUT, Instant.EPOCH),
+            Availability("out", "second", AvailabilityStatus.AVAILABLE, Instant.EPOCH),
+            Availability("low", "second", AvailabilityStatus.OUT, Instant.EPOCH),
+            Availability("available", "second", AvailabilityStatus.LOW, Instant.EPOCH)))
+        assertEquals(listOf("missing", "out", "low", "available"), MedicationPresentation.browse(catalog, section, "", HomeFilters(), HomeSort.AVAILABILITY).map { it.id })
+        assertEquals(listOf("low", "missing", "available", "out"), MedicationPresentation.browse(catalog, "second", "", HomeFilters(), HomeSort.AVAILABILITY).map { it.id })
     }
     @Test fun displayModesUseExistingNamesAndGenericFallbackWithoutPlaceholder() {
         fun text(ar: String?, en: String?, mode: NameDisplay) = MedicationPresentation.names(ar, en, mode).map { it.text }
@@ -102,11 +105,11 @@ class MedicationPresentationTest {
     @Test fun smartTipsOnlyUseOtherActiveAvailableSectionsWhenCurrentIsOut() {
         val current = seed.sections.single()
         val sections = listOf(current, current.copy(id = "available"), current.copy(id = "closed", isActive = false),
-            current.copy(id = "low"), current.copy(id = "unknown"))
-        val values = listOf(AvailabilityStatus.OUT, AvailabilityStatus.AVAILABLE, AvailabilityStatus.AVAILABLE, AvailabilityStatus.LOW, AvailabilityStatus.UNKNOWN)
+            current.copy(id = "low"), current.copy(id = "other-out"))
+        val values = listOf(AvailabilityStatus.OUT, AvailabilityStatus.AVAILABLE, AvailabilityStatus.AVAILABLE, AvailabilityStatus.LOW, AvailabilityStatus.OUT)
         val catalog = seed.copy(sections = sections, availability = sections.zip(values).map { (s, status) -> Availability("med", s.id, status, Instant.EPOCH) })
         assertEquals(listOf("available"), MedicationPresentation.availableElsewhere(catalog, "med", current.id).map { it.id })
-        for (status in listOf(AvailabilityStatus.LOW, AvailabilityStatus.UNKNOWN, AvailabilityStatus.AVAILABLE)) {
+        for (status in listOf(AvailabilityStatus.LOW, AvailabilityStatus.AVAILABLE)) {
             assertTrue(MedicationPresentation.availableElsewhere(catalog.copy(availability = catalog.availability.map { if (it.sectionId == current.id) it.copy(status = status) else it }), "med", current.id).isEmpty())
         }
         assertTrue(MedicationPresentation.availableElsewhere(catalog, "med", null).isEmpty())
@@ -118,9 +121,9 @@ class MedicationPresentationTest {
         assertEquals("علمي · 500 mg · أقراص", MedicationPresentation.identity(value, "أقراص"))
         assertEquals("Generic", MedicationPresentation.scientificName(value.copy(genericAr = null)))
     }
-    @Test fun editableStatusesExcludeUnknownWithoutConvertingMissingAvailability() {
+    @Test fun exactlyThreeEditableStatusesAndMissingAvailabilityDefaultsToOut() {
         assertEquals(listOf(AvailabilityStatus.AVAILABLE, AvailabilityStatus.LOW, AvailabilityStatus.OUT), MedicationPresentation.editableStatuses)
-        assertEquals(AvailabilityStatus.UNKNOWN, seed.status("missing", seed.sections.single().id))
+        assertEquals(AvailabilityStatus.OUT, seed.status("missing", seed.sections.single().id))
     }
     @Test fun freshnessTimestampsAreGregorianInPharmacyTimezone() {
         assertEquals("2026-11-09 00:00", MedicationPresentation.timestamp(Instant.parse("2026-11-08T21:00:00Z"), "Asia/Damascus"))

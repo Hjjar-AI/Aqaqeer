@@ -42,7 +42,7 @@ class PresentationUiTest {
 
     @Test fun bulkSelectionRequiresPreviewAndBusyDisablesSaveAndCancel() {
         val c = F.catalog(); val a = c.medications.single(); val b = a.copy(id = "second", nameEn = "Second medication")
-        val selection = AvailabilitySelection(F.pharmacyId,c.sections.single(),listOf(a,b),mapOf(a.id to AvailabilityStatus.AVAILABLE,b.id to AvailabilityStatus.UNKNOWN),true)
+        val selection = AvailabilitySelection(F.pharmacyId,c.sections.single(),listOf(a,b),mapOf(a.id to AvailabilityStatus.AVAILABLE,b.id to AvailabilityStatus.OUT),true)
         var busy by mutableStateOf(false); var saves = 0
         compose.setContent { AqaqeerTheme(ThemeChoice.LIGHT) { BulkMedicationEditor(selection,c,busy,null,{}, { saves++ }, { true }) } }
         compose.onNodeWithText(uiText(R.string.availability_bulk_preview_action)).assertIsNotEnabled()
