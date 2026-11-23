@@ -375,9 +375,9 @@ Use the selected Electric Violet and Vivid Emerald Green logo on the launcher, s
 
 The first ring in Arabic reading order (right) uses the alternate three internal-bond sides to the left ring; this orientation is fixed artwork, not rotation animation. Home shows the pharmacy name with a small original emblem; onboarding includes the original emblem and prioritizes joining over creating. Medication-detail titles use the scientific name. See [branding](branding.md).
 
-V1 includes a branded launch animation and an About screen. Use the selected عقاقير logo for the in-app launch animation. The Android starting window uses a solid theme background with a transparent icon. The app matches the saved local theme and system-bar contrast (pure black in AMOLED); Android can draw the preceding window using system-mode fallbacks before local preferences are available.
+V1 includes a branded launch splash and an About screen. Android’s starting window shows the selected عقاقير logo on a solid theme background. The app uses the same artwork and framing and follows the saved theme and system-bar contrast, including pure black in AMOLED. The preceding system frame can use system-mode fallbacks before local preferences are available.
 
-Draw the app while local data opens and keep the existing loading state until the Home, onboarding or recovery route is ready. On launch, the logo pulses once over the first app screen, growing from 1× to 1.55× and returning to 1× with a fade over 260 ms. The animation is decorative, respects disabled system animations, and imposes no wait on content or Telegram refresh.
+While the local catalog starts, keep a single branded splash on screen. Pulse the logo from 1× to 1.65× and back every 720 ms. As soon as Home, onboarding or recovery can be shown, stop the pulse and fade into the destination over 100 ms if the app splash has drawn. With system animations disabled, keep the logo still and switch directly. Launch adds no separate loader, minimum display time, or wait for Telegram refresh.
 
 Required startup failures lead to their recovery screen. About uses the existing Arabic interface and the app-information/developer-credit/contact requirements in section 10.
 

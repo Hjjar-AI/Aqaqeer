@@ -29,7 +29,15 @@ import kotlinx.coroutines.flow.collect
     val state by viewModel.shellState.collectAsStateWithLifecycle()
     AqaqeerTheme(state.theme, accent = state.accent) {
         CompositionLocalProvider(LocalNoticeScope provides ((state.catalog as? CatalogState.Ready)?.catalog?.pharmacy?.pharmacyId ?: "unconfigured")) {
-            AppShell(state, viewModel)
+            val catalogLoading = state.catalog == CatalogState.Loading
+            var startupResolved by remember { mutableStateOf(!catalogLoading) }
+            var showSplash by remember { mutableStateOf(catalogLoading) }
+            val waitingForStartup = !startupResolved && catalogLoading
+            SideEffect { if (!catalogLoading) startupResolved = true }
+            Box(Modifier.fillMaxSize()) {
+                if (!waitingForStartup) AppShell(state, viewModel)
+                if (showSplash) LaunchSplash(waitingForStartup) { showSplash = false }
+            }
         }
     }
 }

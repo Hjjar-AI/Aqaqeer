@@ -1,0 +1,5 @@
+<resources>
+    <style name="Theme.Aqaqeer.Starting" parent="Theme.Aqaqeer.Starting.Base">
+        <item name="android:windowSplashScreenBehavior">icon_preferred</item>
+    </style>
+</resources>

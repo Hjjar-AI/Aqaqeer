@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Match the app splash's 190 dp artwork within the native 288 dp icon slot. -->
+<inset xmlns:android="http://schemas.android.com/apk/res/android"
+    android:drawable="@drawable/aqaqeer_launcher"
+    android:insetLeft="17%"
+    android:insetTop="17%"
+    android:insetRight="17%"
+    android:insetBottom="17%" />

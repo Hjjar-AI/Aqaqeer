@@ -6,9 +6,6 @@ import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration
 import android.graphics.drawable.ColorDrawable
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.ui.Modifier
 import androidx.core.view.WindowCompat
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -24,7 +21,6 @@ import com.aqaqeer.app.ui.themeIsDark
 import androidx.compose.ui.graphics.toArgb
 import com.aqaqeer.app.ui.AqaqeerApp
 import com.aqaqeer.app.ui.CatalogViewModel
-import com.aqaqeer.app.ui.LaunchPulse
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -60,13 +56,7 @@ class MainActivity : ComponentActivity() {
             isAppearanceLightStatusBars = !dark
             isAppearanceLightNavigationBars = !dark
         }
-        val playLaunchPulse = savedInstanceState == null
-        setContent {
-            Box(Modifier.fillMaxSize()) {
-                AqaqeerApp(viewModel)
-                if (playLaunchPulse) LaunchPulse()
-            }
-        }
+        setContent { AqaqeerApp(viewModel) }
         if (savedInstanceState == null) receiveConnectionIntent(intent)
     }
 

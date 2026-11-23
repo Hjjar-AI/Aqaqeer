@@ -4,9 +4,9 @@ The [Aqaqeer logo](../assets/branding/aqaqeer-icon-violet-emerald.png) uses Elec
 
 ## Splash artwork and motion
 
-Android’s starting window uses a solid background and transparent icon. With no saved launch hint available, the starting window follows system mode and uses Violet in light mode. The app applies the saved theme and system-bar contrast, including pure black in AMOLED.
+Android’s starting window centers the violet and emerald logo on a solid background. A 17% inset on each side frames the original PNG within the native icon slot. With no saved launch hint available, the starting window follows system mode and uses Violet in light mode. The app applies the saved theme and system-bar contrast, including pure black in AMOLED.
 
-The violet and emerald logo pulses once over the first app screen. It grows from 1× to 1.55× around the center, then returns to 1× and fades over a total of 260 ms. A sampled decode of the packaged launcher PNG supplies the artwork. The overlay is decorative and leaves the underlying app visible, including the loading indicator if the catalog is still opening. It is skipped if system animations are disabled, the activity is recreated, or the bitmap exceeds the 120 ms preparation budget.
+The app continues with the same centered logo at about 190 dp. While the local catalog opens, the logo grows from 1× to 1.65× and returns to 1× every 720 ms. Once the destination is ready, the logo stops at its current scale and the splash fades over 100 ms. If the app splash has yet to draw or system animations are disabled, the destination appears directly.
 
 ## In-app placement
 
