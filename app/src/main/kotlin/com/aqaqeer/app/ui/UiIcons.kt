@@ -40,7 +40,7 @@ internal enum class UiIcon(val resource: Int, val intrinsicColors: Boolean = fal
         tint = if (icon.intrinsicColors) Color.Unspecified else LocalContentColor.current)
 }
 
-/** Only seeded IDs imply a dosage shape; custom forms retain their written label. */
+/** Only seeded IDs imply a dosage shape; custom forms use a neutral shape with an accessible form label. */
 @Composable internal fun DosageFormIcon(form: com.aqaqeer.app.data.MedicationForm) {
     val seed = com.aqaqeer.app.data.CatalogSeeds.forms.indexOfFirst { it.id == form.id }
     val icon = when (seed) {
@@ -60,5 +60,5 @@ internal enum class UiIcon(val resource: Int, val intrinsicColors: Boolean = fal
         12 -> UiIcon.FORM_SPRAY
         else -> UiIcon.FORM_FORM
     }
-    AppIcon(icon, size = Size.iconL)
+    AppIcon(icon, description = form.nameAr, size = Size.iconL)
 }

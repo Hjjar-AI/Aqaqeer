@@ -50,7 +50,7 @@ import kotlinx.coroutines.launch
                     editor = AvailabilitySelection(requireNotNull(catalog.pharmacy).pharmacyId, section, listOf(medication),
                         mapOf(medication.id to catalog.status(medication.id, section.id)), false)
                 }) else null, expanded = captured != null, dismiss = { if (!busy) editor = null }, enabled = !busy && (captured == null || current),
-                    editable = canEdit && section.isActive,
+                    editable = canEdit && section.isActive, saving = busy && captured != null,
                     choose = { status -> if (current && !vm.adminBusy.value) vm.saveAvailability(captured, BulkMedicationChanges(status = status)) { if (editor == captured) editor = null } })
                 if (record == null) SupportingText(uiText(R.string.history_update_time_missing_message))
                 else {

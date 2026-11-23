@@ -90,10 +90,11 @@ import java.time.LocalDate
 }
 
 @Composable internal fun StatusBadge(status: AvailabilityStatus, onClick: (() -> Unit)? = null, editLabel: String? = null,
-    dense: Boolean = false) {
+    dense: Boolean = false, editable: Boolean = onClick != null, enabled: Boolean = true, saving: Boolean = false) {
     val uiText = rememberUiText()
     val presentation = availabilityBadge(status)
-    MedicationBadge(presentation.text, presentation.tone, dense = dense, icon = presentation.icon, onClick = onClick,
+    AvailabilityBadge(presentation.text, presentation.tone, dense = dense, onClick = onClick,
+        editable = editable, enabled = enabled, saving = saving,
         actionDescription = "${presentation.text} · ${editLabel.orEmpty()}", actionLabel = uiText(R.string.availability_edit_action))
 }
 
@@ -102,7 +103,7 @@ import java.time.LocalDate
     bulkSelected: Boolean?, toggleSelection: () -> Unit, onClick: () -> Unit, modifier: Modifier = Modifier,
     selectionEnabled: Boolean = true, query: String = "", unpublished: Boolean = false,
     onLongClick: (() -> Unit)? = null, highlighted: Boolean = false,
-    reserveSelectionSpace: Boolean = false, quickMenuOpen: Boolean = false, dismissQuickMenu: () -> Unit = {}, chooseStatus: (AvailabilityStatus) -> Unit = {}, editableStatus: Boolean = onQuickEdit != null) {
+    reserveSelectionSpace: Boolean = false, quickMenuOpen: Boolean = false, dismissQuickMenu: () -> Unit = {}, chooseStatus: (AvailabilityStatus) -> Unit = {}, editableStatus: Boolean = onQuickEdit != null, savingStatus: Boolean = false) {
     val uiText = rememberUiText()
     val medication = row.medication
     val compact = preferences.layout == CardLayout.COMPACT
@@ -152,17 +153,13 @@ import java.time.LocalDate
                         MedicationNameLines(medication.genericAr, medication.genericEn, preferences.names,
                             prominent = true, query = query, primaryStyle = MaterialTheme.typography.titleMedium, maxLines = 2,
                             strength = medication.strength, titleTrailing = pendingMarker)
-                        Text(formName, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     } else {
                         MedicationSummary(medication, preferences.names, prominent = true, query = query, titleTrailing = pendingMarker)
-                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(UiSpacing.hair)) {
-                            Text(formName, modifier = Modifier.weight(1f, fill = false), style = MaterialTheme.typography.bodyMedium)
-                        }
                     }
                 }
             }
             MedicationBadges(medication, today, sectionId?.let { status }, onQuickEdit, name,
-                quickMenuOpen, dismissQuickMenu, chooseStatus, selectionEnabled, editableStatus)
+                quickMenuOpen, dismissQuickMenu, chooseStatus, selectionEnabled, editableStatus, savingStatus)
 
             if (!compact && !(preferences.groupingEnabled && preferences.grouping == HomeGrouping.CATEGORY)) LabeledValue(uiText(R.string.catalog_category_label), row.category)
             AvailabilityElsewhereTip(medication.id, sectionId, row.elsewhere)
@@ -173,26 +170,15 @@ import java.time.LocalDate
 @OptIn(ExperimentalLayoutApi::class)
 @Composable private fun MedicationBadges(medication: Medication, today: LocalDate, status: AvailabilityStatus?,
     onQuickEdit: (() -> Unit)?, name: String, expanded: Boolean, dismiss: () -> Unit,
-    choose: (AvailabilityStatus) -> Unit, enabled: Boolean, editableStatus: Boolean) {
+    choose: (AvailabilityStatus) -> Unit, enabled: Boolean, editableStatus: Boolean, savingStatus: Boolean) {
     val expiry = remember(medication, today) { MedicationPresentation.expiry(medication, today) }
     if (status == null && expiry == null) return
     FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(UiSpacing.hair),
         verticalArrangement = Arrangement.spacedBy(UiSpacing.hair)) {
         if (status != null) Box(Modifier.align(Alignment.CenterVertically)) {
-            EditableStatusPill(status, onQuickEdit, expanded, dismiss, choose, enabled, dense = true, editable = editableStatus)
+            EditableStatusPill(status, onQuickEdit, expanded, dismiss, choose, enabled, dense = true, editable = editableStatus, saving = savingStatus)
         }
         if (expiry != null)
             Box(Modifier.align(Alignment.CenterVertically)) { ExpiryBadge(expiry, dense = true, modifier = Modifier.testTag("expiry_${medication.id}")) }
     }
-}
-
-@Composable internal fun ExpiryBadge(medication: Medication, today: LocalDate, dense: Boolean = false) {
-    val expiry = remember(medication, today) { MedicationPresentation.expiry(medication, today) }
-    expiry?.let { ExpiryBadge(it, dense, Modifier.testTag("expiry_${medication.id}")) }
-}
-
-@Composable private fun ExpiryBadge(expiry: ExpiryState, dense: Boolean, modifier: Modifier) {
-    val uiText = rememberUiText()
-    val presentation = expiryBadge(expiry)
-    MedicationBadge(presentation.text, presentation.tone, dense = dense, icon = presentation.icon, modifier = modifier)
 }

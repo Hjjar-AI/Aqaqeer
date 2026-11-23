@@ -46,4 +46,5 @@
     <string name="status_available">متوفر</string>
     <string name="status_low">توفر محدود</string>
     <string name="status_out">غير متوفر</string>
+    <string name="availability_saving_description">جارٍ حفظ التوفر</string>
 </resources>

@@ -1,11 +1,23 @@
 <resources>
-    <color name="status_available_container">#DCFCE7</color>
-    <color name="status_available_content">#166534</color>
-    <color name="status_available_edge">#15803D</color>
-    <color name="status_low_container">#FEF3C7</color>
-    <color name="status_low_content">#92400E</color>
-    <color name="status_low_edge">#D97706</color>
-    <color name="status_out_container">#FEE2E2</color>
-    <color name="status_out_content">#991B1B</color>
-    <color name="status_out_edge">#B91C1C</color>
+    <!-- C2 availability: blue/gold/vermilion with stepped lightness. -->
+    <color name="status_available_container">#D8F0FF</color>
+    <color name="status_available_content">#003C60</color>
+    <color name="status_available_edge">#0072B2</color>
+    <color name="status_low_container">#F0C44B</color>
+    <color name="status_low_content">#493000</color>
+    <color name="status_low_edge">#9D6B00</color>
+    <color name="status_out_container">#9F3105</color>
+    <color name="status_out_content">#FFFFFF</color>
+    <color name="status_out_edge">#D14900</color>
+    <!-- General warnings retain their existing palette independently of stock status. -->
+    <color name="status_warning_container">#FEF3C7</color>
+    <color name="status_warning_content">#92400E</color>
+    <color name="status_warning_edge">#D97706</color>
+    <!-- Expiry: transparent outlined purple soon / magenta expired. -->
+    <color name="expiry_soon_container">#00000000</color>
+    <color name="expiry_soon_content">#6B21A8</color>
+    <color name="expiry_soon_edge">#6B21A8</color>
+    <color name="expiry_expired_container">#00000000</color>
+    <color name="expiry_expired_content">#9D174D</color>
+    <color name="expiry_expired_edge">#9D174D</color>
 </resources>

@@ -214,6 +214,7 @@ internal enum class HomeLeadingItem { BULK_HELP, OPERATION, NO_SECTION, SEARCH_S
                 reserveSelectionSpace = canEdit && saveBulk != null,
                 editableStatus = canEdit && !bulkMode && selected != null && medication.id in medicationIds,
                 quickMenuOpen = editorVisible && editor?.medications?.singleOrNull()?.id == medication.id,
+                savingStatus = availabilityBusy && editor?.medications?.singleOrNull()?.id == medication.id,
                 dismissQuickMenu = { if (!availabilityInProgress()) editor = null },
                 chooseStatus = { status ->
                     val captured = editor

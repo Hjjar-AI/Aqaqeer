@@ -63,7 +63,7 @@ import java.time.Instant
     })
     Surface(color = if (visible("update") || visible("refresh-error")) MaterialTheme.colorScheme.errorContainer
         else if (visible("stale"))
-            LocalStatusColors.current.low.container else MaterialTheme.colorScheme.surfaceVariant,
+            LocalStatusColors.current.warning.container else MaterialTheme.colorScheme.surfaceVariant,
         modifier = Modifier.fillMaxWidth().heightIn(max = maxHeight).animateContentSize(tween(Motion.standard))) {
         Column(Modifier.padding(horizontal = UiSpacing.page, vertical = UiSpacing.hair)) {
             Row(verticalAlignment = Alignment.CenterVertically) {

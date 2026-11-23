@@ -37,7 +37,7 @@ internal data class Notice(val text: String, val severity: NoticeSeverity = Noti
     Surface(modifier.fillMaxWidth(), shape = MaterialTheme.shapes.small,
         color = when (notice.severity) {
             NoticeSeverity.ERROR -> colors.errorContainer
-            NoticeSeverity.WARNING -> LocalStatusColors.current.low.container
+            NoticeSeverity.WARNING -> LocalStatusColors.current.warning.container
             NoticeSeverity.INFO -> colors.surfaceVariant
         }) {
         Column(Modifier.padding(UiSpacing.related), verticalArrangement = Arrangement.spacedBy(UiSpacing.hair)) {
@@ -125,13 +125,13 @@ internal data class Notice(val text: String, val severity: NoticeSeverity = Noti
 @Composable internal fun EditableStatusPill(status: com.aqaqeer.app.data.AvailabilityStatus,
     onOpen: (() -> Unit)?, expanded: Boolean, dismiss: () -> Unit,
     choose: (com.aqaqeer.app.data.AvailabilityStatus) -> Unit, enabled: Boolean = true, dense: Boolean = false,
-    editable: Boolean = onOpen != null) {
+    editable: Boolean = onOpen != null, saving: Boolean = false) {
     val uiText = rememberUiText()
     Box(if (editable) Modifier.sizeIn(minWidth = UiSpacing.touch, minHeight = UiSpacing.touch) else Modifier, contentAlignment = Alignment.Center) {
-        StatusBadge(status, if (enabled) onOpen else null, dense = dense)
+        StatusBadge(status, onOpen, dense = dense, editable = editable, enabled = enabled, saving = saving)
         DropdownMenu(expanded = expanded, onDismissRequest = dismiss) {
             com.aqaqeer.app.data.MedicationPresentation.editableStatuses.forEach { candidate ->
-                DropdownMenuItem(text = { Text(statusLabel(candidate, text = uiText)) }, enabled = enabled && candidate != status,
+                DropdownMenuItem(text = { Text(statusLabel(candidate, text = uiText)) }, enabled = enabled && !saving && candidate != status,
                     onClick = { choose(candidate) }, trailingIcon = if (candidate == status) ({ AppIcon(UiIcon.CHECK) }) else null)
             }
         }

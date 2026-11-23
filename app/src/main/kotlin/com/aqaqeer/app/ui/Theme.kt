@@ -139,7 +139,7 @@ private fun amoledColors(colors: ColorScheme): ColorScheme = colors.copy(
 
 internal data class StatusTone(val container: Color, val content: Color, val edge: Color)
 internal data class StatusColors(val available: StatusTone, val low: StatusTone, val out: StatusTone,
-    val info: StatusTone)
+    val info: StatusTone, val expired: StatusTone, val expiringSoon: StatusTone, val warning: StatusTone)
 private fun statusColors(resources: Resources, colors: ColorScheme): StatusColors {
     fun tone(container: Int, content: Int, edge: Int) = StatusTone(
         Color(resources.getColor(container, null)), Color(resources.getColor(content, null)), Color(resources.getColor(edge, null)))
@@ -147,7 +147,10 @@ private fun statusColors(resources: Resources, colors: ColorScheme): StatusColor
         tone(R.color.status_available_container, R.color.status_available_content, R.color.status_available_edge),
         tone(R.color.status_low_container, R.color.status_low_content, R.color.status_low_edge),
         tone(R.color.status_out_container, R.color.status_out_content, R.color.status_out_edge),
-        StatusTone(colors.secondaryContainer, colors.onSecondaryContainer, colors.secondary))
+        StatusTone(colors.secondaryContainer, colors.onSecondaryContainer, colors.secondary),
+        tone(R.color.expiry_expired_container, R.color.expiry_expired_content, R.color.expiry_expired_edge),
+        tone(R.color.expiry_soon_container, R.color.expiry_soon_content, R.color.expiry_soon_edge),
+        tone(R.color.status_warning_container, R.color.status_warning_content, R.color.status_warning_edge))
 }
 internal val LocalStatusColors = staticCompositionLocalOf<StatusColors> { error("AqaqeerTheme is required") }
 
