@@ -1,9 +1,9 @@
 <resources>
-    <color name="accent_violet_light">#6333B6</color>
-    <color name="launch_violet">#FAF8FF</color>
+    <color name="accent_violet_light">#80349F</color>
+    <color name="launch_violet">#FCF7FD</color>
     <color name="launch_blue">#F6FAFF</color>
     <color name="launch_green">#F5FCF8</color>
-    <color name="launch_rose">#FFF8FB</color>
+    <color name="launch_rose">#FFF6F9</color>
     <color name="launch_dark">#16151C</color>
     <color name="launch_black">#000000</color>
 </resources>

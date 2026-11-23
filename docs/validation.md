@@ -168,6 +168,8 @@ Evidence applies to the recorded source revision and environment. A later source
 | Room export and fresh storage | Production models define attribution-free version 1; historical export is explicitly labeled. | Retain/review a regenerated export; fresh initialization and non-destructive incompatible-database acceptance. |
 | Android presentation and lifecycle | Dated historical Android results below; current source/selector checks are recorded separately. | Latest UI, large-text/layout/role/refresh/session/day-boundary acceptance. |
 
+At base `a0dbc94`, static palette checks confirmed greater Violet–Blue hue separation in light and dark mode and higher Rose saturation. Checked text and selection pairs for the two revised accents measured at least 5.92:1. Android rendering remains unverified.
+
 Remaining scope and activity stops are in [plan](plan.md); [verification scope](test-coverage.md) separates source selections, automated results and human acceptance. Historical receipts and original failures are preserved below.
 
 <a id="initial-attribution-free-baseline--2026-11-16"></a>

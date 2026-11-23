@@ -102,13 +102,13 @@ private data class AccentPalette(
 private fun accentColors(accent: ThemeAccent, dark: Boolean, resources: Resources): ColorScheme {
     val palette = when (accent) {
         ThemeAccent.PURPLE -> AccentPalette(launchColor(resources, R.color.accent_violet_light),
-            Color(0xFFECE1FF), Color(0xFF2C1553), Color(0xFFD1B6FF), Color(0xFF452677))
+            Color(0xFFF3E0FB), Color(0xFF38104B), Color(0xFFE4AEF7), Color(0xFF592971))
         ThemeAccent.BLUE -> AccentPalette(Color(0xFF155B99),
             Color(0xFFDCEEFF), Color(0xFF002D54), Color(0xFFA1CDFF), Color(0xFF164575))
         ThemeAccent.GREEN -> AccentPalette(Color(0xFF006548),
             Color(0xFFC9F5E2), Color(0xFF003826), Color(0xFF76DCB5), Color(0xFF064C37))
-        ThemeAccent.ROSE -> AccentPalette(Color(0xFF94365F),
-            Color(0xFFFFDEEB), Color(0xFF470D2B), Color(0xFFFFB1D0), Color(0xFF672847))
+        ThemeAccent.ROSE -> AccentPalette(Color(0xFFA12D57),
+            Color(0xFFFFD9E5), Color(0xFF480D26), Color(0xFFFFA6C4), Color(0xFF702343))
     }
     val base = if (dark) DarkColors.copy(background = launchColor(resources, R.color.launch_dark)) else LightColors
     val primary = if (dark) palette.darkPrimary else palette.primary
