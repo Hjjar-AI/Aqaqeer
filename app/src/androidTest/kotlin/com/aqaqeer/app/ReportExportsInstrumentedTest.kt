@@ -7,6 +7,7 @@ import com.aqaqeer.app.fixtures.M3Fixtures as F
 import com.aqaqeer.app.fixtures.SuiteProfile
 import com.aqaqeer.app.fixtures.SuiteRemote
 import com.aqaqeer.app.admin.catalog
+import com.aqaqeer.app.admin.newId
 import com.aqaqeer.app.reports.*
 import kotlinx.coroutines.*
 import org.junit.*
@@ -66,7 +67,8 @@ class ReportExportsInstrumentedTest {
         assertTrue(book.rows("Summary").contains(listOf(uiText(R.string.shared_search_label), "KEEP")))
         assertTrue(book.rows("Summary").contains(listOf(uiText(R.string.report_summary_source), uiText(R.string.report_source_local))))
         val bytes = ByteArrayOutputStream()
-        PdfReports(profile.context).render(captured).use { it.writeTo(bytes) }
+        val document = PdfReports(profile.context).render(captured)
+        try { document.writeTo(bytes) } finally { document.close() }
         assertTrue(bytes.toByteArray().take(5).toByteArray().contentEquals("%PDF-".toByteArray()))
         assertEquals(request, captured.request)
         assertEquals(before, profile.admin.transaction { Triple(it.catalog(), it.pending(), it.historyCount()) })
@@ -212,7 +214,8 @@ class ReportExportsInstrumentedTest {
         for (paper in ReportPaper.entries) for (landscape in listOf(false, true)) for (compact in listOf(false, true)) {
             val captured = snapshot(ReportOptions(paper = paper, landscape = landscape, compact = compact))
             val file = File(profile.root, "${paper.name}-$landscape-$compact.pdf")
-            pdf.render(captured).use { document -> file.outputStream().use { document.writeTo(it) } }
+            val document = pdf.render(captured)
+            try { file.outputStream().use { document.writeTo(it) } } finally { document.close() }
             PdfRenderer(ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY)).use { renderer ->
                 assertTrue(renderer.pageCount >= 1)
                 val portrait = if (paper == ReportPaper.A5) 420 to 595 else 595 to 842
@@ -229,7 +232,8 @@ class ReportExportsInstrumentedTest {
         suspend fun pages(compact: Boolean): Int {
             val captured = base.copy(medications = records, request = base.request.copy(options = base.request.options.copy(compact = compact)))
             val file = File(profile.root, "density-$compact.pdf")
-            PdfReports(profile.context).render(captured).use { document -> file.outputStream().use { document.writeTo(it) } }
+            val document = PdfReports(profile.context).render(captured)
+            try { file.outputStream().use { document.writeTo(it) } } finally { document.close() }
             return PdfRenderer(ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY)).use { renderer -> renderer.pageCount }
         }
         val compact = pages(true); val comfortable = pages(false)
@@ -240,7 +244,8 @@ class ReportExportsInstrumentedTest {
         var completed = false
         val work = launch(start = CoroutineStart.LAZY) {
             currentCoroutineContext().cancel()
-            PdfReports(profile.context).render(snapshot()).use { completed = true }
+            val document = PdfReports(profile.context).render(snapshot())
+            try { completed = true } finally { document.close() }
         }
         work.start(); work.join()
         assertTrue(work.isCancelled); assertFalse(completed)

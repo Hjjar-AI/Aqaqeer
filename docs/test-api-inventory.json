@@ -7584,6 +7584,27 @@
       "app/src/test/kotlin/com/aqaqeer/app/ui/ReportControllerTest.kt"
     ],
     "note": "Only the listed report/hint contract inventories were refreshed. Other declaration snapshots are historical. No compilation, tests, lint, device actions or workflow dispatch.",
-    "productionFix": "ExcelReports ZIP close ignores identity-equal secondary exceptions, preserving the original failure instead of triggering self-suppression. Source-evidenced; regression authored, not executed."
+    "productionFix": "ExcelReports ZIP close ignores identity-equal secondary exceptions, preserving the original failure instead of triggering self-suppression. Source-evidenced; regression authored, not executed.",
+    "hostedReview": {
+      "source": "5348f792007dccbbb5c36fefd73b8db493aff941",
+      "workflow03": 45249159053,
+      "workflow07": 45249189856,
+      "jvmExecutedByUser": true,
+      "androidExecuted": false,
+      "agentExecuted": false,
+      "standard": {
+        "tests": 632,
+        "passed": 582,
+        "failed": 2,
+        "skipped": 48
+      },
+      "demo": {
+        "tests": 632,
+        "passed": 615,
+        "failed": 2,
+        "skipped": 15
+      },
+      "repair": "Test-only: import admin.newId; explicitly close PdfDocument; retain injected IOException provenance through coroutine recovery and exact original suppressed close failure. Not compiled/executed after repair."
+    }
   }
 }

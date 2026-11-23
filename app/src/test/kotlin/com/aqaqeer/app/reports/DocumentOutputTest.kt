@@ -11,6 +11,14 @@ import java.io.ByteArrayOutputStream
 import java.io.IOException
 
 class DocumentOutputTest {
+    private fun assertOriginalFailure(expected: IOException, actual: IOException) {
+        // Coroutine debug stack recovery may copy IOException across withContext(IO),
+        // retaining the original as its cause. Require its exact origin, type and message.
+        assertEquals(expected.javaClass, actual.javaClass)
+        assertEquals(expected.message, actual.message)
+        assertTrue("The injected failure must survive as the thrown exception or its cause",
+            generateSequence<Throwable>(actual) { it.cause }.any { it === expected })
+    }
     @Test fun nullProviderAndOpenFailureNeverInvokeWriter(): Unit = runBlocking {
         val context = mockk<Context>(); val resolver = mockk<ContentResolver>(); val uri = mockk<Uri>()
         every { context.contentResolver } returns resolver; every { uri.scheme } returns "content"
@@ -19,7 +27,7 @@ class DocumentOutputTest {
         assertThrows(IllegalArgumentException::class.java) { runBlocking { DocumentOutput(context).write(uri) { invoked = true } } }
         val failure = IOException("provider unavailable")
         every { resolver.openOutputStream(uri, "wt") } throws failure
-        assertSame(failure, assertThrows(IOException::class.java) { runBlocking { DocumentOutput(context).write(uri) { invoked = true } } })
+        assertOriginalFailure(failure, assertThrows(IOException::class.java) { runBlocking { DocumentOutput(context).write(uri) { invoked = true } } })
         assertFalse(invoked)
     }
     @Test fun originalWriterFailureSurvivesProviderCloseFailure(): Unit = runBlocking {
@@ -29,7 +37,7 @@ class DocumentOutputTest {
         val stream = object : ByteArrayOutputStream() { override fun close() { throw closing } }
         every { resolver.openOutputStream(uri, "wt") } returns stream
         val error = assertThrows(IOException::class.java) { runBlocking { DocumentOutput(context).write(uri) { throw writing } } }
-        assertSame(writing, error); assertArrayEquals(arrayOf(closing), error.suppressed)
+        assertOriginalFailure(writing, error); assertArrayEquals(arrayOf(closing), writing.suppressed)
     }
     @Test fun cancellationDuringWritingClosesProviderAndPropagates(): Unit = runBlocking {
         val context = mockk<Context>(); val resolver = mockk<ContentResolver>(); val uri = mockk<Uri>()
