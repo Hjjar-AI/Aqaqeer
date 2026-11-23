@@ -15,5 +15,6 @@ internal class PreferenceWriter(private val preferences: DisplayPreferences, pri
     fun setSearchAtBottom(value: Boolean) { scope.launch { preferences.setSearchAtBottom(value) } }
     fun setLayout(value: CardLayout) { scope.launch { preferences.setLayout(value) } }
     fun setSecondaryHijri(value: Boolean) { scope.launch { preferences.setSecondaryHijri(value) } }
+    fun setOtherSectionAvailability(value: Boolean) { scope.launch { preferences.setOtherSectionAvailability(value) } }
     fun setNames(value: NameDisplay) { scope.launch { preferences.setNames(value) } }
 }

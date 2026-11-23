@@ -2,70 +2,117 @@ package com.aqaqeer.app.reports
 
 import android.net.Uri
 import com.aqaqeer.app.BuildConfig
+import com.aqaqeer.app.R
+import com.aqaqeer.app.uiText
 import com.aqaqeer.app.admin.*
 import com.aqaqeer.app.data.*
-import com.aqaqeer.app.security.files.SnapshotWire
 import kotlinx.coroutines.*
 import kotlinx.serialization.json.Json
+import com.aqaqeer.app.security.files.SnapshotWire
 import java.time.Instant
+import java.time.LocalDate
 import javax.inject.Inject
-
-internal enum class ReportPreset { OUT, FULL, EXPIRING_SOON }
-internal data class ReportRequest(val preset: ReportPreset = ReportPreset.OUT, val sectionId: String? = null,
-    val includeUnpublished: Boolean = false, val allSections: Boolean = false)
-internal data class ReportSnapshot(val pharmacyId: String, val pharmacyName: String, val timezone: String,
-    val generatedAt: Instant, val publishedAt: Instant?, val request: ReportRequest,
-    val sections: List<Section>, val medications: List<Medication>, val availability: List<Availability>,
-    val categories: List<Category>, val forms: List<MedicationForm>, val demoWorkspaceId: String? = null) {
-    private val statuses = availability.associate { (it.medicationId to it.sectionId) to it.status }
-    fun status(medication: String, section: String) = statuses[medication to section] ?: AvailabilityStatus.OUT
-}
 
 class ReportRepository @Inject constructor(private val admin: AdminRepository, private val output: DocumentOutput,
     private val pdf: PdfReports) {
-    internal suspend fun capture(request: ReportRequest): ReportSnapshot {
-        if (BuildConfig.IS_DEMO) {
-            return withContext(Dispatchers.Default) {
-                val session = DemoSession.authorized()
-                captureSource(request, session.catalog, session.initial, session.publishedAt).copy(demoWorkspaceId = session.workspaceId)
-            }
+    internal suspend fun source(includeUnpublished: Boolean): ReportSource {
+        if (BuildConfig.IS_DEMO) return withContext(Dispatchers.Default) {
+            val session = DemoSession.authorized()
+            ReportSource(if (includeUnpublished) session.catalog else session.initial,
+                includeUnpublished, session.publishedAt, session.workspaceId)
         }
         return admin.transaction { dao ->
             admin.guard(dao)
             val local = dao.catalog()
-            val saved = dao.snapshotState()?.confirmedPayloadJson?.let { Json.decodeFromString<SnapshotWire>(it) }
-            captureSource(request, local, saved?.supported()?.catalog, saved?.publishedAt)
-        }
-    }
-    private fun captureSource(request: ReportRequest, local: CatalogSnapshot, confirmed: CatalogSnapshot?, publishedAt: Instant?): ReportSnapshot {
-        val catalog = if (request.includeUnpublished) local else confirmed
-            ?: throw CsvProblem("لا توجد نسخة منشورة؛ اختر تضمين التعديلات غير المنشورة صراحة")
-        CatalogRules.validate(catalog)
-        val pharmacy = requireNotNull(catalog.pharmacy)
-        check(pharmacy.pharmacyId == local.pharmacy?.pharmacyId)
-        val generated = Instant.now()
-        val section = if (request.preset == ReportPreset.OUT && !request.allSections) catalog.sections.find { it.id == request.sectionId }
-            ?: throw CsvProblem("اختر قسماً موجوداً في مصدر التقرير") else null
-        val sections = if (section != null) listOf(section) else if (request.preset == ReportPreset.OUT && request.allSections)
-            catalog.sections.filter { it.isActive } else catalog.sections
-        if (request.preset == ReportPreset.OUT && request.allSections && sections.isEmpty())
-            throw CsvProblem("لا توجد أقسام نشطة لإعداد تقرير النواقص")
-        val today = MedicationPresentation.today(generated, pharmacy.timezone)
-        val medications = MedicationPresentation.browse(catalog, section?.id, "", HomeFilters(), HomeSort.SCIENTIFIC_NAME).filter { med ->
-            when (request.preset) {
-                ReportPreset.OUT -> sections.any { catalog.status(med.id, it.id) == AvailabilityStatus.OUT }
-                ReportPreset.FULL -> true
-                ReportPreset.EXPIRING_SOON -> MedicationPresentation.expiry(med, today) == ExpiryState.SOON
+            val metadata = dao.snapshotMetadata()
+            val catalog = if (includeUnpublished) local else {
+                val text = dao.snapshotState()?.confirmedPayloadJson ?: throw CsvProblem(uiText(R.string.report_no_published_source))
+                Json.decodeFromString<SnapshotWire>(text).supported().catalog
             }
+            check(catalog.pharmacy?.pharmacyId == local.pharmacy?.pharmacyId)
+            ReportSource(catalog, includeUnpublished, metadata?.publishedAt?.let(Instant::parse))
         }
-        val estimate = medications.sumOf { med -> listOf(med.nameEn, med.nameAr, med.genericAr, med.genericEn, med.brand,
-            med.strength, med.note).sumOf { (it?.length ?: 0).toLong() * 2 } }
-        val runtime = Runtime.getRuntime()
-        if (estimate * 12 + 16L * 1024 * 1024 > runtime.maxMemory() - (runtime.totalMemory() - runtime.freeMemory()))
-            throw CsvProblem("لا توجد ذاكرة كافية لإعداد التقرير بأمان")
-        return ReportSnapshot(pharmacy.pharmacyId, pharmacy.name, pharmacy.timezone, generated, publishedAt, request,
-            sections, medications, catalog.availability, catalog.categories, catalog.forms)
     }
+
+    internal suspend fun capture(request: ReportRequest): ReportSnapshot {
+        val source = source(request.includeUnpublished)
+        return withContext(Dispatchers.Default) {
+            val catalog = source.catalog
+            CatalogRules.validate(catalog)
+            if (request.pharmacyId != null && request.pharmacyId != source.pharmacyId)
+                throw CsvProblem(uiText(R.string.report_source_changed))
+            val pharmacy = requireNotNull(catalog.pharmacy)
+            val sections = catalog.sections.filter { section -> when {
+                request.sectionIds != null -> section.id in request.sectionIds
+                request.preset == ReportPreset.OUT && !request.allSections -> section.id == request.sectionId
+                else -> section.isActive
+            } }
+            fun requireIds(selected: Set<String>, available: Set<String>) {
+                if (!available.containsAll(selected)) throw CsvProblem(uiText(R.string.report_source_changed))
+            }
+            request.sectionIds?.let { requireIds(it, catalog.sections.map { s -> s.id }.toSet()) }
+            requireIds(request.categoryIds, catalog.categories.map { it.id }.toSet())
+            requireIds(request.formIds, catalog.forms.map { it.id }.toSet())
+            request.medicationIds?.let { requireIds(it, catalog.medications.map { med -> med.id }.toSet()) }
+            if (ReportField.SCIENTIFIC !in request.options.fields) throw CsvProblem(uiText(R.string.report_scientific_required))
+            if (sections.isEmpty() && (ReportField.AVAILABILITY in request.options.fields || request.effectiveStatuses.isNotEmpty() || request.options.sort == ReportSort.AVAILABILITY))
+                throw CsvProblem(uiText(R.string.report_sections_required))
+            fun date(value: String): LocalDate? = if (value.isBlank()) null else try { LocalDate.parse(value) }
+                catch (_: java.time.DateTimeException) { throw CsvProblem(uiText(R.string.report_invalid_dates)) }
+            val from = date(request.fromDate); val through = date(request.throughDate)
+            if (from != null && through != null && from > through) throw CsvProblem(uiText(R.string.report_invalid_dates))
+            val now = Instant.now()
+            val today = MedicationPresentation.today(now, pharmacy.timezone)
+            val statuses = catalog.availability.associate { (it.medicationId to it.sectionId) to it.status }
+            fun values(med: Medication) = sections.map { statuses[med.id to it.id] ?: AvailabilityStatus.OUT }
+            fun statusMatches(med: Medication): Boolean {
+                if (request.effectiveStatuses.isEmpty()) return true
+                val sectionStatuses = values(med)
+                return when (request.effectiveMatch) {
+                    ReportStatusMatch.OVERALL -> combinedStatus(sectionStatuses) in request.effectiveStatuses
+                    ReportStatusMatch.ANY_SECTION -> sectionStatuses.any { it in request.effectiveStatuses }
+                    ReportStatusMatch.ALL_SECTIONS -> sectionStatuses.all { it in request.effectiveStatuses }
+                }
+            }
+            val index = CatalogSearchIndex(catalog)
+            val selected = index.browse(null, request.query, HomeFilters(categoryIds = request.categoryIds), HomeSort.SCIENTIFIC_NAME)
+                .filter { med ->
+                    currentCoroutineContext().ensureActive()
+                    (request.medicationIds == null || med.id in request.medicationIds) &&
+                        (request.formIds.isEmpty() || med.formId in request.formIds) && statusMatches(med) &&
+                        (from == null || med.expiryDate?.let { it >= from } == true) &&
+                        (through == null || med.expiryDate?.let { it <= through } == true) && when (request.effectiveExpiry) {
+                            ReportExpiry.ALL -> true
+                            ReportExpiry.UNDATED -> med.expiryDate == null
+                            ReportExpiry.EXPIRED -> MedicationPresentation.expiry(med, today) == ExpiryState.EXPIRED
+                            ReportExpiry.SOON -> MedicationPresentation.expiry(med, today) == ExpiryState.SOON
+                            ReportExpiry.VALID -> med.expiryDate?.let { it >= today } == true
+                        }
+                }
+            val scientificOrder = selected.withIndex().associate { it.value.id to it.index }
+            val order = when (request.options.sort) {
+                ReportSort.SCIENTIFIC -> compareBy<Medication> { scientificOrder.getValue(it.id) }
+                ReportSort.TRADE -> compareBy { med: Medication -> normalizedName(when (request.options.names) {
+                    ReportNames.ENGLISH -> med.nameEn ?: med.nameAr ?: MedicationPresentation.scientificName(med)
+                    else -> med.nameAr ?: med.nameEn ?: MedicationPresentation.scientificName(med)
+                }) }
+                ReportSort.EXPIRY -> compareBy<Medication, LocalDate?>(nullsLast()) { it.expiryDate }
+                ReportSort.AVAILABILITY -> compareBy { med: Medication -> combinedStatus(values(med)).ordinal }
+            }.thenBy { scientificOrder.getValue(it.id) }
+            val categories = catalog.categories.sortedWith(compareBy<Category> { it.orderIndex }.thenBy { it.id })
+            val categoryOrder = categories.withIndex().associate { it.value.id to it.index }
+            val medications = selected.sortedWith(if (request.options.groupByCategory)
+                compareBy<Medication> { categoryOrder.getValue(it.categoryId) }.then(order) else order)
+            val estimate = medications.sumOf { med -> listOf(med.nameEn, med.nameAr, med.genericAr, med.genericEn,
+                med.brand, med.strength, med.note).sumOf { (it?.length ?: 0).toLong() * 2 } }
+            val runtime = Runtime.getRuntime()
+            if (estimate * 12 + 16L * 1024 * 1024 > runtime.maxMemory() - (runtime.totalMemory() - runtime.freeMemory()))
+                throw CsvProblem(uiText(R.string.report_insufficient_memory))
+            ReportSnapshot(pharmacy.pharmacyId, pharmacy.name, pharmacy.timezone, now, source.publishedAt, request,
+                sections, medications, catalog.availability, categories, catalog.forms, source.demoWorkspaceId)
+        }
+    }
+
     private suspend fun authorize(snapshot: ReportSnapshot) {
         if (BuildConfig.IS_DEMO) {
             val session = DemoSession.authorized()
@@ -74,39 +121,16 @@ class ReportRepository @Inject constructor(private val admin: AdminRepository, p
             admin.guard(dao); check(dao.pharmacy()?.pharmacyId == snapshot.pharmacyId)
         }
     }
-    internal suspend fun csv(uri: Uri, snapshot: ReportSnapshot) {
+    internal suspend fun excel(uri: Uri, snapshot: ReportSnapshot) {
         authorize(snapshot)
-        val jobContext = currentCoroutineContext()
-        output.write(uri) { stream ->
-            CsvCodec.write(stream, sequence {
-                yield(listOf("pharmacy", snapshot.pharmacyName))
-                yield(listOf("timezone", snapshot.timezone))
-                yield(listOf("generatedAt", snapshot.generatedAt.toString()))
-                yield(listOf("publishedAt", snapshot.publishedAt?.toString() ?: "لم يُنشر"))
-                yield(listOf("includeUnpublished", snapshot.request.includeUnpublished.toString()))
-                yield(listOf("preset", snapshot.request.preset.name))
-                if (snapshot.request.preset == ReportPreset.OUT) yield(listOf("allSections", snapshot.request.allSections.toString()))
-                if (snapshot.request.preset == ReportPreset.EXPIRING_SOON)
-                    yield(listOf("expiryPolicy", "صلاحية قصيرة وفق حد كل دواء؛ يستثني المنتهي"))
-                yield(emptyList())
-                yield(visibleMedicationColumns + snapshot.sections.map { "${it.nameAr} (section:${it.id})" })
-                snapshot.medications.forEach { med ->
-                    yield(listOf(med.genericAr.orEmpty(), med.genericEn.orEmpty(), med.nameAr.orEmpty(), med.nameEn.orEmpty(), med.brand.orEmpty(),
-                        snapshot.forms.first { it.id == med.formId }.nameAr, med.strength,
-                        snapshot.categories.first { it.id == med.categoryId }.nameAr, med.note.orEmpty(),
-                        med.expiryDate?.toString().orEmpty(), med.expirySoonThresholdDays.toString()) +
-                        snapshot.sections.map { snapshot.status(med.id, it.id).name })
-                }
-            }, true) { jobContext.ensureActive() }
-        }
+        output.write(uri) { stream -> ExcelReports.write(stream, snapshot, currentCoroutineContext()) }
     }
     internal suspend fun pdf(uri: Uri, snapshot: ReportSnapshot) {
         authorize(snapshot)
         withContext(Dispatchers.Default) {
             val document = pdf.render(snapshot)
-            try {
-                output.write(uri) { stream -> currentCoroutineContext().ensureActive(); document.writeTo(stream); stream.flush() }
-            } finally { document.close() }
+            try { output.write(uri) { stream -> currentCoroutineContext().ensureActive(); document.writeTo(stream); stream.flush() } }
+            finally { document.close() }
         }
     }
 }

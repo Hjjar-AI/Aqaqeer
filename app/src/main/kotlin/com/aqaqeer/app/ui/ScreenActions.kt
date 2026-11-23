@@ -83,6 +83,7 @@ internal data class SettingsCallbacks(
     val openLeave: (() -> Unit)? = null,
     val changeDemoAdmin: (Boolean) -> Unit = {},
     val resetDemo: () -> Unit = {},
+    val setOtherSectionAvailability: (Boolean) -> Unit = {},
     val openAbout: () -> Unit
 )
 
@@ -104,6 +105,7 @@ internal class SettingsActions(private val current: State<SettingsCallbacks>) {
     val openLeave: (() -> Unit)? get() = current.value.openLeave
     val changeDemoAdmin: (Boolean) -> Unit get() = current.value.changeDemoAdmin
     val resetDemo: () -> Unit get() = current.value.resetDemo
+    val setOtherSectionAvailability: (Boolean) -> Unit get() = current.value.setOtherSectionAvailability
     val openAbout: () -> Unit get() = current.value.openAbout
 }
 

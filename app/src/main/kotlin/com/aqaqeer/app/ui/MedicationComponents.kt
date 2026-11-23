@@ -162,7 +162,7 @@ import java.time.LocalDate
                 quickMenuOpen, dismissQuickMenu, chooseStatus, selectionEnabled, editableStatus, savingStatus)
 
             if (!compact && !(preferences.groupingEnabled && preferences.grouping == HomeGrouping.CATEGORY)) LabeledValue(uiText(R.string.catalog_category_label), row.category)
-            AvailabilityElsewhereTip(medication.id, sectionId, row.elsewhere)
+            if (preferences.showOtherSectionAvailability) AvailabilityElsewhereTip(medication.id, sectionId, row.elsewhere)
         }
     }
 }

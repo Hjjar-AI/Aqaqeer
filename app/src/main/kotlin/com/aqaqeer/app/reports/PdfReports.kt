@@ -17,6 +17,7 @@ import androidx.core.graphics.withClip
 import androidx.core.graphics.withTranslation
 import androidx.core.text.BidiFormatter
 import com.aqaqeer.app.R
+import com.aqaqeer.app.uiText
 import com.aqaqeer.app.data.*
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.currentCoroutineContext
@@ -32,7 +33,7 @@ class PdfReports @Inject constructor(@param:ApplicationContext private val conte
         val normal = requireNotNull(ResourcesCompat.getFont(context, R.font.noto_naskh_arabic_regular))
         val bold = requireNotNull(ResourcesCompat.getFont(context, R.font.noto_naskh_arabic_bold))
         val emblem = requireNotNull(BitmapFactory.decodeResource(context.resources, R.drawable.aqaqeer_logo))
-        return A5Report(snapshot, normal, bold, emblem, currentCoroutineContext()).render()
+        return TableReport(snapshot, normal, bold, emblem, currentCoroutineContext()).render()
     }
 }
 
@@ -43,13 +44,10 @@ private data class PdfPart(
 private data class PdfSlice(val layout: StaticLayout, val top: Int, val height: Int, val offset: Float)
 private data class PdfPortion(val slices: List<PdfSlice>, val height: Float)
 
-/** A5 portrait, with one detail column at the RTL start and up to five status columns. */
-private class A5Report(
-    private val snapshot: ReportSnapshot,
-    private val normal: Typeface,
-    private val bold: Typeface,
-    private val emblem: Bitmap,
-    private val owner: CoroutineContext,
+/** Content-sized table columns plus full-width optional details. */
+private class TableReport(
+    private val snapshot: ReportSnapshot, private val normal: Typeface, private val bold: Typeface,
+    private val emblem: Bitmap, private val owner: CoroutineContext,
 ) {
     private val document = PdfDocument()
     private var page: PdfDocument.Page? = null
@@ -57,17 +55,24 @@ private class A5Report(
     private var y = 0f
     private var category: Category? = null
     private var tableActive = false
+    private val options = snapshot.request.options
+    private val paper = if (options.paper == ReportPaper.A5) 420 to 595 else 595 to 842
+    private val pageWidth = if (options.landscape) paper.second else paper.first
+    private val pageHeight = if (options.landscape) paper.first else paper.second
     private val margin = 20f
-    private val right = 400f
-    private val bottom = 557f
-    private val width = 380
-    private val padding = 4f
-    private val sectionWidth = when (snapshot.sections.size) { 1 -> 56f; 2 -> 52f; else -> 36f }
-    private val detailLeft = margin + sectionWidth * snapshot.sections.size
-    private val detailWidth = (right - detailLeft - padding * 2).toInt()
+    private val right = pageWidth - margin
+    private val bottom = pageHeight - 38f
+    private val width = (right - margin).toInt()
+    private val padding = if (options.compact) 2f else 4f
+    private val columns = snapshot.columns().filter { it.core }
+    private val details = snapshot.columns().filterNot { it.core }
+    private val weights = columns.map { if (it.field == ReportField.SCIENTIFIC) 3.2f else 1.2f }
+    private val widths = weights.map { width * it / weights.sum() }
+    private val lefts = widths.runningFold(right) { x, w -> x - w }.drop(1)
     private val fill = Paint(Paint.ANTI_ALIAS_FLAG)
     private val rule = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Color.rgb(122, 90, 18); strokeWidth = 0.8f }
     private val border = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Color.rgb(215, 218, 221); strokeWidth = 0.4f }
+    private val outline = Paint(border).apply { style = Paint.Style.STROKE }
     private val bidi = BidiFormatter.getInstance(true)
     private val canvas get() = requireNotNull(page).canvas
 
@@ -155,163 +160,138 @@ private class A5Report(
     private fun newPage() {
         owner.ensureActive()
         page?.let { document.finishPage(it); page = null }
-        if (++pageNumber > 1000) throw CsvProblem("التقرير يحتاج أكثر من 1000 صفحة؛ قلّل نطاقه")
-        page = document.startPage(PdfDocument.PageInfo.Builder(420, 595, pageNumber).create())
-        canvas.drawBitmap(emblem, null, RectF(margin, 18f, 54f, 52f), null)
-        var headerY = 17f
-        listOf(
-            layout("تقرير عقاقير", 334, true, 12.5f),
-            layout(bidi.unicodeWrap(short(snapshot.pharmacyName, 100)), 334, true, 9f),
-        ).forEach { block -> draw(block, 66f, headerY); headerY += block.height + 1f }
-        y = max(headerY, 55f)
+        if (++pageNumber > 1000) throw CsvProblem(uiText(R.string.report_pdf_too_large))
+        page = document.startPage(PdfDocument.PageInfo.Builder(pageWidth, pageHeight, pageNumber).create())
+        canvas.drawBitmap(emblem, null, RectF(margin, 16f, margin + 30f, 46f), null)
+        val title = layout(bidi.unicodeWrap(short(snapshot.pharmacyName, 80)), width - 42, true, 10f)
+        draw(title, margin + 42f, 16f)
+        y = max(48f, 16f + title.height)
         val metadata = listOf(
-            "التوقيت: ${bidi.unicodeWrap(snapshot.timezone)} · أُنشئ: ${bidi.unicodeWrap(MedicationPresentation.timestamp(snapshot.generatedAt, snapshot.timezone))}",
-            "النشر: " + (snapshot.publishedAt?.let { bidi.unicodeWrap(MedicationPresentation.timestamp(it, snapshot.timezone)) } ?: "لم يُنشر") +
-                " · " + if (snapshot.request.includeUnpublished) "يشمل تعديلات غير منشورة" else "البيانات المنشورة فقط",
+            uiText(if (snapshot.request.includeUnpublished) R.string.report_source_local else R.string.report_source_published),
+            MedicationPresentation.timestamp(snapshot.generatedAt, snapshot.timezone) + " · " + snapshot.timezone,
         )
-        metadata.forEach { text -> val block = layout(text, width, size = 7.2f); draw(block, margin, y); y += block.height + 1f }
-        canvas.drawLine(margin, y + 2f, right, y + 2f, rule)
-        y += 9f
-        canvas.drawLine(margin, 568f, right, 568f, border)
-        draw(layout("عقاقير · صفحة ${MedicationPresentation.displayDigits(pageNumber.toString())}", width, size = 7.5f, centered = true), margin, 571f)
+        metadata.forEach { text -> val block = layout(bidi.unicodeWrap(text), width, size = 7.2f); draw(block, margin, y); y += block.height }
+        canvas.drawLine(margin, y + 2f, right, y + 2f, rule); y += 6f
+        canvas.drawLine(margin, pageHeight - 27f, right, pageHeight - 27f, border)
+        draw(layout(uiText(R.string.report_pdf_page, pageNumber.toString()), width, size = 7.5f, centered = true), margin, pageHeight - 25f)
         if (tableActive) tableHeader()
         require(y + 45f < bottom) { "Repeated PDF headings leave no usable row space" }
     }
-
     private fun plain(parts: List<PdfPart>) {
         val flow = TextFlow(parts, width)
         while (!flow.done) {
-            owner.ensureActive()
             val portion = flow.take(bottom - y)
             if (portion.slices.isEmpty()) { newPage(); continue }
-            drawPortion(portion, margin, y, width)
-            y += portion.height + 3f
+            drawPortion(portion, margin, y, width); y += portion.height + padding
             if (!flow.done) newPage()
         }
     }
-
     private fun tableHeader() {
-        val heading = layout(short(requireNotNull(category).nameAr, 80), width - 8, true, 9.4f)
-        fill.color = Color.rgb(246, 239, 218)
-        canvas.drawRect(margin, y, right, y + heading.height + 6f, fill)
-        draw(heading, margin + 4f, y + 3f)
-        y += heading.height + 8f
-        val detail = layout("الدواء والتفاصيل", detailWidth, true, 8.5f)
-        val sections = snapshot.sections.mapIndexed { index, section ->
-            layout("${MedicationPresentation.displayDigits((index + 1).toString())}\n${short(section.nameAr, 20)}",
-                (sectionWidth - padding * 2).toInt(), true, 7.4f, centered = true)
+        category?.let {
+            val heading = layout(bidi.unicodeWrap(short(it.nameAr, 80)), width - 8, true, 9.4f)
+            fill.color = Color.rgb(246, 239, 218)
+            canvas.drawRect(margin, y, right, y + heading.height + padding * 2, fill)
+            draw(heading, margin + padding, y + padding); y += heading.height + padding * 2
         }
-        val height = max(detail.height, sections.maxOf { it.height }).toFloat() + padding * 2
-        fill.color = Color.rgb(242, 244, 245)
-        canvas.drawRect(margin, y, right, y + height, fill)
-        draw(detail, detailLeft + padding, y + padding)
-        sections.forEachIndexed { index, block -> draw(block, detailLeft - (index + 1) * sectionWidth + padding, y + padding) }
-        grid(y, height)
-        y += height
-    }
-
-    private fun grid(top: Float, height: Float) {
-        canvas.drawLine(margin, top, right, top, border)
-        canvas.drawLine(margin, top + height, right, top + height, border)
-        canvas.drawLine(right, top, right, top + height, border)
-        for (index in 0..snapshot.sections.size) {
-            val x = detailLeft - index * sectionWidth
-            canvas.drawLine(x, top, x, top + height, border)
+        val headings = columns.mapIndexed { i, col ->
+            layout(bidi.unicodeWrap(short(col.title, 24)), (widths[i] - padding * 2).toInt(), true, 8.2f, centered = true)
         }
+        val height = headings.maxOf { it.height }.toFloat() + padding * 2
+        fill.color = Color.rgb(242, 244, 245); canvas.drawRect(margin, y, right, y + height, fill)
+        headings.forEachIndexed { i, h -> draw(h, lefts[i] + padding, y + padding) }
+        grid(y, height, true); y += height
     }
-
+    private fun grid(top: Float, height: Float, cells: Boolean) {
+        canvas.drawRect(margin, top, right, top + height, outline)
+        if (cells) lefts.dropLast(1).forEach { x -> canvas.drawLine(x, top, x, top + height, border) }
+    }
     private fun medication(med: Medication, number: Int) {
-        val parts = mutableListOf<PdfPart>()
-        med.genericAr?.let { parts += PdfPart(it, true, 9.4f, "${MedicationPresentation.displayDigits(number.toString())} · ") }
-        med.genericEn?.let { parts += PdfPart(it, true, 9.4f,
-            if (parts.isEmpty()) "${MedicationPresentation.displayDigits(number.toString())} · " else "", true) }
-        val form = snapshot.forms.first { it.id == med.formId }.nameAr
-        if (med.strength.length + form.length < 2048) {
-            parts += PdfPart("العيار: ${bidi.unicodeWrap(med.strength)} · الشكل: $form")
-        } else {
-            parts += PdfPart(med.strength, prefix = "العيار: ", isolate = true)
-            parts += PdfPart(form, prefix = "الشكل: ")
-        }
-        med.nameAr?.let { parts += PdfPart(it, prefix = "التجاري: ") }
-        med.nameEn?.let { parts += PdfPart(it, prefix = if (med.nameAr == null) "التجاري: " else "", isolate = true) }
-        med.brand?.let { parts += PdfPart(it, prefix = "العلامة: ", isolate = true) }
-        med.expiryDate?.let { parts += PdfPart(it.toString(), prefix = "الانتهاء (ميلادي): ", isolate = true) }
-        requireNotNull(category).let { if (short(it.nameAr, 80) != it.nameAr) parts += PdfPart(it.nameAr, prefix = "التصنيف: ") }
-        med.note?.let { parts += PdfPart(it, prefix = "ملاحظات: ", isolate = true) }
-        val flow = TextFlow(parts, detailWidth)
-        val statuses = snapshot.sections.map { snapshot.status(med.id, it.id) }
-        val labels = statuses.map { layout(MedicationPresentation.statusLabel(it), (sectionWidth - padding * 2).toInt(), size = 7.4f, centered = true) }
-        val minimumHeight = max(32f, labels.maxOf { it.height }.toFloat() + padding * 2)
+        val flows = columns.mapIndexed { i, col -> TextFlow(listOf(PdfPart(col.value(snapshot, med),
+            strong = col.field == ReportField.SCIENTIFIC, size = if (col.field == ReportField.SCIENTIFIC) 9.4f else 8.2f,
+            prefix = if (col.field == ReportField.SCIENTIFIC) "$number · " else "", isolate = true)),
+            (widths[i] - padding * 2).toInt()) }
+        val stockHeight = columns.mapIndexed { i, col -> if (col.field == ReportField.AVAILABILITY)
+            layout(col.value(snapshot, med), (widths[i] - padding * 2).toInt()).height.toFloat() else 0f }.maxOrNull() ?: 0f
+        val continuationText = uiText(R.string.report_medication_continuation, number.toString()) +
+            columns.filter { it.field == ReportField.AVAILABILITY }.joinToString("", prefix = "") { col ->
+                " · ${bidi.unicodeWrap(short(col.title, 16))}: ${col.value(snapshot, med)}"
+            }
         var continued = false
-        while (!flow.done) {
+        while (flows.any { !it.done }) {
             owner.ensureActive()
-            val continuation = if (continued) layout("متابعة الدواء ${MedicationPresentation.displayDigits(number.toString())}", detailWidth, true, 7.4f) else null
-            val prefixHeight = continuation?.height?.toFloat() ?: 0f
-            if (bottom - y < minimumHeight + prefixHeight) newPage()
-            val portion = flow.take(bottom - y - padding * 2 - prefixHeight)
-            if (portion.slices.isEmpty()) { newPage(); continue }
-            val height = max(minimumHeight, portion.height + prefixHeight + padding * 2)
-            fill.color = if (number % 2 == 0) Color.rgb(249, 250, 251) else Color.WHITE
-            canvas.drawRect(margin, y, right, y + height, fill)
-            continuation?.let { draw(it, detailLeft + padding, y + padding) }
-            drawPortion(portion, detailLeft + padding, y + padding + prefixHeight, detailWidth)
-            labels.forEachIndexed { index, label ->
-                val left = detailLeft - (index + 1) * sectionWidth
-                fill.color = when (statuses[index]) {
+            val continuation = if (continued) layout(continuationText, width, true, 7.4f) else null
+            val prefix = continuation?.height?.toFloat() ?: 0f
+            if (bottom - y < prefix + padding * 2 + max(24f, stockHeight)) newPage()
+            continuation?.let { draw(it, margin, y); y += it.height }
+            val portions = flows.map { it.take(bottom - y - padding * 2) }
+            if (portions.all { it.slices.isEmpty() }) { newPage(); continue }
+            val height = max(stockHeight, portions.maxOf { it.height }) + padding * 2
+            columns.forEachIndexed { i, col ->
+                fill.color = when (col.status(snapshot, med)) {
                     AvailabilityStatus.AVAILABLE -> Color.rgb(237, 246, 239)
                     AvailabilityStatus.LOW -> Color.rgb(255, 247, 225)
                     AvailabilityStatus.OUT -> Color.rgb(255, 237, 235)
+                    null -> if (number % 2 == 0) Color.rgb(249, 250, 251) else Color.WHITE
                 }
-                canvas.drawRect(left, y, left + sectionWidth, y + height, fill)
-                draw(label, left + padding, y + padding)
+                canvas.drawRect(lefts[i], y, lefts[i] + widths[i], y + height, fill)
+                drawPortion(portions[i], lefts[i] + padding, y + padding, (widths[i] - padding * 2).toInt())
+                // Repeat the short stock label when other core cells continue onto another page.
+                if (portions[i].slices.isEmpty() && col.field == ReportField.AVAILABILITY)
+                    draw(layout(col.value(snapshot, med), (widths[i] - padding * 2).toInt()), lefts[i] + padding, y + padding)
             }
-            grid(y, height)
-            y += height
-            if (!flow.done) { continued = true; newPage() }
+            grid(y, height, true); y += height
+            if (flows.any { !it.done }) { continued = true; newPage() }
+        }
+        val extra = details.mapNotNull { col -> col.value(snapshot, med).takeIf { it.isNotEmpty() }?.let {
+            PdfPart(it, prefix = col.title + ": ", isolate = true)
+        } }
+        if (extra.isNotEmpty()) {
+            val flow = TextFlow(extra, width - (padding * 2).toInt())
+            var detailContinued = false
+            while (!flow.done) {
+                owner.ensureActive()
+                if (bottom - y < 28f) { newPage(); detailContinued = true }
+                if (detailContinued) {
+                    val title = layout(continuationText, width, true, 7.4f)
+                    draw(title, margin, y); y += title.height
+                }
+                val portion = flow.take(bottom - y - padding * 2)
+                if (portion.slices.isEmpty()) { newPage(); detailContinued = true; continue }
+                drawPortion(portion, margin + padding, y + padding, width - (padding * 2).toInt())
+                grid(y, portion.height + padding * 2, false); y += portion.height + padding * 2
+                if (!flow.done) { newPage(); detailContinued = true }
+            }
         }
     }
-
     fun render(): PdfDocument {
         try {
-            require(snapshot.sections.size in 1..5)
-            val categoryIds = snapshot.categories.map { it.id }.toSet()
-            require(categoryIds.size == snapshot.categories.size && snapshot.medications.all { it.categoryId in categoryIds }) {
-                "Report medications require unique, known categories"
-            }
+            require(ReportField.SCIENTIFIC in options.fields)
             newPage()
-            plain(listOf(PdfPart(snapshot.pharmacyName, true, 10f, "الصيدلية: ", true)))
-            val title = when (snapshot.request.preset) {
-                ReportPreset.OUT -> if (snapshot.request.allSections) "النواقص في جميع الأقسام النشطة — غير متوفر في قسم واحد على الأقل"
-                    else "الأدوية غير المتوفرة في القسم: ${snapshot.sections.single().nameAr}"
-                ReportPreset.FULL -> "التوافر الكامل"
-                ReportPreset.EXPIRING_SOON -> "الأدوية القريبة من الانتهاء — يستثني المنتهي، وفق حد التنبيه الخاص بكل دواء"
-            }
-            plain(listOf(PdfPart(title, true, 10f)))
-            snapshot.sections.forEachIndexed { index, section ->
-                plain(listOf(PdfPart(section.nameAr + if (!section.isActive) " (قسم مغلق)" else "", size = 7.8f,
-                    prefix = "القسم ${MedicationPresentation.displayDigits((index + 1).toString())}: ", isolate = true)))
-            }
-            if (snapshot.medications.isEmpty()) plain(listOf(PdfPart("لا توجد أدوية مطابقة لهذا التقرير")))
-            val grouped = snapshot.medications.groupBy { it.categoryId }
-            var number = 0
-            snapshot.categories.sortedBy { it.orderIndex }.forEach { group ->
-                val medications = grouped[group.id] ?: return@forEach
+            snapshot.summary().forEach { (label, value) -> plain(listOf(PdfPart(value, prefix = "$label: ", isolate = true))) }
+            if (snapshot.medications.isEmpty()) plain(listOf(PdfPart(uiText(R.string.report_empty))))
+            var previous: String? = null
+            snapshot.medications.forEachIndexed { i, med ->
                 owner.ensureActive()
-                category = group
-                tableActive = true
-                // Reserve a bounded category/column heading plus a first readable row.
-                val heading = layout(short(group.nameAr, 80), width - 8, true, 9.4f)
-                val columns = snapshot.sections.maxOf { layout("1\n${short(it.nameAr, 20)}", (sectionWidth - padding * 2).toInt(), true, 7.4f, true).height }
-                if (bottom - y < heading.height + columns + 56f) newPage() else tableHeader()
-                medications.forEach { med -> medication(med, ++number) }
-                y += 8f
+                if (!tableActive || options.groupByCategory && med.categoryId != previous) {
+                    category = if (options.groupByCategory) snapshot.categories.first { it.id == med.categoryId } else null
+                    category?.let { if (short(it.nameAr, 80) != it.nameAr) {
+                        tableActive = false
+                        plain(listOf(PdfPart(it.nameAr, true, 9.4f, isolate = true)))
+                    } }
+                    tableActive = true
+                    // Reserve the actual category/column headings and a readable first line.
+                    val categoryHeight = category?.let { layout(bidi.unicodeWrap(short(it.nameAr, 80)), width - 8, true, 9.4f).height + padding * 2 } ?: 0f
+                    val columnHeight = columns.mapIndexed { n, col -> layout(bidi.unicodeWrap(short(col.title, 24)), (widths[n] - padding * 2).toInt(), true, 8.2f, true).height }.maxOf { it }
+                    if (bottom - y < categoryHeight + columnHeight + padding * 2 + 32f) newPage() else tableHeader()
+                    previous = med.categoryId
+                }
+                medication(med, i + 1)
             }
             page?.let { document.finishPage(it); page = null }
             return document
         } catch (error: Throwable) {
             page?.let { runCatching { document.finishPage(it) }; page = null }
-            document.close()
-            throw error
+            document.close(); throw error
         }
     }
 }

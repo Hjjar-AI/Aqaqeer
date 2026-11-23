@@ -12,6 +12,10 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
 import java.io.IOException
+import com.aqaqeer.app.reports.ReportOptions
+import com.aqaqeer.app.reports.ReportField
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 
 private val Context.displayDataStore by preferencesDataStore("display")
 enum class ThemeChoice { SYSTEM, LIGHT, DARK, AMOLED }
@@ -56,6 +60,7 @@ class DisplayPreferences(private val context: Context) {
         prefs[TWO_COLUMNS] ?: true,
         prefs[SECTIONS_AT_BOTTOM] ?: true,
         prefs[SEARCH_AT_BOTTOM] ?: true,
+        prefs[OTHER_SECTION_AVAILABILITY] ?: false,
     ) }
     suspend fun setTheme(value: ThemeChoice) { context.displayDataStore.edit { it[THEME] = value.name } }
     suspend fun setAccent(value: ThemeAccent) { context.displayDataStore.edit { it[ACCENT] = value.name } }
@@ -68,6 +73,17 @@ class DisplayPreferences(private val context: Context) {
     suspend fun setSecondaryHijri(value: Boolean) { context.displayDataStore.edit { it[SECONDARY_HIJRI] = value } }
     suspend fun setGroupingEnabled(value: Boolean) { context.displayDataStore.edit { it[GROUPING_ENABLED] = value } }
     suspend fun setGrouping(value: HomeGrouping) { context.displayDataStore.edit { it[GROUPING] = value.name } }
+    internal val reportOptions: Flow<ReportOptions> = data.map { prefs ->
+        prefs[REPORT_OPTIONS]?.let { raw -> runCatching { Json.decodeFromString<ReportOptions>(raw) }
+            .getOrNull()?.takeIf { ReportField.SCIENTIFIC in it.fields } } ?: ReportOptions()
+    }
+    internal suspend fun setReportOptions(value: ReportOptions) {
+        require(ReportField.SCIENTIFIC in value.fields)
+        context.displayDataStore.edit { it[REPORT_OPTIONS] = Json.encodeToString(value) }
+    }
+    suspend fun setOtherSectionAvailability(value: Boolean) {
+        context.displayDataStore.edit { it[OTHER_SECTION_AVAILABILITY] = value }
+    }
     companion object {
         private const val STARTUP_CACHE = "startup_presentation"
         internal fun startupPresentation(context: Context): Pair<ThemeChoice, ThemeAccent> {
@@ -76,6 +92,8 @@ class DisplayPreferences(private val context: Context) {
                 ThemeAccent.fromStoredName(cache.getString("accent", null))
         }
 
+        private val REPORT_OPTIONS = stringPreferencesKey("report_presentation")
+        private val OTHER_SECTION_AVAILABILITY = booleanPreferencesKey("show_other_section_availability")
         private val TWO_COLUMNS = booleanPreferencesKey("home_two_columns")
         private val SECTIONS_AT_BOTTOM = booleanPreferencesKey("home_sections_at_bottom")
         private val SEARCH_AT_BOTTOM = booleanPreferencesKey("home_search_at_bottom")

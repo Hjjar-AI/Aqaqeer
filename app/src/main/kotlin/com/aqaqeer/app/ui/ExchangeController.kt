@@ -21,7 +21,27 @@ internal class ExchangeController(private val csvImports: CsvImportRepository, p
     private val reportState = MutableStateFlow<ReportSnapshot?>(null)
     internal val reportSnapshot = reportState.asStateFlow()
     private var csvSaveDraft: Pair<CsvSaveKind, CsvImportState>? = null
-    private var reportSaveDraft: Pair<ReportSnapshot, Boolean>? = null
+    private var reportSaveDraft: Pair<ReportSnapshot, ReportFormat>? = null
+    private val sourceState = MutableStateFlow<ReportSource?>(null)
+    internal val reportSource = sourceState.asStateFlow()
+    private val draftState = MutableStateFlow(ReportRequest())
+    internal val reportDraft = draftState.asStateFlow()
+    private var reportGeneration = 0L
+    internal fun invalidateReport() { reportGeneration++; reportState.value = null; reportSaveDraft = null }
+    internal fun reviseReport(request: ReportRequest) {
+        if (request.includeUnpublished != draftState.value.includeUnpublished) sourceState.value = null
+        draftState.value = request
+        invalidateReport()
+    }
+    internal fun loadReportSource() = command(queueOffline = false) {
+        val draft = draftState.value
+        sourceState.value = null
+        invalidateReport()
+        val pharmacy = (catalogState() as? CatalogState.Ready)?.catalog?.pharmacy?.pharmacyId ?: return@command
+        val source = reports.source(draft.includeUnpublished)
+        check(exchangeEligible(pharmacy) && source.pharmacyId == pharmacy)
+        if (draftState.value.includeUnpublished == draft.includeUnpublished) sourceState.value = source
+    }
 
     internal fun loadCsv(uri: Uri) = command(queueOffline = false) {
         val session = csvImports.load(uri)
@@ -78,16 +98,17 @@ internal class ExchangeController(private val csvImports: CsvImportRepository, p
         }
     }
     internal fun prepareReport(request: ReportRequest) = command(queueOffline = false) {
+        val generation = reportGeneration
         val snapshot = reports.capture(request)
         check(exchangeEligible(snapshot.pharmacyId))
-        reportState.value = snapshot
+        if (generation == reportGeneration) reportState.value = snapshot
     }
-    internal fun beginReportSave(pdf: Boolean) { reportState.value?.let { reportSaveDraft = it to pdf } }
+    internal fun beginReportSave(format: ReportFormat) { reportState.value?.let { reportSaveDraft = it to format } }
     internal fun saveReport(uri: Uri?) {
         val draft = reportSaveDraft; reportSaveDraft = null
         if (uri == null || draft == null) return
         command(queueOffline = false) {
-            if (draft.second) reports.pdf(uri, draft.first) else reports.csv(uri, draft.first)
+            when (draft.second) { ReportFormat.PDF -> reports.pdf(uri, draft.first); ReportFormat.XLSX -> reports.excel(uri, draft.first) }
             if (currentRoute() == "reports") feedback.value = UiFeedback(uiText(R.string.exchange_report_file_saved_message), "reports")
         }
     }
@@ -100,8 +121,11 @@ internal class ExchangeController(private val csvImports: CsvImportRepository, p
         if (access?.second != true || (csvState.value.session?.pharmacyId?.let { it != pharmacyId } == true)) {
             csvState.value = CsvImportState(); csvSaveDraft = null
         }
-        if (access?.second != true || (reportState.value?.pharmacyId?.let { it != pharmacyId } == true)) {
-            reportState.value = null; reportSaveDraft = null
+        if (access?.second != true || (reportState.value?.pharmacyId?.let { it != pharmacyId } == true) ||
+            sourceState.value?.pharmacyId?.let { it != pharmacyId } == true ||
+            draftState.value.pharmacyId?.let { it != pharmacyId } == true) {
+            invalidateReport(); sourceState.value = null
+            draftState.value = ReportRequest()
         }
     }
 }

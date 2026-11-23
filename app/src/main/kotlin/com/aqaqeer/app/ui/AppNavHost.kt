@@ -57,6 +57,7 @@ import kotlinx.coroutines.launch
                                 setLayout = viewModel::setLayout,
                                 setNames = viewModel::setNames,
                                 setSecondaryHijri = viewModel::setSecondaryHijri,
+                                setOtherSectionAvailability = viewModel::setOtherSectionAvailability,
                                 setAccent = viewModel::setAccent,
                                 setTwoColumns = viewModel::setTwoColumns,
                                 setSectionsAtBottom = viewModel::setSectionsAtBottom,

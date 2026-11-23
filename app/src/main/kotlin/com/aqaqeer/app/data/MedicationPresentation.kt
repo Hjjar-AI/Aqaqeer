@@ -15,7 +15,8 @@ data class HomePreferences(val sort: HomeSort = HomeSort.SCIENTIFIC_NAME,
     val layout: CardLayout = CardLayout.COMPACT, val names: NameDisplay = NameDisplay.BOTH,
     val secondaryHijri: Boolean = false, val groupingEnabled: Boolean = false,
     val grouping: HomeGrouping = HomeGrouping.CATEGORY, val twoColumns: Boolean = true,
-    val sectionsAtBottom: Boolean = true, val searchAtBottom: Boolean = true)
+    val sectionsAtBottom: Boolean = true, val searchAtBottom: Boolean = true,
+    val showOtherSectionAvailability: Boolean = false)
 data class HomeFilters(val statuses: Set<AvailabilityStatus> = emptySet(), val categoryIds: Set<String> = emptySet(),
     val expiringSoon: Boolean = false, val unpublishedOnly: Boolean = false, val fetchedOnly: Boolean = false) {
     val hasAny: Boolean get() = statuses.isNotEmpty() || categoryIds.isNotEmpty() || expiringSoon || unpublishedOnly || fetchedOnly

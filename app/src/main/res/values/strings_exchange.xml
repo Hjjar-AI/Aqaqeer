@@ -67,11 +67,11 @@
     <string name="exchange_report_section_label" formatted="false">"القسم"</string>
     <string name="exchange_report_show_all_action" formatted="false">"عرض جميع الأدوية"</string>
     <string name="exchange_report_show_first_five_action" formatted="false">"عرض أول خمسة أدوية"</string>
-    <string name="exchange_report_source_help" formatted="false">"المصدر الافتراضي هو النسخة المنشورة المتحققة. لتصدير المسودة فعّل تضمين التعديلات. إذا لم يوجد القسم في المصدر المنشور، اختر قسماً آخر أو ضمّن التعديلات. تبقى اللقطة ثابتة؛ أعد إعدادها لتضمين تغييرات لاحقة. قد يبقى ملف جزئي عند الإلغاء أو فشل مزود التخزين. ملف الجداول CSV يُجهّز للعرض الآمن في تطبيقات الجداول ويختلف عن قالب الاستيراد وملف إعادة المحاولة."</string>
+    <string name="exchange_report_source_help" formatted="false">"اختر البيانات المنشورة أو المحلية صراحة. PDF للطباعة، وExcel جدول منسق مع ملخص وخيارات تصفية. يحتفظ التصدير بلقطة ثابتة؛ أعد إعدادها لالتقاط تغييرات لاحقة. قد يبقى ملف جزئي عند الإلغاء أو فشل المزود. ملفات التقارير ليست نسخاً احتياطية ولا قوالب استيراد."</string>
     <string name="exchange_report_source_help_title" formatted="false">"عن مصدر التقرير وحفظه"</string>
     <string name="exchange_report_times_heading" formatted="false">"توقيت التقرير والنشر"</string>
     <string name="exchange_report_unpublished_label" formatted="false">"لم يُنشر"</string>
-    <string name="exchange_reports_navigation_label" formatted="false">"تقارير CSV وPDF"</string>
+    <string name="exchange_reports_navigation_label" formatted="false">"تقارير Excel وPDF"</string>
     <string name="logic_all_shortages">النواقص في جميع الأقسام النشطة</string>
     <string name="logic_csv_skip_duplicates">تخطي جميع المكررات</string>
     <string name="logic_csv_update_match">تحديث الدواء المطابق</string>

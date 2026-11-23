@@ -20,7 +20,7 @@ The app tracks availability, not quantities or inventory transactions. It does n
 - **Read comfortably:** choose compact or expanded cards, adaptive or single-column lists, collapsible groups, bar placement, light/dark/AMOLED themes and optional secondary Hijri dates.
 - **Administer the catalog:** edit medications, sections, categories and dosage forms; save individual availability changes immediately or preview and confirm bulk changes.
 - **Share and reconcile:** publish pending work, refresh cached data and review conflicting changes while retaining publication and recovery safeguards.
-- **Import, report and recover:** preview CSV imports, export CSV/PDF reports, create encrypted backups and restore through explicit reconciliation.
+- **Import, report and recover:** preview CSV imports, export customizable Excel/PDF reports, create encrypted backups and restore through explicit reconciliation.
 - **Review local changes:** inspect before/after History with pharmacy-local dates and filters, without collecting editor names.
 
 ## Get started

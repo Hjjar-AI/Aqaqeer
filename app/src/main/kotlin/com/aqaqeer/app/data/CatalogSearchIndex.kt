@@ -119,7 +119,7 @@ class CatalogSearchIndex(val catalog: CatalogSnapshot) {
         fun row(med: Medication, sectionId: String?): MedicationRowUi =
             MedicationRowUi(med, catalog.formsById[med.formId], catalog.categoriesById[med.categoryId]?.nameAr ?: "غير مصنف",
                 sectionId?.let { catalog.status(med.id, it) } ?: AvailabilityStatus.OUT,
-                MedicationPresentation.availableElsewhere(catalog, med.id, sectionId, onlyWhenOut = readerStockOnly),
+                if (preferences.showOtherSectionAvailability) MedicationPresentation.availableElsewhere(catalog, med.id, sectionId, onlyWhenOut = readerStockOnly) else emptyList(),
                 med.id in unpublished, med.id in fetched)
         val rows = visible.associate { med ->
             currentCoroutineContext().ensureActive()

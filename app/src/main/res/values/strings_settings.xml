@@ -48,4 +48,6 @@
     <string name="settings_theme_label" formatted="false">"المظهر"</string>
     <string name="settings_theme_light_label" formatted="false">"فاتح"</string>
     <string name="settings_theme_system_label" formatted="false">"حسب النظام"</string>
+    <string name="settings_other_section_availability" formatted="false">"إظهار التوافر في الأقسام الأخرى"</string>
+    <string name="settings_other_section_availability_help" formatted="false">"معطّل افتراضياً. يعرض أسماء الأقسام النشطة المتوفر فيها الدواء كنص موجز على البطاقة، دون زر إخفاء."</string>
 </resources>

@@ -64,6 +64,8 @@ import com.aqaqeer.app.data.*
                 CardLayoutPicker(preferences.layout, setLayout)
                 MedicationLayoutPreview(preferences.layout)
             }
+            SwitchChoiceRow(preferences.showOtherSectionAvailability, uiText(R.string.settings_other_section_availability),
+                uiText(R.string.settings_other_section_availability_help), Modifier.testTag("other_section_availability"), actions.setOtherSectionAvailability)
             SwitchChoiceRow(preferences.twoColumns, uiText(R.string.review_adaptive_columns), uiText(R.string.review_adaptive_columns_help), Modifier.testTag("two_columns"), setTwoColumns)
             ContentSection {
                 SwitchChoiceRow(preferences.groupingEnabled, uiText(R.string.settings_grouping_label), uiText(R.string.settings_grouping_help), change = setGroupingEnabled)

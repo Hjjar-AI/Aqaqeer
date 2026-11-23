@@ -1,0 +1,86 @@
+<resources>
+    <string name="report_overall_heading" formatted="false">"التوافر الموحد"</string>
+    <string name="report_combined_rule" formatted="false">"متوفر في أي قسم مختار؛ وإلا محدود في أي قسم؛ وإلا غير متوفر. الأزواج دون سجل غير متوفرة."</string>
+    <string name="report_all" formatted="false">"الكل"</string>
+    <string name="report_all_medications" formatted="false">"كل الأدوية"</string>
+    <string name="report_availability_filter" formatted="false">"تصفية التوافر"</string>
+    <string name="report_availability_output" formatted="false">"عرض التوافر"</string>
+    <string name="report_availability_overall" formatted="false">"حالة موحدة للأقسام المختارة"</string>
+    <string name="report_availability_sections" formatted="false">"حالة مستقلة لكل قسم"</string>
+    <string name="report_categories" formatted="false">"التصنيفات"</string>
+    <string name="report_forms" formatted="false">"الأشكال الدوائية"</string>
+    <string name="report_sections" formatted="false">"الأقسام المشمولة"</string>
+    <string name="report_clear_selection" formatted="false">"مسح الاختيار"</string>
+    <string name="report_select_all" formatted="false">"تحديد الكل"</string>
+    <string name="report_compact" formatted="false">"جدول PDF مضغوط"</string>
+    <string name="report_continuation" formatted="false">"متابعة"</string>
+    <string name="report_date_from" formatted="false">"الانتهاء من تاريخ"</string>
+    <string name="report_date_through" formatted="false">"الانتهاء حتى تاريخ"</string>
+    <string name="report_default_fields">"المعلومات المختارة: %1$s"</string>
+    <string name="report_empty" formatted="false">"لا توجد أدوية مطابقة لهذا التقرير"</string>
+    <string name="report_empty_filter_all" formatted="false">"عدم تحديد قيم في هذا الفلتر يعني تضمين الكل."</string>
+    <string name="report_excel_too_large" formatted="false">"يتجاوز التقرير سعة ورقة Excel؛ قلّل نطاقه ثم أعد التصدير."</string>
+    <string name="report_expiry_all" formatted="false">"كل حالات الصلاحية"</string>
+    <string name="report_expiry_expired" formatted="false">"منتهي الصلاحية"</string>
+    <string name="report_expiry_filter" formatted="false">"حالة الصلاحية"</string>
+    <string name="report_expiry_range" formatted="false">"نطاق تاريخ الانتهاء"</string>
+    <string name="report_expiry_soon" formatted="false">"صلاحية قصيرة (يستثني المنتهي)"</string>
+    <string name="report_expiry_undated" formatted="false">"بلا تاريخ انتهاء"</string>
+    <string name="report_expiry_valid" formatted="false">"غير منتهي وله تاريخ"</string>
+    <string name="report_field_availability" formatted="false">"التوافر"</string>
+    <string name="report_field_brand" formatted="false">"العلامة"</string>
+    <string name="report_field_category" formatted="false">"التصنيف"</string>
+    <string name="report_field_expiry" formatted="false">"الانتهاء (ميلادي)"</string>
+    <string name="report_field_form" formatted="false">"الشكل الدوائي"</string>
+    <string name="report_field_note" formatted="false">"ملاحظات"</string>
+    <string name="report_field_scientific" formatted="false">"الاسم العلمي"</string>
+    <string name="report_field_strength" formatted="false">"العيار"</string>
+    <string name="report_field_threshold" formatted="false">"حد التنبيه بالأيام"</string>
+    <string name="report_field_trade" formatted="false">"الاسم التجاري"</string>
+    <string name="report_fields" formatted="false">"المعلومات المراد تصديرها"</string>
+    <string name="report_filters" formatted="false">"تصفية الأدوية"</string>
+    <string name="report_group_category" formatted="false">"تجميع حسب التصنيف"</string>
+    <string name="report_group_none" formatted="false">"دون تجميع"</string>
+    <string name="report_grouping" formatted="false">"التجميع"</string>
+    <string name="report_insufficient_memory" formatted="false">"لا توجد ذاكرة كافية لإعداد التقرير بأمان"</string>
+    <string name="report_invalid_dates" formatted="false">"أدخل تاريخين ميلاديين صالحين، بحيث لا تسبق النهاية البداية."</string>
+    <string name="report_landscape" formatted="false">"صفحات عرضية"</string>
+    <string name="report_layout" formatted="false">"الترتيب وتخطيط الطباعة"</string>
+    <string name="report_layout_help" formatted="false">"تحفظ خيارات العرض على هذا الجهاز. Excel يستخدم جدولاً قابلاً للتصفية، وتخطيط الصفحات للطباعة؛ كثافة الصفوف تخص PDF."</string>
+    <string name="report_match_all" formatted="false">"الحالة مطابقة في كل قسم مختار"</string>
+    <string name="report_match_any" formatted="false">"الحالة مطابقة في أي قسم مختار"</string>
+    <string name="report_match_overall" formatted="false">"الحالة الموحدة مطابقة"</string>
+    <string name="report_medication_continuation">"متابعة الدواء %1$s"</string>
+    <string name="report_medication_selection" formatted="false">"أدوية محددة"</string>
+    <string name="report_name_language" formatted="false">"لغة الأسماء"</string>
+    <string name="report_names_arabic" formatted="false">"العربية، أو المتاح عند غيابها"</string>
+    <string name="report_names_both" formatted="false">"العربية والإنجليزية المتاحتان"</string>
+    <string name="report_names_english" formatted="false">"الإنجليزية، أو المتاح عند غيابها"</string>
+    <string name="report_no_published_source" formatted="false">"لا توجد نسخة منشورة؛ اختر البيانات المحلية صراحة إذا أردت تضمين التعديلات غير المنشورة."</string>
+    <string name="report_paper" formatted="false">"حجم الورق"</string>
+    <string name="report_pdf_page">"عقاقير · صفحة %1$s"</string>
+    <string name="report_pdf_too_large" formatted="false">"التقرير يحتاج أكثر من 1000 صفحة؛ قلّل نطاقه"</string>
+    <string name="report_reload_source" formatted="false">"إعادة تحميل خيارات المصدر"</string>
+    <string name="report_reset_filters" formatted="false">"إعادة ضبط الفلاتر"</string>
+    <string name="report_row_number" formatted="false">"رقم الدواء"</string>
+    <string name="report_save_excel" formatted="false">"حفظ Excel (.xlsx)"</string>
+    <string name="report_scientific_required" formatted="false">"يبقى الاسم العلمي ضمن التقرير لتعريف كل دواء."</string>
+    <string name="report_sections_required" formatted="false">"اختر قسماً واحداً على الأقل للتوافر، أو أزل حقل التوافر وفلتره وترتيبه."</string>
+    <string name="report_selected_count">"المحدد: %1$s"</string>
+    <string name="report_shortages_any" formatted="false">"نواقص في أي قسم نشط"</string>
+    <string name="report_sort" formatted="false">"ترتيب الأدوية"</string>
+    <string name="report_sort_availability" formatted="false">"التوافر الموحد"</string>
+    <string name="report_sort_expiry" formatted="false">"تاريخ الانتهاء، غير المؤرخ أخيراً"</string>
+    <string name="report_sort_scientific" formatted="false">"الاسم العلمي"</string>
+    <string name="report_sort_trade" formatted="false">"الاسم التجاري"</string>
+    <string name="report_source_changed" formatted="false">"تغير المصدر أو حُذفت عناصر مختارة؛ أعد تحميل الخيارات وراجع التحديد."</string>
+    <string name="report_source_help" formatted="false">"المصدر المنشور لا يشمل المسودات. الحالة الموحدة: متوفر إذا توفر في أي قسم مختار، ثم محدود، وإلا غير متوفر. النواقص في أي قسم ليست بالضرورة غير متوفرة في جميع الأقسام."</string>
+    <string name="report_source_local" formatted="false">"البيانات المحلية، بما فيها التعديلات غير المنشورة"</string>
+    <string name="report_source_published" formatted="false">"البيانات المنشورة فقط"</string>
+    <string name="report_status_match" formatted="false">"طريقة مطابقة التوافر"</string>
+    <string name="report_summary_count" formatted="false">"عدد الأدوية"</string>
+    <string name="report_summary_generated" formatted="false">"وقت إنشاء التقرير"</string>
+    <string name="report_summary_pharmacy" formatted="false">"الصيدلية"</string>
+    <string name="report_summary_source" formatted="false">"مصدر البيانات"</string>
+    <string name="report_summary_title" formatted="false">"تقرير عقاقير"</string>
+</resources>

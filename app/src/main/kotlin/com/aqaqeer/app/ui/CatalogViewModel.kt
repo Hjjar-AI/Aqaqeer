@@ -95,7 +95,21 @@ class CatalogViewModel @Inject constructor(
     internal fun beginCsvSave(kind: CsvSaveKind) = exchangeController.beginCsvSave(kind)
     internal fun saveCsv(uri: Uri?) = exchangeController.saveCsv(uri)
     internal fun prepareReport(request: ReportRequest) = exchangeController.prepareReport(request)
-    internal fun beginReportSave(pdf: Boolean) = exchangeController.beginReportSave(pdf)
+    internal val reportSource = exchangeController.reportSource
+    internal val reportDraft = exchangeController.reportDraft
+    internal val reportOptions: StateFlow<ReportOptions?> = preferences.reportOptions
+        .stateIn(viewModelScope, SharingStarted.Eagerly, null)
+    internal fun reviseReport(request: ReportRequest) = exchangeController.reviseReport(request)
+    internal fun loadReportSource() = exchangeController.loadReportSource()
+    internal fun setReportOptions(value: ReportOptions) {
+        exchangeController.invalidateReport()
+        viewModelScope.launch {
+            try { preferences.setReportOptions(value) }
+            catch (error: CancellationException) { throw error }
+            catch (_: Exception) { feedback.value = UiFeedback(uiText(R.string.shared_operation_failed_message), route.value) }
+        }
+    }
+    internal fun beginReportSave(format: ReportFormat) = exchangeController.beginReportSave(format)
     internal fun saveReport(uri: Uri?) = exchangeController.saveReport(uri)
 
     private val connectivity = context.getSystemService(ConnectivityManager::class.java)
@@ -489,5 +503,6 @@ class CatalogViewModel @Inject constructor(
     fun setSearchAtBottom(value: Boolean) = preferenceWriter.setSearchAtBottom(value)
     fun setLayout(value: CardLayout) = preferenceWriter.setLayout(value)
     fun setSecondaryHijri(value: Boolean) = preferenceWriter.setSecondaryHijri(value)
+    fun setOtherSectionAvailability(value: Boolean) = preferenceWriter.setOtherSectionAvailability(value)
     fun setNames(value: NameDisplay) = preferenceWriter.setNames(value)
 }
