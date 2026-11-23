@@ -42,7 +42,8 @@ class AcceptancePdfInstrumentedTest {
         val reports=ReportRepository(profile.admin,DocumentOutput(profile.context),PdfReports(profile.context))
         val results=buildJsonArray {
             for(preset in ReportPreset.entries) {
-                val request=ReportRequest(preset,if(preset==ReportPreset.OUT) section.id else null,true)
+                val request=ReportRequest(preset,if(preset==ReportPreset.OUT) section.id else null,true,
+                    options=ReportOptions(fields=ReportField.entries.toSet()))
                 val snapshot=reports.capture(request)
                 val file=File(output,"arabic-${preset.name.lowercase()}.pdf")
                 val authority=InstrumentationRegistry.getInstrumentation().context.packageName+".suite-documents"

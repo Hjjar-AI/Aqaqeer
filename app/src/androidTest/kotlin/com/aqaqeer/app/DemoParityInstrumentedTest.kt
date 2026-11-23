@@ -7,6 +7,7 @@ import android.net.Uri
 import android.os.ParcelFileDescriptor
 import androidx.test.platform.app.InstrumentationRegistry
 import com.aqaqeer.app.admin.*
+import com.aqaqeer.app.data.*
 import com.aqaqeer.app.fixtures.SuiteProfile
 import com.aqaqeer.app.reports.*
 import kotlinx.coroutines.runBlocking
@@ -31,7 +32,25 @@ class DemoParityInstrumentedTest {
     }
     private fun document(): Uri {
         val authority = InstrumentationRegistry.getInstrumentation().context.packageName + ".suite-documents"
-        return Uri.parse("content://$authority/demo-parity-${UUID.randomUUID()}").also { documents += it }
+        return Uri.parse("content://$authority/suite-demo-parity-${UUID.randomUUID()}").also { documents += it }
+    }
+    @Test fun demoExcelExportsEveryCapturedMedicationAndSummaryThroughRealProvider(): Unit = runBlocking {
+        val reports = ReportRepository(profile.admin, DocumentOutput(profile.context), PdfReports(profile.context))
+        val snapshot = reports.capture(ReportRequest(options = ReportOptions(names = ReportNames.ENGLISH)))
+        val target = document(); reports.excel(target, snapshot)
+        val book = profile.context.contentResolver.openInputStream(target)!!.use { ReportWorkbook.read(it) }
+        book.assertStructure()
+        val rows = book.rows("Medications").drop(1)
+        assertEquals(40, rows.size)
+        assertEquals(snapshot.medications.map { it.genericEn ?: it.genericAr.orEmpty() }, rows.map { it[1] })
+        assertEquals(snapshot.medications.map { MedicationPresentation.statusLabel(snapshot.overall(it.id)) }, rows.map { it[4] })
+        assertTrue(book.rows("Summary").contains(listOf(uiText(R.string.report_summary_pharmacy), snapshot.pharmacyName)))
+        assertTrue(book.rows("Summary").contains(listOf(uiText(R.string.report_summary_source), uiText(R.string.report_source_published))))
+        assertTrue(book.rows("Summary").contains(listOf(uiText(R.string.report_summary_count), "40")))
+        assertTrue(book.rows("Summary").contains(listOf(uiText(R.string.home_publication_time_label),
+            MedicationPresentation.timestamp(requireNotNull(snapshot.publishedAt), snapshot.timezone))))
+        val text = (book.rows("Summary") + rows).flatten().joinToString("\n")
+        for (excluded in listOf("botToken", "snapshotKey", "UNKNOWN")) assertFalse(excluded, text.contains(excluded))
     }
     @Test fun demoPdfExportsAllPresetsThroughRealProviderWithRenderableA5Pages(): Unit = runBlocking {
         val reports = ReportRepository(profile.admin, DocumentOutput(profile.context), PdfReports(profile.context))

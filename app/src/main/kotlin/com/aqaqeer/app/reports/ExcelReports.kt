@@ -244,7 +244,7 @@ internal object ExcelReports {
         } finally {
             val original = failure
             if (original == null) zip.close()
-            else try { zip.close() } catch (closeError: Throwable) { original.addSuppressed(closeError) }
+            else try { zip.close() } catch (closeError: Throwable) { if (closeError !== original) original.addSuppressed(closeError) }
         }
     }
 }

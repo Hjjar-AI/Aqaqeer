@@ -8,7 +8,23 @@ Use the [current checkpoint](validation.md#current-verification-checkpoint--2026
 
 [Build](build.md#hosted-emulator-screenshots-and-recordings) owns the current workflow-07 selection and invocation counts. A selector is not a new pass count. Later UI/session/source changes and offline Python reservation cases still need applicable compilation/execution evidence; the [backup/restore audit](validation.md#backuprestore-requirement-to-evidence-audit--2026-11-22) maps recorded results to current obligations without inspecting test source.
 
-## Current authored batch — 2026-11-23
+## Report and hint test batch — 2026-11-23
+
+Authored against production revision `ddf035017451002d2776d925971b9122c7d6f756` after explicit permission to inspect/update tests. Added **39 JVM methods** and **23 Android methods**; aligned existing report export/long-note fixtures and Home roles. One report production fix prevents ZIP cleanup from suppressing an exception onto itself and replacing the original failure; the writer-failure identity assertion covers it. No test, build, compilation, lint, device or workflow execution occurred locally. These counts describe authored methods, not passes or measured coverage.
+
+| Area | Authored assertions |
+| --- | --- |
+| Selection and source | Published/local separation without fallback, all-medication defaults, source-bound IDs, active/explicit closed sections, search/category/form/individual intersections, empty selections, overall/any/all aggregation, inclusive dates, expiry thresholds, sorting/grouping, read-only capture. |
+| Snapshot/controller | Same captured object for PDF/XLSX, option/source invalidation, late capture/source results, access/pharmacy resets, cancelled destinations, scoped feedback, output exceptions/cancellation. |
+| Workbook | Real Android XML/ZIP parsing, relationships/content types, two sheets, text cells without formulas/macros, selected columns, localized values/status styles, RTL/frozen headers/filter table/print settings, ordinary rows, duplicate/long headings and columns beyond Z, empty reports, exact long Unicode/control/CRLF text reconstruction and identified continuation rows, write/cancellation/provider-close errors. |
+| PDF | Real provider exports in demo, selected long-note continuation, all A4/A5/orientation/density combinations, compact-versus-comfortable page counts, cancellation; existing nonblank-page assertions preserved. |
+| Hints/preferences/UI | Model default off, active AVAILABLE-only hints and Reader/Admin eligibility, unchanged cross-section search, persisted report options and hint toggles with restoration, both card layouts, Settings recreation, narrow RTL/1.5× report controls, required scientific identity, busy state and searchable multi-selection. |
+
+Workflow 03 discovers JVM methods automatically: run **03 - Checks - Tests and compilation**, `scope=all`, `coverage=true` (or `false` to omit optional reports). Then run **07 - Verify - Emulator with visual evidence**, `standard_functional=true`, on the default branch containing this batch. The explicit selection is **10 demo invocations per API 29/35 + 88 standard API-35 invocations = 108 invocations / 96 unique methods**. Existing 64 standard selections are retained; 24 report/preferences/control/Home selections are added. No workflow was dispatched by the agent. Failure logs and original failed assertions must be reviewed before retries; historical passes below retain their original scope/counts.
+
+Limits remain explicit: no new compilation/runtime pass is established, Android raster/structure checks cannot prove complete PDF text extraction or actual Excel application/printing acceptance, new-reader persistence does not establish process-death recovery, absent-key DataStore behavior is source-reviewed/model-tested rather than exercised against a fresh installation, and the 1,000-page/Excel-row/memory caps are not pressure-tested by this batch. The human-review PDF helper remains outside workflow 07 because it requires its host-owned acceptance run and artifact collection.
+
+## Earlier domain/demo authored batch — 2026-11-23
 
 The user authorized source alignment/additions and later executed workflow 03 themselves. Added **47 JVM test methods** and **7 Android test methods**; these are authored method counts, not executed scenarios or new passes.
 

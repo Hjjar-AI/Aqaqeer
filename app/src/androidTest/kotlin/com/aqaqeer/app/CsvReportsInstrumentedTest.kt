@@ -81,9 +81,13 @@ class CsvReportsInstrumentedTest {
         val draft = repo.capture(ReportRequest(ReportPreset.FULL, includeUnpublished = true))
         assertTrue(draft.medications.any { it.nameEn == "Draft change" })
         assertEquals(AvailabilityStatus.OUT, draft.status(draft.medications.single { it.nameEn == "Missing availability" }.id, section))
-        val destination = document(); repo.csv(destination, draft)
-        val text = p.context.contentResolver.openInputStream(destination)!!.reader(Charsets.UTF_8).use { it.readText() }
-        assertTrue(text.contains("OUT")); assertFalse(text.contains("UNKNOWN")); assertTrue(text.contains("includeUnpublished"))
+        val destination = document(); repo.excel(destination, draft)
+        val workbook = p.context.contentResolver.openInputStream(destination)!!.use { ReportWorkbook.read(it) }
+        assertEquals(2, workbook.rows("Medications").size - 1)
+        assertTrue(workbook.rows("Medications").drop(1).all { it.last() == "غير متوفر" })
+        val summary = workbook.rows("Summary").flatten()
+        assertTrue(summary.contains(uiText(R.string.report_source_local)))
+        assertFalse(summary.any { it.contains("UNKNOWN") })
     }
     @Test fun draftsRequireOptInAndExpiryPresetExcludesExpired(): Unit = runBlocking {
         val repo = reports()
@@ -97,7 +101,8 @@ class CsvReportsInstrumentedTest {
     @Test fun arabicPdfRendersMultiplePagesAndHasNoBlankContinuationPages(): Unit = runBlocking {
         val med = p.medication("English 10 mg")
         p.admin.saveMedication(med.copy(nameAr = "دواء عربي", note = "نص عربي طويل مع English 123\n".repeat(400)))
-        val repo = reports(); val snapshot = repo.capture(ReportRequest(ReportPreset.FULL, includeUnpublished = true))
+        val repo = reports(); val snapshot = repo.capture(ReportRequest(ReportPreset.FULL, includeUnpublished = true,
+            options = ReportOptions(fields = ReportField.entries.toSet())))
         val uri = document(); repo.pdf(uri, snapshot)
         val file = File(p.root, "report.pdf")
         p.context.contentResolver.openInputStream(uri)!!.use { input -> file.outputStream().use { input.copyTo(it) } }
@@ -116,7 +121,7 @@ class CsvReportsInstrumentedTest {
     @Test fun authorizationLossBlocksExternalOutputAndImportBeforeFileAccess(): Unit = runBlocking {
         val snapshot = reports().capture(ReportRequest(ReportPreset.FULL, includeUnpublished = true))
         p.admin.transaction { it.updateDeviceIdentity(it.deviceIdentity()!!.copy(adminMode = false)) }
-        assertThrows(AdminProblem::class.java) { runBlocking { reports().csv(document(), snapshot) } }
+        assertThrows(AdminProblem::class.java) { runBlocking { reports().excel(Uri.parse("content://missing/never-open"), snapshot) } }
         assertThrows(AdminProblem::class.java) { runBlocking { importer().load(Uri.parse("content://missing/file")) } }
     }
     @Test fun fiftyOneRowsReportCommittedChunksInOrder(): Unit = runBlocking {

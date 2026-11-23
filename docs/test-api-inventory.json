@@ -1753,69 +1753,128 @@
         {
           "name": "ThemeChoice",
           "kind": "class",
-          "line": 14,
+          "line": 21,
           "directTestReferences": [
-            "app/src/androidTest/kotlin/com/aqaqeer/app/ConnectionImportUiTest.kt",
             "app/src/androidTest/kotlin/com/aqaqeer/app/HomeFixtureUiTest.kt",
-            "app/src/androidTest/kotlin/com/aqaqeer/app/PresentationUiTest.kt",
-            "app/src/androidTest/kotlin/com/aqaqeer/app/ReadOnlyUiTest.kt",
-            "app/src/androidTest/kotlin/com/aqaqeer/app/RefreshUiTest.kt"
+            "app/src/androidTest/kotlin/com/aqaqeer/app/ReportControlsUiTest.kt"
           ]
+        },
+        {
+          "name": "ThemeAccent",
+          "kind": "class",
+          "line": 22,
+          "directTestReferences": []
         },
         {
           "name": "DisplayPreferences",
           "kind": "class",
-          "line": 17,
+          "line": 32,
           "directTestReferences": [
-            "app/src/androidTest/kotlin/com/aqaqeer/app/HiltGraphInstrumentedTest.kt",
-            "app/src/androidTest/kotlin/com/aqaqeer/app/HomeUiTest.kt",
-            "app/src/androidTest/kotlin/com/aqaqeer/app/ReadOnlyUiTest.kt",
-            "app/src/androidTest/kotlin/com/aqaqeer/app/ViewModelInstrumentedTest.kt",
-            "app/src/androidTest/kotlin/com/aqaqeer/app/fixtures/RestoreCrashProfile.kt"
+            "app/src/androidTest/kotlin/com/aqaqeer/app/BottomPlacementSettingsUiTest.kt",
+            "app/src/androidTest/kotlin/com/aqaqeer/app/ReportPreferencesInstrumentedTest.kt"
           ]
         },
         {
           "name": "setTheme",
           "kind": "fun",
-          "line": 27,
-          "directTestReferences": [
-            "app/src/androidTest/kotlin/com/aqaqeer/app/ReadOnlyUiTest.kt"
-          ]
+          "line": 65,
+          "directTestReferences": []
+        },
+        {
+          "name": "setAccent",
+          "kind": "fun",
+          "line": 66,
+          "directTestReferences": []
         },
         {
           "name": "setSort",
           "kind": "fun",
-          "line": 28,
-          "directTestReferences": [
-            "app/src/androidTest/kotlin/com/aqaqeer/app/HomeUiTest.kt"
-          ]
+          "line": 67,
+          "directTestReferences": []
         },
         {
           "name": "setLayout",
           "kind": "fun",
-          "line": 29,
+          "line": 68,
+          "directTestReferences": []
+        },
+        {
+          "name": "setTwoColumns",
+          "kind": "fun",
+          "line": 69,
+          "directTestReferences": []
+        },
+        {
+          "name": "setSectionsAtBottom",
+          "kind": "fun",
+          "line": 70,
           "directTestReferences": [
-            "app/src/androidTest/kotlin/com/aqaqeer/app/HomeUiTest.kt"
+            "app/src/androidTest/kotlin/com/aqaqeer/app/BottomPlacementSettingsUiTest.kt"
+          ]
+        },
+        {
+          "name": "setSearchAtBottom",
+          "kind": "fun",
+          "line": 71,
+          "directTestReferences": [
+            "app/src/androidTest/kotlin/com/aqaqeer/app/BottomPlacementSettingsUiTest.kt"
           ]
         },
         {
           "name": "setNames",
           "kind": "fun",
-          "line": 30,
-          "directTestReferences": [
-            "app/src/androidTest/kotlin/com/aqaqeer/app/HomeUiTest.kt"
-          ]
+          "line": 72,
+          "directTestReferences": []
         },
         {
           "name": "setSecondaryHijri",
           "kind": "fun",
-          "line": 31,
+          "line": 73,
+          "directTestReferences": []
+        },
+        {
+          "name": "setGroupingEnabled",
+          "kind": "fun",
+          "line": 74,
+          "directTestReferences": []
+        },
+        {
+          "name": "setGrouping",
+          "kind": "fun",
+          "line": 75,
+          "directTestReferences": []
+        },
+        {
+          "name": "setSection",
+          "kind": "fun",
+          "line": 47,
+          "directTestReferences": []
+        },
+        {
+          "name": "clearSection",
+          "kind": "fun",
+          "line": 50,
+          "directTestReferences": []
+        },
+        {
+          "name": "setReportOptions",
+          "kind": "fun",
+          "line": 80,
           "directTestReferences": [
-            "app/src/androidTest/kotlin/com/aqaqeer/app/ViewModelInstrumentedTest.kt"
+            "app/src/androidTest/kotlin/com/aqaqeer/app/ReportPreferencesInstrumentedTest.kt"
+          ]
+        },
+        {
+          "name": "setOtherSectionAvailability",
+          "kind": "fun",
+          "line": 84,
+          "directTestReferences": [
+            "app/src/androidTest/kotlin/com/aqaqeer/app/BottomPlacementSettingsUiTest.kt",
+            "app/src/androidTest/kotlin/com/aqaqeer/app/ReportPreferencesInstrumentedTest.kt"
           ]
         }
       ],
-      "execution": "See validation.md for actual evidence and unexecuted cases."
+      "execution": "Report/hint contracts refreshed by source inspection 2026-11-23; authored references are lexical, not execution evidence. See validation.md."
     },
     {
       "source": "app/src/main/kotlin/com/aqaqeer/app/data/HistoryRepository.kt",
@@ -3691,135 +3750,95 @@
         {
           "name": "PdfReports",
           "kind": "class",
-          "line": 21,
+          "line": 31,
           "directTestReferences": [
+            "app/src/androidTest/kotlin/com/aqaqeer/app/AcceptancePdfInstrumentedTest.kt",
             "app/src/androidTest/kotlin/com/aqaqeer/app/CsvReportsInstrumentedTest.kt",
-            "app/src/androidTest/kotlin/com/aqaqeer/app/ViewModelInstrumentedTest.kt",
-            "app/src/androidTest/kotlin/com/aqaqeer/app/fixtures/RestoreCrashProfile.kt"
+            "app/src/androidTest/kotlin/com/aqaqeer/app/DemoParityInstrumentedTest.kt",
+            "app/src/androidTest/kotlin/com/aqaqeer/app/ReportExportsInstrumentedTest.kt",
+            "app/src/test/kotlin/com/aqaqeer/app/reports/DemoExchangeTest.kt"
           ]
         },
         {
           "name": "render",
           "kind": "fun",
-          "line": 22,
-          "directTestReferences": [
-            "app/src/androidTest/kotlin/com/aqaqeer/app/CsvReportsInstrumentedTest.kt"
-          ]
-        },
-        {
-          "name": "isolate",
-          "kind": "fun",
           "line": 32,
-          "directTestReferences": []
-        },
-        {
-          "name": "layout",
-          "kind": "fun",
-          "line": 33,
           "directTestReferences": [
-            "app/src/androidTest/kotlin/com/aqaqeer/app/HomeFixtureUiTest.kt",
-            "app/src/androidTest/kotlin/com/aqaqeer/app/HomeUiTest.kt",
-            "app/src/test/kotlin/com/aqaqeer/app/sync/SnapshotReadClientTest.kt"
+            "app/src/androidTest/kotlin/com/aqaqeer/app/CsvReportsInstrumentedTest.kt",
+            "app/src/androidTest/kotlin/com/aqaqeer/app/DemoParityInstrumentedTest.kt",
+            "app/src/androidTest/kotlin/com/aqaqeer/app/ReportExportsInstrumentedTest.kt"
           ]
-        },
-        {
-          "name": "draw",
-          "kind": "fun",
-          "line": 39,
-          "directTestReferences": []
-        },
-        {
-          "name": "nextPage",
-          "kind": "fun",
-          "line": 45,
-          "directTestReferences": []
-        },
-        {
-          "name": "block",
-          "kind": "fun",
-          "line": 63,
-          "directTestReferences": []
         }
       ],
-      "execution": "See validation.md for actual evidence and unexecuted cases."
+      "execution": "Report/hint contracts refreshed by source inspection 2026-11-23; authored references are lexical, not execution evidence. See validation.md."
     },
     {
       "source": "app/src/main/kotlin/com/aqaqeer/app/reports/ReportRepository.kt",
       "declarations": [
         {
-          "name": "ReportPreset",
-          "kind": "class",
-          "line": 13,
-          "directTestReferences": [
-            "app/src/androidTest/kotlin/com/aqaqeer/app/CsvReportsInstrumentedTest.kt"
-          ]
-        },
-        {
-          "name": "ReportRequest",
-          "kind": "class",
-          "line": 14,
-          "directTestReferences": [
-            "app/src/androidTest/kotlin/com/aqaqeer/app/CsvReportsInstrumentedTest.kt"
-          ]
-        },
-        {
-          "name": "ReportSnapshot",
-          "kind": "class",
-          "line": 16,
-          "directTestReferences": []
-        },
-        {
-          "name": "status",
-          "kind": "fun",
-          "line": 20,
-          "directTestReferences": [
-            "app/src/androidTest/kotlin/com/aqaqeer/app/AdminHistoryInstrumentedTest.kt",
-            "app/src/androidTest/kotlin/com/aqaqeer/app/CsvReportsInstrumentedTest.kt",
-            "app/src/androidTest/kotlin/com/aqaqeer/app/PharmacySharingInstrumentedTest.kt",
-            "app/src/androidTest/kotlin/com/aqaqeer/app/RestoreProcessDeathInstrumentedTest.kt",
-            "app/src/androidTest/kotlin/com/aqaqeer/app/fixtures/SuiteProfile.kt",
-            "app/src/test/kotlin/com/aqaqeer/app/data/CatalogRulesTest.kt",
-            "app/src/test/kotlin/com/aqaqeer/app/data/MedicationPresentationTest.kt",
-            "app/src/test/kotlin/com/aqaqeer/app/sync/TelegramSnapshotReadTransportTest.kt"
-          ]
-        },
-        {
           "name": "ReportRepository",
           "kind": "class",
-          "line": 23,
+          "line": 16,
           "directTestReferences": [
+            "app/src/androidTest/kotlin/com/aqaqeer/app/AcceptancePdfInstrumentedTest.kt",
             "app/src/androidTest/kotlin/com/aqaqeer/app/CsvReportsInstrumentedTest.kt",
-            "app/src/androidTest/kotlin/com/aqaqeer/app/HiltGraphInstrumentedTest.kt",
-            "app/src/androidTest/kotlin/com/aqaqeer/app/ViewModelInstrumentedTest.kt",
-            "app/src/androidTest/kotlin/com/aqaqeer/app/fixtures/RestoreCrashProfile.kt"
+            "app/src/androidTest/kotlin/com/aqaqeer/app/DemoParityInstrumentedTest.kt",
+            "app/src/androidTest/kotlin/com/aqaqeer/app/ReportExportsInstrumentedTest.kt",
+            "app/src/test/kotlin/com/aqaqeer/app/reports/DemoExchangeTest.kt",
+            "app/src/test/kotlin/com/aqaqeer/app/reports/ReportSelectionTest.kt",
+            "app/src/test/kotlin/com/aqaqeer/app/ui/ReportControllerTest.kt"
+          ]
+        },
+        {
+          "name": "source",
+          "kind": "fun",
+          "line": 18,
+          "directTestReferences": [
+            "app/src/androidTest/kotlin/com/aqaqeer/app/ReportExportsInstrumentedTest.kt",
+            "app/src/test/kotlin/com/aqaqeer/app/reports/DemoExchangeTest.kt",
+            "app/src/test/kotlin/com/aqaqeer/app/ui/ReportControllerTest.kt"
           ]
         },
         {
           "name": "capture",
           "kind": "fun",
-          "line": 25,
+          "line": 37,
           "directTestReferences": [
-            "app/src/androidTest/kotlin/com/aqaqeer/app/CsvReportsInstrumentedTest.kt"
+            "app/src/androidTest/kotlin/com/aqaqeer/app/AcceptancePdfInstrumentedTest.kt",
+            "app/src/androidTest/kotlin/com/aqaqeer/app/CsvReportsInstrumentedTest.kt",
+            "app/src/androidTest/kotlin/com/aqaqeer/app/DemoParityInstrumentedTest.kt",
+            "app/src/androidTest/kotlin/com/aqaqeer/app/ReportExportsInstrumentedTest.kt",
+            "app/src/test/kotlin/com/aqaqeer/app/reports/DemoExchangeTest.kt",
+            "app/src/test/kotlin/com/aqaqeer/app/reports/ReportSelectionTest.kt",
+            "app/src/test/kotlin/com/aqaqeer/app/ui/ReportControllerTest.kt"
           ]
         },
         {
-          "name": "csv",
+          "name": "excel",
           "kind": "fun",
-          "line": 56,
+          "line": 124,
           "directTestReferences": [
-            "app/src/androidTest/kotlin/com/aqaqeer/app/CsvReportsInstrumentedTest.kt"
+            "app/src/androidTest/kotlin/com/aqaqeer/app/CsvReportsInstrumentedTest.kt",
+            "app/src/androidTest/kotlin/com/aqaqeer/app/DemoParityInstrumentedTest.kt",
+            "app/src/test/kotlin/com/aqaqeer/app/reports/DemoExchangeTest.kt",
+            "app/src/test/kotlin/com/aqaqeer/app/ui/ReportControllerTest.kt"
           ]
         },
         {
           "name": "pdf",
           "kind": "fun",
-          "line": 82,
+          "line": 128,
           "directTestReferences": [
-            "app/src/androidTest/kotlin/com/aqaqeer/app/CsvReportsInstrumentedTest.kt"
+            "app/src/androidTest/kotlin/com/aqaqeer/app/AcceptancePdfInstrumentedTest.kt",
+            "app/src/androidTest/kotlin/com/aqaqeer/app/CsvReportsInstrumentedTest.kt",
+            "app/src/androidTest/kotlin/com/aqaqeer/app/DemoParityInstrumentedTest.kt",
+            "app/src/androidTest/kotlin/com/aqaqeer/app/ReportExportsInstrumentedTest.kt",
+            "app/src/test/kotlin/com/aqaqeer/app/reports/DemoExchangeTest.kt",
+            "app/src/test/kotlin/com/aqaqeer/app/ui/ReportControllerTest.kt"
           ]
         }
       ],
-      "execution": "See validation.md for actual evidence and unexecuted cases."
+      "execution": "Report/hint contracts refreshed by source inspection 2026-11-23; authored references are lexical, not execution evidence. See validation.md."
     },
     {
       "source": "app/src/main/kotlin/com/aqaqeer/app/security/SecureStore.kt",
@@ -7152,6 +7171,373 @@
         }
       ],
       "execution": "See validation.md for actual evidence and unexecuted cases."
+    },
+    {
+      "source": "app/src/main/kotlin/com/aqaqeer/app/reports/ReportModels.kt",
+      "declarations": [
+        {
+          "name": "ReportPreset",
+          "kind": "class",
+          "line": 9,
+          "directTestReferences": [
+            "app/src/androidTest/kotlin/com/aqaqeer/app/AcceptancePdfInstrumentedTest.kt",
+            "app/src/androidTest/kotlin/com/aqaqeer/app/CsvReportsInstrumentedTest.kt",
+            "app/src/androidTest/kotlin/com/aqaqeer/app/DemoParityInstrumentedTest.kt",
+            "app/src/test/kotlin/com/aqaqeer/app/reports/DemoExchangeTest.kt",
+            "app/src/test/kotlin/com/aqaqeer/app/reports/ReportModelsTest.kt"
+          ]
+        },
+        {
+          "name": "ReportFormat",
+          "kind": "class",
+          "line": 10,
+          "directTestReferences": [
+            "app/src/test/kotlin/com/aqaqeer/app/ui/ReportControllerTest.kt"
+          ]
+        },
+        {
+          "name": "ReportField",
+          "kind": "class",
+          "line": 11,
+          "directTestReferences": [
+            "app/src/androidTest/kotlin/com/aqaqeer/app/AcceptancePdfInstrumentedTest.kt",
+            "app/src/androidTest/kotlin/com/aqaqeer/app/CsvReportsInstrumentedTest.kt",
+            "app/src/androidTest/kotlin/com/aqaqeer/app/ReportControlsUiTest.kt",
+            "app/src/androidTest/kotlin/com/aqaqeer/app/ReportExportsInstrumentedTest.kt",
+            "app/src/androidTest/kotlin/com/aqaqeer/app/ReportPreferencesInstrumentedTest.kt",
+            "app/src/test/kotlin/com/aqaqeer/app/reports/ReportModelsTest.kt",
+            "app/src/test/kotlin/com/aqaqeer/app/reports/ReportSelectionTest.kt"
+          ]
+        },
+        {
+          "name": "ReportNames",
+          "kind": "class",
+          "line": 18,
+          "directTestReferences": [
+            "app/src/androidTest/kotlin/com/aqaqeer/app/DemoParityInstrumentedTest.kt",
+            "app/src/androidTest/kotlin/com/aqaqeer/app/ReportExportsInstrumentedTest.kt",
+            "app/src/androidTest/kotlin/com/aqaqeer/app/ReportPreferencesInstrumentedTest.kt",
+            "app/src/test/kotlin/com/aqaqeer/app/reports/ReportModelsTest.kt",
+            "app/src/test/kotlin/com/aqaqeer/app/reports/ReportSelectionTest.kt"
+          ]
+        },
+        {
+          "name": "ReportSort",
+          "kind": "class",
+          "line": 19,
+          "directTestReferences": [
+            "app/src/androidTest/kotlin/com/aqaqeer/app/ReportPreferencesInstrumentedTest.kt",
+            "app/src/test/kotlin/com/aqaqeer/app/reports/ReportModelsTest.kt",
+            "app/src/test/kotlin/com/aqaqeer/app/reports/ReportSelectionTest.kt"
+          ]
+        },
+        {
+          "name": "ReportAvailability",
+          "kind": "class",
+          "line": 20,
+          "directTestReferences": [
+            "app/src/androidTest/kotlin/com/aqaqeer/app/ReportExportsInstrumentedTest.kt",
+            "app/src/androidTest/kotlin/com/aqaqeer/app/ReportPreferencesInstrumentedTest.kt",
+            "app/src/test/kotlin/com/aqaqeer/app/reports/ReportModelsTest.kt"
+          ]
+        },
+        {
+          "name": "ReportPaper",
+          "kind": "class",
+          "line": 21,
+          "directTestReferences": [
+            "app/src/androidTest/kotlin/com/aqaqeer/app/ReportExportsInstrumentedTest.kt",
+            "app/src/androidTest/kotlin/com/aqaqeer/app/ReportPreferencesInstrumentedTest.kt",
+            "app/src/test/kotlin/com/aqaqeer/app/reports/ReportModelsTest.kt",
+            "app/src/test/kotlin/com/aqaqeer/app/ui/ReportControllerTest.kt"
+          ]
+        },
+        {
+          "name": "ReportStatusMatch",
+          "kind": "class",
+          "line": 22,
+          "directTestReferences": [
+            "app/src/test/kotlin/com/aqaqeer/app/reports/ReportModelsTest.kt",
+            "app/src/test/kotlin/com/aqaqeer/app/reports/ReportSelectionTest.kt"
+          ]
+        },
+        {
+          "name": "ReportExpiry",
+          "kind": "class",
+          "line": 23,
+          "directTestReferences": [
+            "app/src/test/kotlin/com/aqaqeer/app/reports/ReportModelsTest.kt",
+            "app/src/test/kotlin/com/aqaqeer/app/reports/ReportSelectionTest.kt"
+          ]
+        },
+        {
+          "name": "ReportOptions",
+          "kind": "class",
+          "line": 26,
+          "directTestReferences": [
+            "app/src/androidTest/kotlin/com/aqaqeer/app/AcceptancePdfInstrumentedTest.kt",
+            "app/src/androidTest/kotlin/com/aqaqeer/app/CsvReportsInstrumentedTest.kt",
+            "app/src/androidTest/kotlin/com/aqaqeer/app/DemoParityInstrumentedTest.kt",
+            "app/src/androidTest/kotlin/com/aqaqeer/app/ReportControlsUiTest.kt",
+            "app/src/androidTest/kotlin/com/aqaqeer/app/ReportExportsInstrumentedTest.kt",
+            "app/src/androidTest/kotlin/com/aqaqeer/app/ReportPreferencesInstrumentedTest.kt",
+            "app/src/test/kotlin/com/aqaqeer/app/reports/ReportModelsTest.kt",
+            "app/src/test/kotlin/com/aqaqeer/app/reports/ReportSelectionTest.kt",
+            "app/src/test/kotlin/com/aqaqeer/app/ui/ReportControllerTest.kt"
+          ]
+        },
+        {
+          "name": "ReportRequest",
+          "kind": "class",
+          "line": 33,
+          "directTestReferences": [
+            "app/src/androidTest/kotlin/com/aqaqeer/app/AcceptancePdfInstrumentedTest.kt",
+            "app/src/androidTest/kotlin/com/aqaqeer/app/CsvReportsInstrumentedTest.kt",
+            "app/src/androidTest/kotlin/com/aqaqeer/app/DemoParityInstrumentedTest.kt",
+            "app/src/androidTest/kotlin/com/aqaqeer/app/ReportExportsInstrumentedTest.kt",
+            "app/src/test/kotlin/com/aqaqeer/app/reports/DemoExchangeTest.kt",
+            "app/src/test/kotlin/com/aqaqeer/app/reports/ReportModelsTest.kt",
+            "app/src/test/kotlin/com/aqaqeer/app/reports/ReportSelectionTest.kt",
+            "app/src/test/kotlin/com/aqaqeer/app/ui/ReportControllerTest.kt"
+          ]
+        },
+        {
+          "name": "ReportSource",
+          "kind": "class",
+          "line": 46,
+          "directTestReferences": [
+            "app/src/test/kotlin/com/aqaqeer/app/ui/ReportControllerTest.kt"
+          ]
+        },
+        {
+          "name": "ReportSnapshot",
+          "kind": "class",
+          "line": 51,
+          "directTestReferences": [
+            "app/src/androidTest/kotlin/com/aqaqeer/app/ReportExportsInstrumentedTest.kt",
+            "app/src/test/kotlin/com/aqaqeer/app/reports/ReportModelsTest.kt",
+            "app/src/test/kotlin/com/aqaqeer/app/reports/ReportSelectionTest.kt",
+            "app/src/test/kotlin/com/aqaqeer/app/ui/ReportControllerTest.kt"
+          ]
+        },
+        {
+          "name": "combinedStatus",
+          "kind": "fun",
+          "line": 62,
+          "directTestReferences": [
+            "app/src/test/kotlin/com/aqaqeer/app/reports/ReportModelsTest.kt"
+          ]
+        },
+        {
+          "name": "ReportColumn",
+          "kind": "class",
+          "line": 68,
+          "directTestReferences": [
+            "app/src/test/kotlin/com/aqaqeer/app/reports/ReportModelsTest.kt"
+          ]
+        },
+        {
+          "name": "status",
+          "kind": "fun",
+          "line": 58,
+          "directTestReferences": [
+            "app/src/androidTest/kotlin/com/aqaqeer/app/CsvReportsInstrumentedTest.kt",
+            "app/src/test/kotlin/com/aqaqeer/app/data/OtherSectionHintsTest.kt",
+            "app/src/test/kotlin/com/aqaqeer/app/reports/DemoExchangeTest.kt",
+            "app/src/test/kotlin/com/aqaqeer/app/reports/ReportModelsTest.kt"
+          ]
+        },
+        {
+          "name": "overall",
+          "kind": "fun",
+          "line": 59,
+          "directTestReferences": [
+            "app/src/androidTest/kotlin/com/aqaqeer/app/DemoParityInstrumentedTest.kt",
+            "app/src/test/kotlin/com/aqaqeer/app/reports/ReportModelsTest.kt",
+            "app/src/test/kotlin/com/aqaqeer/app/reports/ReportSelectionTest.kt"
+          ]
+        },
+        {
+          "name": "value",
+          "kind": "fun",
+          "line": 74,
+          "directTestReferences": [
+            "app/src/androidTest/kotlin/com/aqaqeer/app/ReportExportsInstrumentedTest.kt",
+            "app/src/test/kotlin/com/aqaqeer/app/reports/ReportModelsTest.kt",
+            "app/src/test/kotlin/com/aqaqeer/app/ui/ReportControllerTest.kt"
+          ]
+        },
+        {
+          "name": "columns",
+          "kind": "fun",
+          "line": 95,
+          "directTestReferences": [
+            "app/src/test/kotlin/com/aqaqeer/app/reports/ReportModelsTest.kt"
+          ]
+        },
+        {
+          "name": "summary",
+          "kind": "fun",
+          "line": 101,
+          "directTestReferences": [
+            "app/src/androidTest/kotlin/com/aqaqeer/app/CsvReportsInstrumentedTest.kt",
+            "app/src/androidTest/kotlin/com/aqaqeer/app/ReportExportsInstrumentedTest.kt"
+          ]
+        },
+        {
+          "name": "statusMatchLabel",
+          "kind": "fun",
+          "line": 128,
+          "directTestReferences": []
+        },
+        {
+          "name": "expiryLabel",
+          "kind": "fun",
+          "line": 133,
+          "directTestReferences": []
+        },
+        {
+          "name": "sortLabel",
+          "kind": "fun",
+          "line": 140,
+          "directTestReferences": []
+        }
+      ],
+      "execution": "Report/hint contracts refreshed by source inspection 2026-11-23; authored references are lexical, not execution evidence. See validation.md."
+    },
+    {
+      "source": "app/src/main/kotlin/com/aqaqeer/app/reports/ExcelReports.kt",
+      "declarations": [
+        {
+          "name": "ExcelReports",
+          "kind": "object",
+          "line": 15,
+          "directTestReferences": [
+            "app/src/androidTest/kotlin/com/aqaqeer/app/ReportExportsInstrumentedTest.kt"
+          ]
+        },
+        {
+          "name": "write",
+          "kind": "fun",
+          "line": 60,
+          "directTestReferences": [
+            "app/src/androidTest/kotlin/com/aqaqeer/app/CsvReportsInstrumentedTest.kt",
+            "app/src/androidTest/kotlin/com/aqaqeer/app/ReportExportsInstrumentedTest.kt",
+            "app/src/test/kotlin/com/aqaqeer/app/reports/DocumentOutputTest.kt"
+          ]
+        }
+      ],
+      "execution": "Report/hint contracts refreshed by source inspection 2026-11-23; authored references are lexical, not execution evidence. See validation.md."
+    },
+    {
+      "source": "app/src/main/kotlin/com/aqaqeer/app/ui/ExchangeController.kt",
+      "declarations": [
+        {
+          "name": "ExchangeController",
+          "kind": "class",
+          "line": 12,
+          "directTestReferences": [
+            "app/src/test/kotlin/com/aqaqeer/app/ui/ReportControllerTest.kt"
+          ]
+        },
+        {
+          "name": "invalidateReport",
+          "kind": "fun",
+          "line": 30,
+          "directTestReferences": []
+        },
+        {
+          "name": "reviseReport",
+          "kind": "fun",
+          "line": 31,
+          "directTestReferences": [
+            "app/src/test/kotlin/com/aqaqeer/app/ui/ReportControllerTest.kt"
+          ]
+        },
+        {
+          "name": "loadReportSource",
+          "kind": "fun",
+          "line": 36,
+          "directTestReferences": [
+            "app/src/test/kotlin/com/aqaqeer/app/ui/ReportControllerTest.kt"
+          ]
+        },
+        {
+          "name": "prepareReport",
+          "kind": "fun",
+          "line": 100,
+          "directTestReferences": [
+            "app/src/test/kotlin/com/aqaqeer/app/ui/ReportControllerTest.kt"
+          ]
+        },
+        {
+          "name": "beginReportSave",
+          "kind": "fun",
+          "line": 106,
+          "directTestReferences": [
+            "app/src/test/kotlin/com/aqaqeer/app/ui/ReportControllerTest.kt"
+          ]
+        },
+        {
+          "name": "saveReport",
+          "kind": "fun",
+          "line": 107,
+          "directTestReferences": [
+            "app/src/test/kotlin/com/aqaqeer/app/ui/ReportControllerTest.kt"
+          ]
+        },
+        {
+          "name": "reconcileAccess",
+          "kind": "fun",
+          "line": 119,
+          "directTestReferences": [
+            "app/src/test/kotlin/com/aqaqeer/app/ui/ReportControllerTest.kt"
+          ]
+        }
+      ],
+      "execution": "Report/hint contracts refreshed by source inspection 2026-11-23; authored references are lexical, not execution evidence. See validation.md."
+    },
+    {
+      "source": "app/src/main/kotlin/com/aqaqeer/app/ui/ReportControls.kt",
+      "declarations": [
+        {
+          "name": "ReportChoice",
+          "kind": "class",
+          "line": 12,
+          "directTestReferences": [
+            "app/src/androidTest/kotlin/com/aqaqeer/app/ReportControlsUiTest.kt"
+          ]
+        },
+        {
+          "name": "ReportMultiPicker",
+          "kind": "fun",
+          "line": 15,
+          "directTestReferences": [
+            "app/src/androidTest/kotlin/com/aqaqeer/app/ReportControlsUiTest.kt"
+          ]
+        },
+        {
+          "name": "ReportPresentationControls",
+          "kind": "fun",
+          "line": 44,
+          "directTestReferences": [
+            "app/src/androidTest/kotlin/com/aqaqeer/app/ReportControlsUiTest.kt"
+          ]
+        }
+      ],
+      "execution": "Report/hint contracts refreshed by source inspection 2026-11-23; authored references are lexical, not execution evidence. See validation.md."
+    },
+    {
+      "source": "app/src/main/kotlin/com/aqaqeer/app/ui/AvailabilityElsewhereTip.kt",
+      "declarations": [
+        {
+          "name": "AvailabilityElsewhereTip",
+          "kind": "fun",
+          "line": 13,
+          "directTestReferences": []
+        }
+      ],
+      "execution": "Report/hint contracts refreshed by source inspection 2026-11-23; authored references are lexical, not execution evidence. See validation.md."
     }
   ],
   "executionReport": "validation.md",
@@ -7168,5 +7554,36 @@
     "status": "Passed on API 29; validation.md links reconciled evidence. Final extension lint pending permission.",
     "productionChanges": false,
     "insideReplacementSqlTransaction": "Unverified: no production hook added"
+  },
+  "reportAndHintAuthoring": {
+    "baseRevision": "ddf035017451002d2776d925971b9122c7d6f756",
+    "date": "2026-11-23",
+    "newJvmMethods": 39,
+    "newAndroidMethods": 23,
+    "executed": false,
+    "selectedDemoInvocationsPerApi": 10,
+    "selectedStandardInvocationsApi35": 88,
+    "totalSelectedInvocations": 108,
+    "uniqueSelectedMethods": 96,
+    "testFiles": [
+      "app/src/androidTest/kotlin/com/aqaqeer/app/AcceptancePdfInstrumentedTest.kt",
+      "app/src/androidTest/kotlin/com/aqaqeer/app/BottomPlacementSettingsUiTest.kt",
+      "app/src/androidTest/kotlin/com/aqaqeer/app/CsvReportsInstrumentedTest.kt",
+      "app/src/androidTest/kotlin/com/aqaqeer/app/DemoParityInstrumentedTest.kt",
+      "app/src/androidTest/kotlin/com/aqaqeer/app/HomeFixtureUiTest.kt",
+      "app/src/androidTest/kotlin/com/aqaqeer/app/ReportControlsUiTest.kt",
+      "app/src/androidTest/kotlin/com/aqaqeer/app/ReportExportsInstrumentedTest.kt",
+      "app/src/androidTest/kotlin/com/aqaqeer/app/ReportPreferencesInstrumentedTest.kt",
+      "app/src/androidTest/kotlin/com/aqaqeer/app/ReportWorkbook.kt",
+      "app/src/test/kotlin/com/aqaqeer/app/data/OtherSectionHintsTest.kt",
+      "app/src/test/kotlin/com/aqaqeer/app/reports/DemoExchangeTest.kt",
+      "app/src/test/kotlin/com/aqaqeer/app/reports/DocumentOutputTest.kt",
+      "app/src/test/kotlin/com/aqaqeer/app/reports/ReportModelsTest.kt",
+      "app/src/test/kotlin/com/aqaqeer/app/reports/ReportSelectionTest.kt",
+      "app/src/test/kotlin/com/aqaqeer/app/reports/ReportTestStrings.kt",
+      "app/src/test/kotlin/com/aqaqeer/app/ui/ReportControllerTest.kt"
+    ],
+    "note": "Only the listed report/hint contract inventories were refreshed. Other declaration snapshots are historical. No compilation, tests, lint, device actions or workflow dispatch.",
+    "productionFix": "ExcelReports ZIP close ignores identity-equal secondary exceptions, preserving the original failure instead of triggering self-suppression. Source-evidenced; regression authored, not executed."
   }
 }

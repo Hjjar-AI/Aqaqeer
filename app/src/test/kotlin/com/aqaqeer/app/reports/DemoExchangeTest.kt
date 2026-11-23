@@ -21,6 +21,7 @@ class DemoExchangeTest {
     private val files = mutableMapOf<Uri, ByteArray>()
     @Before fun setup() {
         Assume.assumeTrue(BuildConfig.IS_DEMO)
+        installReportStrings()
         DemoSession.reset(); DemoSession.setAdmin(true)
         admin = mockk(); resolver = mockk(); context = mockk(); pdf = mockk()
         every { context.contentResolver } returns resolver
@@ -33,7 +34,7 @@ class DemoExchangeTest {
     }
     @After fun cleanup() {
         if (::admin.isInitialized) verify { admin wasNot Called }
-        if (BuildConfig.IS_DEMO) { DemoSession.reset(); DemoSession.setAdmin(false) }
+        if (BuildConfig.IS_DEMO) { DemoSession.reset(); DemoSession.setAdmin(false); restoreReportStrings() }
     }
     private fun uri(text: String? = null): Uri = mockk<Uri>().also {
         every { it.scheme } returns "content"
@@ -78,23 +79,27 @@ class DemoExchangeTest {
         DemoSession.edit { c, _, _, _ -> c.copy(sections = c.sections.map { it.copy(isActive = false) }) }
         assertThrows(CsvProblem::class.java) { runBlocking { reports().capture(ReportRequest(ReportPreset.OUT, includeUnpublished = true, allSections = true)) } }
     }
-    @Test fun reportCsvWritesSampleMetadataAndEveryCapturedMedication(): Unit = runBlocking {
-        val snapshot = reports().capture(ReportRequest(ReportPreset.FULL)); val target = uri()
-        reports().csv(target, snapshot)
-        val text = files.getValue(target).toString(Charsets.UTF_8)
-        assertTrue(text.startsWith("\uFEFF")); assertTrue(text.contains(snapshot.pharmacyName))
-        assertTrue(text.contains("publishedAt")); assertTrue(text.contains("includeUnpublished"))
-        snapshot.medications.forEach { assertTrue(text.contains(it.genericEn!!)) }
-        assertFalse(text.contains("botToken")); assertFalse(text.contains("snapshotKey")); assertFalse(text.contains("UNKNOWN"))
+    @Test fun reportCaptureRetainsCompleteSeedAndPublishedSourceMetadata(): Unit = runBlocking {
+        val snapshot = reports().capture(ReportRequest())
+        val source = reports().source(false)
+        assertEquals(source.pharmacyId, snapshot.pharmacyId)
+        assertEquals(source.publishedAt, snapshot.publishedAt)
+        assertEquals(source.demoWorkspaceId, snapshot.demoWorkspaceId)
+        assertEquals(source.catalog.medications.toSet(), snapshot.medications.toSet())
+        assertFalse(snapshot.request.includeUnpublished)
+        assertEquals(40, snapshot.medications.size)
     }
     @Test fun readerAndResetGenerationBlockReportOutputBeforeOpeningProvider(): Unit = runBlocking {
         val snapshot = reports().capture(ReportRequest(ReportPreset.FULL)); val target = uri()
         DemoSession.setAdmin(false)
         assertThrows(AdminProblem::class.java) { runBlocking { reports().capture(ReportRequest(ReportPreset.FULL)) } }
-        assertThrows(AdminProblem::class.java) { runBlocking { reports().csv(target, snapshot) } }
+        assertThrows(AdminProblem::class.java) { runBlocking { reports().excel(target, snapshot) } }
+        assertThrows(AdminProblem::class.java) { runBlocking { reports().pdf(target, snapshot) } }
         DemoSession.setAdmin(true); DemoSession.reset()
-        assertThrows(IllegalStateException::class.java) { runBlocking { reports().csv(target, snapshot) } }
+        assertThrows(IllegalStateException::class.java) { runBlocking { reports().excel(target, snapshot) } }
+        assertThrows(IllegalStateException::class.java) { runBlocking { reports().pdf(target, snapshot) } }
         verify(exactly = 0) { resolver.openOutputStream(any(), any()) }
+        verify { pdf wasNot Called }
     }
     @Test fun csvImportUsesSameDefaultsAndOnlyPublishesOnExplicitAction(): Unit = runBlocking {
         val before = DemoSession.authorized(); val repo = importer()

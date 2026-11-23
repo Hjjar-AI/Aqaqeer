@@ -19,6 +19,28 @@ class BottomPlacementSettingsUiTest {
         return compose.onNodeWithTag(tag)
     }
 
+    @Test fun otherSectionHintsSwitchPersistsAcrossRecreationAndCanBeDisabled() {
+        org.junit.Assume.assumeTrue(BuildConfig.IS_DEMO)
+        val preferences = DisplayPreferences(compose.activity.applicationContext)
+        val original = runBlocking { preferences.home.first() }
+        try {
+            runBlocking { preferences.setOtherSectionAvailability(false) }
+            compose.waitUntil(15000) { compose.onAllNodesWithTag("home").fetchSemanticsNodes().isNotEmpty() }
+            compose.onNodeWithTag("home_menu").performClick()
+            compose.onNodeWithText(uiText(R.string.navigation_settings_title)).performClick()
+            compose.onNodeWithTag("settings").performScrollToNode(hasText(uiText(R.string.review_list_display)))
+            compose.onNodeWithText(uiText(R.string.review_list_display)).performClick()
+            placementSwitch("other_section_availability").assertIsOff().performClick()
+            compose.waitUntil(10000) { runBlocking { preferences.home.first() }.showOtherSectionAvailability }
+            compose.activityRule.scenario.recreate()
+            compose.waitUntil(15000) { compose.onAllNodesWithTag("settings").fetchSemanticsNodes().isNotEmpty() }
+            placementSwitch("other_section_availability").assertIsOn().performClick()
+            compose.waitUntil(10000) { !runBlocking { preferences.home.first() }.showOtherSectionAvailability }
+            val restored = runBlocking { DisplayPreferences(compose.activity.applicationContext).home.first() }
+            assertEquals(original.copy(showOtherSectionAvailability = false), restored)
+        } finally { runBlocking { preferences.setOtherSectionAvailability(original.showOtherSectionAvailability) } }
+    }
+
     @Test fun independentSwitchesPersistAcrossActivityRecreationAndNewPreferenceReader() {
         org.junit.Assume.assumeTrue(BuildConfig.IS_DEMO)
         val preferences = DisplayPreferences(compose.activity.applicationContext)

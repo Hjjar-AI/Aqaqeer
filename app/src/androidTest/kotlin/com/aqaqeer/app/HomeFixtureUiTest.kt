@@ -39,13 +39,13 @@ class HomeFixtureUiTest {
 
     @Test fun narrowRtlRowsAllowLongCategoriesAndSectionChangeRemovesOutTip() {
         val catalog = catalog()
-        var state by mutableStateOf(AppUiState(homePreferences = HomePreferences(layout = CardLayout.EXPANDED, names = NameDisplay.ARABIC)))
+        var state by mutableStateOf(AppUiState(homePreferences = HomePreferences(layout = CardLayout.EXPANDED, names = NameDisplay.ARABIC, showOtherSectionAvailability = true)))
         val now = Instant.parse("2026-11-09T10:00:00Z")
         compose.setContent {
             val density = LocalDensity.current
             CompositionLocalProvider(LocalDensity provides Density(density.density, 1.3f)) {
                 AqaqeerTheme(ThemeChoice.LIGHT) { Box(Modifier.width(320.dp)) {
-                    HomeScreen(CatalogState.Ready(catalog, false), state, now,
+                    HomeScreen(CatalogState.Ready(catalog, false, admin = true), state, now,
                         projection = homeProjection(catalog, state),
                         actions = rememberHomeActions(HomeCallbacks(
                             selectSection = { state = state.copy(sectionId = it) },
@@ -74,12 +74,35 @@ class HomeFixtureUiTest {
         compose.onNodeWithTag("tip_m", useUnmergedTree = true).assertDoesNotExist()
     }
 
+    @Test fun hintsDefaultOffAndToggleAsPlainTextInBothCardLayouts() {
+        val catalog = catalog()
+        var preferences by mutableStateOf(HomePreferences())
+        compose.setContent {
+            AqaqeerTheme(ThemeChoice.LIGHT) {
+                val state = AppUiState(homePreferences = preferences)
+                HomeScreen(CatalogState.Ready(catalog, false, admin = true), state, Instant.parse("2026-11-09T10:00:00Z"),
+                    projection = homeProjection(catalog, state),
+                    actions = rememberHomeActions(HomeCallbacks({}, {}, {}, {}, {}, {}, {})))
+            }
+        }
+        compose.onNodeWithTag("home").performScrollToNode(hasTestTag("med_English only"))
+        compose.onNodeWithTag("tip_m", useUnmergedTree = true).assertDoesNotExist()
+        for (layout in CardLayout.entries) {
+            compose.runOnIdle { preferences = preferences.copy(layout = layout, showOtherSectionAvailability = true) }
+            compose.onNodeWithTag("home").performScrollToNode(hasTestTag("med_English only"))
+            compose.onNodeWithTag("tip_m", useUnmergedTree = true).performScrollTo()
+                .assertIsDisplayed().assertTextContains("الفرع الآخر", substring = true).assert(hasClickAction().not())
+            compose.runOnIdle { preferences = preferences.copy(showOtherSectionAvailability = false) }
+            compose.onNodeWithTag("tip_m", useUnmergedTree = true).assertDoesNotExist()
+        }
+    }
+
     @Test fun expiryRecomputesAtPharmacyMidnightWithoutChangingAvailability() {
         val catalog = catalog()
         var now by mutableStateOf(Instant.parse("2026-11-09T20:59:59Z"))
         compose.setContent {
             AqaqeerTheme(ThemeChoice.DARK) {
-                HomeScreen(CatalogState.Ready(catalog, false), AppUiState(), now,
+                HomeScreen(CatalogState.Ready(catalog, false, admin = true), AppUiState(), now,
                     projection = homeProjection(catalog, now = now),
                     actions = rememberHomeActions(HomeCallbacks(
                         selectSection = {},
@@ -100,7 +123,7 @@ class HomeFixtureUiTest {
     @Test fun futureCompatibilityNoticeKeepsCachedMedicationAndBrowsingAvailable() {
         compose.setContent {
             AqaqeerTheme(ThemeChoice.SYSTEM) {
-                HomeScreen(CatalogState.Ready(catalog(),false,requiresUpdate=true), AppUiState(), Instant.parse("2026-11-09T10:00:00Z"),
+                HomeScreen(CatalogState.Ready(catalog(),false,requiresUpdate=true,admin=true), AppUiState(), Instant.parse("2026-11-09T10:00:00Z"),
                     projection = homeProjection(catalog()),
                     actions = rememberHomeActions(HomeCallbacks(
                         selectSection = {},

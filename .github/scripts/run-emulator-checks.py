@@ -16,6 +16,9 @@ OUTPUT = ROOT / 'ci-output/emulator'
 SERIAL = 'emulator-5554'
 PACKAGE = 'com.aqaqeer.app.demo.debug'
 DEMO_CASES = (
+    ('demo-pdf-reports', 'DemoParityInstrumentedTest#demoPdfExportsAllPresetsThroughRealProviderWithRenderableA5Pages', False),
+    ('demo-excel-reports', 'DemoParityInstrumentedTest#demoExcelExportsEveryCapturedMedicationAndSummaryThroughRealProvider', False),
+    ('other-section-settings', 'BottomPlacementSettingsUiTest#otherSectionHintsSwitchPersistsAcrossRecreationAndCanBeDisabled', False),
     ('read-only-details', 'ReadOnlyUiTest#medicationDetailsRemainReadOnlyAndNavigateBack', True),
     ('light-large-arabic', 'CiPresentationUiTest#arabicLargeTextThemeAndRecreationRemainUsable', True),
     ('dark-large-arabic', 'CiPresentationUiTest#arabicLargeTextThemeAndRecreationRemainUsable', True),
@@ -26,6 +29,30 @@ DEMO_CASES = (
 )
 
 STANDARD_CASES = (
+    ('Reports-ReportExportsInstrumented-manySectionColumnsAndLongHeadingsKeepFullScopeInSummary', 'ReportExportsInstrumentedTest#manySectionColumnsAndLongHeadingsKeepFullScopeInSummary', False),
+    ('Reports-ReportExportsInstrumented-publishedAndLocalSourcesNeverFallbackAndRejectForeignSelections', 'ReportExportsInstrumentedTest#publishedAndLocalSourcesNeverFallbackAndRejectForeignSelections', False),
+    ('Reports-ReportExportsInstrumented-filteredSnapshotDrivesBothFormatsWithoutChangingCatalogOrPendingWork', 'ReportExportsInstrumentedTest#filteredSnapshotDrivesBothFormatsWithoutChangingCatalogOrPendingWork', False),
+    ('Reports-ReportExportsInstrumented-workbookHasSummaryFilterableRowsRtlFrozenHeadersAndPrintSettings', 'ReportExportsInstrumentedTest#workbookHasSummaryFilterableRowsRtlFrozenHeadersAndPrintSettings', False),
+    ('Reports-ReportExportsInstrumented-workbookContainsOnlySelectedFieldsAndPreservesFormulaLikeText', 'ReportExportsInstrumentedTest#workbookContainsOnlySelectedFieldsAndPreservesFormulaLikeText', False),
+    ('Reports-ReportExportsInstrumented-longNotesPreserveEveryCharacterAcrossIdentifiedContinuationRows', 'ReportExportsInstrumentedTest#longNotesPreserveEveryCharacterAcrossIdentifiedContinuationRows', False),
+    ('Reports-ReportExportsInstrumented-longScientificIdentityUsesExplicitMedicationReferencesWithoutTruncation', 'ReportExportsInstrumentedTest#longScientificIdentityUsesExplicitMedicationReferencesWithoutTruncation', False),
+    ('Reports-ReportExportsInstrumented-sectionColumnsRetainDistinctStatusesColorsAndUniqueHeaders', 'ReportExportsInstrumentedTest#sectionColumnsRetainDistinctStatusesColorsAndUniqueHeaders', False),
+    ('Reports-ReportExportsInstrumented-categoryGroupingPreservesOrdinaryRowsAndAlternatingStyles', 'ReportExportsInstrumentedTest#categoryGroupingPreservesOrdinaryRowsAndAlternatingStyles', False),
+    ('Reports-ReportExportsInstrumented-emptyWorkbookHasAValidFilterTableAndZeroCount', 'ReportExportsInstrumentedTest#emptyWorkbookHasAValidFilterTableAndZeroCount', False),
+    ('Reports-ReportExportsInstrumented-writerLeavesDestinationOpenAndPropagatesWriteFailures', 'ReportExportsInstrumentedTest#writerLeavesDestinationOpenAndPropagatesWriteFailures', False),
+    ('Reports-ReportExportsInstrumented-cancelledWriterStopsBeforeSuccessAndNeverClosesProvider', 'ReportExportsInstrumentedTest#cancelledWriterStopsBeforeSuccessAndNeverClosesProvider', False),
+    ('Reports-ReportExportsInstrumented-pdfPaperOrientationAndDensityOptionsRemainRenderable', 'ReportExportsInstrumentedTest#pdfPaperOrientationAndDensityOptionsRemainRenderable', False),
+    ('Reports-ReportExportsInstrumented-compactPdfUsesNoMorePagesThanComfortableForTheSameRecords', 'ReportExportsInstrumentedTest#compactPdfUsesNoMorePagesThanComfortableForTheSameRecords', False),
+    ('Reports-ReportExportsInstrumented-cancelledPdfRenderingPropagatesBeforeAnyDestinationIsOpened', 'ReportExportsInstrumentedTest#cancelledPdfRenderingPropagatesBeforeAnyDestinationIsOpened', False),
+    ('Reports-ReportPreferencesInstrumented-everyPresentationOptionAndHintTogglePersistForANewReader', 'ReportPreferencesInstrumentedTest#everyPresentationOptionAndHintTogglePersistForANewReader', False),
+    ('Reports-ReportPreferencesInstrumented-invalidScientificFieldSelectionRejectsWithoutOverwritingSavedDefaults', 'ReportPreferencesInstrumentedTest#invalidScientificFieldSelectionRejectsWithoutOverwritingSavedDefaults', False),
+    ('Reports-ReportControlsUi-requiredScientificIdentityAndOptionalNotesRemainUsableAtLargeArabicText', 'ReportControlsUiTest#requiredScientificIdentityAndOptionalNotesRemainUsableAtLargeArabicText', False),
+    ('Reports-ReportControlsUi-layoutChoicesChangeOnlyPresentationAndBusyStateDisablesEdits', 'ReportControlsUiTest#layoutChoicesChangeOnlyPresentationAndBusyStateDisablesEdits', False),
+    ('Reports-ReportControlsUi-medicationPickerSearchSelectAllAndClearRetainExplicitSelectionMeaning', 'ReportControlsUiTest#medicationPickerSearchSelectAllAndClearRetainExplicitSelectionMeaning', False),
+    ('Reports-HomeFixtureUi-narrowRtlRowsAllowLongCategoriesAndSectionChangeRemovesOutTip', 'HomeFixtureUiTest#narrowRtlRowsAllowLongCategoriesAndSectionChangeRemovesOutTip', False),
+    ('Reports-HomeFixtureUi-hintsDefaultOffAndToggleAsPlainTextInBothCardLayouts', 'HomeFixtureUiTest#hintsDefaultOffAndToggleAsPlainTextInBothCardLayouts', False),
+    ('Reports-HomeFixtureUi-expiryRecomputesAtPharmacyMidnightWithoutChangingAvailability', 'HomeFixtureUiTest#expiryRecomputesAtPharmacyMidnightWithoutChangingAvailability', False),
+    ('Reports-HomeFixtureUi-futureCompatibilityNoticeKeepsCachedMedicationAndBrowsingAvailable', 'HomeFixtureUiTest#futureCompatibilityNoticeKeepsCachedMedicationAndBrowsingAvailable', False),
     ('CsvReports-contentProviderImportCommitsValidRowsAndRetainsFailedRowResults', 'CsvReportsInstrumentedTest#contentProviderImportCommitsValidRowsAndRetainsFailedRowResults', False),
     ('CsvReports-staleUpdateRollsBackAndTaxonomyRequiresExplicitConsent', 'CsvReportsInstrumentedTest#staleUpdateRollsBackAndTaxonomyRequiresExplicitConsent', False),
     ('CsvReports-cancellationAfterChunkCallbackRetainsAllCommittedRows', 'CsvReportsInstrumentedTest#cancellationAfterChunkCallbackRetainsAllCommittedRows', False),
