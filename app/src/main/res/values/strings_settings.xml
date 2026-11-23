@@ -5,8 +5,8 @@
     <string name="review_appearance">المظهر</string>
     <string name="review_dates_placement">التواريخ ومواضع الأشرطة</string>
     <string name="review_demo_admin">إدارة تجريبية</string>
-    <string name="review_demo_edit_help">تعديلات على بيانات مؤقتة فقط. يمكنك التبديل بين القارئ والإدارة لمعاينتها. التعديلات غير محفوظة بصورة دائمة، ولا تتصل النسخة بخدمات النشر.</string>
-    <string name="review_demo_local_only">عرض محلي: المزامنة والنشر والاتصالات الحقيقية غير متاحة.</string>
+    <string name="review_demo_edit_help">مساحة عرض مؤقتة مع اتصال ونشر وهميين. الإدارة ترى التعديلات المحلية، والقارئ يرى آخر نسخة منشورة تجريبياً. التقارير وCSV والنسخ المشفرة تعمل على بيانات العرض؛ تحفظ الملفات التي تختار تصديرها. تنتهي المساحة عند انتهاء عملية التطبيق.</string>
+    <string name="review_demo_local_only">النشر والتحديث هنا محاكاة محلية؛ لا تتصل النسخة بتيليغرام.</string>
     <string name="review_demo_mode">وضع العرض التجريبي</string>
     <string name="review_demo_reader">قارئ</string>
     <string name="review_demo_reset">إعادة البيانات التجريبية</string>

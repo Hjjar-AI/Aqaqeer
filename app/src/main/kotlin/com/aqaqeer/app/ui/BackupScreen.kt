@@ -22,7 +22,6 @@ import java.time.format.DateTimeFormatter
 @Composable internal fun BackupScreen(state: AppUiState, vm: CatalogViewModel) {
     val uiText = rememberUiText()
     val ready = state.catalog as? CatalogState.Ready ?: return
-    if (ready.isDemo) return
     val busy by vm.adminBusy.collectAsStateWithLifecycle()
     val message by vm.adminMessage.collectAsStateWithLifecycle()
     val sharing by vm.sharing.status.collectAsStateWithLifecycle()
@@ -36,13 +35,14 @@ import java.time.format.DateTimeFormatter
     val export = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/octet-stream")) { uri ->
         val p = secrets.password; val c = secrets.confirmation; secrets.password = null; secrets.confirmation = null
         if (uri == null || p == null || c == null) { p?.fill('\u0000'); c?.fill('\u0000') }
-        else vm.secretCommand(null, p, c) { vm.backups.export(uri, p, c); exportSucceeded = true }
+        else vm.secretCommand(null, p, c) { if (ready.isDemo) vm.demoFiles.exportBackup(uri, p, c) else vm.backups.export(uri, p, c); exportSucceeded = true }
     }
     val pick = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { selected = it }
     FormPage(Modifier.testTag("backup_screen"), showFieldConvention = true) {
         OperationStatus(busy || sharing.busy, message,
             if (exportSucceeded) uiText(R.string.backup_export_success_message) else if (restoreSession) sharing.message else null,
             vm::cancelAdminOperation)
+        if (ready.isDemo) SupportingText(uiText(R.string.demo_backup_help))
         if (ready.restorePaused) {
             StepHeader(listOf(uiText(R.string.review_select_file), uiText(R.string.backup_restore_passphrase_label), uiText(R.string.backup_restore_paused_title)), 2)
             InformationCard(uiText(R.string.backup_restore_paused_title), uiText(R.string.backup_restore_admin_reconciliation_help))
@@ -61,7 +61,7 @@ import java.time.format.DateTimeFormatter
                     exportSucceeded = false
                     secrets.clear(); secrets.password = password.toCharArray(); secrets.confirmation = confirmation.toCharArray(); password = ""; confirmation = ""
                     val time = ZonedDateTime.now(ZoneId.of(ready.catalog.pharmacy?.timezone ?: DEFAULT_PRESENTATION_TIMEZONE))
-                    try { export.launch("aqaqeer-backup-${time.format(DateTimeFormatter.ofPattern("yyyy-MM-dd-HHmm"))}.aqbak") }
+                    try { export.launch("aqaqeer-${if (ready.isDemo) "demo-" else ""}backup-${time.format(DateTimeFormatter.ofPattern("yyyy-MM-dd-HHmm"))}.aqbak") }
                     catch (_: Exception) { secrets.clear(); vm.adminMessage.value = uiText(R.string.backup_file_picker_failed_message) }
                 }) { Text(uiText(R.string.backup_choose_export_destination_action)) }
                 SupportingText(uiText(R.string.backup_file_size_limit_help))
@@ -88,7 +88,7 @@ import java.time.format.DateTimeFormatter
                     DestructiveConfirmButton(enabled = !busy && restorePassword.isNotEmpty() &&
                         (ready.catalog.pharmacy == null || confirmed && typedName == ready.catalog.pharmacy.name), onClick = {
                         val uri = selected ?: return@DestructiveConfirmButton; val p = restorePassword.toCharArray(); restorePassword = ""
-                        vm.secretCommand(Route.Home, p) { vm.backups.restore(uri, p, typedName, confirmed); selected = null }
+                        vm.secretCommand(Route.Home, p) { if (ready.isDemo) vm.demoFiles.restoreBackup(uri, p, typedName, confirmed) else vm.backups.restore(uri, p, typedName, confirmed); selected = null }
                     }, label = uiText(R.string.backup_validate_restore_action))
                 }
             }
@@ -98,6 +98,13 @@ import java.time.format.DateTimeFormatter
 
 @Composable private fun RestoreReview(ready: CatalogState.Ready, vm: CatalogViewModel, busy: Boolean) {
     val uiText = rememberUiText()
+    if (ready.isDemo) {
+        SupportingText(uiText(R.string.demo_restore_review_help))
+        AppButton(enabled = !busy, onClick = { vm.command(queueOffline = false) { com.aqaqeer.app.admin.DemoSession.resumeRestore() } }) {
+            Text(uiText(R.string.backup_inspect_reconciliation_action))
+        }
+        return
+    }
     val sharing by vm.sharing.status.collectAsStateWithLifecycle()
     var replace by remember { mutableStateOf(false) }; var typedName by remember { mutableStateOf("") }
     var choices by remember { mutableStateOf<Map<String, Boolean>>(emptyMap()) }

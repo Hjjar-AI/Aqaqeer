@@ -107,6 +107,7 @@ class AdminRepository @Inject constructor(private val factory: DatabaseFactory,
     }
     suspend fun promote(pin: CharArray) {
         try {
+            if (BuildConfig.IS_DEMO) { DemoSession.promote(pin); return }
             // Failure count commits even when authorization fails.
             val authorized = transaction { dao ->
                 adminCheck(!BuildConfig.IS_DEMO)
@@ -246,7 +247,7 @@ class AdminRepository @Inject constructor(private val factory: DatabaseFactory,
             adminRequire(expected.keys == medications)
             adminCheck(medications.all { c.status(it, section) == expected.getValue(it) })
         }
-        // A missing legacy pair already displays UNKNOWN. Saving it unchanged is inert.
+        // Missing pairs display OUT. Saving that effective status unchanged is inert.
         val changed = medications.filter { c.status(it, section) != status }.toSet()
         c.copy(availability = c.availability.filterNot { it.sectionId == section && it.medicationId in changed } +
             changed.map { Availability(it, section, status, now) })
@@ -392,6 +393,12 @@ class AdminRepository @Inject constructor(private val factory: DatabaseFactory,
         return transaction { dao -> adminCheck(dao.deviceIdentity()?.adminMode == true); dao.pending() }
     }
     suspend fun leave(typedName: String, confirmed: Boolean) = sharingGate.withLock {
+        if (BuildConfig.IS_DEMO) {
+            val current = DemoSession.initialize()
+            adminRequire(confirmed && (!current.admin || typedName == current.catalog.pharmacy?.name))
+            DemoSession.reset(); DemoSession.setAdmin(false)
+            return@withLock
+        }
         transaction { dao ->
             adminCheck(!BuildConfig.IS_DEMO && confirmed)
             val p = requireNotNull(dao.pharmacy()); val d = requireNotNull(dao.deviceIdentity())

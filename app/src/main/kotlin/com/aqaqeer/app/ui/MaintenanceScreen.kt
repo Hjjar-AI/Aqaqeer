@@ -17,7 +17,8 @@ import com.aqaqeer.app.maintenance.*
 
 @Composable internal fun MaintenanceScreen(ready: CatalogState.Ready?, vm: CatalogViewModel) {
     val uiText = rememberUiText()
-    if (ready == null || ready.isDemo || ready.catalog.pharmacy == null) {
+    if (ready?.isDemo == true) { DemoConnectionScreen(ready, vm); return }
+    if (ready == null || ready.catalog.pharmacy == null) {
         InformationCard(uiText(R.string.maintenance_title), uiText(R.string.maintenance_real_pharmacy_required_message))
         return
     }

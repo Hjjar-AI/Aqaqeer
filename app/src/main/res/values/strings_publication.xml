@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="pin_setup_unpin_action">إلغاء التثبيت السابق</string>
+    <string name="pin_setup_unpin_help">توجد رسالة مثبتة. راجع المجموعة ثم ألغِ تثبيت الرسالة السابقة لتجهيز أول نشر لعقاقير. لا يمكن تجاوز نسخة عقاقير قائمة أو تالفة بهذه الخطوة.</string>
+    <string name="pin_setup_unpin_warning">هل تؤكد إلغاء تثبيت الرسالة المعروضة في مجموعة %1$s؟ تبقى الرسالة نفسها محفوظة. هذا إجراء على تيليغرام لا يُتراجع عنه بإلغاء الإعداد، وقد يكشف تثبيتاً أقدم يحتاج مراجعة منفصلة.</string>
+    <string name="pin_setup_unpin_cancel">إلغاء</string>
     <string name="pin_changed_review">تغيرت الرسالة المثبتة؛ أعد المراجعة.</string>
     <string name="pin_recovery_confirm">راجعت البيانات والتحذير وأؤكد نشرها وتثبيت نسخة جديدة</string>
     <string name="pin_recovery_explicit">استرداد بتأكيد صريح</string>
@@ -8,7 +12,7 @@
     <string name="pin_recovery_retained">هوية ووقت النسخة المحتفظ بها</string>
     <string name="pin_recovery_title">نشر نسخة جديدة وتثبيتها</string>
     <string name="pin_recovery_unavailable">النسخة المشتركة مفقودة أو الرسالة المثبتة لا تخص عقاقير.</string>
-    <string name="pin_recovery_warning">ستُنشر البيانات المحتفظ بها على هذا الهاتف (%1$d دواء) مع التعديلات المراجعة وتُثبّت نسخة جديدة. قد تكون هناك تغييرات بعيدة غير مرئية لا يمكن استعادتها. راجع البيانات قبل التأكيد.</string>
+    <string name="pin_recovery_warning">ستُنشر البيانات المحتفظ بها على هذا الهاتف (%1$d دواء) مع التعديلات المراجعة وتُثبّت نسخة جديدة. قد تكون هناك تغييرات بعيدة غير مرئية لا يمكن استعادتها. راجع البيانات قبل التأكيد. سيُلغى تثبيت الرسالة السابقة إن كانت لا تخص عقاقير؛ تبقى الرسالة محفوظة، وقد يبقى التثبيت ملغى إذا تعذر إكمال النشر.</string>
     <string name="publication_after_label" formatted="false">"بعد"</string>
     <string name="publication_automatic_reconnect_help" formatted="false">"قد تُنشر التعديلات المنتظرة تلقائياً عند عودة الاتصال. النسخ المشتركة لا تشمل السجل المحلي."</string>
     <string name="publication_before_label" formatted="false">"قبل"</string>

@@ -23,7 +23,7 @@ object DateSerializer : KSerializer<LocalDate> {
     override fun deserialize(decoder: Decoder): LocalDate = LocalDate.parse(decoder.decodeString())
 }
 
-@Serializable enum class AvailabilityStatus { AVAILABLE, LOW, OUT, UNKNOWN }
+@Serializable enum class AvailabilityStatus { AVAILABLE, LOW, OUT }
 @Serializable data class PinVerifier(val salt: String, val iterations: Int, val hash: String)
 
 @Serializable @Entity(tableName = "pharmacy")
@@ -74,7 +74,7 @@ data class Medication(
     ForeignKey(entity = Section::class, parentColumns = ["id"], childColumns = ["sectionId"], onDelete = ForeignKey.CASCADE),
 ], indices = [Index("sectionId")])
 data class Availability(val medicationId: String, val sectionId: String,
-                        val status: AvailabilityStatus = AvailabilityStatus.UNKNOWN,
+                        val status: AvailabilityStatus = AvailabilityStatus.OUT,
                         val updatedAt: Instant)
 
 @Serializable @Entity(tableName = "tombstones", primaryKeys = ["entityType", "entityId", "operationId"])
@@ -129,10 +129,12 @@ data class CatalogSnapshot(
     private val availabilityIndex by lazy { availability.associateBy { it.medicationId to it.sectionId } }
     val formsById by lazy { forms.associateBy { it.id } }
     val categoriesById by lazy { categories.associateBy { it.id } }
-    val outCounts by lazy { availability.filter { it.status == AvailabilityStatus.OUT }.groupingBy { it.sectionId }.eachCount() }
+    val outCounts by lazy { sections.associate { section ->
+        section.id to medications.count { status(it.id, section.id) == AvailabilityStatus.OUT }
+    } }
     fun availability(medicationId: String, sectionId: String): Availability? = availabilityIndex[medicationId to sectionId]
     fun status(medicationId: String, sectionId: String): AvailabilityStatus =
-        availability(medicationId, sectionId)?.status ?: AvailabilityStatus.UNKNOWN
+        availability(medicationId, sectionId)?.status ?: AvailabilityStatus.OUT
 }
 
 /** Device-local lifecycle; never serialized into shared data. */

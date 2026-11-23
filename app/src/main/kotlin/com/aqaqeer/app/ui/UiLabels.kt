@@ -20,7 +20,6 @@ internal fun statusLabel(status: AvailabilityStatus, text: UiText? = null): Stri
     AvailabilityStatus.AVAILABLE -> R.string.status_available
     AvailabilityStatus.LOW -> R.string.status_low
     AvailabilityStatus.OUT -> R.string.status_out
-    AvailabilityStatus.UNKNOWN -> R.string.status_unknown
 })
 }
 

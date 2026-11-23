@@ -74,6 +74,7 @@ class CatalogViewModel @Inject constructor(
 
 ) : ViewModel() {
     init { viewModelScope.launch { runCatching { backups.cleanupAbandoned() } } }
+    internal val demoFiles = com.aqaqeer.app.admin.DemoFiles(context)
     internal val feedback = MutableStateFlow<UiFeedback?>(null)
     internal var newMedicationName: String = ""
     internal val highlightedMedication = MutableStateFlow<String?>(null)
@@ -175,8 +176,8 @@ class CatalogViewModel @Inject constructor(
     internal fun review() = command(Route.Review) { pendingEdits.value = admin.pending() }
     internal fun publish(choices: Map<String, Boolean> = emptyMap(), reviewOnFailure: Boolean = false,
         recoverPin: Boolean = false) = command {
-        check(!BuildConfig.IS_DEMO)
-        sharing.publish(choices, recoverPin); pendingEdits.value = admin.pending(); admin.clearReconnectIfDone(sharing.status.value.verified)
+        sharing.publish(choices, recoverPin); pendingEdits.value = admin.pending()
+        if (!BuildConfig.IS_DEMO) admin.clearReconnectIfDone(sharing.status.value.verified)
         if (reviewOnFailure && !sharing.status.value.verified) navigate(Route.Review)
     }
     internal fun onForeground(active: Boolean) {
@@ -266,7 +267,7 @@ class CatalogViewModel @Inject constructor(
             filters = browsing.third.copy(
                 statuses = if (readerStockOnly) emptySet() else browsing.third.statuses,
                 unpublishedOnly = browsing.third.unpublishedOnly && ready?.admin == true),
-            refresh = refresh, online = online)
+            refresh = refresh, online = if (BuildConfig.IS_DEMO) DemoSession.initialize().online else online)
     }.stateIn(viewModelScope, SharingStarted.Eagerly, DisplayPreferences.startupPresentation(context).let { (theme, accent) ->
         AppUiState(theme = theme, accent = accent)
     })
@@ -283,7 +284,7 @@ class CatalogViewModel @Inject constructor(
         }
         viewModelScope.launch {
             state.map { current -> (current.catalog as? CatalogState.Ready)?.let { ready ->
-                ready.catalog.pharmacy?.pharmacyId to (ready.admin && !ready.isDemo && !ready.requiresUpdate && !ready.maintenancePaused)
+                ready.catalog.pharmacy?.pharmacyId to (ready.admin && !ready.requiresUpdate && !ready.maintenancePaused)
             } }.distinctUntilChanged().collect { access ->
                 exchangeController.reconcileAccess(access)
             }
@@ -349,7 +350,14 @@ class CatalogViewModel @Inject constructor(
     private var refreshJob: Job? = null
     fun refreshCatalog(automatic: Boolean = false) {
         val ready = state.value.catalog as? CatalogState.Ready ?: return
-        if (ready.isDemo || ready.restorePaused || ready.maintenancePaused || ready.lifecycle != "SHARED" || ready.catalog.pharmacy == null || refreshState.value.busy) return
+        if (ready.restorePaused || ready.maintenancePaused || ready.lifecycle != "SHARED" || ready.catalog.pharmacy == null || refreshState.value.busy) return
+        if (ready.isDemo) {
+            if (!automatic && !adminBusy.value) command(queueOffline = false) {
+                DemoSession.refresh()
+                feedback.value = UiFeedback(uiText(R.string.logic_refresh_current), route.value)
+            }
+            return
+        }
         val offline = if (automatic) !online else connectivity.activeNetwork == null
         if (adminBusy.value || sharing.status.value.busy || offline) {
             if (!automatic) feedback.value = UiFeedback(if (offline) uiText(R.string.logic_offline) else uiText(R.string.logic_busy), route.value)
@@ -393,8 +401,9 @@ class CatalogViewModel @Inject constructor(
     fun navigate(destination: String) = navigate(RouteStorage.decode(destination))
     fun navigate(destination: Route) = navigation.navigate(destination)
     private fun demoRouteAllowed(destination: Route): Boolean = when (destination) {
-        Route.Home, Route.Settings, Route.About, is Route.Medication -> true
-        Route.Admin, Route.Taxonomy, Route.Review, is Route.History, is Route.EditMedication -> DemoSession.initialize().admin
+        Route.Home, Route.Settings, Route.About, Route.Admin, Route.Maintenance, Route.Promote, Route.Leave, is Route.Medication -> true
+        Route.Backup -> DemoSession.initialize().let { it.admin || it.restorePaused }
+        Route.Taxonomy, Route.Review, Route.Reports, Route.CsvImport, Route.Setup, Route.ExportConnection, is Route.History, is Route.EditMedication -> DemoSession.initialize().admin
         else -> false
     }
     internal fun setDemoAdmin(value: Boolean) {
@@ -406,6 +415,7 @@ class CatalogViewModel @Inject constructor(
     internal fun resetDemo() {
         if (!BuildConfig.IS_DEMO || adminBusy.value) return
         DemoSession.reset()
+        exchangeController.reconcileAccess(null)
         pendingEdits.value = emptyList(); highlightedMedication.value = null; availabilitySavedId.value = null
         clearFilters(); setQuery(""); navigate(Route.Home)
     }

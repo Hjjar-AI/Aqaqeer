@@ -5,4 +5,4 @@ import com.aqaqeer.app.data.CatalogState
 internal val CatalogState.Ready.canEditCatalog: Boolean
     get() = admin && !requiresUpdate && !maintenancePaused
 internal val CatalogState.Ready.canRefreshCatalog: Boolean
-    get() = !isDemo && !restorePaused && !maintenancePaused && lifecycle == "SHARED"
+    get() = !restorePaused && !maintenancePaused && lifecycle == "SHARED"

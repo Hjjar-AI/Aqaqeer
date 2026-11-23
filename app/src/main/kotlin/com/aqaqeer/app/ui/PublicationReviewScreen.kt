@@ -71,7 +71,7 @@ import kotlinx.serialization.json.*
             Column(verticalArrangement = Arrangement.spacedBy(UiSpacing.group)) {
                 if (ready.isDemo) SupportingText(uiText(R.string.review_demo_local_only))
                 ConflictChoices(sharing.conflicts, choices, catalog) { choices = it }
-                AppButton(enabled = !ready.isDemo && (ready.pendingCount > 0 || ready.uncertain || ready.lifecycle == "LOCAL_DRAFT") && !busy && !sharing.busy && !ready.requiresUpdate && !ready.restorePaused && !ready.maintenancePaused, onClick = { vm.publish(choices) }) { Text(uiText(R.string.publication_publish_verify_action)) }
+                AppButton(enabled = (ready.pendingCount > 0 || ready.uncertain || ready.lifecycle == "LOCAL_DRAFT") && !busy && !sharing.busy && !ready.requiresUpdate && !ready.restorePaused && !ready.maintenancePaused, onClick = { vm.publish(choices) }) { Text(uiText(R.string.publication_publish_verify_action)) }
                 if (!ready.isDemo && ready.lifecycle == "SHARED") PinRecoveryAction(
                     enabled = !busy && !sharing.busy && !ready.requiresUpdate && !ready.restorePaused && !ready.maintenancePaused,
                     recover = { vm.publish(choices, recoverPin = true) })

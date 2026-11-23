@@ -92,7 +92,9 @@ object BuildSeed {
                 note = "سجل عرض محلي. التوفر والصلاحية افتراضيان، ولا يمثلان صيدلية حقيقية أو تعليمات علاجية.",
                 expiryDate = when (index) { 0 -> today.minusDays(7); 1 -> today.plusDays(21); 7 -> null; else -> today.plusMonths(12) })
         }
-        val states = listOf(AvailabilityStatus.AVAILABLE, AvailabilityStatus.LOW, AvailabilityStatus.OUT)
+        // Cover all three states, including stock available only in the other section.
+        val states = listOf(AvailabilityStatus.AVAILABLE, AvailabilityStatus.LOW, AvailabilityStatus.OUT,
+            AvailabilityStatus.OUT, AvailabilityStatus.AVAILABLE, AvailabilityStatus.LOW)
         val availability = sections.flatMapIndexed { sectionIndex, section ->
             medications.mapIndexed { index, med ->
                 Availability(med.id, section.id, states[(index + sectionIndex) % states.size], time)

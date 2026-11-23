@@ -20,7 +20,7 @@ import kotlinx.serialization.json.*
 
     Text(uiText(R.string.navigation_leave_pharmacy_title), style = MaterialTheme.typography.headlineSmall)
     GroupedCard(title = uiText(R.string.catalog_leave_confirmation_title)) {
-        Text(uiText(R.string.catalog_leave_consequences_help))
+        Text(uiText(if (ready.isDemo) R.string.demo_leave_help else R.string.catalog_leave_consequences_help))
         if (ready.admin) FormField(uiText(R.string.catalog_leave_pharmacy_name_label), leaveName, { leaveName = it }, submitted = formSubmitted, required = true, validate = { if (it == catalog.pharmacy?.name) null else uiText(R.string.catalog_leave_pharmacy_name_mismatch_error) })
         CheckChoiceRow(confirmedLeave, uiText(R.string.catalog_leave_acknowledgement_label)) { confirmedLeave = it }
         if (ready.uncertain) NoticeStrip(Notice(uiText(R.string.catalog_leave_uncertain_publication_warning), NoticeSeverity.WARNING))

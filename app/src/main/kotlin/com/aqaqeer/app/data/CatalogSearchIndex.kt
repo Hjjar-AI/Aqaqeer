@@ -35,8 +35,8 @@ class CatalogSearchIndex(val catalog: CatalogSnapshot) {
         return 0
     }
     private fun order(sort: HomeSort, section: String?) = Comparator<Entry> { a, b ->
-        fun rank(entry: Entry) = when (section?.let { catalog.status(entry.medication.id, it) } ?: AvailabilityStatus.UNKNOWN) {
-            AvailabilityStatus.OUT -> 0; AvailabilityStatus.LOW -> 1; AvailabilityStatus.UNKNOWN -> 2; AvailabilityStatus.AVAILABLE -> 3
+        fun rank(entry: Entry) = when (section?.let { catalog.status(entry.medication.id, it) } ?: AvailabilityStatus.OUT) {
+            AvailabilityStatus.OUT -> 0; AvailabilityStatus.LOW -> 1; AvailabilityStatus.AVAILABLE -> 2
         }
         val comparison = when (sort) {
             HomeSort.ARABIC_NAME -> compareKeys(a.arabic, b.arabic)
@@ -118,7 +118,7 @@ class CatalogSearchIndex(val catalog: CatalogSnapshot) {
             MedicationPresentation.normalizedSearch(query).isNotEmpty()) else emptyList()
         fun row(med: Medication, sectionId: String?): MedicationRowUi =
             MedicationRowUi(med, catalog.formsById[med.formId], catalog.categoriesById[med.categoryId]?.nameAr ?: "غير مصنف",
-                sectionId?.let { catalog.status(med.id, it) } ?: AvailabilityStatus.UNKNOWN,
+                sectionId?.let { catalog.status(med.id, it) } ?: AvailabilityStatus.OUT,
                 MedicationPresentation.availableElsewhere(catalog, med.id, sectionId, onlyWhenOut = readerStockOnly),
                 med.id in unpublished, med.id in fetched)
         val rows = visible.associate { med ->

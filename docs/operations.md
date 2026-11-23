@@ -1,5 +1,11 @@
 # Operations
 
+## Reviewed pin replacement
+
+During draft setup, verify the group and explicitly confirm removing the reviewed unrelated pin before saving the connection. The action calls Telegram `unpinChatMessage` with that specific message ID, never all pins; messages remain in the group. A newly revealed older pin needs a new verification and confirmation. Existing or damaged bot-owned documents cannot be bypassed.
+
+For a shared pharmacy, use publication review’s explicit pin recovery. After retained-state review and the durable write checkpoint, recovery removes the reviewed unrelated pin, checks for remaining pins, then pins and verifies the replacement. If interrupted, the old pin may already be removed; retain the attempt/pending work and review the actual group before retrying. Cancelling cannot undo external unpinning. Admins must still coordinate publication.
+
 ## Current capabilities
 
 Creation, persistent admin authorization, catalog/availability editing, Telegram setup/publication, connection sharing, cached viewing/refresh, encrypted backup/restore and credential maintenance are implemented. Current results and limits belong in [validation](validation.md), remaining checks in [plan](plan.md). Demo requires no credentials; real credentials belong only in protected ignored storage.

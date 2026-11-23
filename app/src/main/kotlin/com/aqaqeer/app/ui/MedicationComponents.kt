@@ -86,7 +86,6 @@ import java.time.LocalDate
         AvailabilityStatus.AVAILABLE -> it.available
         AvailabilityStatus.LOW -> it.low
         AvailabilityStatus.OUT -> it.out
-        AvailabilityStatus.UNKNOWN -> it.unknown
     }
 }
 

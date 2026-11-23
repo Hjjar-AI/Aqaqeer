@@ -92,7 +92,7 @@ internal class ExchangeController(private val csvImports: CsvImportRepository, p
         }
     }
     private fun exchangeEligible(pharmacyId: String): Boolean = (catalogState() as? CatalogState.Ready)?.let {
-        it.admin && !it.isDemo && !it.requiresUpdate && !it.maintenancePaused && it.catalog.pharmacy?.pharmacyId == pharmacyId
+        it.admin && !it.requiresUpdate && !it.maintenancePaused && it.catalog.pharmacy?.pharmacyId == pharmacyId
     } == true
 
     fun reconcileAccess(access: Pair<String?, Boolean>?) {

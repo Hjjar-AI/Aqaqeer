@@ -37,7 +37,7 @@
     <string name="exchange_csv_skip_action_label" formatted="false">"تخطي"</string>
     <string name="exchange_csv_skipped_outcome_label" formatted="false">"تُخطي"</string>
     <string name="exchange_csv_target_medication_label" formatted="false">"الدواء المستهدف"</string>
-    <string name="exchange_csv_template_section_ids_help" formatted="false">"تقبل أعمدة التوافر AVAILABLE / LOW / OUT / UNKNOWN دون حساسية لحالة الأحرف أو التسميات العربية. تقبل معرّف القسم أو اسمه الواضح. معرّفات القالب الحالي:"</string>
+    <string name="exchange_csv_template_section_ids_help" formatted="false">"تقبل أعمدة التوافر AVAILABLE / LOW / OUT دون حساسية لحالة الأحرف أو التسميات العربية. تقبل معرّف القسم أو اسمه الواضح. معرّفات القالب الحالي:"</string>
     <string name="exchange_csv_truncated_suffix" formatted="false">"… (مختصر)"</string>
     <string name="exchange_csv_unprocessed_row_error" formatted="false">"لم يُعالج الصف؛ أُوقفت العملية. أعد المعاينة قبل المحاولة"</string>
     <string name="exchange_csv_update_selected_action_label" formatted="false">"تحديث دواء محدد"</string>

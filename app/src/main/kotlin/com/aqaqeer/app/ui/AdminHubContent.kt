@@ -48,8 +48,8 @@ import kotlinx.serialization.json.*
         NavigationRow(uiText(R.string.exchange_reports_navigation_label), { vm.navigate(Route.Reports) })
     }
     NavigationGroup(uiText(R.string.connection_sharing_heading)) {
-        if (ready.lifecycle == "LOCAL_DRAFT") NavigationRow(uiText(R.string.navigation_telegram_setup_title), { vm.navigate(Route.Setup) })
-        if (ready.lifecycle == "LOCAL_DRAFT") HorizontalDivider()
+        if (ready.lifecycle == "LOCAL_DRAFT" || ready.isDemo) NavigationRow(uiText(R.string.navigation_telegram_setup_title), { vm.navigate(Route.Setup) })
+        if (ready.lifecycle == "LOCAL_DRAFT" || ready.isDemo) HorizontalDivider()
         NavigationRow(uiText(R.string.navigation_publication_review_title), vm::review)
         HorizontalDivider()
         NavigationRow(uiText(R.string.navigation_connection_export_title), { vm.navigate(Route.ExportConnection) }, enabled = ready.lifecycle == "SHARED" && !ready.restorePaused)

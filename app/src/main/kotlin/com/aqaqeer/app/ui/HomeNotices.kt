@@ -95,7 +95,7 @@ internal fun buildHomeNotices(ready: CatalogState.Ready, state: AppUiState, cloc
         if (ready.requiresUpdate) add(HomeNotice("update", uiText(R.string.home_update_required_notice)))
         if (ready.maintenancePaused) add(HomeNotice("maintenance", uiText(R.string.home_maintenance_paused_notice)))
         if (ready.restorePaused) add(HomeNotice("restore", uiText(R.string.home_restore_paused_notice)))
-        if (ready.admin && !ready.isDemo && (ready.pendingCount > 0 || ready.uncertain || publicationBusy) &&
+        if (ready.admin && (ready.pendingCount > 0 || ready.uncertain || publicationBusy) &&
             !ready.requiresUpdate && !ready.maintenancePaused && !ready.restorePaused && publicationBlockReason != null)
             add(HomeNotice("publication-block", publicationBlockReason))
         if (refreshAvailable && state.refresh.error != null) add(HomeNotice("refresh-error", uiText(R.string.home_refresh_failed_notice), listOf(state.refresh.error.orEmpty())))

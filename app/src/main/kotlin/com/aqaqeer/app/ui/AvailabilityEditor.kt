@@ -119,7 +119,6 @@ internal val InitialAvailabilitySaver = Saver<Map<String, AvailabilityStatus>, A
     Text(section.nameAr + if (section.isActive) "" else uiText(R.string.catalog_closed_section_suffix),
         style = MaterialTheme.typography.titleSmall)
     if (section.isActive) WrappingContent {
-        if (current == AvailabilityStatus.UNKNOWN) StatusBadge(current)
         MedicationPresentation.editableStatuses.forEach { status ->
             AppChip(selected = current == status, enabled = !busy,
                 onClick = { choose(status) }, label = { Text(statusLabel(status, text = uiText)) },

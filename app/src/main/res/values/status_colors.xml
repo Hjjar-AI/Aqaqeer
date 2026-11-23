@@ -8,7 +8,4 @@
     <color name="status_out_container">#FEE2E2</color>
     <color name="status_out_content">#991B1B</color>
     <color name="status_out_edge">#B91C1C</color>
-    <color name="status_unknown_container">#E2E8F0</color>
-    <color name="status_unknown_content">#334155</color>
-    <color name="status_unknown_edge">#64748B</color>
 </resources>

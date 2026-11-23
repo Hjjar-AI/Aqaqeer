@@ -2,6 +2,7 @@ package com.aqaqeer.app.reports
 
 import android.content.Context
 import android.net.Uri
+import com.aqaqeer.app.BuildConfig
 import com.aqaqeer.app.admin.*
 import com.aqaqeer.app.data.*
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -11,14 +12,16 @@ import javax.inject.Inject
 
 class CsvImportRepository @Inject constructor(private val admin: AdminRepository, private val output: DocumentOutput,
     @param:ApplicationContext private val context: Context) {
-    private suspend fun catalog() = admin.transaction { dao -> admin.guard(dao); dao.catalog() }
+    private suspend fun catalog(): CatalogSnapshot = if (BuildConfig.IS_DEMO) DemoSession.authorized().catalog
+        else admin.transaction { dao -> admin.guard(dao); dao.catalog() }
     internal suspend fun load(uri: Uri): CsvImportSession = withContext(Dispatchers.IO) {
+        val workspaceId = if (BuildConfig.IS_DEMO) DemoSession.authorized().workspaceId else null
         catalog() // Reject readers/unsupported installations before opening an external file.
         require(uri.scheme == "content")
         val jobContext = currentCoroutineContext()
         val table = requireNotNull(context.contentResolver.openInputStream(uri)).use { CsvCodec.read(it) { jobContext.ensureActive() } }
         val baseline = catalog()
-        CsvRowPlanner.preview(UUID.randomUUID().toString(), baseline, table, emptyMap()) { jobContext.ensureActive() }
+        CsvRowPlanner.preview(UUID.randomUUID().toString(), baseline, table, emptyMap()) { jobContext.ensureActive() }.copy(demoWorkspaceId = workspaceId)
     }
     internal suspend fun revise(session: CsvImportSession, number: Int, decision: CsvDecision): CsvImportSession = withContext(Dispatchers.Default) {
         val choices = session.rows.associate { it.record.number to it.decision }.toMutableMap()
@@ -37,7 +40,7 @@ class CsvImportRepository @Inject constructor(private val admin: AdminRepository
             else if (row.duplicates.size == 1) row.decision.copy(action = CsvAction.UPDATE, targetId = row.duplicates.single(), selected = false)
             else row.decision }
         val owner = currentCoroutineContext()
-        CsvRowPlanner.preview(session.id, session.baseline, session.table, choices) { owner.ensureActive() }
+        CsvRowPlanner.preview(session.id, session.baseline, session.table, choices) { owner.ensureActive() }.copy(demoWorkspaceId = session.demoWorkspaceId)
     }
 
     /** A chunk commits once; only then can its results become successes. No write is auto-replayed. */
@@ -50,9 +53,8 @@ class CsvImportRepository @Inject constructor(private val admin: AdminRepository
             withContext(NonCancellable) {
                 val outcomes = mutableListOf<CsvRowResult>()
                 try {
-                    admin.transaction { dao ->
-                        val device = admin.guard(dao)
-                        var staged = dao.catalog()
+                    fun planChunk(source: CatalogSnapshot): List<CsvRowPlan> {
+                        var staged = source
                         val stagedIndex = MedicationDuplicates.index(staged.medications).mapValues { it.value.toMutableList() }.toMutableMap()
                         val plans = mutableListOf<CsvRowPlan>()
                         val baselineIndex = session.duplicateIndex
@@ -95,8 +97,21 @@ class CsvImportRepository @Inject constructor(private val admin: AdminRepository
                             } catch (e: CsvProblem) { outcomes += outcome(CsvOutcome.FAILED, e.reason) }
                             catch (_: IllegalArgumentException) { outcomes += outcome(CsvOutcome.FAILED, "قيم غير صالحة؛ تحقق من الحقول والمراجع") }
                         }
-                        // All row-level validation finishes before the first write. A storage error rolls back the chunk.
-                        plans.forEach { plan -> admin.editInTransaction(dao) { current, _, now, _ -> plan.apply(current, now) } }
+                        return plans
+                    }
+                    // Both flavors validate all rows before committing a chunk; failures roll it back.
+                    if (BuildConfig.IS_DEMO) withContext(Dispatchers.Default) {
+                        DemoSession.batch {
+                            adminCheck(DemoSession.authorized().workspaceId == session.demoWorkspaceId) { "أعد فتح الملف بعد تغيير مساحة العرض" }
+                            planChunk(DemoSession.authorized().catalog).forEach { plan ->
+                                DemoSession.edit { current, _, now, _ -> plan.apply(current, now) }
+                            }
+                        }
+                    } else admin.transaction { dao ->
+                        admin.guard(dao)
+                        planChunk(dao.catalog()).forEach { plan ->
+                            admin.editInTransaction(dao) { current, _, now, _ -> plan.apply(current, now) }
+                        }
                     }
                 } catch (e: CancellationException) { throw e }
                 catch (error: Exception) {

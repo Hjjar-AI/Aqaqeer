@@ -94,7 +94,7 @@ internal object CsvRowPlanner {
                 value.copy(medication = value.medication.copy(id = if (row.decision.action == CsvAction.UPDATE) value.medication.id else row.decision.createdId))
             }
         }
-        return CsvImportSession(id, requireNotNull(baseline.pharmacy).pharmacyId, baseline, table, rows, index, effectiveCandidates, identities)
+        return CsvImportSession(id, requireNotNull(baseline.pharmacy).pharmacyId, baseline, table, rows, index, effectiveCandidates, identities, previous?.demoWorkspaceId)
     }
 
     fun plan(sessionId: String, catalog: CatalogSnapshot, table: CsvTable, record: CsvRecord, decision: CsvDecision): CsvRowPlan {

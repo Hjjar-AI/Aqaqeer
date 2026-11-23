@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="demo_connection_help">اتصال تجريبي بمجموعة وهمية داخل التطبيق. الإعداد والنشر والتحديث يعملون على بيانات العرض دون الاتصال بتيليغرام. ملفات الاتصال والنسخ التجريبية لا تصلح للنسخة العادية.</string>
+    <string name="demo_group_label">المجموعة التجريبية</string>
+    <string name="demo_group_name">مجموعة عقاقير التجريبية</string>
+    <string name="demo_connection_status">حالة الاتصال التجريبي</string>
+    <string name="demo_connection_version">إصدار الاعتماد التجريبي</string>
+    <string name="demo_connected">مُعدّ</string>
+    <string name="demo_disconnected">غير مُعدّ</string>
+    <string name="demo_online">اتصال الشبكة التجريبية</string>
+    <string name="demo_online_help">حاكِ الاتصال والانقطاع دون استخدام شبكة الهاتف. النشر اليدوي يحتاج اتصالاً تجريبياً متاحاً.</string>
+    <string name="demo_connect">تفعيل الاتصال التجريبي</string>
+    <string name="demo_disconnect">فصل الاتصال التجريبي</string>
+    <string name="demo_replace_connection">استبدال ملف الاتصال التجريبي</string>
+    <string name="demo_pin_help">رمز الإدارة التجريبي الأولي 1234. يمكن تغييره مؤقتاً؛ إعادة بيانات العرض تعيده إلى 1234. التبديل السريع من الإعدادات متاح أيضاً.</string>
+    <string name="demo_current_pin">رمز الإدارة التجريبي الحالي</string>
+    <string name="demo_new_pin">الرمز التجريبي الجديد</string>
+    <string name="demo_confirm_pin">تأكيد الرمز التجريبي الجديد</string>
+    <string name="demo_change_pin">تغيير الرمز التجريبي</string>
+    <string name="demo_rotate_connection">تدوير الاعتماد التجريبي</string>
+    <string name="demo_rotation_help">يزداد إصدار الاتصال الوهمي وتحتاج ملفات الاتصال الأقدم إلى إعادة إصدار. لا يُلغى رمز بوت حقيقي ولا تُنقل بيانات إلى مجموعة حقيقية.</string>
+    <string name="demo_backup_help">نسخة مشفرة لبيانات العرض وسجلها فقط، ولا تستعيدها النسخة العادية. الاستعادة تستبدل مساحة العرض وتسحب الإدارة وتوقف النشر للمراجعة؛ الاتصال والسجل المنشور هنا محاكاة محلية.</string>
+    <string name="demo_restore_review_help">راجع بيانات العرض المستعادة. إكمال المراجعة يتيح النشر التجريبي اليدوي ولا ينشر تلقائياً؛ لا توجد صيدلية بعيدة حقيقية للمصالحة.</string>
+    <string name="demo_leave_help">تُحذف مساحة العرض وتعديلاتها وسجلها وتعود عينات جديدة بوضع القارئ. تبقى الملفات التي صدّرتها، ولا تتأثر أي صيدلية حقيقية.</string>
+</resources>

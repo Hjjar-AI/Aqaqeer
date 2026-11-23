@@ -192,12 +192,15 @@ class TelegramSnapshotReadTransport internal constructor(private val openConnect
         }
     }
 
-    private fun connect(address: String): HttpsURLConnection = openConnection(URL(address)).apply {
-        instanceFollowRedirects = false
-        connectTimeout = 15_000
-        readTimeout = 15_000
-        useCaches = false
-        setRequestProperty("Accept-Encoding", "identity")
+    private fun connect(address: String): HttpsURLConnection {
+        check(!com.aqaqeer.app.BuildConfig.IS_DEMO) { "Demo transport cannot contact Telegram" }
+        return openConnection(URL(address)).apply {
+            instanceFollowRedirects = false
+            connectTimeout = 15_000
+            readTimeout = 15_000
+            useCaches = false
+            setRequestProperty("Accept-Encoding", "identity")
+        }
     }
 
     private fun retryAfter(envelope: JsonObject): Int =

@@ -52,7 +52,7 @@ import com.aqaqeer.app.data.*
                     CompactDrawerItem(label = category.nameAr, selected = filters.categoryIds == setOf(category.id), onClick = { chooseCategory(category.id) })
                 }
             }
-            if (pharmacy != null && (!ready.isDemo || ready.admin)) DrawerGroup(uiText(R.string.navigation_drawer_catalog_history_heading), catalogOpen, { catalogOpen = !catalogOpen }, UiIcon.HISTORY) {
+            if (pharmacy != null) DrawerGroup(uiText(R.string.navigation_drawer_catalog_history_heading), catalogOpen, { catalogOpen = !catalogOpen }, UiIcon.HISTORY) {
                 DrawerRow(uiText(R.string.navigation_admin_tools_title), { openRoute(Route.Admin) }, icon = UiIcon.TOOLS)
             }
             DrawerGroup(uiText(R.string.navigation_drawer_application_heading), applicationOpen, { applicationOpen = !applicationOpen }, UiIcon.INFO) {

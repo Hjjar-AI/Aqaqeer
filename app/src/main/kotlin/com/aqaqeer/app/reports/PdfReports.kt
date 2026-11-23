@@ -261,7 +261,6 @@ private class A5Report(
                     AvailabilityStatus.AVAILABLE -> Color.rgb(237, 246, 239)
                     AvailabilityStatus.LOW -> Color.rgb(255, 247, 225)
                     AvailabilityStatus.OUT -> Color.rgb(255, 237, 235)
-                    AvailabilityStatus.UNKNOWN -> Color.rgb(240, 241, 244)
                 }
                 canvas.drawRect(left, y, left + sectionWidth, y + height, fill)
                 draw(label, left + padding, y + padding)
@@ -284,7 +283,7 @@ private class A5Report(
             val title = when (snapshot.request.preset) {
                 ReportPreset.OUT -> if (snapshot.request.allSections) "النواقص في جميع الأقسام النشطة — غير متوفر في قسم واحد على الأقل"
                     else "الأدوية غير المتوفرة في القسم: ${snapshot.sections.single().nameAr}"
-                ReportPreset.FULL -> "التوافر الكامل — يشمل غير معروف"
+                ReportPreset.FULL -> "التوافر الكامل"
                 ReportPreset.EXPIRING_SOON -> "الأدوية القريبة من الانتهاء — يستثني المنتهي، وفق حد التنبيه الخاص بكل دواء"
             }
             plain(listOf(PdfPart(title, true, 10f)))

@@ -26,6 +26,7 @@ import kotlinx.serialization.json.*
         val pass = outgoing; outgoing = null
         if (uri == null) pass?.fill('\u0000') else if (pass != null) vm.secretCommand(null, pass) { vm.sharing.export(uri, pass) }
     }
+    if (com.aqaqeer.app.BuildConfig.IS_DEMO) SupportingText(uiText(R.string.demo_connection_help))
     Text(uiText(R.string.connection_export_security_help))
     GroupedCard(title = uiText(R.string.connection_export_protection_title)) {
         SecretField(uiText(R.string.connection_file_password_label), password, { if (it.length <= 1024) { password = it; generated = false } }, required = true, validate = FormGuidance::pin, imeAction = ImeAction.Done, rule = uiText(R.string.connection_file_password_rule), tag = uiText(R.string.connection_file_password_label_with_guidance))
@@ -47,7 +48,7 @@ import kotlinx.serialization.json.*
         }
         AppButton(enabled = shared && !busy && outgoing == null && FormGuidance.pin(password) == null, onClick = {
             outgoing = password.toCharArray(); password = ""; generated = false
-            try { launcher.launch("pharmacy.aqz") } catch (_: Exception) {
+            try { launcher.launch(if (com.aqaqeer.app.BuildConfig.IS_DEMO) "pharmacy-demo.aqz" else "pharmacy.aqz") } catch (_: Exception) {
                 outgoing?.fill('\u0000'); outgoing = null
                 vm.adminMessage.value = uiText(R.string.logic_file_destination_failed)
             }

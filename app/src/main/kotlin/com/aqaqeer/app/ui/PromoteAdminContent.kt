@@ -16,6 +16,7 @@ import kotlinx.serialization.json.*
     val uiText = rememberUiText()
     var formSubmitted by submitted
 
+    if (com.aqaqeer.app.BuildConfig.IS_DEMO) SupportingText(uiText(R.string.demo_pin_help))
     var pin by remember { mutableStateOf("") }
     GroupedCard(title = uiText(R.string.catalog_authorize_admin_title)) {
         SecretField(uiText(R.string.catalog_admin_pin_label), pin, { pin = it }, submitted = formSubmitted, required = true, numericSecret = true, imeAction = ImeAction.Done, validate = FormGuidance::pin)

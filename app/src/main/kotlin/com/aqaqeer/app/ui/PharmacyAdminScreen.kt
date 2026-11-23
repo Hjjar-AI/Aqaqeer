@@ -52,14 +52,6 @@ import kotlinx.serialization.json.*
             (!ready.admin && state.destination != Route.Admin) -> Text(uiText(R.string.shared_admin_authorization_required_message))
             ready.requiresUpdate && state.destination !in setOf(Route.Review, Route.Admin) -> Text(uiText(R.string.shared_compatible_version_required_message))
             ready.maintenancePaused && state.destination !in setOf(Route.Admin, Route.Review) -> Text(uiText(R.string.maintenance_complete_before_editing_message))
-            ready.isDemo && state.destination == Route.Admin -> {
-                InformationCard(uiText(R.string.review_demo_admin), uiText(R.string.review_demo_edit_help))
-                NavigationCard(uiText(R.string.navigation_add_medication_title), { vm.navigate(Route.EditMedication()) })
-                NavigationCard(uiText(R.string.navigation_taxonomy_title), { vm.navigate(Route.Taxonomy) })
-                NavigationCard(uiText(R.string.navigation_history_title), { vm.openHistory() })
-                NavigationCard(uiText(R.string.navigation_publication_review_title), vm::review)
-            }
-            ready.isDemo && state.destination !in setOf(Route.Taxonomy, Route.Review) -> Text(uiText(R.string.review_demo_local_only))
             state.destination == Route.Setup -> TelegramSetup(vm, busy, catalog.medications.isEmpty())
             state.destination == Route.ExportConnection -> ConnectionExport(vm, ready.lifecycle == "SHARED", busy)
             state.destination == Route.Taxonomy -> TaxonomyEditor(catalog, vm, busy)

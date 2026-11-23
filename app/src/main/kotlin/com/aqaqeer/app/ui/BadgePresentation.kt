@@ -14,7 +14,6 @@ internal data class BadgePresentation(val text: String, val tone: StatusTone, va
         AvailabilityStatus.AVAILABLE -> UiIcon.CHECK
         AvailabilityStatus.LOW -> UiIcon.WARNING
         AvailabilityStatus.OUT -> UiIcon.CLOSE
-        AvailabilityStatus.UNKNOWN -> UiIcon.UNKNOWN
     })
 
 @Composable internal fun expiryBadge(expiry: ExpiryState): BadgePresentation {

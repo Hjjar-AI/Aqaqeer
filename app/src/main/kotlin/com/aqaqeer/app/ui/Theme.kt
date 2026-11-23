@@ -139,7 +139,7 @@ private fun amoledColors(colors: ColorScheme): ColorScheme = colors.copy(
 
 internal data class StatusTone(val container: Color, val content: Color, val edge: Color)
 internal data class StatusColors(val available: StatusTone, val low: StatusTone, val out: StatusTone,
-    val unknown: StatusTone, val info: StatusTone = unknown)
+    val info: StatusTone)
 private fun statusColors(resources: Resources, colors: ColorScheme): StatusColors {
     fun tone(container: Int, content: Int, edge: Int) = StatusTone(
         Color(resources.getColor(container, null)), Color(resources.getColor(content, null)), Color(resources.getColor(edge, null)))
@@ -147,7 +147,6 @@ private fun statusColors(resources: Resources, colors: ColorScheme): StatusColor
         tone(R.color.status_available_container, R.color.status_available_content, R.color.status_available_edge),
         tone(R.color.status_low_container, R.color.status_low_content, R.color.status_low_edge),
         tone(R.color.status_out_container, R.color.status_out_content, R.color.status_out_edge),
-        tone(R.color.status_unknown_container, R.color.status_unknown_content, R.color.status_unknown_edge),
         StatusTone(colors.secondaryContainer, colors.onSecondaryContainer, colors.secondary))
 }
 internal val LocalStatusColors = staticCompositionLocalOf<StatusColors> { error("AqaqeerTheme is required") }

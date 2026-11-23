@@ -25,15 +25,15 @@ enum class ExpiryState { EXPIRED, SOON }
 data class DisplayName(val text: String, val english: Boolean)
 
 object MedicationPresentation {
-    /** UNKNOWN remains a legacy/missing-data state, not an editable status. */
-    val editableStatuses = AvailabilityStatus.entries.filterNot { it == AvailabilityStatus.UNKNOWN }
+    /** The complete set of supported availability states. */
+    val editableStatuses = AvailabilityStatus.entries
 
     /** Search may ignore hamza without broadening taxonomy uniqueness or changing sort keys. */
     fun normalizedSearch(value: String): String = normalizedName(westernDigits(value).replace("ء", ""))
 
     fun statusLabel(status: AvailabilityStatus): String = when (status) {
         AvailabilityStatus.AVAILABLE -> "متوفر"; AvailabilityStatus.LOW -> "توفر محدود"
-        AvailabilityStatus.OUT -> "غير متوفر"; AvailabilityStatus.UNKNOWN -> "غير معروف"
+        AvailabilityStatus.OUT -> "غير متوفر"
     }
 
     fun names(ar: String?, en: String?, mode: NameDisplay): List<DisplayName> {

@@ -17,7 +17,7 @@ import com.aqaqeer.app.reports.*
 
 @Composable internal fun CsvImportScreen(ready: CatalogState.Ready?, vm: CatalogViewModel) {
     val uiText = rememberUiText()
-    if (ready == null || !ready.admin || ready.isDemo || ready.requiresUpdate) {
+    if (ready == null || !ready.admin || ready.requiresUpdate) {
         InformationCard(uiText(R.string.navigation_csv_import_title), uiText(R.string.exchange_report_access_required_message))
         return
     }

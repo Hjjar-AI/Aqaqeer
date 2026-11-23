@@ -11,6 +11,9 @@ import java.util.UUID
 import javax.net.ssl.HttpsURLConnection
 
 internal data class SetupGroup(val id: Long, val title: String, val pin: String?)
+internal fun SetupGroup.pinnedMessageId(): Long? = pin?.let {
+    Json.parseToJsonElement(it).jsonObject["message_id"]?.jsonPrimitive?.longOrNull?.takeIf { id -> id > 0 }
+}
 /** Positive identification only; a damaged bot-owned snapshot is not an unrelated pin. */
 internal fun SetupGroup.hasUnrelatedPin(botId: Long): Boolean = runCatching {
     val message = Json.parseToJsonElement(requireNotNull(pin)).jsonObject
@@ -29,6 +32,9 @@ internal interface SnapshotWriteTransport {
     suspend fun upload(token: String, group: Long, bytes: ByteArray, caption: String): UploadedDocument
     suspend fun replace(token: String, group: Long, message: Long, file: String, caption: String)
     suspend fun pin(token: String, group: Long, message: Long)
+    suspend fun unpin(token: String, group: Long, message: Long) {
+        throw UnsupportedOperationException("Targeted unpin is unavailable")
+    }
 }
 
 /** Official HTTPS host only, bounded metadata, no redirects or platform exception text in UI. */
@@ -38,8 +44,9 @@ internal class TelegramPublishing internal constructor(
     constructor() : this({ it.openConnection() as HttpsURLConnection })
     private suspend fun api(token: String, method: String, parameters: Map<String, String> = emptyMap(),
         document: ByteArray? = null): JsonElement = withContext(Dispatchers.IO) {
+        check(!com.aqaqeer.app.BuildConfig.IS_DEMO) { "Demo transport cannot contact Telegram" }
         require(token.length <= 1024 && token.matches(Regex("[0-9]+:[A-Za-z0-9_-]+"))) { "رمز البوت غير صالح" }
-        require(method in setOf("getMe", "getChat", "getChatMember", "getWebhookInfo", "getUpdates", "sendDocument", "editMessageMedia", "pinChatMessage"))
+        require(method in setOf("getMe", "getChat", "getChatMember", "getWebhookInfo", "getUpdates", "sendDocument", "editMessageMedia", "pinChatMessage", "unpinChatMessage"))
         val connection = openConnection(URL("https://api.telegram.org/bot$token/$method"))
         connection.instanceFollowRedirects = false; connection.connectTimeout = 15000; connection.readTimeout = 15000; connection.useCaches = false
         val started = System.nanoTime()
@@ -147,5 +154,9 @@ internal class TelegramPublishing internal constructor(
     }
     override suspend fun pin(token: String, group: Long, message: Long) {
         check(api(token, "pinChatMessage", mapOf("chat_id" to group.toString(), "message_id" to message.toString(), "disable_notification" to "true")).jsonPrimitive.boolean)
+    }
+    override suspend fun unpin(token: String, group: Long, message: Long) {
+        require(message > 0)
+        check(api(token, "unpinChatMessage", mapOf("chat_id" to group.toString(), "message_id" to message.toString())).jsonPrimitive.boolean)
     }
 }

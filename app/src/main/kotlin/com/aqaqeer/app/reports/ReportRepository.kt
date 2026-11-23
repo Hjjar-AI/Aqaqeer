@@ -1,6 +1,7 @@
 package com.aqaqeer.app.reports
 
 import android.net.Uri
+import com.aqaqeer.app.BuildConfig
 import com.aqaqeer.app.admin.*
 import com.aqaqeer.app.data.*
 import com.aqaqeer.app.security.files.SnapshotWire
@@ -15,18 +16,29 @@ internal data class ReportRequest(val preset: ReportPreset = ReportPreset.OUT, v
 internal data class ReportSnapshot(val pharmacyId: String, val pharmacyName: String, val timezone: String,
     val generatedAt: Instant, val publishedAt: Instant?, val request: ReportRequest,
     val sections: List<Section>, val medications: List<Medication>, val availability: List<Availability>,
-    val categories: List<Category>, val forms: List<MedicationForm>) {
+    val categories: List<Category>, val forms: List<MedicationForm>, val demoWorkspaceId: String? = null) {
     private val statuses = availability.associate { (it.medicationId to it.sectionId) to it.status }
-    fun status(medication: String, section: String) = statuses[medication to section] ?: AvailabilityStatus.UNKNOWN
+    fun status(medication: String, section: String) = statuses[medication to section] ?: AvailabilityStatus.OUT
 }
 
 class ReportRepository @Inject constructor(private val admin: AdminRepository, private val output: DocumentOutput,
     private val pdf: PdfReports) {
-    internal suspend fun capture(request: ReportRequest): ReportSnapshot = admin.transaction { dao ->
-        admin.guard(dao)
-        val local = dao.catalog()
-        val saved = dao.snapshotState()?.confirmedPayloadJson?.let { Json.decodeFromString<SnapshotWire>(it) }
-        val catalog = if (request.includeUnpublished) local else saved?.supported()?.catalog
+    internal suspend fun capture(request: ReportRequest): ReportSnapshot {
+        if (BuildConfig.IS_DEMO) {
+            return withContext(Dispatchers.Default) {
+                val session = DemoSession.authorized()
+                captureSource(request, session.catalog, session.initial, session.publishedAt).copy(demoWorkspaceId = session.workspaceId)
+            }
+        }
+        return admin.transaction { dao ->
+            admin.guard(dao)
+            val local = dao.catalog()
+            val saved = dao.snapshotState()?.confirmedPayloadJson?.let { Json.decodeFromString<SnapshotWire>(it) }
+            captureSource(request, local, saved?.supported()?.catalog, saved?.publishedAt)
+        }
+    }
+    private fun captureSource(request: ReportRequest, local: CatalogSnapshot, confirmed: CatalogSnapshot?, publishedAt: Instant?): ReportSnapshot {
+        val catalog = if (request.includeUnpublished) local else confirmed
             ?: throw CsvProblem("لا توجد نسخة منشورة؛ اختر تضمين التعديلات غير المنشورة صراحة")
         CatalogRules.validate(catalog)
         val pharmacy = requireNotNull(catalog.pharmacy)
@@ -51,11 +63,16 @@ class ReportRepository @Inject constructor(private val admin: AdminRepository, p
         val runtime = Runtime.getRuntime()
         if (estimate * 12 + 16L * 1024 * 1024 > runtime.maxMemory() - (runtime.totalMemory() - runtime.freeMemory()))
             throw CsvProblem("لا توجد ذاكرة كافية لإعداد التقرير بأمان")
-        ReportSnapshot(pharmacy.pharmacyId, pharmacy.name, pharmacy.timezone, generated, saved?.publishedAt, request,
+        return ReportSnapshot(pharmacy.pharmacyId, pharmacy.name, pharmacy.timezone, generated, publishedAt, request,
             sections, medications, catalog.availability, catalog.categories, catalog.forms)
     }
-    private suspend fun authorize(snapshot: ReportSnapshot) = admin.transaction { dao ->
-        admin.guard(dao); check(dao.pharmacy()?.pharmacyId == snapshot.pharmacyId)
+    private suspend fun authorize(snapshot: ReportSnapshot) {
+        if (BuildConfig.IS_DEMO) {
+            val session = DemoSession.authorized()
+            check(session.catalog.pharmacy?.pharmacyId == snapshot.pharmacyId && session.workspaceId == snapshot.demoWorkspaceId)
+        } else admin.transaction { dao ->
+            admin.guard(dao); check(dao.pharmacy()?.pharmacyId == snapshot.pharmacyId)
+        }
     }
     internal suspend fun csv(uri: Uri, snapshot: ReportSnapshot) {
         authorize(snapshot)

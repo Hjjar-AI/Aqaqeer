@@ -66,7 +66,7 @@ import kotlinx.coroutines.flow.collect
         if ((state.destination == Route.Connection && configured) || missingMedication) viewModel.navigate(Route.Home)
     }
     val lifecycle = LocalLifecycleOwner.current.lifecycle
-    val refreshEligible = configured && !state.catalog.isDemo && !state.catalog.restorePaused && !state.catalog.maintenancePaused && state.catalog.lifecycle == "SHARED"
+    val refreshEligible = configured && !state.catalog.restorePaused && !state.catalog.maintenancePaused && state.catalog.lifecycle == "SHARED"
     DisposableEffect(lifecycle, refreshEligible) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_START) { viewModel.onForeground(true); if (refreshEligible) viewModel.refreshCatalog(automatic = true) }

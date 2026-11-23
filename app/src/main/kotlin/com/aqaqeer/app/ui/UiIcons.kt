@@ -30,7 +30,7 @@ internal enum class UiIcon(val resource: Int, val intrinsicColors: Boolean = fal
     TOOLS(R.drawable.ic_tools), SETUP(R.drawable.ic_setup), CONNECTION(R.drawable.ic_connection),
     SETTINGS(R.drawable.ic_settings), MENU(R.drawable.ic_menu), BACK(R.drawable.ic_back), MORE(R.drawable.ic_more), SEARCH(R.drawable.ic_search),
     FILTER(R.drawable.ic_filter), EDIT(R.drawable.ic_edit), CLOSE(R.drawable.ic_close),
-    CHECK(R.drawable.ic_check), WARNING(R.drawable.ic_warning), UNKNOWN(R.drawable.ic_unknown),
+    CHECK(R.drawable.ic_check), WARNING(R.drawable.ic_warning),
     VISIBILITY(R.drawable.ic_visibility), INFO(R.drawable.ic_info), HISTORY(R.drawable.ic_history),
     PUBLISH(R.drawable.ic_publish), ADD(R.drawable.ic_add), CALENDAR(R.drawable.ic_calendar),
 }

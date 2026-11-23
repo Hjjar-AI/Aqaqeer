@@ -41,14 +41,35 @@ class PharmacySharing @Inject internal constructor(private val admin: AdminRepos
     private val active = PendingConnectionStore(secure, "active-connection")
     private var retryAt = 0L
     suspend fun inspectSetup(token: String, group: Long): String {
+        return inspectSetupGroup(token, group).title
+    }
+    internal suspend fun inspectSetupGroup(token: String, group: Long): SetupGroup {
+        if (BuildConfig.IS_DEMO) { DemoSession.authorized(); return SetupGroup(-901, "مجموعة عقاقير التجريبية", null) }
         admin.transaction { admin.guard(it); adminCheck(it.attemptCount() == 0) }
-        return setup.validate(token, group).title
+        return setup.validate(token, group)
+    }
+    internal suspend fun clearSetupPin(token: String, group: Long, expected: SetupGroup): SetupGroup = gate.withLock {
+        admin.transaction { dao ->
+            admin.guard(dao)
+            adminCheck(dao.control()?.lifecycle == "LOCAL_DRAFT" && dao.attemptCount() == 0)
+        }
+        val current = setup.validate(token, group)
+        adminCheck(current == expected && current.id == group) { uiText(R.string.pin_changed_review) }
+        adminCheck(current.hasUnrelatedPin(token.substringBefore(':').toLong())) { uiText(R.string.pin_recovery_live_snapshot) }
+        val message = current.pinnedMessageId() ?: throw AdminProblem(uiText(R.string.pin_changed_review))
+        adminCheck(writes.inspect(token, group) == current) { uiText(R.string.pin_changed_review) }
+        writes.unpin(token, group, message)
+        setup.validate(token, group).also {
+            adminCheck(it.pin == null) { uiText(R.string.pin_changed_review) }
+        }
     }
     suspend fun discover(token: String, challenge: String): List<Pair<Long, String>> {
+        if (BuildConfig.IS_DEMO) { DemoSession.authorized(); return listOf(-901L to "مجموعة عقاقير التجريبية") }
         admin.transaction { admin.guard(it) }
         return setup.discover(token, challenge).map { it.id to it.title }
     }
     suspend fun saveSetup(token: String, group: Long, expectedTitle: String) = gate.withLock {
+        if (BuildConfig.IS_DEMO) { DemoSession.setConnection(true); return@withLock }
         val validated = setup.validate(token, group)
         adminCheck(validated.title == expectedTitle) { "تغيرت المجموعة؛ تحقق مجدداً" }
         admin.transaction { dao ->
@@ -82,7 +103,7 @@ class PharmacySharing @Inject internal constructor(private val admin: AdminRepos
         }
         mutable.value = SharingStatus(busy = true)
         try {
-            val published = publishLocked(choices, recoverPin)
+            val published = if (BuildConfig.IS_DEMO) { DemoSession.publish(); true } else publishLocked(choices, recoverPin)
             mutable.value = if (published) SharingStatus(message = "تم التحقق من النشر", verified = true)
                 else SharingStatus(message = "لا توجد تعديلات للنشر")
         } catch (e: CancellationException) { throw e }
@@ -240,7 +261,14 @@ class PharmacySharing @Inject internal constructor(private val admin: AdminRepos
                 val targetMessage = incoming?.document?.messageId
                 currentAttempt = currentAttempt.copy(transportPhase = "WRITE_STARTED")
                 saveAttempt(currentAttempt)
-                if (targetMessage == null) writes.pin(secrets.botToken, secrets.groupId, requireNotNull(currentAttempt.uploadedMessageId))
+                if (targetMessage == null) {
+                    if (recoverPin && group.pin != null) {
+                        val oldMessage = group.pinnedMessageId() ?: throw AdminProblem(uiText(R.string.pin_changed_review))
+                        writes.unpin(secrets.botToken, secrets.groupId, oldMessage)
+                        adminCheck(writes.inspect(secrets.botToken, secrets.groupId).pin == null) { uiText(R.string.pin_changed_review) }
+                    }
+                    writes.pin(secrets.botToken, secrets.groupId, requireNotNull(currentAttempt.uploadedMessageId))
+                }
                 else writes.replace(secrets.botToken, secrets.groupId, targetMessage, requireNotNull(currentAttempt.uploadedFileId), caption)
                 val verified = reads.read(connection, BuildConfig.VERSION_CODE)
                 val published = verified.snapshot as? SnapshotCandidate.Supported ?: throw AdminProblem("يلزم تحديث التطبيق")
@@ -460,6 +488,7 @@ class PharmacySharing @Inject internal constructor(private val admin: AdminRepos
 
     suspend fun export(uri: Uri, password: CharArray) = withContext(Dispatchers.IO) {
         try {
+            if (BuildConfig.IS_DEMO) { DemoFiles(context).exportConnection(uri, password); return@withContext }
             admin.transaction { adminCheck(it.control()?.restorePaused != true) }
             val state = local()
             adminCheck(state.lifecycle == "SHARED" && state.state.confirmedPayloadJson != null)

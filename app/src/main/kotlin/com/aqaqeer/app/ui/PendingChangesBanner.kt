@@ -14,7 +14,7 @@ import com.aqaqeer.app.data.MedicationPresentation
 @Composable internal fun PendingChangesBanner(ready: CatalogState.Ready, sharing: SharingStatus, busy: Boolean,
     review: () -> Unit, publish: () -> Unit) {
     val uiText = rememberUiText()
-    if (!ready.admin || ready.isDemo || (ready.pendingCount == 0 && !ready.uncertain && !sharing.busy)) return
+    if (!ready.admin || (ready.pendingCount == 0 && !ready.uncertain && !sharing.busy)) return
     val working = busy || sharing.busy
     val blocked = publicationBlockedReason(ready, sharing, working)
     GroupedCard {
@@ -35,7 +35,6 @@ import com.aqaqeer.app.data.MedicationPresentation
 }
 
 internal fun publicationBlockedReason(ready: CatalogState.Ready, sharing: SharingStatus, working: Boolean): String? = when {
-        ready.isDemo -> uiText(R.string.review_demo_local_only)
         ready.requiresUpdate -> uiText(R.string.publication_pending_update_required_message)
         ready.maintenancePaused -> uiText(R.string.publication_maintenance_block_message)
         ready.restorePaused -> uiText(R.string.publication_restore_review_block_message)
