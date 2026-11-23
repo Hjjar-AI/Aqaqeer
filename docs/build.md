@@ -459,6 +459,8 @@ For repeated use, keep a short release record with source, code, package, public
 | `scope=all` (default) | The JVM/vector checks above, debug and instrumentation-source compilation for both flavors, and standard-release compilation. |
 | `coverage=true` | Add per-flavor JVM coverage reports; no coverage percentage gate or device execution. |
 
+For the 2026-11-23 availability/pin/demo test-alignment batch, select the ref containing the source changes, use **scope = all** and **coverage = false**, then run workflow 03 manually. The added JVM tests are discovered automatically; Android additions are compiled only. Authoring this batch did not run any checks or dispatch this workflow.
+
 The matrix uses `fail-fast: false` and exact `:app:` tasks. The JDK job uses the existing [vector verifier](../tools/VerifyCryptoVectors.java) and standard-library exporter. No connected tasks, packaging/version reservation or signing credentials occur here. JVM XML totals distinguish failures/errors/skips and reject missing, malformed, empty or all-skipped results. Partial skips remain visible without an arbitrary failure percentage. Compilation is separate from runtime acceptance; exact task lists live in the workflow and executed outcomes in [validation](validation.md#current-verification-checkpoint--2026-11-16).
 
 ### Hosted emulator screenshots and recordings
