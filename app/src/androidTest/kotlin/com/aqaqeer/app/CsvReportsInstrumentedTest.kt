@@ -65,8 +65,10 @@ class CsvReportsInstrumentedTest {
         val results = mutableListOf<CsvRowResult>()
         val job = launch { repo.commit(session) { results += it; this@launch.cancel() } }
         job.join()
+        assertTrue(job.isCancelled)
         assertEquals(2, results.size); assertTrue(results.all { it.outcome == CsvOutcome.CREATED })
-        assertEquals(listOf("First", "Second"), p.ready().catalog.medications.map { it.genericEn })
+        // Catalog order is nameEn/id, so generic-only rows need not retain CSV order.
+        assertEquals(listOf("First", "Second"), p.ready().catalog.medications.sortedBy { it.genericEn }.map { it.genericEn })
     }
     @Test fun reportsDefaultToPublishedAndOutIncludesMissingAvailability(): Unit = runBlocking {
         val a = p.medication("Published"); p.medication("Missing availability")
