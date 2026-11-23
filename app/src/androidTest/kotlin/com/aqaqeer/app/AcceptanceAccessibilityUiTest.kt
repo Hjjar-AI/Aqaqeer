@@ -1,9 +1,10 @@
 package com.aqaqeer.app
 
+import android.os.Build
 import android.view.accessibility.AccessibilityNodeInfo
 import androidx.core.view.accessibility.AccessibilityNodeInfoCompat
 import androidx.compose.ui.test.*
-import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.test.platform.app.InstrumentationRegistry
 import kotlinx.serialization.json.*
 import org.junit.*
@@ -13,6 +14,12 @@ import java.io.File
 /** Framework accessibility exposure/focus only; does not claim audible TalkBack acceptance. */
 @dagger.hilt.android.testing.HiltAndroidTest
 class AcceptanceAccessibilityUiTest {
+    // Android 26–32 still pool nodes; API 33+ removed pooling and recycle is a no-op.
+    @Suppress("DEPRECATION")
+    private fun releaseLegacyNode(node: AccessibilityNodeInfo) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) node.recycle()
+    }
+
     @get:Rule(order=0) val hilt=dagger.hilt.android.testing.HiltAndroidRule(this)
     @get:Rule(order=1) val compose=createAndroidComposeRule<MainActivity>()
     @Test fun frameworkLabelsRolesAndAccessibilityFocusAreExposed() {
@@ -40,10 +47,12 @@ class AcceptanceAccessibilityUiTest {
                     put("visible",node.isVisibleToUser);put("heading",AccessibilityNodeInfoCompat.wrap(node).isHeading)
                 }
             }
-            for(i in 0 until node.childCount) node.getChild(i)?.let { visit(it);it.recycle() }
+            for(i in 0 until node.childCount) node.getChild(i)?.let { child ->
+                try { visit(child) } finally { releaseLegacyNode(child) }
+            }
         }
         val root=requireNotNull(automation.rootInActiveWindow)
-        try { visit(root) } finally { root.recycle() }
+        try { visit(root) } finally { releaseLegacyNode(root) }
         assertTrue("Settings must expose labeled interactive framework nodes",labeledActions>=2)
         assertTrue("An owned labeled control must accept and retain accessibility focus",focused)
         val id=requireNotNull(InstrumentationRegistry.getArguments().getString("acceptanceRun"))

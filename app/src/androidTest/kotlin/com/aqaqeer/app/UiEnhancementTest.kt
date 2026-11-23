@@ -10,7 +10,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.*
-import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import com.aqaqeer.app.data.*
@@ -125,7 +125,7 @@ class UiEnhancementTest {
         compose.setContent { AqaqeerTheme(ThemeChoice.LIGHT) { FilterSummary(filters) { filters=HomeFilters() } } }
         compose.onNodeWithText("الحالات المحددة: 2 · التصنيفات المحددة: 1").assertIsDisplayed()
         compose.onNodeWithTag("clear_filters").performClick()
-        assertEquals(HomeFilters(), filters)
+        compose.runOnIdle { assertEquals(HomeFilters(), filters) }
         compose.onNodeWithTag("filter_summary").assertDoesNotExist()
         compose.onNodeWithTag("clear_filters").assertDoesNotExist()
     }

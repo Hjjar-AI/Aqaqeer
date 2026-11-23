@@ -79,7 +79,11 @@ class AdminHistoryInstrumentedTest {
         val a = repo.observe(pharmacy, HistoryFilter(), 0).first(); val b = repo.observe(pharmacy, HistoryFilter(), 1).first()
         assertEquals(50, a.entries.size); assertTrue(a.hasMore); assertEquals(1, b.entries.size); assertFalse(b.hasMore)
         assertTrue(a.entries.map { it.id }.intersect(b.entries.map { it.id }.toSet()).isEmpty())
-        assertTrue(a.entries.all { it.after.shortened && it.after.text!!.codePointCount(0, it.after.text!!.length) == 512 })
+        assertTrue(a.entries.all { entry ->
+            entry.after.shortened && requireNotNull(entry.after.text).let { text ->
+                text.codePointCount(0, text.length) == 512
+            }
+        })
         p.admin.delete("medication", med.id)
         assertTrue(repo.observe(pharmacy, HistoryFilter(), 0).first().medications.any { it.id == med.id })
         p.admin.transaction { it.updateDeviceIdentity(it.deviceIdentity()!!.copy(adminMode = false)) }

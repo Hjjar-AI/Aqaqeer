@@ -461,6 +461,10 @@ For repeated use, keep a short release record with source, code, package, public
 
 For the 2026-11-23 availability/pin/demo test-alignment batch, select the ref containing the source changes, use **scope = all** and **coverage = false**, then run workflow 03 manually. The added JVM tests are discovered automatically; Android additions are compiled only. Authoring this batch did not run any checks or dispatch this workflow.
 
+Unit-test JVMs preload the Byte Buddy agent already selected by MockK's resolved runtime graph through a tracked @Classpath command-line argument provider. They retain -Xshare:off and disable dynamic attachment with -XX:-EnableDynamicAgentLoading; the shared startup regression checks that instrumentation is available. This avoids adding a second agent version or suppressing future-JVM attachment warnings. Agents remain test-only and coexist with the optional coverage agent. This source configuration still needs an authorized workflow-03 run; no local Gradle execution was used to validate it.
+
+Workflow 03 also retains build/reports/problems/ when Gradle generates it. The informational Problems-report notice is not itself a failed check. For the warning-fix follow-up, use **scope = all**, **coverage = true** to verify the same coverage-enabled mode as run 45167699776. It compiles Compose v2 test sources but does not execute their Android scheduling checks.
+
 The matrix uses `fail-fast: false` and exact `:app:` tasks. The JDK job uses the existing [vector verifier](../tools/VerifyCryptoVectors.java) and standard-library exporter. No connected tasks, packaging/version reservation or signing credentials occur here. JVM XML totals distinguish failures/errors/skips and reject missing, malformed, empty or all-skipped results. Partial skips remain visible without an arbitrary failure percentage. Compilation is separate from runtime acceptance; exact task lists live in the workflow and executed outcomes in [validation](validation.md#current-verification-checkpoint--2026-11-16).
 
 ### Hosted emulator screenshots and recordings

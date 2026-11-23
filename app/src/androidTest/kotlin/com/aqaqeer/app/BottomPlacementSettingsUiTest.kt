@@ -1,7 +1,7 @@
 package com.aqaqeer.app
 
 import androidx.compose.ui.test.*
-import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import com.aqaqeer.app.data.DisplayPreferences
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking

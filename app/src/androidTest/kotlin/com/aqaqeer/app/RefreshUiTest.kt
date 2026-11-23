@@ -2,7 +2,7 @@ package com.aqaqeer.app
 
 import androidx.compose.runtime.*
 import androidx.compose.ui.test.*
-import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.junit4.v2.createComposeRule
 import com.aqaqeer.app.data.*
 import com.aqaqeer.app.fixtures.M3Fixtures as F
 import com.aqaqeer.app.fixtures.homeProjection

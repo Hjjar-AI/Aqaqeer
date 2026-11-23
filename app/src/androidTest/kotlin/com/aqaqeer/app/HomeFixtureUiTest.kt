@@ -8,7 +8,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.test.*
-import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.junit4.v2.createComposeRule
 import com.aqaqeer.app.data.*
 import com.aqaqeer.app.fixtures.homeProjection
 import com.aqaqeer.app.ui.*

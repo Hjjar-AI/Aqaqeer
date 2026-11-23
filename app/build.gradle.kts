@@ -11,6 +11,17 @@ plugins {
     alias(libs.plugins.hilt)
 }
 
+// Preload the same Byte Buddy agent resolved for MockK instead of attaching it dynamically.
+abstract class MockingAgentArguments : org.gradle.process.CommandLineArgumentProvider {
+    @get:org.gradle.api.tasks.Classpath
+    abstract val agentClasspath: org.gradle.api.file.ConfigurableFileCollection
+
+    override fun asArguments(): Iterable<String> = listOf(
+        "-javaagent:${agentClasspath.singleFile.absolutePath}",
+        "-XX:-EnableDynamicAgentLoading",
+    )
+}
+
 // Generated from the actual production runtime graph during an authorized release build.
 abstract class RuntimeNoticeInventory : DefaultTask() {
     @get:org.gradle.api.tasks.Input
@@ -178,6 +189,18 @@ androidComponents {
         }
     }
     onVariants(selector().all()) { variant ->
+        variant.hostTests[HostTestBuilder.UNIT_TEST_TYPE]?.let { hostTest ->
+            val agentFiles = hostTest.runtimeConfiguration.incoming.artifactView {
+                componentFilter { component ->
+                    component is org.gradle.api.artifacts.component.ModuleComponentIdentifier &&
+                        component.group == "net.bytebuddy" && component.module == "byte-buddy-agent"
+                }
+            }.files
+            val agentArguments = objects.newInstance<MockingAgentArguments>().apply {
+                agentClasspath.from(agentFiles)
+            }
+            hostTest.configureTestTask { test -> test.jvmArgumentProviders.add(agentArguments) }
+        }
         if (variant.buildType == "release") {
             variant.sources.assets?.addGeneratedSourceDirectory(runtimeNoticeInventory, RuntimeNoticeInventory::outputDirectory)
         }

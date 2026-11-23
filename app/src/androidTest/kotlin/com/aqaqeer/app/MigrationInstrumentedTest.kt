@@ -14,7 +14,7 @@ import java.util.UUID
 class MigrationInstrumentedTest {
     private val context = InstrumentationRegistry.getInstrumentation().targetContext
     @get:Rule val helper = MigrationTestHelper(InstrumentationRegistry.getInstrumentation(),
-        AqaqeerDatabase::class.java.canonicalName!!, FrameworkSQLiteOpenHelperFactory())
+        AqaqeerDatabase::class.java, emptyList(), FrameworkSQLiteOpenHelperFactory())
     private val names = mutableListOf<String>()
     @After fun cleanup() { names.forEach { context.deleteDatabase(it) } }
 

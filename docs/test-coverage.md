@@ -10,7 +10,7 @@ Use the [current checkpoint](validation.md#current-verification-checkpoint--2026
 
 ## Current authored batch — 2026-11-23
 
-The user authorized source alignment/additions and will execute workflow 03 themselves. Added **47 JVM test methods** and **7 Android test methods**; these are authored method counts, not executed scenarios or new passes.
+The user authorized source alignment/additions and later executed workflow 03 themselves. Added **47 JVM test methods** and **7 Android test methods**; these are authored method counts, not executed scenarios or new passes.
 
 | Area | Authored or aligned checks |
 | --- | --- |
@@ -23,6 +23,14 @@ The user authorized source alignment/additions and will execute workflow 03 them
 Workflow 03 automatically discovers the JVM files. Use `scope=all`, `coverage=false` on the ref containing the changes; optional `coverage=true` requests reports without a percentage gate. Existing standard HTTP-adapter tests are standard-only because demo deliberately refuses HTTP before opening a connection; a separate demo refusal check preserves that boundary. Hosted-emulator selections remain 7 demo / 64 standard invocations with three selector renames, and no new Android runtime scope is selected or authorized.
 
 <a id="recoveryresource-extension"></a>
+
+## Current executed JVM coverage — 2026-11-23
+
+[Run 45167699776](validation.md#current-hosted-result-and-warning-review--2026-11-23) at `b49eb35`, with coverage enabled, passed all five jobs. Standard discovered 592 cases: 556 passed, 36 intentional flavor skips; demo discovered 592: 577 passed, 15 intentional flavor skips. Both had zero failures/errors across 42 XML suites each. Standard line/branch coverage is 16.28%/15.71%; demo is 18.17%/16.50%. These whole-instrumented-app JVM measurements do not establish Android execution or universal behavior coverage. All new Android methods were compiled only. Test-tooling/compiler warnings and retained original evidence are detailed in validation.
+
+## Warning-fix follow-up — source only
+
+After the run review, the user requested warning fixes. Added one JVM startup-agent regression method; migrated 12 Compose factories and synchronized callback-state assertions; updated the deprecated Room helper and unnecessary null assertions; gated accessibility pooling cleanup to API 26–32. The original 592-case outcomes above remain unchanged historical measurements. All 7 demo / 64 standard emulator selections remain unchanged. Future workflow-03 scope=all, coverage=true must verify the agent configuration and new sources; Android v2 synchronization still needs separate runtime authorization. No checks were executed during this follow-up.
 
 ## Recovery evidence
 
