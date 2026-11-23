@@ -333,7 +333,10 @@ class SnapshotRefreshInstrumentedTest {
         assertEquals(setOf(medication), FetchedChanges.ids.value[F.pharmacyId])
         val retained = state()
         var failedRead = false
-        rejects<SnapshotReadException> { refresh(transport(pin = { failedRead = true; throw TelegramFailure() })).refresh() }
+        val failure = rejects<SnapshotReadException> {
+            refresh(transport(pin = { failedRead = true; throw SnapshotReadException(SnapshotReadError.NETWORK) })).refresh()
+        }
+        assertEquals(SnapshotReadError.NETWORK, failure.error)
         assertTrue(failedRead); assertEquals(retained, state())
         assertEquals(setOf(medication), FetchedChanges.ids.value[F.pharmacyId])
         assertEquals(RefreshOutcome.UNCHANGED, refresh(remote(payload)).refresh())

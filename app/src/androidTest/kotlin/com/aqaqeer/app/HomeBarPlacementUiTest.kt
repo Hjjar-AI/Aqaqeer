@@ -32,7 +32,7 @@ class HomeBarPlacementUiTest {
             CompositionLocalProvider(LocalDensity provides Density(density.density, 1f)) {
                 AqaqeerTheme(ThemeChoice.LIGHT) { Box(Modifier.width(320.dp).height(560.dp).imePadding()) {
                     HomeScreen(CatalogState.Ready(catalog, false), state, F.time,
-                        projection = homeProjection(catalog, state),
+                        projection = homeProjection(catalog, state, readerStockOnly = true),
                         actions = rememberHomeActions(HomeCallbacks(
                             selectSection = { state = state.copy(sectionId = it) },
                             setQuery = { state = state.copy(query = it, appliedQuery = it) },
@@ -71,7 +71,7 @@ class HomeBarPlacementUiTest {
             filters = HomeFilters(statuses = setOf(AvailabilityStatus.AVAILABLE))))
         compose.setContent { AqaqeerTheme(ThemeChoice.LIGHT) { Box(Modifier.width(320.dp).height(560.dp)) {
             HomeScreen(CatalogState.Ready(catalog, false), state, F.time,
-                projection = homeProjection(catalog, state),
+                projection = homeProjection(catalog, state, readerStockOnly = true),
                 actions = rememberHomeActions(HomeCallbacks(
                     selectSection = {},
                     setQuery = {},
@@ -102,7 +102,7 @@ class HomeBarPlacementUiTest {
             SideEffect { keyboardVisible.set(ime) }
             AqaqeerTheme(ThemeChoice.LIGHT) { Box(Modifier.fillMaxSize().imePadding()) {
                 HomeScreen(CatalogState.Ready(catalog, false), state, F.time,
-                    projection = homeProjection(catalog, state),
+                    projection = homeProjection(catalog, state, readerStockOnly = true),
                     actions = rememberHomeActions(HomeCallbacks(
                         selectSection = { state = state.copy(sectionId = it) },
                         setQuery = { state = state.copy(query = it, appliedQuery = it) },
@@ -128,11 +128,13 @@ class HomeBarPlacementUiTest {
     @Test fun compactBottomSectionsRemainReachableAfterScrollingTheCatalog() {
         val large = catalog.copy(medications = (1..30).map { i -> catalog.medications.single().copy(
             id = "00000000-0000-4000-8000-%012d".format(java.util.Locale.ROOT, i), nameEn = "Medication $i", genericEn = "Medication $i") },
-            availability = emptyList())
+            availability = emptyList()).let { snapshot -> snapshot.copy(availability = snapshot.medications.map {
+                Availability(it.id, second.id, AvailabilityStatus.AVAILABLE, F.time)
+            }) }
         val state = AppUiState(sectionId = second.id, homePreferences = HomePreferences(groupingEnabled = false))
         compose.setContent { AqaqeerTheme(ThemeChoice.LIGHT) { Box(Modifier.width(320.dp).height(300.dp)) {
             HomeScreen(CatalogState.Ready(large, false), state, F.time,
-                projection = homeProjection(large, state),
+                projection = homeProjection(large, state, readerStockOnly = true),
                 actions = rememberHomeActions(HomeCallbacks(
                     selectSection = {},
                     setQuery = {},
@@ -151,12 +153,14 @@ class HomeBarPlacementUiTest {
     @Test fun compactTopSectionsStayPinnedWhileTheGridScrolls() {
         val large = catalog.copy(medications = (1..30).map { i -> catalog.medications.single().copy(
             id = "00000000-0000-4000-8000-%012d".format(java.util.Locale.ROOT, i), nameEn = "Medication $i", genericEn = "Medication $i") },
-            availability = emptyList())
+            availability = emptyList()).let { snapshot -> snapshot.copy(availability = snapshot.medications.map {
+                Availability(it.id, second.id, AvailabilityStatus.AVAILABLE, F.time)
+            }) }
         val state = AppUiState(sectionId = second.id, homePreferences = HomePreferences(groupingEnabled = false,
             sectionsAtBottom = false, searchAtBottom = false))
         compose.setContent { AqaqeerTheme(ThemeChoice.LIGHT) { Box(Modifier.width(320.dp).height(300.dp)) {
             HomeScreen(CatalogState.Ready(large, false), state, F.time,
-                projection = homeProjection(large, state),
+                projection = homeProjection(large, state, readerStockOnly = true),
                 actions = rememberHomeActions(HomeCallbacks(
                     selectSection = {},
                     setQuery = {},
@@ -182,7 +186,7 @@ class HomeBarPlacementUiTest {
             CompositionLocalProvider(LocalDensity provides Density(density.density, 1.6f)) {
                 AqaqeerTheme(ThemeChoice.DARK) { Box(Modifier.width(420.dp).height(640.dp)) {
                     HomeScreen(CatalogState.Ready(catalog, false), state, F.time,
-                        projection = homeProjection(catalog, state),
+                        projection = homeProjection(catalog, state, readerStockOnly = true),
                         actions = rememberHomeActions(HomeCallbacks(
                             selectSection = {},
                             setQuery = {},
