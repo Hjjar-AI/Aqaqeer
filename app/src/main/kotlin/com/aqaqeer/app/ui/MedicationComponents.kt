@@ -139,25 +139,27 @@ import java.time.LocalDate
         }) {
         Column(Modifier.fillMaxWidth().statusEdge(status, edge, unavailableStripe, rtl).padding(if (compact) UiSpacing.related else UiSpacing.section), verticalArrangement = Arrangement.spacedBy(UiSpacing.hair)) {
             Row(horizontalArrangement = Arrangement.spacedBy(UiSpacing.hair), verticalAlignment = Alignment.Top) {
-                // Fixed slot prevents selection-mode row/width changes for editable cards.
-                if (reserveSelectionSpace || bulkSelected != null) Box(Modifier.size(Size.checkbox)) {
-                    if (bulkSelected != null) Checkbox(checked = bulkSelected, onCheckedChange = null,
-                        enabled = selectionEnabled, modifier = Modifier.size(Size.checkbox).testTag("select_${medication.id}").clearAndSetSemantics { })
+                // Swap the icon for a checkbox in the same slot so names stay aligned.
+                when {
+                    bulkSelected != null -> Box(Modifier.size(Size.checkbox)) {
+                        Checkbox(checked = bulkSelected, onCheckedChange = null, enabled = selectionEnabled,
+                            modifier = Modifier.size(Size.checkbox).testTag("select_${medication.id}").clearAndSetSemantics { })
+                    }
+                    form != null -> DosageFormIcon(form)
+                    reserveSelectionSpace -> AppIcon(UiIcon.FORM_FORM, size = Size.checkbox)
                 }
-                form?.let { DosageFormIcon(it) }
                 Column(Modifier.weight(1f)) {
-            if (compact) {
-                MedicationNameLines(medication.genericAr, medication.genericEn, preferences.names,
-                    prominent = true, query = query, primaryStyle = MaterialTheme.typography.titleMedium, maxLines = 2,
-                    strength = medication.strength, titleTrailing = pendingMarker)
-                Text(form?.nameAr ?: uiText(R.string.catalog_unknown_dosage_form_label), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            } else {
-                MedicationSummary(medication, preferences.names, prominent = true, query = query, titleTrailing = pendingMarker)
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(UiSpacing.hair)) {
-                    Text(form?.nameAr ?: uiText(R.string.catalog_unknown_dosage_form_label), modifier = Modifier.weight(1f, fill = false), style = MaterialTheme.typography.bodyMedium)
-
-                }
-            }
+                    if (compact) {
+                        MedicationNameLines(medication.genericAr, medication.genericEn, preferences.names,
+                            prominent = true, query = query, primaryStyle = MaterialTheme.typography.titleMedium, maxLines = 2,
+                            strength = medication.strength, titleTrailing = pendingMarker)
+                        Text(formName, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    } else {
+                        MedicationSummary(medication, preferences.names, prominent = true, query = query, titleTrailing = pendingMarker)
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(UiSpacing.hair)) {
+                            Text(formName, modifier = Modifier.weight(1f, fill = false), style = MaterialTheme.typography.bodyMedium)
+                        }
+                    }
                 }
             }
             MedicationBadges(medication, today, sectionId?.let { status }, onQuickEdit, name,

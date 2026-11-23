@@ -4,7 +4,7 @@ The [launcher and splash artwork](../assets/branding/aqaqeer-launcher-calm-emera
 
 ## Splash artwork and motion
 
-Android’s starting window centers the violet and emerald logo on a solid background. A 17% inset on each side frames the original PNG within the native icon slot. With no saved launch hint available, the starting window follows system mode and uses Violet in light mode. The app applies the saved theme and system-bar contrast, including pure black in AMOLED.
+Android’s starting window centers the violet and emerald logo on a solid background. A 17% inset on each side frames the original PNG within the native icon slot. The native drawable uses filtered scaling and a mipmap hint. With no saved launch hint available, the starting window follows system mode and uses Violet in light mode. The app applies the saved theme and system-bar contrast, including pure black in AMOLED.
 
 The app continues with the same centered logo at about 190 dp. While the local catalog opens, the logo grows from 1× to 1.65× and returns to 1× every 720 ms. Once the destination is ready, the logo stops at its current scale and the splash fades over 100 ms. If the app splash has yet to draw or system animations are disabled, the destination appears directly.
 

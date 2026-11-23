@@ -172,6 +172,8 @@ At base `a0dbc94`, static palette checks confirmed greater Violet–Blue hue sep
 
 At base `db1ec06`, the revised launcher/splash PNG was reviewed at 190 px on light, dark and AMOLED backgrounds and at 32 and 48 px including a colored wallpaper sample. Source checks covered artwork transparency, master/package equality, the shared launcher and splash references, and the retained in-app and PDF asset. At base `c89025f`, the matte violet revision was checked for color, framing, transparency and byte equality with the packaged launcher bitmap. Android rendering and launch continuity remain unverified. [Artwork provenance](../assets/branding/launcher-revision.md).
 
+At base `e5f09e5`, source review checked native splash bitmap filtering and inset geometry, location hint role and section eligibility, and the shared dosage-icon and bulk-checkbox slot. The reported launch artifact and card behavior still need on-device verification.
+
 Remaining scope and activity stops are in [plan](plan.md); [verification scope](test-coverage.md) separates source selections, automated results and human acceptance. Historical receipts and original failures are preserved below.
 
 <a id="initial-attribution-free-baseline--2026-11-16"></a>

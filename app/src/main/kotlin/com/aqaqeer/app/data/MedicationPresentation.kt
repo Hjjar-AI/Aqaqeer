@@ -109,8 +109,9 @@ object MedicationPresentation {
         val days = ChronoUnit.DAYS.between(today, date)
         return when { days < 0 -> ExpiryState.EXPIRED; days <= med.expirySoonThresholdDays.toLong() -> ExpiryState.SOON; else -> null }
     }
-    fun availableElsewhere(catalog: CatalogSnapshot, medId: String, currentSectionId: String?): List<Section> =
-        if (currentSectionId == null || catalog.status(medId, currentSectionId) != AvailabilityStatus.OUT) emptyList()
+    fun availableElsewhere(catalog: CatalogSnapshot, medId: String, currentSectionId: String?,
+        onlyWhenOut: Boolean = true): List<Section> =
+        if (currentSectionId == null || (onlyWhenOut && catalog.status(medId, currentSectionId) != AvailabilityStatus.OUT)) emptyList()
         else catalog.sections.filter { it.isActive && it.id != currentSectionId && catalog.status(medId, it.id) == AvailabilityStatus.AVAILABLE }
 
     fun displayDigits(value: String): String = westernDigits(value)

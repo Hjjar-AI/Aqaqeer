@@ -195,7 +195,7 @@ Use the initial field contract in section 7; preserve non-price fields, history,
 
 Expiry optional; threshold is a nonnegative integer, default 60. Editing a past expiry shows a non-blocking warning. Before today: Expired red badge. Today through today+threshold inclusive: Expires soon, labeled «صلاحية قصيرة» in Arabic badges/reports. No date: no badge. Expired medications retain their recorded availability; do not infer a status change. Exports labeled “expiring soon” exclude expired items and say so.
 
-Smart tip in compact and expanded cards: only when current section status is OUT; list other active sections whose status is AVAILABLE. LOW/UNKNOWN never qualify. This is a location hint, not a therapeutic recommendation. A close control hides that medication/section tip for the current task/process session across navigation and rotation; changed tip content can appear again. Dismissals are not saved to preferences or backups.
+Smart tips in compact and expanded cards list other active sections whose status is AVAILABLE. Admins can see the tip from any section regardless of its status. For readers, the tip requires OUT in the displayed section. LOW/UNKNOWN elsewhere never qualify. This is a location hint, not a therapeutic recommendation. A close control hides that medication/section tip for the current task/process session across navigation and rotation; changed tip content can appear again. Dismissals are not saved to preferences or backups.
 
 ### Search matching
 
@@ -297,7 +297,7 @@ Commercial names are hidden in compact mode. The first displayed scientific name
 
 Expanded cards retain the complete name-and-dose title separated by a hyphen (for example, Paracetamol - 500 mg). The alternate scientific-name line has no repeated dose. English remains explicitly LTR, with normalization-aware highlight offsets.
 
-A small «غير منشور» tag marks unpublished edits. A fixed checkbox slot beside the name prevents bulk-selection shifts. A leading dosage-form vector illustration uses modest surface shading, recognizable form silhouettes and no ground shadow; it is not repeated elsewhere. Written labels remain authoritative for representative container shapes, and custom forms retain a neutral illustration.
+A small «غير منشور» tag marks unpublished edits. The leading dosage-form illustration shares its slot with the bulk-selection checkbox, keeping the name aligned when bulk selection starts. Dosage-form illustrations use modest surface shading and recognizable form silhouettes without a ground shadow. Written labels remain authoritative for representative container shapes, and custom forms retain a neutral illustration.
 
 Trade-name labels/values share a wrapping line; category-grouped cards omit the repeated category line. Expanded/detail/editor/report text remains complete. Availability and expiry badges share a vertically centered wrapping row in both card modes, using text-only card availability badges, 4 dp horizontal padding and 4 dp inter-badge gaps to allow short labels on one line.
 
