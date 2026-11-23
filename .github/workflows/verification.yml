@@ -45,6 +45,10 @@ jobs:
         with:
           diagnostics-directory: ci-output/verification
 
+      - name: Verify dependency retry boundaries without Gradle or network
+        if: ${{ matrix.check == 'standard-unit-tests' }}
+        run: python3 -m unittest discover -s .github/scripts/tests -p test_gradle_ci.py
+
       # Exact tasks only: no connected/device tasks, packaging or version reservation.
       - name: Run selected check
         id: verify
@@ -64,8 +68,8 @@ jobs:
             esac
             tasks+=(-Paqaqeer.unitCoverage=true)
           fi
-          ./gradlew --no-daemon --console=plain --no-configuration-cache --continue \
-            "${tasks[@]}" 2>&1 | tee ci-output/verification/gradle.log
+          python3 .github/scripts/run-gradle-ci.py --log ci-output/verification/gradle.log -- \
+            --no-daemon --console=plain --no-configuration-cache --continue "${tasks[@]}"
 
       - name: Write verification summary
         if: ${{ !cancelled() }}

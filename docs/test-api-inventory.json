@@ -19,7 +19,7 @@
         {
           "name": "MainActivity",
           "kind": "class",
-          "line": 22,
+          "line": 28,
           "directTestReferences": [
             "app/src/androidTest/kotlin/com/aqaqeer/app/CreationUiTest.kt",
             "app/src/androidTest/kotlin/com/aqaqeer/app/HomeUiTest.kt",
@@ -29,13 +29,13 @@
         {
           "name": "attachBaseContext",
           "kind": "fun",
-          "line": 25,
+          "line": 31,
           "directTestReferences": []
         },
         {
           "name": "onCreate",
           "kind": "fun",
-          "line": 32,
+          "line": 38,
           "directTestReferences": [
             "app/src/androidTest/java/com/aqaqeer/app/RestoreCrashDocumentProvider.java",
             "app/src/androidTest/kotlin/com/aqaqeer/app/SuiteRunner.kt"
@@ -44,13 +44,13 @@
         {
           "name": "onDestroy",
           "kind": "fun",
-          "line": 45,
+          "line": 70,
           "directTestReferences": []
         },
         {
           "name": "onNewIntent",
           "kind": "fun",
-          "line": 51,
+          "line": 79,
           "directTestReferences": []
         }
       ],
@@ -7605,6 +7605,29 @@
         "skipped": 15
       },
       "repair": "Test-only: import admin.newId; explicitly close PdfDocument; retain injected IOException provenance through coroutine recovery and exact original suppressed close failure. Not compiled/executed after repair."
+    },
+    "latestHostedReview": {
+      "source": "ba563748ebf6558d4ff07466ce697cf0bdf97a0f",
+      "workflow03": 45252134675,
+      "workflow07": 45252257412,
+      "demoJvm": {
+        "tests": 632,
+        "passed": 617,
+        "skipped": 15,
+        "failed": 0,
+        "suites": 47
+      },
+      "standardJvmExecuted": false,
+      "androidDemoPerApi": {
+        "passed": 4,
+        "timedOut": 6,
+        "apis": [
+          29,
+          35
+        ]
+      },
+      "standardAndroidExecuted": false,
+      "remaining": "Native splash state-based release and dependency-only bounded HTTP429 CI retry helper await hosted verification. Six Python methods authored/wired, never run locally."
     }
   }
 }

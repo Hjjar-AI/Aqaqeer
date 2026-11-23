@@ -44,9 +44,9 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          ./gradlew --no-daemon --console=plain --no-configuration-cache \
-            -Paqaqeer.exportApks=false :app:packageDemoDebug :app:packageDemoDebugAndroidTest \
-            2>&1 | tee ci-output/emulator/gradle-package.log
+          python3 .github/scripts/run-gradle-ci.py --log ci-output/emulator/gradle-package.log -- \
+            --no-daemon --console=plain --no-configuration-cache \
+            -Paqaqeer.exportApks=false :app:packageDemoDebug :app:packageDemoDebugAndroidTest
 
       - name: Enable runner KVM access
         run: |
@@ -113,9 +113,9 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          ./gradlew --no-daemon --console=plain --no-configuration-cache \
-            -Paqaqeer.exportApks=false :app:packageStandardDebug :app:packageStandardDebugAndroidTest \
-            2>&1 | tee ci-output/emulator/gradle-package.log
+          python3 .github/scripts/run-gradle-ci.py --log ci-output/emulator/gradle-package.log -- \
+            --no-daemon --console=plain --no-configuration-cache \
+            -Paqaqeer.exportApks=false :app:packageStandardDebug :app:packageStandardDebugAndroidTest
 
       - name: Enable runner KVM access
         run: |

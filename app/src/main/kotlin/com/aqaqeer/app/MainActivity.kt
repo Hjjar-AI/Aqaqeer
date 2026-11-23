@@ -13,6 +13,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import com.aqaqeer.app.data.DisplayPreferences
+import com.aqaqeer.app.data.CatalogState
 import com.aqaqeer.app.data.FetchedChanges
 import com.aqaqeer.app.data.ThemeChoice
 import com.aqaqeer.app.data.ThemeAccent
@@ -50,7 +51,10 @@ class MainActivity : ComponentActivity() {
         })
         val splash = installSplashScreen()
         super.onCreate(savedInstanceState)
-        splash.setKeepOnScreenCondition { !appFrameReady }
+        val startupState = viewModel.shellState
+        // The native pre-draw gate must be releasable without a Compose frame:
+        // activity launch/idling can otherwise wait on the callback it prevents.
+        splash.setKeepOnScreenCondition { !appFrameReady && startupState.value.catalog == CatalogState.Loading }
         splash.setOnExitAnimationListener { it.remove() }
         enableEdgeToEdge()
         val launchBackground = appColorScheme(launchTheme, launchAccent, systemDark, resources).background.toArgb()
