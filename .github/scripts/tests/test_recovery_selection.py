@@ -65,6 +65,33 @@ class RecoverySelectionTest(unittest.TestCase):
             with patch.dict(os.environ, {'CI_RECOVERY_RESOURCES': 'false'}), self.assertRaises(ValueError):
                 selection.main()
 
+    def test_runtime_heap_setup_refuses_foreign_avd_before_mutation_and_records_restart(self):
+        calls = []; values = {'heap': '192m', 'pid': '100'}
+        def adb(*args, **kwargs):
+            calls.append(args)
+            output = ''
+            if args == ('shell', 'getprop', 'ro.kernel.qemu'): output = '1'
+            elif args == ('emu', 'avd', 'name'): output = values.get('avd', 'aqaqeer-recovery')
+            elif args == ('shell', 'am', 'get-current-user'): output = '0'
+            elif args == ('shell', 'id', '-u'): output = '0'
+            elif args == ('shell', 'getprop', 'dalvik.vm.heapgrowthlimit'): output = values['heap']
+            elif args == ('shell', 'pidof', 'zygote64'): output = values['pid']
+            elif args == ('shell', 'setprop', 'dalvik.vm.heapgrowthlimit', '384m'): values['heap'] = '384m'
+            elif args == ('shell', 'setprop', 'ctl.restart', 'zygote'): values['pid'] = '200'
+            elif args == ('shell', 'pm', 'path', 'android'): output = 'package:/system/framework/framework-res.apk'
+            return Mock(stdout=output, returncode=0)
+        with patch.dict(os.environ, {'GITHUB_ACTIONS': 'true', 'RUNNER_ENVIRONMENT': 'github-hosted'}):
+            values['avd'] = 'foreign'
+            with self.assertRaises(RuntimeError):
+                selection.campaign.configure_hosted_resource_heap(adb, 'emulator-5554')
+            self.assertNotIn(('root',), calls)
+            self.assertFalse(any('setprop' in call for call in calls))
+            values['avd'] = 'aqaqeer-recovery'
+            receipt = selection.campaign.configure_hosted_resource_heap(adb, 'emulator-5554')
+            self.assertEqual('192m', receipt['growthLimitBefore'])
+            self.assertEqual('384m', receipt['growthLimitAfter'])
+            self.assertNotEqual(receipt['zygotePidBefore'], receipt['zygotePidAfter'])
+
     def test_owned_avd_configuration_sets_real_vm_heap_key_and_preserves_other_settings(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory); avd = root / 'aqaqeer-recovery.avd'; avd.mkdir()

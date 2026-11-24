@@ -331,8 +331,17 @@ def main():
     global PACKAGE
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--suite', choices=('demo', 'standard', 'storage', 'sharing', 'ui'), default='demo')
+    parser.add_argument('--selection-only', action='store_true', help='Validate selectors and emit has_checks without Android tooling')
     args = parser.parse_args()
     cases = select_cases(args.suite, os.environ.get('CI_DEMO_RETRY_METHODS' if args.suite == 'demo' else 'CI_RETRY_METHODS', ''))
+    if args.selection_only:
+        with Path(os.environ['GITHUB_OUTPUT']).open('a') as output:
+            output.write('has_checks=' + ('true' if cases else 'false') + '\n')
+        if not cases:
+            OUTPUT.mkdir(parents=True, exist_ok=True)
+            save_results(args.suite, cases, [], [])
+        print(f'Selected {len(cases)} checks for {args.suite}; no Android tooling used.')
+        return
     flavor = 'demo' if args.suite == 'demo' else 'standard'
     PACKAGE = 'com.aqaqeer.app.demo.debug' if flavor == 'demo' else 'com.aqaqeer.app.debug'
     if not cases:

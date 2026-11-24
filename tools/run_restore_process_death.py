@@ -55,6 +55,40 @@ def scenarios():
     return controls + cases + recovery
 
 
+def configure_hosted_resource_heap(adb, serial):
+    """Set the large-history environment only on the owned disposable hosted AVD."""
+    def owned():
+        return (os.environ.get("GITHUB_ACTIONS") == "true" and os.environ.get("RUNNER_ENVIRONMENT") == "github-hosted"
+                and serial == "emulator-5554" and adb("shell", "getprop", "ro.kernel.qemu").stdout.strip() == "1"
+                and adb("emu", "avd", "name").stdout.splitlines()[0] == "aqaqeer-recovery"
+                and adb("shell", "am", "get-current-user").stdout.strip() == "0")
+    if not owned():
+        raise RuntimeError("Owned hosted recovery AVD required before runtime configuration")
+    before = adb("shell", "getprop", "dalvik.vm.heapgrowthlimit").stdout.strip()
+    adb("root")
+    adb("wait-for-device", timeout=60)
+    if not owned() or adb("shell", "id", "-u").stdout.strip() != "0":
+        raise RuntimeError("Owned userdebug AVD root required; no alternative device or image is used")
+    old_pid = adb("shell", "pidof", "zygote64").stdout.strip()
+    if not old_pid.isdecimal():
+        raise RuntimeError("Expected one owned 64-bit zygote before runtime configuration")
+    adb("shell", "setprop", "dalvik.vm.heapgrowthlimit", "384m")
+    if adb("shell", "getprop", "dalvik.vm.heapgrowthlimit").stdout.strip() != "384m":
+        raise RuntimeError("Runtime heap growth property was not applied")
+    adb("shell", "setprop", "ctl.restart", "zygote")
+    for _ in range(60):
+        pid = adb("shell", "pidof", "zygote64", check=False).stdout.strip()
+        package = adb("shell", "pm", "path", "android", check=False)
+        if pid.isdecimal() and pid != old_pid and package.returncode == 0 and "package:" in package.stdout:
+            if not owned():
+                raise RuntimeError("Recovery AVD identity changed during runtime restart")
+            return {"growthLimitBefore": before, "growthLimitAfter": "384m",
+                    "zygotePidBefore": old_pid, "zygotePidAfter": pid,
+                    "mechanism": "owned userdebug AVD property and zygote restart before fixture installation"}
+        time.sleep(1)
+    raise RuntimeError("Owned AVD runtime restart did not become ready")
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     add_options(parser)
@@ -243,6 +277,10 @@ def main():
                            "api": adb("shell", "getprop", "ro.build.version.sdk").stdout.strip(),
                            "dalvikHeapSize": adb("shell", "getprop", "dalvik.vm.heapsize").stdout.strip(),
                            "dalvikHeapGrowthLimit": adb("shell", "getprop", "dalvik.vm.heapgrowthlimit").stdout.strip()})
+        if args.hosted_emulator and args.resource_tests and "measuredHistoryRoundTripsBelowBackupCap" in resource_methods:
+            (evidence / "provenance.json").write_text(json.dumps(provenance, indent=2) + "\n")
+            provenance["resourceHeapSetup"] = configure_hosted_resource_heap(adb, args.serial)
+            provenance["dalvikHeapGrowthLimit"] = adb("shell", "getprop", "dalvik.vm.heapgrowthlimit").stdout.strip()
     (evidence / "provenance.json").write_text(json.dumps(provenance, indent=2) + "\n")
     counter = ROOT / "local/versioning/last-code.txt"
     version_before = counter.read_bytes() if counter.exists() else None

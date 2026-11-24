@@ -213,6 +213,16 @@ def check(path):
             cleanup = path.name == 'cleanup-evidence.yml' and name == 'cleanup'
             default_only = path.name in ('android.yml', 'publish-debug.yml', 'publish-release.yml', 'emulator.yml', 'recovery.yml', 'release.yml', 'build-tooling.yml', 'secret-history.yml', 'cleanup-debug.yml', 'actionlint-updates.yml', 'recovery.yml')
             expected_guard = CLEANUP_GUARD if cleanup or default_only else PUBLIC_GUARD
+            if path.name == 'emulator.yml':
+                steps = job.get('steps', [])
+                selectors = [step for step in steps if step.get('id') == 'selection']
+                suite = 'demo' if name == 'emulator' else '"$CI_STANDARD_SUITE"'
+                if len(selectors) != 1 or selectors[0].get('run') != f'python3 .github/scripts/run-emulator-checks.py --suite {suite} --selection-only':
+                    problem(name, 'emulator selection must be validated before Android tooling')
+                for step in steps:
+                    guarded = (step.get('name', '').startswith(('Set up Android', 'Package ', 'Enable runner KVM', 'Run selected tests', 'Run offline standard')))
+                    if guarded and step.get('if') != "${{ steps.selection.outputs.has_checks == 'true' }}":
+                        problem(name, 'empty emulator batches must skip Android tooling and device setup')
             if path.name == 'emulator.yml' and name == 'emulator':
                 expected_guard = "${{ inputs.demo_checks && github.event.repository.private == false && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}"
                 dispatch = triggers.get('workflow_dispatch', {})

@@ -51,12 +51,18 @@ jobs:
       - name: Prepare diagnostics
         run: mkdir -p ci-output/emulator
 
+      - name: Validate selection before Android tooling
+        id: selection
+        run: python3 .github/scripts/run-emulator-checks.py --suite demo --selection-only
+
       - name: Set up Android tooling
+        if: ${{ steps.selection.outputs.has_checks == 'true' }}
         uses: ./.github/actions/setup-android
         with:
           diagnostics-directory: ci-output/emulator
 
       - name: Package demo application and instrumentation
+        if: ${{ steps.selection.outputs.has_checks == 'true' }}
         shell: bash
         run: |
           set -euo pipefail
@@ -65,12 +71,14 @@ jobs:
             -Paqaqeer.exportApks=false :app:packageDemoDebug :app:packageDemoDebugAndroidTest
 
       - name: Enable runner KVM access
+        if: ${{ steps.selection.outputs.has_checks == 'true' }}
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
 
       - name: Run selected tests and capture visuals
+        if: ${{ steps.selection.outputs.has_checks == 'true' }}
         id: emulator
         uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2.38.0
         with:
@@ -128,12 +136,18 @@ jobs:
       - name: Prepare diagnostics
         run: mkdir -p ci-output/emulator
 
+      - name: Validate selection before Android tooling
+        id: selection
+        run: python3 .github/scripts/run-emulator-checks.py --suite "$CI_STANDARD_SUITE" --selection-only
+
       - name: Set up Android tooling
+        if: ${{ steps.selection.outputs.has_checks == 'true' }}
         uses: ./.github/actions/setup-android
         with:
           diagnostics-directory: ci-output/emulator
 
       - name: Package standard application and instrumentation
+        if: ${{ steps.selection.outputs.has_checks == 'true' }}
         shell: bash
         run: |
           set -euo pipefail
@@ -142,12 +156,14 @@ jobs:
             -Paqaqeer.exportApks=false :app:packageStandardDebug :app:packageStandardDebugAndroidTest
 
       - name: Enable runner KVM access
+        if: ${{ steps.selection.outputs.has_checks == 'true' }}
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
 
       - name: Run offline standard functional and review/UI regressions
+        if: ${{ steps.selection.outputs.has_checks == 'true' }}
         id: emulator
         uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2.38.0
         with:

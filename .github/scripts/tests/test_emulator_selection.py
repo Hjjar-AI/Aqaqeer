@@ -72,6 +72,18 @@ class EmulatorSelectionTest(unittest.TestCase):
             select.assert_called_once_with('demo', method)
             adb.assert_not_called()
 
+    def test_selection_only_reports_empty_and_matching_batches_without_device_or_gradle(self):
+        method = runner.STORAGE_CASES[0][1]
+        with tempfile.TemporaryDirectory() as directory, patch.object(runner, 'OUTPUT', Path(directory)), \
+             patch.object(runner, 'adb') as adb, patch.object(runner.subprocess, 'run') as command:
+            output = Path(directory) / 'github-output'
+            for suite, expected in (('storage', 'true'), ('ui', 'false')):
+                with patch.dict(os.environ, {'CI_RETRY_METHODS': method, 'GITHUB_OUTPUT': str(output)}), \
+                     patch.object(sys, 'argv', ['runner', '--suite', suite, '--selection-only']):
+                    runner.main()
+                self.assertEqual('has_checks=' + expected, output.read_text().splitlines()[-1])
+            adb.assert_not_called(); command.assert_not_called()
+
     def test_nonmatching_retry_batch_records_zero_selected_without_adb_calls(self):
         method = runner.STORAGE_CASES[0][1]
         with tempfile.TemporaryDirectory() as directory, patch.object(runner, 'OUTPUT', Path(directory)), \
