@@ -8,6 +8,23 @@ Use the [current checkpoint](validation.md#current-verification-checkpoint--2026
 
 [Build](build.md#hosted-emulator-screenshots-and-recordings) owns the current workflow-07 selection and invocation counts. A selector is not a new pass count. Later UI/session/source changes and offline Python reservation cases still need applicable compilation/execution evidence; the [backup/restore audit](validation.md#backuprestore-requirement-to-evidence-audit--2026-11-22) maps recorded results to current obligations without inspecting test source.
 
+## Production-readiness test extension — 2026-11-24
+
+Authored against `25c7ee2` with the prior 140 dp card-minimum change retained: **35 new JVM methods and 11 new Android methods**. No existing behavioral assertions were removed or relaxed. This is source authoring, not an execution or coverage result.
+
+| Area | New methods | Assertions |
+| --- | ---: | --- |
+| Home projection | 13 JVM | Section-specific statuses, Reader stock restriction, query clearing, category/expiry/marker intersections, inactive sections, grouping partitions, deterministic ordering, and cancelled projection refusal. |
+| Refresh ownership/policy | 6 JVM | App-owned request survives cancelled waiters, shared original failure, owner cancellation, fresh subsequent requests, and authenticated timestamp/parent/compatibility changes. |
+| Snapshot read safety | 10 JVM | Invalid app/bot/group rejection before downstream calls, pharmacy/key cache isolation, update-required cache invalidation, publication/media identity checks, changed-pin retry, token-scoped rate limits, queued cancellation and stream closure. |
+| Merge safety | 6 JVM | Explicit null versus concurrent edits, independent section availability, reviewed missing references, normalized taxonomy collisions and malformed operation targets. |
+| Grid | 6 Android | Real one/two/three-column geometry at 319/320/321 and 467/468 dp, 1.5× font boundary at 459/460 dp, smaller-font floor, preference changes, full-span notices and stable item state. |
+| Medication badges/cards | 5 Android | Read-only semantics, disabled/saving actions and geometry, expiry transitions, and dose/badge reachability with overflow assertions across both card modes, light/dark/AMOLED and 1×/1.5× text. |
+
+Workflow 03 discovers all new JVM methods and compiles both Android flavors: user-run **03 - Checks - Tests and compilation**, `scope=all`, `coverage=true` (or `false` to omit reports). Then user-run **07 - Verify - Emulator with visual evidence**, `standard_functional=true`, on the default branch containing the changes. Its retained 88 standard selections plus 11 new UI methods make **99 standard API-35 invocations**; demo remains **10 per API 29/35**, totaling **119 invocations / 107 unique methods**. Workflow input descriptions, policy expectations and canonical build/CI guidance agree. All prior selections remain.
+
+Only source-contract review, selector/declaration reconciliation, Python syntax parsing, document/inventory integrity and whitespace checks were performed. No tests, Gradle, compilation, packaging, lint, devices, migrations or workflows were executed/dispatched. Grid fixtures use explicit density and assert host width; card checks do not establish human visual or spoken accessibility acceptance. Existing report/export, startup, recovery and release limitations remain in [validation](validation.md) and [plan](plan.md).
+
 ## Report and hint test batch — 2026-11-23
 
 Authored against production revision `ddf035017451002d2776d925971b9122c7d6f756` after explicit permission to inspect/update tests. Added **39 JVM methods** and **23 Android methods**; aligned existing report export/long-note fixtures and Home roles. One report production fix prevents ZIP cleanup from suppressing an exception onto itself and replacing the original failure; the writer-failure identity assertion covers it. No test, build, compilation, lint, device or workflow execution occurred locally. These counts describe authored methods, not passes or measured coverage.

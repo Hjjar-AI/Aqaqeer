@@ -42,7 +42,7 @@ internal object Size {
     val emblemLarge = 160.dp
     val drawerMax = 320.dp
     val drawerOutside = 72.dp
-    val gridCellMin = 160.dp
+    val gridCellMin = 140.dp
 }
 internal object Radius {
     val xs = 4.dp

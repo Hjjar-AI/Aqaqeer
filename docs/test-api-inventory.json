@@ -324,7 +324,8 @@
           "line": 16,
           "directTestReferences": [
             "app/src/androidTest/kotlin/com/aqaqeer/app/PharmacySharingInstrumentedTest.kt",
-            "app/src/test/kotlin/com/aqaqeer/app/admin/CatalogEditsTest.kt"
+            "app/src/test/kotlin/com/aqaqeer/app/admin/CatalogEditsTest.kt",
+            "app/src/test/kotlin/com/aqaqeer/app/admin/CatalogMergeSafetyTest.kt"
           ]
         },
         {
@@ -349,7 +350,8 @@
           "kind": "fun",
           "line": 30,
           "directTestReferences": [
-            "app/src/test/kotlin/com/aqaqeer/app/admin/CatalogEditsTest.kt"
+            "app/src/test/kotlin/com/aqaqeer/app/admin/CatalogEditsTest.kt",
+            "app/src/test/kotlin/com/aqaqeer/app/admin/CatalogMergeSafetyTest.kt"
           ]
         },
         {
@@ -358,7 +360,8 @@
           "line": 45,
           "directTestReferences": [
             "app/src/androidTest/kotlin/com/aqaqeer/app/PharmacySharingInstrumentedTest.kt",
-            "app/src/test/kotlin/com/aqaqeer/app/admin/CatalogEditsTest.kt"
+            "app/src/test/kotlin/com/aqaqeer/app/admin/CatalogEditsTest.kt",
+            "app/src/test/kotlin/com/aqaqeer/app/admin/CatalogMergeSafetyTest.kt"
           ]
         },
         {
@@ -366,6 +369,7 @@
           "kind": "fun",
           "line": 48,
           "directTestReferences": [
+            "app/src/test/kotlin/com/aqaqeer/app/admin/CatalogMergeSafetyTest.kt",
             "app/src/test/kotlin/com/aqaqeer/app/sync/SnapshotReadClientTest.kt"
           ]
         },
@@ -5535,7 +5539,8 @@
           "kind": "class",
           "line": 16,
           "directTestReferences": [
-            "app/src/test/kotlin/com/aqaqeer/app/sync/SnapshotReadClientTest.kt"
+            "app/src/test/kotlin/com/aqaqeer/app/sync/SnapshotReadClientTest.kt",
+            "app/src/test/kotlin/com/aqaqeer/app/sync/SnapshotReadSafetyTest.kt"
           ]
         },
         {
@@ -5543,7 +5548,8 @@
           "kind": "fun",
           "line": 19,
           "directTestReferences": [
-            "app/src/test/kotlin/com/aqaqeer/app/sync/SnapshotReadClientTest.kt"
+            "app/src/test/kotlin/com/aqaqeer/app/sync/SnapshotReadClientTest.kt",
+            "app/src/test/kotlin/com/aqaqeer/app/sync/SnapshotReadSafetyTest.kt"
           ]
         },
         {
@@ -5560,7 +5566,8 @@
             "app/src/androidTest/kotlin/com/aqaqeer/app/ViewModelInstrumentedTest.kt",
             "app/src/androidTest/kotlin/com/aqaqeer/app/fixtures/RestoreCrashProfile.kt",
             "app/src/androidTest/kotlin/com/aqaqeer/app/fixtures/SuiteProfile.kt",
-            "app/src/test/kotlin/com/aqaqeer/app/sync/SnapshotReadClientTest.kt"
+            "app/src/test/kotlin/com/aqaqeer/app/sync/SnapshotReadClientTest.kt",
+            "app/src/test/kotlin/com/aqaqeer/app/sync/SnapshotReadSafetyTest.kt"
           ]
         },
         {
@@ -5588,6 +5595,7 @@
             "app/src/test/kotlin/com/aqaqeer/app/security/files/PayloadReaderTest.kt",
             "app/src/test/kotlin/com/aqaqeer/app/security/files/SnapshotRequirementsStoreTest.kt",
             "app/src/test/kotlin/com/aqaqeer/app/sync/SnapshotReadClientTest.kt",
+            "app/src/test/kotlin/com/aqaqeer/app/sync/SnapshotReadSafetyTest.kt",
             "app/src/test/kotlin/com/aqaqeer/app/sync/TelegramSnapshotReadTransportTest.kt"
           ]
         },
@@ -5596,7 +5604,8 @@
           "kind": "fun",
           "line": 39,
           "directTestReferences": [
-            "app/src/test/kotlin/com/aqaqeer/app/sync/SnapshotReadClientTest.kt"
+            "app/src/test/kotlin/com/aqaqeer/app/sync/SnapshotReadClientTest.kt",
+            "app/src/test/kotlin/com/aqaqeer/app/sync/SnapshotReadSafetyTest.kt"
           ]
         }
       ],
@@ -5616,6 +5625,7 @@
             "app/src/androidTest/kotlin/com/aqaqeer/app/SnapshotRefreshInstrumentedTest.kt",
             "app/src/androidTest/kotlin/com/aqaqeer/app/fixtures/SuiteProfile.kt",
             "app/src/test/kotlin/com/aqaqeer/app/sync/SnapshotReadClientTest.kt",
+            "app/src/test/kotlin/com/aqaqeer/app/sync/SnapshotReadSafetyTest.kt",
             "app/src/test/kotlin/com/aqaqeer/app/sync/TelegramSnapshotReadTransportTest.kt"
           ]
         },
@@ -5631,6 +5641,7 @@
             "app/src/androidTest/kotlin/com/aqaqeer/app/SnapshotRefreshInstrumentedTest.kt",
             "app/src/androidTest/kotlin/com/aqaqeer/app/fixtures/SuiteProfile.kt",
             "app/src/test/kotlin/com/aqaqeer/app/sync/SnapshotReadClientTest.kt",
+            "app/src/test/kotlin/com/aqaqeer/app/sync/SnapshotReadSafetyTest.kt",
             "app/src/test/kotlin/com/aqaqeer/app/sync/TelegramSnapshotReadTransportTest.kt"
           ]
         },
@@ -5646,6 +5657,7 @@
             "app/src/androidTest/kotlin/com/aqaqeer/app/fixtures/RestoreCrashProfile.kt",
             "app/src/androidTest/kotlin/com/aqaqeer/app/fixtures/SuiteProfile.kt",
             "app/src/test/kotlin/com/aqaqeer/app/sync/SnapshotReadClientTest.kt",
+            "app/src/test/kotlin/com/aqaqeer/app/sync/SnapshotReadSafetyTest.kt",
             "app/src/test/kotlin/com/aqaqeer/app/sync/TelegramSnapshotReadTransportTest.kt"
           ]
         },
@@ -5661,6 +5673,7 @@
             "app/src/androidTest/kotlin/com/aqaqeer/app/fixtures/RestoreCrashProfile.kt",
             "app/src/androidTest/kotlin/com/aqaqeer/app/fixtures/SuiteProfile.kt",
             "app/src/test/kotlin/com/aqaqeer/app/sync/SnapshotReadClientTest.kt",
+            "app/src/test/kotlin/com/aqaqeer/app/sync/SnapshotReadSafetyTest.kt",
             "app/src/test/kotlin/com/aqaqeer/app/sync/TelegramSnapshotReadTransportTest.kt"
           ]
         },
@@ -5676,7 +5689,8 @@
             "app/src/androidTest/kotlin/com/aqaqeer/app/SnapshotRefreshInstrumentedTest.kt",
             "app/src/androidTest/kotlin/com/aqaqeer/app/fixtures/RestoreCrashProfile.kt",
             "app/src/androidTest/kotlin/com/aqaqeer/app/fixtures/SuiteProfile.kt",
-            "app/src/test/kotlin/com/aqaqeer/app/sync/SnapshotReadClientTest.kt"
+            "app/src/test/kotlin/com/aqaqeer/app/sync/SnapshotReadClientTest.kt",
+            "app/src/test/kotlin/com/aqaqeer/app/sync/SnapshotReadSafetyTest.kt"
           ]
         },
         {
@@ -5687,6 +5701,7 @@
             "app/src/androidTest/kotlin/com/aqaqeer/app/PharmacySharingInstrumentedTest.kt",
             "app/src/androidTest/kotlin/com/aqaqeer/app/fixtures/RestoreCrashProfile.kt",
             "app/src/androidTest/kotlin/com/aqaqeer/app/fixtures/SuiteProfile.kt",
+            "app/src/test/kotlin/com/aqaqeer/app/sync/SnapshotReadSafetyTest.kt",
             "app/src/test/kotlin/com/aqaqeer/app/sync/TelegramSnapshotReadTransportTest.kt"
           ]
         },
@@ -5699,6 +5714,7 @@
             "app/src/androidTest/kotlin/com/aqaqeer/app/PharmacySharingInstrumentedTest.kt",
             "app/src/androidTest/kotlin/com/aqaqeer/app/fixtures/RestoreCrashProfile.kt",
             "app/src/androidTest/kotlin/com/aqaqeer/app/fixtures/SuiteProfile.kt",
+            "app/src/test/kotlin/com/aqaqeer/app/sync/SnapshotReadSafetyTest.kt",
             "app/src/test/kotlin/com/aqaqeer/app/sync/TelegramSnapshotReadTransportTest.kt"
           ]
         },
@@ -5715,6 +5731,7 @@
             "app/src/androidTest/kotlin/com/aqaqeer/app/fixtures/RestoreCrashProfile.kt",
             "app/src/androidTest/kotlin/com/aqaqeer/app/fixtures/SuiteProfile.kt",
             "app/src/test/kotlin/com/aqaqeer/app/sync/SnapshotReadClientTest.kt",
+            "app/src/test/kotlin/com/aqaqeer/app/sync/SnapshotReadSafetyTest.kt",
             "app/src/test/kotlin/com/aqaqeer/app/sync/TelegramSnapshotReadTransportTest.kt"
           ]
         },
@@ -5737,6 +5754,7 @@
             "app/src/androidTest/kotlin/com/aqaqeer/app/PharmacySharingInstrumentedTest.kt",
             "app/src/androidTest/kotlin/com/aqaqeer/app/fixtures/RestoreCrashProfile.kt",
             "app/src/androidTest/kotlin/com/aqaqeer/app/fixtures/SuiteProfile.kt",
+            "app/src/test/kotlin/com/aqaqeer/app/sync/SnapshotReadSafetyTest.kt",
             "app/src/test/kotlin/com/aqaqeer/app/sync/TelegramSnapshotReadTransportTest.kt"
           ]
         },
@@ -5749,6 +5767,7 @@
             "app/src/androidTest/kotlin/com/aqaqeer/app/PharmacySharingInstrumentedTest.kt",
             "app/src/androidTest/kotlin/com/aqaqeer/app/fixtures/RestoreCrashProfile.kt",
             "app/src/androidTest/kotlin/com/aqaqeer/app/fixtures/SuiteProfile.kt",
+            "app/src/test/kotlin/com/aqaqeer/app/sync/SnapshotReadSafetyTest.kt",
             "app/src/test/kotlin/com/aqaqeer/app/sync/TelegramSnapshotReadTransportTest.kt"
           ]
         },
@@ -5765,6 +5784,7 @@
             "app/src/androidTest/kotlin/com/aqaqeer/app/fixtures/RestoreCrashProfile.kt",
             "app/src/androidTest/kotlin/com/aqaqeer/app/fixtures/SuiteProfile.kt",
             "app/src/test/kotlin/com/aqaqeer/app/sync/SnapshotReadClientTest.kt",
+            "app/src/test/kotlin/com/aqaqeer/app/sync/SnapshotReadSafetyTest.kt",
             "app/src/test/kotlin/com/aqaqeer/app/sync/TelegramSnapshotReadTransportTest.kt"
           ]
         },
@@ -7032,13 +7052,17 @@
           "name": "MedicationCard",
           "kind": "fun",
           "line": 45,
-          "directTestReferences": []
+          "directTestReferences": [
+            "app/src/androidTest/kotlin/com/aqaqeer/app/MedicationBadgeRegressionUiTest.kt"
+          ]
         },
         {
           "name": "ExpiryBadge",
           "kind": "fun",
           "line": 78,
-          "directTestReferences": []
+          "directTestReferences": [
+            "app/src/androidTest/kotlin/com/aqaqeer/app/MedicationBadgeRegressionUiTest.kt"
+          ]
         }
       ],
       "execution": "See validation.md for actual evidence and unexecuted cases."
@@ -7133,24 +7157,6 @@
             "app/src/androidTest/kotlin/com/aqaqeer/app/PharmacySharingInstrumentedTest.kt",
             "app/src/androidTest/kotlin/com/aqaqeer/app/RestoreProcessDeathInstrumentedTest.kt"
           ]
-        }
-      ],
-      "execution": "See validation.md for actual evidence and unexecuted cases."
-    },
-    {
-      "source": "app/src/main/kotlin/com/aqaqeer/app/ui/SplashExit.kt",
-      "declarations": [
-        {
-          "name": "animateSplashExit",
-          "kind": "fun",
-          "line": 19,
-          "directTestReferences": []
-        },
-        {
-          "name": "onAnimationEnd",
-          "kind": "fun",
-          "line": 76,
-          "directTestReferences": []
         }
       ],
       "execution": "See validation.md for actual evidence and unexecuted cases."
@@ -7538,13 +7544,185 @@
         }
       ],
       "execution": "Report/hint contracts refreshed by source inspection 2026-11-23; authored references are lexical, not execution evidence. See validation.md."
+    },
+    {
+      "source": "app/src/main/kotlin/com/aqaqeer/app/data/CatalogSearchIndex.kt",
+      "declarations": [
+        {
+          "name": "MedicationRowUi",
+          "kind": "class",
+          "line": 7,
+          "directTestReferences": [
+            "app/src/androidTest/kotlin/com/aqaqeer/app/MedicationBadgeRegressionUiTest.kt"
+          ]
+        },
+        {
+          "name": "SectionSearchResults",
+          "kind": "class",
+          "line": 9,
+          "directTestReferences": []
+        },
+        {
+          "name": "HomeBrowseResult",
+          "kind": "class",
+          "line": 10,
+          "directTestReferences": [
+            "app/src/androidTest/kotlin/com/aqaqeer/app/HomeGridRegressionUiTest.kt"
+          ]
+        },
+        {
+          "name": "CatalogSearchIndex",
+          "kind": "class",
+          "line": 20,
+          "directTestReferences": [
+            "app/src/test/kotlin/com/aqaqeer/app/data/HomeProjectionRegressionTest.kt"
+          ]
+        },
+        {
+          "name": "key",
+          "kind": "fun",
+          "line": 24,
+          "directTestReferences": [
+            "app/src/test/kotlin/com/aqaqeer/app/admin/CatalogMergeSafetyTest.kt",
+            "app/src/test/kotlin/com/aqaqeer/app/sync/SnapshotReadSafetyTest.kt",
+            "app/src/androidTest/kotlin/com/aqaqeer/app/HomeGridRegressionUiTest.kt"
+          ]
+        },
+        {
+          "name": "rank",
+          "kind": "fun",
+          "line": 38,
+          "directTestReferences": []
+        },
+        {
+          "name": "browse",
+          "kind": "fun",
+          "line": 56,
+          "directTestReferences": []
+        },
+        {
+          "name": "groups",
+          "kind": "fun",
+          "line": 71,
+          "directTestReferences": [
+            "app/src/test/kotlin/com/aqaqeer/app/data/HomeProjectionRegressionTest.kt"
+          ]
+        },
+        {
+          "name": "project",
+          "kind": "fun",
+          "line": 89,
+          "directTestReferences": [
+            "app/src/test/kotlin/com/aqaqeer/app/data/HomeProjectionRegressionTest.kt"
+          ]
+        },
+        {
+          "name": "extra",
+          "kind": "fun",
+          "line": 96,
+          "directTestReferences": []
+        },
+        {
+          "name": "row",
+          "kind": "fun",
+          "line": 119,
+          "directTestReferences": [
+            "app/src/test/kotlin/com/aqaqeer/app/data/HomeProjectionRegressionTest.kt",
+            "app/src/androidTest/kotlin/com/aqaqeer/app/HomeGridRegressionUiTest.kt",
+            "app/src/androidTest/kotlin/com/aqaqeer/app/MedicationBadgeRegressionUiTest.kt"
+          ]
+        }
+      ],
+      "execution": "See validation.md for actual evidence and unexecuted cases."
+    },
+    {
+      "source": "app/src/main/kotlin/com/aqaqeer/app/ui/AvailabilityBadge.kt",
+      "declarations": [
+        {
+          "name": "AvailabilityBadge",
+          "kind": "fun",
+          "line": 19,
+          "directTestReferences": [
+            "app/src/androidTest/kotlin/com/aqaqeer/app/MedicationBadgeRegressionUiTest.kt"
+          ]
+        }
+      ],
+      "execution": "See validation.md for actual evidence and unexecuted cases."
+    },
+    {
+      "source": "app/src/main/kotlin/com/aqaqeer/app/ui/ExpiryBadge.kt",
+      "declarations": [
+        {
+          "name": "ExpiryBadge",
+          "kind": "fun",
+          "line": 21,
+          "directTestReferences": [
+            "app/src/androidTest/kotlin/com/aqaqeer/app/MedicationBadgeRegressionUiTest.kt"
+          ]
+        },
+        {
+          "name": "ExpiryBadge",
+          "kind": "fun",
+          "line": 27,
+          "directTestReferences": [
+            "app/src/androidTest/kotlin/com/aqaqeer/app/MedicationBadgeRegressionUiTest.kt"
+          ]
+        }
+      ],
+      "execution": "See validation.md for actual evidence and unexecuted cases."
+    },
+    {
+      "source": "app/src/main/kotlin/com/aqaqeer/app/ui/HomeGrid.kt",
+      "declarations": [
+        {
+          "name": "HomeGrid",
+          "kind": "fun",
+          "line": 14,
+          "directTestReferences": [
+            "app/src/androidTest/kotlin/com/aqaqeer/app/HomeGridRegressionUiTest.kt"
+          ]
+        }
+      ],
+      "execution": "See validation.md for actual evidence and unexecuted cases."
+    },
+    {
+      "source": "app/src/main/kotlin/com/aqaqeer/app/ui/LayoutMetrics.kt",
+      "declarations": [
+        {
+          "name": "LayoutMetrics",
+          "kind": "class",
+          "line": 11,
+          "directTestReferences": []
+        },
+        {
+          "name": "compact",
+          "kind": "fun",
+          "line": 13,
+          "directTestReferences": []
+        },
+        {
+          "name": "ProvideLayoutMetrics",
+          "kind": "fun",
+          "line": 18,
+          "directTestReferences": [
+            "app/src/androidTest/kotlin/com/aqaqeer/app/HomeGridRegressionUiTest.kt"
+          ]
+        },
+        {
+          "name": "compactHeight",
+          "kind": "fun",
+          "line": 26,
+          "directTestReferences": []
+        }
+      ],
+      "execution": "See validation.md for actual evidence and unexecuted cases."
     }
   ],
   "executionReport": "validation.md",
   "checkpoint": "Green planned suite: JVM 161 passed per flavor; standard device 120 aggregate passes (two demo-only guards), demo 32 passed/88 standard-only skips; see validation.md. Lexical references do not prove every declaration/branch executes.",
   "unverifiedCoverage": {
-    "declarations": 661,
-    "withoutDirectLexicalReferences": 231,
+    "declarations": 718,
+    "withoutDirectLexicalReferences": 246,
     "note": "Includes internal helpers. May be covered via callers; independent declaration and branch coverage not measured."
   },
   "restoreProcessDeath": {
@@ -7629,5 +7807,26 @@
       "standardAndroidExecuted": false,
       "remaining": "Native splash state-based release and dependency-only bounded HTTP429 CI retry helper await hosted verification. Six Python methods authored/wired, never run locally."
     }
+  },
+  "productionReadinessAuthoring": {
+    "date": "2026-11-24",
+    "baseRevision": "25c7ee2af237edeb782a4c7ad39c32dabb1c6b09",
+    "newJvmMethods": 35,
+    "newAndroidMethods": 11,
+    "compiled": false,
+    "executed": false,
+    "selectedDemoInvocationsPerApi": 10,
+    "selectedStandardInvocationsApi35": 99,
+    "totalSelectedInvocations": 119,
+    "uniqueSelectedMethods": 107,
+    "testFiles": [
+      "app/src/test/kotlin/com/aqaqeer/app/admin/CatalogMergeSafetyTest.kt",
+      "app/src/test/kotlin/com/aqaqeer/app/data/HomeProjectionRegressionTest.kt",
+      "app/src/test/kotlin/com/aqaqeer/app/data/RefreshPolicyTest.kt",
+      "app/src/test/kotlin/com/aqaqeer/app/sync/SnapshotReadSafetyTest.kt",
+      "app/src/androidTest/kotlin/com/aqaqeer/app/HomeGridRegressionUiTest.kt",
+      "app/src/androidTest/kotlin/com/aqaqeer/app/MedicationBadgeRegressionUiTest.kt"
+    ],
+    "note": "Source authoring and lexical references only. Earlier results do not validate this batch; workflow 03 scope=all and workflow 07 standard_functional=true remain user-run. Added current source entries for the newly exercised grid/badge/search components and removed the obsolete SplashExit.kt entry; inventory remains lexical, not measured coverage."
   }
 }

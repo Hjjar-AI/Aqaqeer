@@ -139,7 +139,7 @@ Shared 16/12/8/4 dp spacing and ≥48 dp targets underpin `FormPage` persistent 
 
 <a id="initial-ui-mechanisms"></a>
 
-CollapsibleGroup shares disclosure semantics with screen-owned expansion. NoticeStrip shares severity/action presentation; focused Settings/empty-state/step helpers reuse existing controls. Status menus anchor to badges while screens retain captured expected values and domain callbacks. The bulk checkbox uses the leading dosage-icon slot, and the bottom bulk bar aligns to page margins. Adaptive grids use 160 dp × max(1, fontScale). Top tabs stay pinned. Settings owns grouping preferences.
+CollapsibleGroup shares disclosure semantics with screen-owned expansion. NoticeStrip shares severity/action presentation; focused Settings/empty-state/step helpers reuse existing controls. Status menus anchor to badges while screens retain captured expected values and domain callbacks. The bulk checkbox uses the leading dosage-icon slot, and the bottom bulk bar aligns to page margins. Adaptive grids use 140 dp × max(1, fontScale). Top tabs stay pinned. Settings owns grouping preferences.
 
 Its text choices reuse RadioChoiceRows under labeled blocks, with color swatches and prior callback/tags retained; group headers align to the body, separate settings use 24 dp spacing, and layout/preview, grouping/mode and Hijri/help stay together. The direct preview has its own border. Settings retains three saveable disclosure groups, initially Appearance only; the inline fetched chip and filter sheet share SavedStateHandle inputs.
 
@@ -207,7 +207,7 @@ Active sections and medication-ID membership are remembered, and editor validity
 
 HomeBrowseResult includes extra filter inputs, pharmacy-local day, unpublished/fetched ID sets and per-section additional result IDs; freshness checks distinguish current results from the temporarily retained display snapshot. The ViewModel's day clock invalidates expiry projections across pharmacy midnight. FetchedChanges keeps installation-local non-secret markers/session expiry outside explicit backups, updates after committed fetches and exposes a StateFlow. MainActivity starts a session once per process/task and marks a finishing task; rotation/backgrounding alone do not count. Markers expire before a third session opens.
 
-Selected section is persisted per pharmacy; saved state has pharmacy-scoped precedence and active fallback. One keyed lazy grid uses adaptive columns with a 160 dp × max(1, fontScale) minimum (default on, one column when off), shared scroll state and full-span grouping/notices, with adjacent detail at 840 dp. Top tabs remain pinned; search stays visible in its selected top/bottom position, with filter and selection controls.
+Selected section is persisted per pharmacy; saved state has pharmacy-scoped precedence and active fallback. One keyed lazy grid uses adaptive columns with a 140 dp × max(1, fontScale) minimum (default on, one column when off), shared scroll state and full-span grouping/notices, with adjacent detail at 840 dp. Top tabs remain pinned; search stays visible in its selected top/bottom position, with filter and selection controls.
 
 Quick chips and the sheet share status/expiry/unpublished/fetched filter inputs. Grouping defaults to disabled in both HomePreferences and the DataStore fallback; category remains the initial mode when enabled, and explicit saved choices remain authoritative.
 

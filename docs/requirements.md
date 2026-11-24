@@ -289,7 +289,7 @@ Keep query/category/extra filters and applicable status intersection, omit empty
 
 Group headers collapse independently, initially expanded, with no counts.
 
-Home uses one lazy grid in both compact and expanded display modes. A separate installation-local Settings option enables adaptive columns by default: minimum width 160 dp × max(1, font scale); disabling it displays one column. Existing explicit grouping and card-style choices remain saved.
+Home uses one lazy grid in both compact and expanded display modes. A separate installation-local Settings option enables adaptive columns by default: minimum width 140 dp × max(1, font scale); disabling it displays one column. Existing explicit grouping and card-style choices remain saved.
 
 At available widths of at least 840 dp, browsing and medication detail share the window; below that, detail has its own destination. Selecting another medication in the shared window preserves list scroll, collapsed groups and browsing controls. Keep the pharmacy toolbar, drawer and eligible Add button with browsing, and place medication title/back/edit/history controls in the detail pane. Center detail content with a 640 dp maximum width. Stable medication-ID keys, shared scroll state and full-width letter headings/notices/empty states remain. Compact cards use 8 dp padding, scientific names (two lines per displayed language), a dosage-form illustration without repeated formulation text, status and expiry/pending cues, with ellipsis and no fixed heights.
 

@@ -29,6 +29,17 @@ DEMO_CASES = (
 )
 
 STANDARD_CASES = (
+    ('Release-HomeGridRegressionUiTest-twoColumnsStartAt320DpIncludingPagePaddingAndGap', 'HomeGridRegressionUiTest#twoColumnsStartAt320DpIncludingPagePaddingAndGap', False),
+    ('Release-HomeGridRegressionUiTest-largerFontsRaiseTheTwoColumnBoundary', 'HomeGridRegressionUiTest#largerFontsRaiseTheTwoColumnBoundary', False),
+    ('Release-HomeGridRegressionUiTest-smallerFontsDoNotReduceTheMinimumCardWidth', 'HomeGridRegressionUiTest#smallerFontsDoNotReduceTheMinimumCardWidth', False),
+    ('Release-HomeGridRegressionUiTest-preferenceDisablesColumnsAndRestoresAdaptiveLayoutWithoutLosingItemState', 'HomeGridRegressionUiTest#preferenceDisablesColumnsAndRestoresAdaptiveLayoutWithoutLosingItemState', False),
+    ('Release-HomeGridRegressionUiTest-fullSpanNoticeKeepsItsWidthWhenAdaptiveGridAddsAThirdColumn', 'HomeGridRegressionUiTest#fullSpanNoticeKeepsItsWidthWhenAdaptiveGridAddsAThirdColumn', False),
+    ('Release-HomeGridRegressionUiTest-stableMedicationKeysPreserveRememberedStateAfterReordering', 'HomeGridRegressionUiTest#stableMedicationKeysPreserveRememberedStateAfterReordering', False),
+    ('Release-MedicationBadgeRegressionUiTest-readOnlyBadgeHasWrittenMeaningWithoutButtonOrClickSemantics', 'MedicationBadgeRegressionUiTest#readOnlyBadgeHasWrittenMeaningWithoutButtonOrClickSemantics', False),
+    ('Release-MedicationBadgeRegressionUiTest-editableBadgeHasMinimumTouchTargetAndInvokesExactlyOneAction', 'MedicationBadgeRegressionUiTest#editableBadgeHasMinimumTouchTargetAndInvokesExactlyOneAction', False),
+    ('Release-MedicationBadgeRegressionUiTest-savingAndDisabledBadgeRemoveEditActionAndRetainGeometry', 'MedicationBadgeRegressionUiTest#savingAndDisabledBadgeRemoveEditActionAndRetainGeometry', False),
+    ('Release-MedicationBadgeRegressionUiTest-expiryBadgeIsReadOnlyAndUpdatesAtTheMedicationBoundary', 'MedicationBadgeRegressionUiTest#expiryBadgeIsReadOnlyAndUpdatesAtTheMedicationBoundary', False),
+    ('Release-MedicationBadgeRegressionUiTest-narrowRtlCardsKeepDoseAndBothBadgesReachableInBothLayoutsAndThemes', 'MedicationBadgeRegressionUiTest#narrowRtlCardsKeepDoseAndBothBadgesReachableInBothLayoutsAndThemes', False),
     ('Reports-ReportExportsInstrumented-manySectionColumnsAndLongHeadingsKeepFullScopeInSummary', 'ReportExportsInstrumentedTest#manySectionColumnsAndLongHeadingsKeepFullScopeInSummary', False),
     ('Reports-ReportExportsInstrumented-publishedAndLocalSourcesNeverFallbackAndRejectForeignSelections', 'ReportExportsInstrumentedTest#publishedAndLocalSourcesNeverFallbackAndRejectForeignSelections', False),
     ('Reports-ReportExportsInstrumented-filteredSnapshotDrivesBothFormatsWithoutChangingCatalogOrPendingWork', 'ReportExportsInstrumentedTest#filteredSnapshotDrivesBothFormatsWithoutChangingCatalogOrPendingWork', False),
