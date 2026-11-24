@@ -275,7 +275,7 @@ internal enum class HomeLeadingItem { BULK_HELP, OPERATION, NO_SECTION, SEARCH_S
                                             } else {
                                                 SupportingText(uiText(R.string.home_no_matches_help))
                                                 if (canEdit) AppButton(variant = AppButtonVariant.QUIET, onClick = { prefillMedication(searchText.text) }) { Text(uiText(R.string.home_add_search_name_action)) }
-                                                AppButton(variant = AppButtonVariant.QUIET, onClick = { changeSearch(TextFieldValue("")); clearFilters(); focus.clearFocus() }) { Text(uiText(R.string.home_clear_search_filters_action)) }
+                                                AppButton(variant = AppButtonVariant.QUIET, onClick = { focus.clearFocus(); changeSearch(TextFieldValue("")); clearFilters() }) { Text(uiText(R.string.home_clear_search_filters_action)) }
                                             }
                                         }
                                     }

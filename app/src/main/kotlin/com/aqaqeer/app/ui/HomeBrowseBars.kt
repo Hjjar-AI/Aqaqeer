@@ -92,7 +92,11 @@ import com.aqaqeer.app.data.*
             listOf(filters.expiringSoon, filters.unpublishedOnly, filters.fetchedOnly).count { it }
         val leadingAction: @Composable () -> Unit = {
             if (query.text.isNotEmpty()) IconButton(
-                onClick = { changeQuery(TextFieldValue("")); focus.clearFocus() },
+                onClick = {
+                    // Finish the focused field's pending edit before replacing its value.
+                    focus.clearFocus()
+                    changeQuery(TextFieldValue(""))
+                },
                 modifier = Modifier.testTag("clear_search")) {
                 AppIcon(UiIcon.CLOSE, description = uiText(R.string.home_clear_search_description))
             } else AppIcon(UiIcon.SEARCH)
