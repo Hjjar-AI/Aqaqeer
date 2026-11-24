@@ -25,7 +25,7 @@ import com.aqaqeer.app.R
     val canClick = editable && enabled && !saving && onClick != null
     val interaction = if (!editable) Modifier else Modifier
         .sizeIn(minWidth = UiSpacing.touch, minHeight = UiSpacing.touch)
-        .then(if (canClick) Modifier.clickable(role = Role.Button, onClickLabel = actionLabel) { onClick?.invoke() } else Modifier)
+        .then(if (canClick) Modifier.clickable(role = Role.Button, onClickLabel = actionLabel) { onClick.invoke() } else Modifier)
         .clearAndSetSemantics {
             role = Role.Button
             contentDescription = actionDescription

@@ -8,7 +8,7 @@ on:
         type: string
         required: true
       publication:
-        description: "Options: release = publish a regular release; prerelease = publish a prerelease; draft = save unpublished. Default: draft."
+        description: "Options: release = publish a regular release; prerelease = publish a prerelease; draft = save an unpublished GitHub Release; artifacts = retain signed workflow artifacts without creating a GitHub Release. Default: draft."
         type: choice
         required: true
         default: draft
@@ -16,6 +16,7 @@ on:
           - release
           - prerelease
           - draft
+          - artifacts
 
 permissions:
   contents: read
@@ -127,7 +128,16 @@ jobs:
           AQAQEER_RELEASE_CERT_SHA256: ${{ vars.AQAQEER_RELEASE_CERT_SHA256 }}
           AQAQEER_EXPECTED_RELEASE_CODE: ${{ inputs.version_code }}
         run: python3 tools/sign_release.py --output-directory release-files
+      - name: Retain signed APKs and public metadata without publication
+        if: ${{ inputs.publication == 'artifacts' }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: production-signed-${{ github.run_id }}
+          path: release-files/
+          retention-days: 1
+          if-no-files-found: error
       - name: Publish signed inspected APKs, mappings and public metadata
+        if: ${{ inputs.publication != 'artifacts' }}
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}

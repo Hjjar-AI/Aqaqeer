@@ -207,10 +207,19 @@ class PharmacySharingInstrumentedTest {
         assumeFalse(BuildConfig.IS_DEMO)
         val p = profile(); p.create(); val med = medicine(p)
         p.admin.saveMedication(med.copy(note = "edited"))
-        assertEquals(1, p.ready().pendingCount)
+        val pending = p.admin.pending()
+        // New medication plus its default AVAILABLE section pair are independent net entities.
+        assertEquals(2, p.ready().pendingCount)
+        assertEquals(2, pending.size)
+        assertEquals(setOf("medication", "availability"), pending.map { it.entityType }.toSet())
+        val medication = pending.single { it.entityType == "medication" }
+        assertEquals(med.id, medication.targetId)
+        assertEquals("edited", Json.parseToJsonElement(medication.intendedValueJson).jsonObject.getValue("note").jsonPrimitive.content)
+        val historyBeforeDelete = p.admin.transaction { it.historyCount() }
         p.admin.delete("medication", med.id)
         assertEquals(0, p.ready().pendingCount); assertTrue(p.ready().catalog.medications.isEmpty())
         assertTrue(p.ready().catalog.tombstones.isEmpty())
+        assertTrue(p.admin.transaction { it.historyCount() } > historyBeforeDelete)
     }
 
     @Test fun realTelegramCreatePublishExportJoinThenReplaceAndRefresh(): Unit = runBlocking {

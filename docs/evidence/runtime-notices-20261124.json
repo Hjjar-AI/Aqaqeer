@@ -4,7 +4,39 @@
   "resolvedGraphSource": "7048c2cb70370adace63132fbd4bd8c72f88726b",
   "configuration": "standardReleaseRuntimeClasspath",
   "componentCount": 139,
-  "packagedGraphComparison": "pending original unsigned APK retrieval",
+  "packagedGraphComparison": {
+    "run": 45390880523,
+    "source": "e808c13c1332b23677fbb36c927bd6db25889846",
+    "result": "all 139 exact coordinates match in all five unsigned architecture outputs",
+    "artifacts": [
+      {
+        "name": "app-standard-arm64-v8a-release-unsigned.apk",
+        "sha256": "7e20665c7338615d82dd9bd9b59caa7a09b000707880fc4440f64393b4d980ac",
+        "runtimeComponentsSha256": "9bcdd3f721310f9135359c717afc25d37ca8530287011af3902f8e76f3f55502"
+      },
+      {
+        "name": "app-standard-armeabi-v7a-release-unsigned.apk",
+        "sha256": "3ca752d44827759865250198f30830dad9dc785693bb52cc51150424e12a7183",
+        "runtimeComponentsSha256": "9bcdd3f721310f9135359c717afc25d37ca8530287011af3902f8e76f3f55502"
+      },
+      {
+        "name": "app-standard-universal-release-unsigned.apk",
+        "sha256": "ce6e6c4510319dae670e2078dd41692e76a9b2d95e7a376b4dc66672c7c419d9",
+        "runtimeComponentsSha256": "9bcdd3f721310f9135359c717afc25d37ca8530287011af3902f8e76f3f55502"
+      },
+      {
+        "name": "app-standard-x86-release-unsigned.apk",
+        "sha256": "1e442ed387498c1dc5b12faa0c83d754072fa0a8df9b6c05f8868fa04be40d87",
+        "runtimeComponentsSha256": "9bcdd3f721310f9135359c717afc25d37ca8530287011af3902f8e76f3f55502"
+      },
+      {
+        "name": "app-standard-x86_64-release-unsigned.apk",
+        "sha256": "625a208db033fb85a997c60348bd9a9e58f649c9ec9d1e86c5ff806300efe738",
+        "runtimeComponentsSha256": "9bcdd3f721310f9135359c717afc25d37ca8530287011af3902f8e76f3f55502"
+      }
+    ],
+    "limit": "These APKs predate the added Protobuf/Jakarta notices. Packaging of the updated notice texts and production signing remain pending."
+  },
   "components": [
     {
       "coordinate": "androidx.activity:activity-compose:1.11.0",

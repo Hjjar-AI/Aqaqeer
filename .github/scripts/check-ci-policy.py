@@ -263,6 +263,13 @@ def check(path):
                     problem(name, 'production jobs must reserve, build, then sign/publish in order')
                 if name == 'publish' and job.get('environment') != 'release-signing':
                     problem(name, 'production signing must use the release-signing environment')
+                if name == 'publish':
+                    publication_steps = [step for step in job.get('steps', []) if 'gh release create' in step.get('run', '')]
+                    artifact_steps = [step for step in job.get('steps', []) if step.get('with', {}).get('name') == 'production-signed-${{ github.run_id }}']
+                    if len(publication_steps) != 1 or publication_steps[0].get('if') != "${{ inputs.publication != 'artifacts' }}":
+                        problem(name, 'artifact-only production mode must skip GitHub Release creation')
+                    if len(artifact_steps) != 1 or artifact_steps[0].get('if') != "${{ inputs.publication == 'artifacts' }}":
+                        problem(name, 'artifact-only production mode must retain the signed outputs')
             if 'uses' in job:
                 problem(name, 'reusable workflow jobs are forbidden')
             reservation = path.name in ('android.yml', 'publish-debug.yml', 'publish-release.yml') and name == 'reserve'
