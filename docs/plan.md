@@ -16,6 +16,8 @@
 
 ## Implemented baseline
 
+Current branding follow-up: Cobalt/silver is selected and the approved PNG is copied unchanged into both logo resources. Home launcher padding alone is reduced by equal −3% insets; the taller redraw is rejected and the original proportions retained. Splash framing/motion remain unchanged. Source/raster/reference/link checks are complete; packaged Android/PDF rendering and human acceptance remain unverified. No build or device campaign is resumed by this artwork change.
+
 Current version workflow follow-up: the user requested an initial local/remote reset and confirmed no installed copies. The local counter is0, the remote reservation registry is empty and the next build is0.0.1; existing Releases/APKs/history are retained. Workflow10/11 visibility and blank-by-default automatic production numbering are source-implemented with static checks. Hosted execution of this change remains unverified; the user is pushing commits, and no new build is dispatched here. See [version reset evidence](validation.md#initial-version-sequence-and-automatic-selection--2026-11-24).
 
 **Resumed at the user’s request on 2026-11-24.** Preserve existing hosted runs at `e808c13` and retain their valid results before targeting failed or relevantly invalidated cases. Detailed continuation checkpoint (local-only): `local/verification/hosted-completion-20261124/HANDOFF.md`. The selected hosted batch is complete; the specific acceptance dispositions below remain; do not infer passes from selections.

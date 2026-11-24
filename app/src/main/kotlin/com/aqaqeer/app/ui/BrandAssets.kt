@@ -19,7 +19,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.lang.ref.WeakReference
 
-/** The original artwork stays intact. Bounded sampled decodes are shared by the in-app emblems. */
+/** Bounded sampled decodes of the selected wordmark are shared by the in-app emblems. */
 internal object BrandAssets {
     private val samples = android.util.LruCache<Int, Bitmap>(3)
     @Synchronized fun bitmap(resources: Resources, sample: Int): Bitmap = samples.get(sample) ?:

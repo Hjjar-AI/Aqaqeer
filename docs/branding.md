@@ -1,6 +1,10 @@
 # Branding
 
-The [launcher and splash artwork](../assets/branding/aqaqeer-launcher-calm-emerald.png) uses a matte violet fill targeting #8054DA for the Arabic wordmark and keeps the navy outlines. Its calmer emerald targets #20BA82 on the tablet dots, ring bonds and green half of the capsule. Wider ring bonds and tablet score lines help those details read at small sizes. The two rings retain their complementary bond orientations. The normal and round launcher icons and both splash stages use the same [transparent, non-adaptive bitmap](../app/src/main/res/drawable-nodpi/aqaqeer_launcher.png). The [in-app and PDF emblem](../app/src/main/res/drawable-nodpi/aqaqeer_logo.png) uses the original artwork. [Generation provenance and prompt](../assets/branding/launcher-revision.md).
+The [selected matte wordmark](../assets/branding/aqaqeer-logo-matte.png) follows the user's [Gemini reference](../assets/branding/aqaqeer-logo-reference.jpeg) and their chosen **Cobalt / silver** palette. It keeps the navy outlines, two horizontal capsule-shaped upper dots, empty hexagonal counters and lower split circular tablet. Palette targets are cobalt #3D5E98 and matte silver-grey #A9B2BE; generated shades vary, and the approved preview is retained unchanged.
+
+The 1254 × 1254 RGBA master is copied byte-for-byte to the [launcher/splash bitmap](../app/src/main/res/drawable-nodpi/aqaqeer_launcher.png) and [in-app/PDF bitmap](../app/src/main/res/drawable-nodpi/aqaqeer_logo.png). Normal and round home icons use a [padding-only drawable](../app/src/main/res/drawable/aqaqeer_launcher_icon.xml) with equal −3% insets. This uniformly enlarges the existing bitmap nominally 6%, without changing letter proportions, pixel data or adding a backing/adaptive shape. The taller generated redraw was rejected and is not used.
+
+The native splash and Compose still use the original bitmap and their existing framing/motion. [Palette comparison previews](../assets/branding/previews/README.md) remain separate. [Provenance, exact prompts and hashes](../assets/branding/launcher-revision.md) record the selection and geometry check; Android/OEM rendering remains unverified.
 
 ## Splash artwork and motion
 

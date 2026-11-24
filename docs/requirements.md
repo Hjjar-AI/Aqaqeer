@@ -367,15 +367,15 @@ Bottom snackbars expose a close action and explicit finite Material durations: L
 
 Use focused reusable composables where they fit; create distinct components when responsibilities differ rather than forcing unrelated elements into a generic API to reduce component count. Screens/ViewModels retain workflow state, validation, authorization and callbacks. Routine UI details are implementation choices within this settled design: use standard Material 3 spacing, component sizing, and interaction patterns; adapt layout for narrow screens and system text scaling while retaining the chosen visible controls and readable medication content.
 
-Keep the launcher a transparent, non-adaptive bitmap; the violet and emerald artwork retains the chemical wordmark and navy outline. Record meaningful visual defaults and adjustments in implementation documentation; they do not require reopening the approved navigation, search, filters, cards, quick editor, publication banner, Splash, or About requirements.
+Keep the launcher transparent and non-adaptive, using the selected bitmap wordmark and navy outline. Record meaningful visual defaults and adjustments in implementation documentation; they do not require reopening the approved navigation, search, filters, cards, quick editor, publication banner, Splash, or About requirements.
 
 Use the existing vector capsule in the empty wide-screen detail pane, preserving the selected logo artwork in existing branded empty states. Representative source previews cover RTL, themes and large text. No gesture hints, alphabet rail or role chip.
 
 ### Branding and startup
 
-Use the same matte violet artwork for the launcher and splash, with a violet target of #8054DA, a calmer emerald target of #20BA82 and thicker tablet score lines and ring bonds. Retain the Arabic wordmark, complementary bond orientations and outlined capsule. The launcher remains a transparent RGBA bitmap without a backing shape or monochrome or adaptive layers. In-app branding and PDF headers use the original violet and emerald emblem.
+Use the selected matte cobalt and silver wordmark across the launcher, splash, in-app branding and PDF headers. Keep its navy outlines, two horizontal capsule-shaped upper dots, lower split circular tablet and empty hexagonal letter counters. Keep the finish subdued and matte, without glossy highlights. For the home launcher, reduce only padding with equal scaling on both axes; preserve the approved bitmap's lettering and proportions. No taller redraw, backing shape, monochrome or adaptive layers. Keep the splash's own framing separate. Superseded logo variants are removed from the working artwork set at the user's request.
 
-The first ring in Arabic reading order (right) uses the alternate three internal-bond sides to the left ring; this orientation is fixed artwork, not rotation animation. Home shows the pharmacy name with a small original emblem; onboarding includes the original emblem and prioritizes joining over creating. Medication-detail titles use the scientific name. See [branding](branding.md).
+Home shows the pharmacy name with the selected small emblem; onboarding includes the same emblem and prioritizes joining over creating. Medication-detail titles use the scientific name. See [branding](branding.md).
 
 V1 includes a branded launch splash and an About screen. Android’s starting window shows the selected عقاقير logo on a solid theme background. The app uses the same artwork and framing and follows the saved theme and system-bar contrast, including pure black in AMOLED. The preceding system frame can use system-mode fallbacks before local preferences are available.
 
