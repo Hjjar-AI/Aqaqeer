@@ -8,6 +8,7 @@ internal object Space {
     val none = 0.dp
     val xxs = 2.dp
     val xs = 4.dp
+    val xsPlus = 6.dp
     val sm = 8.dp
     val md = 12.dp
     val lg = 16.dp
@@ -40,6 +41,7 @@ internal object Size {
     val illustrationLarge = 96.dp
     val emblemCompact = 120.dp
     val emblemLarge = 160.dp
+    val launchArtwork = 190.dp
     val drawerMax = 320.dp
     val drawerOutside = 72.dp
     val gridCellMin = 140.dp
@@ -55,6 +57,7 @@ internal object Radius {
 }
 internal object AppStroke {
     val hairline = 1.dp
+    val badge = 1.5.dp
     val emphasis = 2.dp
     val accent = 4.dp
 }

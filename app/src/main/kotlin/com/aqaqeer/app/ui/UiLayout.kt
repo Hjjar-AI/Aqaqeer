@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.Dp
 internal object UiSpacing {
     val hair = Space.xs
     val badgeHorizontal = Size.badgePadding
+    val badgeVertical = Space.xsPlus
     val page = Space.lg
     val section = Space.md
     val related = Space.sm

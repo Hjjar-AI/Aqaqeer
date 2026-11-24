@@ -1,5 +1,7 @@
 package com.aqaqeer.app
 
+import com.aqaqeer.app.admin.catalog
+
 import com.aqaqeer.app.fixtures.SuiteProfile
 import kotlinx.coroutines.*
 import org.junit.*

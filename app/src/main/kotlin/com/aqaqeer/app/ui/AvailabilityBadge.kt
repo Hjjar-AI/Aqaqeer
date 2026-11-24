@@ -12,7 +12,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.*
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
 import com.aqaqeer.app.R
 
 /** Availability owns its filled pill, edit affordance and stable interaction/progress slot. */
@@ -37,14 +36,14 @@ import com.aqaqeer.app.R
     Box(modifier.then(interaction), contentAlignment = Alignment.Center) {
         Surface(color = container, contentColor = content, shape = CircleShape) {
             Row(Modifier.padding(horizontal = if (dense) UiSpacing.badgeHorizontal else UiSpacing.section,
-                vertical = if (dense) UiSpacing.hair else 6.dp), verticalAlignment = Alignment.CenterVertically,
+                vertical = if (dense) UiSpacing.hair else UiSpacing.badgeVertical), verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(UiSpacing.hair)) {
                 Text(text, modifier = Modifier.weight(1f, fill = false),
                     style = if (dense) MaterialTheme.typography.labelMedium else MaterialTheme.typography.labelLarge.copy(fontSize = MaterialTheme.typography.bodyLarge.fontSize),
                     fontWeight = if (dense) FontWeight.Normal else FontWeight.Bold)
                 if (editable) Box(Modifier.size(Size.iconS), contentAlignment = Alignment.Center) {
                     if (saving) CircularProgressIndicator(modifier = Modifier.fillMaxSize().clearAndSetSemantics { },
-                        color = content, strokeWidth = 2.dp)
+                        color = content, strokeWidth = AppStroke.emphasis)
                     else AppIcon(UiIcon.EDIT, size = Size.iconS)
                 }
             }

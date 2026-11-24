@@ -8,14 +8,14 @@ import java.time.LocalDate
 
 /** Cross-section results must obey the same filters without acquiring current-section state. */
 class HomeProjectionRegressionTest {
-    private val seed = F.catalog()
-    private val here = seed.sections.single()
-    private val other = Section(F.otherPharmacyId, "آخر")
-    private val closed = Section(F.installationId, "مغلق", isActive = false)
-    private val day = LocalDate.of(2026, 11, 24)
-    private val a = seed.medications.single().copy(genericEn = "Needle A", expiryDate = day)
-    private val b = a.copy(id = F.publishId, genericEn = "Needle B", categoryId = F.pharmacyId, expiryDate = day.plusDays(61))
-    private val catalog = seed.copy(sections = listOf(here, other, closed),
+    private val seed: CatalogSnapshot = F.catalog()
+    private val here: Section = seed.sections.single()
+    private val other: Section = Section(F.otherPharmacyId, "آخر")
+    private val closed: Section = Section(F.installationId, "مغلق", isActive = false)
+    private val day: LocalDate = LocalDate.of(2026, 11, 24)
+    private val a: Medication = seed.medications.single().copy(genericEn = "Needle A", expiryDate = day)
+    private val b: Medication = a.copy(id = F.publishId, genericEn = "Needle B", categoryId = F.pharmacyId, expiryDate = day.plusDays(61))
+    private val catalog: CatalogSnapshot = seed.copy(sections = listOf(here, other, closed),
         categories = seed.categories + Category(F.pharmacyId, "آخر"), medications = listOf(b, a),
         availability = listOf(
             Availability(a.id, here.id, AvailabilityStatus.LOW, F.time),
@@ -24,7 +24,7 @@ class HomeProjectionRegressionTest {
             Availability(b.id, closed.id, AvailabilityStatus.AVAILABLE, F.time)))
 
     private suspend fun project(query: String = "Needle", filters: HomeFilters = HomeFilters(),
-        preferences: HomePreferences = HomePreferences(), reader: Boolean = false) =
+        preferences: HomePreferences = HomePreferences(), reader: Boolean = false): HomeBrowseResult =
         CatalogSearchIndex(catalog).project(here.id, query, filters, preferences,
             unpublished = setOf(a.id), fetched = setOf(a.id, b.id), today = day, readerStockOnly = reader)
 

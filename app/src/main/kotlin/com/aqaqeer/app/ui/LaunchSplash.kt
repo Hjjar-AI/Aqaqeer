@@ -63,7 +63,7 @@ internal fun LaunchSplash(waitingForStartup: Boolean, artwork: ImageBitmap, onDi
             Image(
                 bitmap = artwork,
                 contentDescription = null,
-                modifier = Modifier.size(190.dp).graphicsLayer {
+                modifier = Modifier.size(Size.launchArtwork).graphicsLayer {
                     scaleX = if (animate) scale.value else 1f
                     scaleY = scaleX
                 },

@@ -23,7 +23,7 @@ SECRET_PATTERNS = {
 }
 
 # Add only exact paths of explicitly reviewed public fixtures, never directories/globs.
-PUBLIC_FIXTURE_PATHS = frozenset()
+PUBLIC_FIXTURE_PATHS = frozenset({'app/src/androidTest/assets/m3-import.aqz'})
 SENSITIVE_SUFFIXES = frozenset(('.jks', '.keystore', '.p12', '.pfx', '.pem', '.key', '.p8', '.aqz'))
 
 

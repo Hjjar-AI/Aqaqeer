@@ -1,0 +1,12 @@
+# Exact public PBKDF2 vector outputs only; production credentials remain fully scanned.
+# Configuration contract: https://github.com/gitleaks/gitleaks#configuration
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Two reviewed public derived keys in canonical crypto vectors"
+targetRules = ["generic-api-key"]
+condition = "AND"
+regexTarget = "line"
+paths = ['''^docs/crypto/v1-vectors\.json$''']
+regexes = ['''^\s*"keyHex": "(?:56e0f12982d8214698f473a77b69d38525948dfc7fefe58a8594e0447a4f8eea|f07472e5310948a4ed9bc273bfef90541c501fbfe2a7335030890f35343f2add)",?\s*$''']

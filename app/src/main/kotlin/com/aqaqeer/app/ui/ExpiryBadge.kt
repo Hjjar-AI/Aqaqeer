@@ -12,7 +12,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.unit.dp
 import com.aqaqeer.app.data.ExpiryState
 import com.aqaqeer.app.data.Medication
 import com.aqaqeer.app.data.MedicationPresentation
@@ -29,9 +28,9 @@ import java.time.LocalDate
     val content by animateColorAsState(presentation.tone.content, tween(Motion.standard), label = "expiry content")
     val border by animateColorAsState(presentation.tone.edge, tween(Motion.standard), label = "expiry border")
     Surface(modifier = modifier, color = Color.Transparent, contentColor = content,
-        shape = MaterialTheme.shapes.small, border = BorderStroke(1.5.dp, border)) {
+        shape = MaterialTheme.shapes.small, border = BorderStroke(AppStroke.badge, border)) {
         Row(Modifier.padding(horizontal = if (dense) UiSpacing.badgeHorizontal else UiSpacing.section,
-            vertical = if (dense) UiSpacing.hair else 6.dp), verticalAlignment = Alignment.CenterVertically,
+            vertical = if (dense) UiSpacing.hair else UiSpacing.badgeVertical), verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(UiSpacing.hair)) {
             AppIcon(UiIcon.CALENDAR, size = if (dense) Size.iconS else Size.iconM)
             Text(presentation.text, modifier = Modifier.weight(1f, fill = false),

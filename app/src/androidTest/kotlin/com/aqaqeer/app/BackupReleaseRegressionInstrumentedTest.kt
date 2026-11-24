@@ -1,5 +1,7 @@
 package com.aqaqeer.app
 
+import com.aqaqeer.app.admin.catalog
+
 import android.net.Uri
 import com.aqaqeer.app.backup.BackupRepository
 import com.aqaqeer.app.data.*
