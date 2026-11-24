@@ -1,7 +1,8 @@
 package com.aqaqeer.app
 
 import androidx.lifecycle.ViewModelProvider
-import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.*
 import com.aqaqeer.app.ui.CatalogViewModel
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
@@ -64,7 +65,7 @@ class HomeUiTest {
             browse.sectionId == section && browse.query == query &&
                 medications.all { medication -> browse.visible.any { it.id == medication.id } } &&
                 compose.onNodeWithTag("home").fetchSemanticsNode().config
-                    .getOrNull(SemanticsActions.IndexForKey)?.action?.let { index ->
+                    .getOrNull(SemanticsProperties.IndexForKey)?.let { index ->
                         medications.all { index(it.id) >= 0 }
                     } == true
         }
