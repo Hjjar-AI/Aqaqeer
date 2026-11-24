@@ -92,7 +92,7 @@ class UiEnhancementTest {
         compose.onNodeWithText("تعديل المحدد").performClick()
         compose.onNodeWithText("غير متوفر", useUnmergedTree = true).performScrollTo().performClick()
         compose.onNodeWithText(uiText(R.string.availability_bulk_preview_action)).performScrollTo().performClick()
-        compose.onNode(hasScrollToIndexAction()).performScrollToNode(hasText("Item 00", substring = true))
+        compose.onNode(hasScrollToIndexAction() and !hasTestTag("home")).performScrollToNode(hasText("Item 00", substring = true))
         compose.onNodeWithText("Item 00", substring = true).assertIsDisplayed()
     }
 
