@@ -60,14 +60,30 @@ class HomeUiTest {
         return section
     }
     private fun awaitRows(section: String, query: String, vararg medications: Medication) {
-        compose.waitUntil(15_000) {
+        try {
+            compose.waitUntil(15_000) {
+                val browse = viewModel.homeBrowse.value
+                browse.sectionId == section && browse.query == query &&
+                    medications.all { medication -> browse.visible.any { it.id == medication.id } } &&
+                    compose.onNodeWithTag("home").fetchSemanticsNode().config
+                        .getOrNull(SemanticsProperties.IndexForKey)?.let { index ->
+                            medications.all { index(it.id) >= 0 }
+                        } == true
+            }
+        } catch (failure: Throwable) {
             val browse = viewModel.homeBrowse.value
-            browse.sectionId == section && browse.query == query &&
-                medications.all { medication -> browse.visible.any { it.id == medication.id } } &&
-                compose.onNodeWithTag("home").fetchSemanticsNode().config
-                    .getOrNull(SemanticsProperties.IndexForKey)?.let { index ->
-                        medications.all { index(it.id) >= 0 }
-                    } == true
+            val state = viewModel.state.value
+            val grid = compose.onNodeWithTag("home").fetchSemanticsNode().config
+            val index = grid.getOrNull(SemanticsProperties.IndexForKey)
+            val diagnostic = "Expected section=$section/query=$query; state section=${state.sectionId}/query=${state.query}/applied=${state.appliedQuery}; " +
+                "browse section=${browse.sectionId}/query=${browse.query}/rows=${browse.visible.size}; " +
+                "requestedIndexes=${medications.associate { it.id to index?.invoke(it.id) }}; " +
+                "preferencesMatch=${browse.preferences == state.homePreferences}/filtersMatch=${browse.filters == state.filters}; " +
+                compose.onRoot().printToString()
+            failure.addSuppressed(AssertionError(diagnostic))
+            try { captureCiScreen("home-search-rendered-projection") }
+            catch (capture: Throwable) { failure.addSuppressed(capture) }
+            throw failure
         }
         compose.waitForIdle()
     }
