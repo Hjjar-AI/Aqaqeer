@@ -2,6 +2,12 @@
 
 [Requirements](requirements.md) define acceptance; [plan](plan.md) owns remaining work. The evidence manifest (local-only: `../local/verification/manifest.json`) retains original results, public hashes and provenance. Ignored evidence may be absent in fresh checkouts. Source checks, compilation, runtime results and human acceptance remain distinct.
 
+## Initial version sequence and automatic selection — 2026-11-24
+
+At the user's explicit request, after they confirmed there are no installed copies, the version sequence was reset for the next build to **0.0.1**. The local counter is0 and its existing lock is preserved. All21 remote `android-initial-build-N` reservation tags (1–19,32,33) were removed after checking that no packaging run was active; no matching local tags existed. All10 existing Releases, APKs and commit history were preserved. Original tag identities and per-deletion results are retained in the local-only receipt `local/verification/version-resets/reset-20261124T182140Z.json`. Earlier delivery codes remain historical evidence, not the floor for this explicitly restarted sequence. This reset is a user-authorized exception, not a retry or gap-recovery policy.
+
+Workflow11 now defaults to automatic next-code selection when `version_code` is blank, while retaining an optional numeric override. Workflows10/11 show the previous and reserved versions plus source commit in the run summary, with selected versions in downstream job names. Production build, signing and publication all consume the reservation output. The live shared registry is read under serialized reservation; pushes alone consume no code, and each run retains its own source SHA. Policy, Python/YAML parsing, documentation integrity and whitespace checks passed; the read-only next-code suggestion is1 with zero remote reservations. No tests, Gradle, packaging, Android lint, devices or workflow dispatch were run for this change; actual hosted behavior awaits a dispatch after the user's push.
+
 ## Hosted completion batch — 2026-11-24
 
 The user resumed completion, clarified that the existing `Final/e808c13` runs predate pending edits, and explicitly authorized hosted verification/targeted retries and final hosted lint last. Artifact-only production signing with codes32 and then33 is separately authorized; no GitHub Release publication is authorized. Local Gradle/build/lint/device and physical/live campaigns remain stopped. No migration work is included.

@@ -267,12 +267,29 @@ def check(path):
                 problem(name, 'required scoped job permissions missing')
             if path.name == 'publish-debug.yml' and name == 'publish' and job.get('needs') != ['reserve', 'sign-debug']:
                 problem(name, 'publication must depend on all selected debug builds succeeding')
+            if path.name in ('publish-debug.yml', 'publish-release.yml') and name != 'reserve':
+                if '${{ needs.reserve.outputs.code }}' not in job.get('name', ''):
+                    problem(name, 'distribution job names must show the selected version code')
             if path.name == 'publish-release.yml':
-                expected_dependencies = {'reserve': None, 'build': 'reserve', 'publish': 'build'}
+                expected_dependencies = {'reserve': None, 'build': 'reserve', 'publish': ['reserve', 'build']}
                 if name not in expected_dependencies or job.get('needs') != expected_dependencies.get(name):
                     problem(name, 'production jobs must reserve, build, then sign/publish in order')
                 if name == 'publish' and job.get('environment') != 'release-signing':
                     problem(name, 'production signing must use the release-signing environment')
+                if name == 'reserve':
+                    version = dispatch.get('inputs', {}).get('version_code', {})
+                    if (version.get('type') != 'string' or version.get('required') is not False
+                            or version.get('default') != ''):
+                        problem(name, 'production version override must be optional with blank automatic selection')
+                    if job.get('outputs', {}).get('code') != '${{ steps.reserve.outputs.code }}':
+                        problem(name, 'production reservation must expose the selected code')
+                if name in ('build', 'publish'):
+                    expected_code = '${{ needs.reserve.outputs.code }}'
+                    required_keys = ['AQAQEER_MIN_BUILD_CODE'] if name == 'build' else ['AQAQEER_EXPECTED_RELEASE_CODE', 'CI_RELEASE_CODE']
+                    for key in required_keys:
+                        values = [step.get('env', {})[key] for step in job.get('steps', []) if key in step.get('env', {})]
+                        if values != [expected_code]:
+                            problem(name, f'{key} must use the selected reservation output')
                 if name == 'publish':
                     publication_steps = [step for step in job.get('steps', []) if 'gh release create' in step.get('run', '')]
                     artifact_steps = [step for step in job.get('steps', []) if step.get('with', {}).get('name') == 'production-signed-${{ github.run_id }}']

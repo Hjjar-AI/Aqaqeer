@@ -4,9 +4,10 @@ on:
   workflow_dispatch:
     inputs:
       version_code:
-        description: "Required integer from 1 to 2099999999, without leading zeros (example format: 42). Must exceed all local release codes and android-initial-build-N reservations, including failed attempts. No default."
+        description: "Optional integer from 1 to 2099999999, without leading zeros. Default: blank = automatically reserve the next shared version. An override must exceed all reservations and any locally distributed code."
         type: string
-        required: true
+        required: false
+        default: ''
       publication:
         description: "Options: release = publish a regular release; prerelease = publish a prerelease; draft = save an unpublished GitHub Release; artifacts = retain signed workflow artifacts without creating a GitHub Release. Default: draft."
         type: choice
@@ -35,12 +36,15 @@ jobs:
     concurrency:
       group: aqaqeer-version-reservations
       cancel-in-progress: false
+    outputs:
+      code: ${{ steps.reserve.outputs.code }}
     steps:
       - name: Check out repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - name: Reserve the requested production version
+      - name: Detect current version and reserve the next production version
+        id: reserve
         env:
           GH_TOKEN: ${{ github.token }}
           CI_RELEASE_CODE: ${{ inputs.version_code }}
@@ -48,6 +52,7 @@ jobs:
         run: python3 .github/scripts/reserve-release.py
 
   build:
+    name: Build release 0.0.${{ needs.reserve.outputs.code }}
     needs: reserve
     if: ${{ github.event.repository.private == false && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
     runs-on: ubuntu-24.04
@@ -65,7 +70,7 @@ jobs:
           diagnostics-directory: ci-output/release
       - name: Build the unsigned standard release through the wrapper
         env:
-          AQAQEER_MIN_BUILD_CODE: ${{ inputs.version_code }}
+          AQAQEER_MIN_BUILD_CODE: ${{ needs.reserve.outputs.code }}
         run: |
           set -euo pipefail
           # A failed packaging retry must consume a new code on a new dispatch.
@@ -92,7 +97,8 @@ jobs:
           if-no-files-found: error
 
   publish:
-    needs: build
+    name: Sign and deliver release 0.0.${{ needs.reserve.outputs.code }}
+    needs: [reserve, build]
     if: ${{ github.event.repository.private == false && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
     runs-on: ubuntu-24.04
     timeout-minutes: 20
@@ -126,7 +132,7 @@ jobs:
           AQAQEER_RELEASE_STORE_PASSWORD: ${{ secrets.AQAQEER_RELEASE_STORE_PASSWORD }}
           AQAQEER_RELEASE_KEY_PASSWORD: ${{ secrets.AQAQEER_RELEASE_KEY_PASSWORD }}
           AQAQEER_RELEASE_CERT_SHA256: ${{ vars.AQAQEER_RELEASE_CERT_SHA256 }}
-          AQAQEER_EXPECTED_RELEASE_CODE: ${{ inputs.version_code }}
+          AQAQEER_EXPECTED_RELEASE_CODE: ${{ needs.reserve.outputs.code }}
         run: python3 tools/sign_release.py --output-directory release-files
       - name: Retain signed APKs and public metadata without publication
         if: ${{ inputs.publication == 'artifacts' }}
@@ -142,7 +148,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
           CI_PUBLICATION: ${{ inputs.publication }}
-          CI_RELEASE_CODE: ${{ inputs.version_code }}
+          CI_RELEASE_CODE: ${{ needs.reserve.outputs.code }}
         run: |
           set -euo pipefail
           case "$CI_PUBLICATION" in
