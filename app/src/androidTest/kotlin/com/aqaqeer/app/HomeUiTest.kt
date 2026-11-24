@@ -41,8 +41,9 @@ class HomeUiTest {
     }
     private fun card(medication: Medication) = "med_${medication.nameEn ?: medication.id}"
     private fun show(medication: Medication) {
-        compose.onNodeWithTag("home").performScrollToNode(hasTestTag(card(medication)))
-        compose.onNodeWithTag(card(medication)).assertIsDisplayed()
+        compose.onNodeWithTag("home").performScrollToKey(medication.id)
+        // The current section precedes cross-section search matches for the same medication.
+        compose.onAllNodesWithTag(card(medication)).onFirst().assertIsDisplayed()
     }
     private fun choosePreference(matcher: SemanticsMatcher, saved: (HomePreferences) -> Boolean) {
         compose.onNodeWithTag("settings").performScrollToNode(matcher)
