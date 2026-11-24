@@ -129,6 +129,7 @@ def main():
                         'assets/Apache-2.0.txt', 'assets/THIRD-PARTY-NOTICES.txt', 'assets/runtime-components.txt'}
             if not required <= names:
                 raise ValueError('Release is missing required code/resources/license entries')
+            (directory / 'runtime-components.txt').write_bytes(apk.read('assets/runtime-components.txt'))
             if any('telegram-test-config' in name or name.endswith('/v1-vectors.json') for name in names):
                 raise ValueError('Verification-only fixture/credential file in release APK')
             for name in sorted(names):

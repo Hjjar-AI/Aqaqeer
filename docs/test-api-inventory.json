@@ -7719,7 +7719,7 @@
     }
   ],
   "executionReport": "validation.md",
-  "checkpoint": "Green planned suite: JVM 161 passed per flavor; standard device 120 aggregate passes (two demo-only guards), demo 32 passed/88 standard-only skips; see validation.md. Lexical references do not prove every declaration/branch executes.",
+  "checkpoint": "Current results and limitations are recorded in validation.md#hosted-completion-batch--2026-11-24. Source references and authored/selected counts are not measured branch coverage or runtime passes.",
   "unverifiedCoverage": {
     "declarations": 718,
     "withoutDirectLexicalReferences": 246,

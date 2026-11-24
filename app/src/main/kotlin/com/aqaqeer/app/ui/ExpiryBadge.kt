@@ -27,7 +27,7 @@ import java.time.LocalDate
     val presentation = expiryBadge(expiry)
     val content by animateColorAsState(presentation.tone.content, tween(Motion.standard), label = "expiry content")
     val border by animateColorAsState(presentation.tone.edge, tween(Motion.standard), label = "expiry border")
-    Surface(modifier = modifier, color = Color.Transparent, contentColor = content,
+    Surface(modifier = modifier.width(IntrinsicSize.Max), color = Color.Transparent, contentColor = content,
         shape = MaterialTheme.shapes.small, border = BorderStroke(AppStroke.badge, border)) {
         Row(Modifier.padding(horizontal = if (dense) UiSpacing.badgeHorizontal else UiSpacing.section,
             vertical = if (dense) UiSpacing.hair else UiSpacing.badgeVertical), verticalAlignment = Alignment.CenterVertically,

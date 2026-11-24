@@ -19,6 +19,7 @@ PACKAGE = "com.aqaqeer.app.verification.creation.debug"
 TEST_PACKAGE = PACKAGE + ".test"
 RUNNER = TEST_PACKAGE + "/com.aqaqeer.app.SuiteRunner"
 CLASS = "com.aqaqeer.app.RestoreProcessDeathInstrumentedTest#phase"
+RESOURCE_METHODS = ("measuredHistoryRoundTripsBelowBackupCap", "controlledHeapPressureRejectsBeforeReplacementAndRecoversAfterRelease")
 CHECKPOINTS = ("during_input", "before_journal", "after_journal", "before_activation",
                "after_active", "after_setup", "after_pending", "after_requirements", "before_stage_cleanup",
                "inside_sql_insert", "inside_sql_history")
@@ -60,21 +61,32 @@ def main():
     parser.add_argument("--serial", required=True)
     parser.add_argument("--hosted-emulator", action="store_true", help="Require the owned GitHub-hosted aqaqeer-recovery emulator; refuse physical/local devices.")
     parser.add_argument("--resource-tests", action="store_true", help="Also execute the two isolated resource cases and retain their original measurements.")
+    parser.add_argument("--resources-only", action="store_true", help="Omit already-verified recovery scenarios; requires resource tests.")
+    parser.add_argument("--resource-method", action="append", choices=RESOURCE_METHODS, help="Select only failed or unexecuted resource methods.")
     parser.add_argument("--retry-build", action="store_true", help="Rebuild only the affected test APK after a test compilation failure.")
     parser.add_argument("--build-only", action="store_true", help="Compile the complete harness while a physical phone is unavailable.")
     parser.add_argument("--only", action="append", choices=[c["name"] for c in scenarios()],
                         help="Run only failed or previously unexecuted scenarios.")
     parser.add_argument("--build-from", type=Path, help="Reuse a prior successful build only if source/APK hashes match.")
     args = parser.parse_args()
+    if (args.resources_only or args.resource_method) and not args.resource_tests:
+        raise ValueError("Resource-only selection requires --resource-tests")
+    if args.resources_only and args.only:
+        raise ValueError("Resource-only selection cannot also select recovery scenarios")
+    resource_methods = args.resource_method or RESOURCE_METHODS
+    if len(set(resource_methods)) != len(resource_methods):
+        raise ValueError("Duplicate resource methods")
     sdk, adb_path, init_script, gradle_args = prepare(args)
     if args.resource_tests and not args.hosted_emulator:
         raise ValueError("Resource extension is restricted to the owned hosted emulator")
     run_id = uuid.uuid4().hex
     evidence = ROOT / "local/verification/runs" / ("restore-death-" + datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%fZ"))
     evidence.mkdir(parents=True)
-    chosen = [c for c in scenarios() if (c["name"] in args.only if args.only else "class" not in c)]
+    chosen = [] if args.resources_only else [c for c in scenarios() if (c["name"] in args.only if args.only else "class" not in c)]
     state = {"runId": run_id, "serial": args.serial, "lintRun": False, "externalNetworkUsed": False,
              "scenarios": [], "planned": [c["name"] for c in chosen]}
+    if not chosen:
+        state["profileCleanup"] = "not applicable: no recovery profiles selected"
     (evidence / "source-sha256.json").write_text(json.dumps(sources(init_script), indent=2) + "\n")
 
     def save():
@@ -228,7 +240,9 @@ def main():
                 raise RuntimeError("Verification namespace already installed; existing data left untouched")
         provenance.update({"deviceVerified": True,
                            "model": adb("shell", "getprop", "ro.product.model").stdout.strip(),
-                           "api": adb("shell", "getprop", "ro.build.version.sdk").stdout.strip()})
+                           "api": adb("shell", "getprop", "ro.build.version.sdk").stdout.strip(),
+                           "dalvikHeapSize": adb("shell", "getprop", "dalvik.vm.heapsize").stdout.strip(),
+                           "dalvikHeapGrowthLimit": adb("shell", "getprop", "dalvik.vm.heapgrowthlimit").stdout.strip()})
     (evidence / "provenance.json").write_text(json.dumps(provenance, indent=2) + "\n")
     counter = ROOT / "local/versioning/last-code.txt"
     version_before = counter.read_bytes() if counter.exists() else None
@@ -324,7 +338,7 @@ def main():
                 break
         if args.resource_tests:
             state["resourceCases"] = []
-            for method in ("measuredHistoryRoundTripsBelowBackupCap", "controlledHeapPressureRejectsBeforeReplacementAndRecoversAfterRelease"):
+            for method in resource_methods:
                 require_installation(PACKAGE)
                 adb("shell", "am", "force-stop", PACKAGE)
                 result = adb("shell", "am", "instrument", "-w", "-r", "-e", "class",
@@ -368,8 +382,8 @@ def main():
         save()
     return 0 if (not state["unexecuted"] and all(c["status"] == "passed" for c in state["scenarios"])
                  and all(c["absent"] for c in state["packageCleanup"]) and state["versionCounterUnchanged"]
-                 and state.get("profileCleanup") == "passed"
-                 and (not args.resource_tests or len(state.get("resourceCases", [])) == 2 and all(r["status"] == "passed" for r in state["resourceCases"]))) else 1
+                 and (not chosen or state.get("profileCleanup") == "passed")
+                 and (not args.resource_tests or len(state.get("resourceCases", [])) == len(resource_methods) and all(r["status"] == "passed" for r in state["resourceCases"]))) else 1
 
 
 if __name__ == "__main__":

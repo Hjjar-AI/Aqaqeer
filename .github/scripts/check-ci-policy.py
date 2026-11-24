@@ -215,12 +215,19 @@ def check(path):
             expected_guard = CLEANUP_GUARD if cleanup or default_only else PUBLIC_GUARD
             if path.name == 'emulator.yml' and name == 'emulator':
                 expected_guard = "${{ inputs.demo_checks && github.event.repository.private == false && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}"
+                dispatch = triggers.get('workflow_dispatch', {})
+                inputs = dispatch.get('inputs', {}) if isinstance(dispatch, dict) else {}
+                if inputs.get('demo_retry_methods') != {
+                    'description': 'Optional comma-separated exact Class#method selectors from the demo offline allowlist, without spaces or duplicates. Default: blank = all demo checks. Applies only when demo_checks=true, on both API 29 and 35.',
+                    'type': 'string', 'required': False, 'default': '',
+                } or job.get('env', {}).get('CI_DEMO_RETRY_METHODS') != '${{ inputs.demo_retry_methods }}':
+                    problem(name, 'demo retries must retain the exact optional allowlist input and environment')
             if path.name == 'emulator.yml' and name == 'standard-functional':
                 expected_guard = "${{ !cancelled() && inputs.standard_functional && github.event.repository.private == false && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}"
                 dispatch = triggers.get('workflow_dispatch', {})
                 inputs = dispatch.get('inputs', {}) if isinstance(dispatch, dict) else {}
                 if inputs.get('standard_functional') != {
-                    'description': 'Options: false = omit standard batches; true = run 220 offline standard checks in four serialized API-35 batches after selected demo checks. Default: false.',
+                    'description': 'Options: false = omit standard batches; true = run 223 offline standard checks in four serialized API-35 batches after selected demo checks. Default: false.',
                     'type': 'boolean', 'default': False,
                 } or job.get('needs') != 'emulator':
                     problem(name, 'standard functional checks must be opt-in and wait for the demo emulators')

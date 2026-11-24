@@ -4,6 +4,7 @@ import androidx.lifecycle.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.v2.createComposeRule
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.test.platform.app.InstrumentationRegistry
 import app.cash.turbine.test
@@ -48,6 +49,52 @@ class ViewModelInstrumentedTest {
         withTimeout(15000) { vm.state.first { it.catalog is CatalogState.Ready } }
     }
     @After fun cleanup() { if (::vm.isInitialized) main { models.clear() }; if (::p.isInitialized) p.close() }
+    @Test fun backupReaderHasNoExportOrReplacementControls(): Unit = runBlocking {
+        val ready = p.ready().copy(admin = false)
+        compose.setContent { AqaqeerTheme(ThemeChoice.LIGHT) { BackupScreen(AppUiState(catalog = ready), vm) } }
+        compose.onNodeWithText(uiText(R.string.backup_restore_admin_only_message)).assertIsDisplayed()
+        compose.onNodeWithTag(uiText(R.string.backup_passphrase_label)).assertDoesNotExist()
+        compose.onNodeWithText(uiText(R.string.backup_choose_restore_file_action)).assertDoesNotExist()
+    }
+
+    @Test fun backupPassphraseUsesUnicodeCodePointsAndScreenDisposalClearsSecrets(): Unit = runBlocking {
+        val ready = p.ready(); var visible by mutableStateOf(true)
+        compose.setContent { AqaqeerTheme(ThemeChoice.LIGHT) {
+            if (visible) BackupScreen(AppUiState(catalog = ready), vm)
+        } }
+        val password = uiText(R.string.backup_passphrase_label)
+        val confirmation = uiText(R.string.backup_passphrase_confirmation_label)
+        val action = uiText(R.string.backup_choose_export_destination_action)
+        compose.onNodeWithTag(password).performScrollTo()
+            .assert(SemanticsMatcher.keyIsDefined(SemanticsProperties.Password)).performTextInput("😀".repeat(7))
+        compose.onNodeWithTag(confirmation).performScrollTo().performTextInput("😀".repeat(7))
+        compose.onNodeWithText(action).performScrollTo().assertIsNotEnabled()
+        compose.onNodeWithTag(password).performScrollTo().performTextInput("😀")
+        compose.onNodeWithTag(confirmation).performScrollTo().performTextInput("😀")
+        compose.onNodeWithText(action).performScrollTo().assertIsEnabled()
+        compose.runOnIdle { visible = false }
+        compose.onNodeWithTag("backup_screen").assertDoesNotExist()
+        compose.runOnIdle { visible = true }
+        compose.onNodeWithTag(password).performScrollTo().assert(SemanticsMatcher.expectValue(SemanticsProperties.EditableText, AnnotatedString("")))
+        compose.onNodeWithTag(confirmation).performScrollTo().assert(SemanticsMatcher.expectValue(SemanticsProperties.EditableText, AnnotatedString("")))
+        compose.onNodeWithText(action).performScrollTo().assertIsNotEnabled()
+    }
+
+    @Test fun backupExportRemainsDisabledWhileAnotherAdminCommandOwnsTheBusyGate(): Unit = runBlocking {
+        val ready = p.ready(); val entered = CompletableDeferred<Unit>(); val release = CompletableDeferred<Unit>()
+        compose.setContent { AqaqeerTheme(ThemeChoice.LIGHT) { BackupScreen(AppUiState(catalog = ready), vm) } }
+        compose.onNodeWithTag(uiText(R.string.backup_passphrase_label)).performScrollTo().performTextInput("public fixture")
+        compose.onNodeWithTag(uiText(R.string.backup_passphrase_confirmation_label)).performScrollTo().performTextInput("public fixture")
+        compose.onNodeWithText(uiText(R.string.backup_choose_export_destination_action)).performScrollTo().assertIsEnabled()
+        main { vm.command(queueOffline = false) { entered.complete(Unit); release.await() } }
+        try {
+            withTimeout(10_000) { entered.await() }
+            compose.onNodeWithText(uiText(R.string.backup_choose_export_destination_action)).performScrollTo().assertIsNotEnabled()
+        } finally { release.complete(Unit) }
+        withTimeout(10_000) { vm.adminBusy.first { !it } }
+        compose.onNodeWithText(uiText(R.string.backup_choose_export_destination_action)).performScrollTo().assertIsEnabled()
+    }
+
     @Test fun searchDebouncesAndNavigationFiltersPersistInSavedState(): Unit = runBlocking {
         main { vm.setQuery("new query"); vm.toggleStatus(AvailabilityStatus.OUT); vm.navigate("settings") }
         val state = withTimeout(10000) { vm.state.first { it.appliedQuery == "new query" && it.route == "settings" } }
@@ -102,11 +149,21 @@ class ViewModelInstrumentedTest {
             AqaqeerTheme(ThemeChoice.LIGHT) { PharmacyAdminScreen(state, vm) }
         }
     }
+    private var taxonomyType = R.string.catalog_entity_section_label
     private fun chooseType(label: Int) {
         compose.onNodeWithText(uiText(R.string.catalog_taxonomy_type_label)).performScrollTo().performClick()
         compose.onNodeWithText(uiText(label)).performClick()
+        taxonomyType = label
     }
-    private fun row(name: String) = compose.onNodeWithText(name, substring = true).performScrollTo()
+    private fun row(name: String): SemanticsNodeInteraction {
+        if (taxonomyType != R.string.catalog_entity_section_label) {
+            compose.onNode(hasText(uiText(R.string.catalog_taxonomy_items_heading)) and hasClickAction())
+                .performScrollTo().performClick()
+            compose.onNode(hasScrollToIndexAction()).performScrollToNode(hasText(name, substring = true))
+            return compose.onNodeWithText(name, substring = true)
+        }
+        return compose.onNodeWithText(name, substring = true).performScrollTo()
+    }
     private fun confirmDeletion() = compose.onNodeWithText(uiText(R.string.catalog_taxonomy_delete_confirmation_label)).performScrollTo()
     private fun deleteButton() = compose.onNodeWithText(uiText(R.string.catalog_confirm_delete_action)).performScrollTo()
 

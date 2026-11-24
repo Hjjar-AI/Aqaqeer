@@ -301,5 +301,6 @@
       "notice": "licenses/upstream/Apache-2.0-upstream.txt",
       "sha256": "809fa1ed21450f59827d1e9aec720bbc4b687434fa22283c6cb5dd82a47ab9c0"
     }
-  ]
+  ],
+  "currentReleaseReview": "docs/evidence/runtime-notices-20261124.json"
 }

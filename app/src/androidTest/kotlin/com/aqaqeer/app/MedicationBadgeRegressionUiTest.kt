@@ -113,7 +113,9 @@ class MedicationBadgeRegressionUiTest {
                 compose.onNodeWithText(text, useUnmergedTree = true)
                     .performSemanticsAction(SemanticsActions.GetTextLayoutResult) { it(layouts) }
                 assertEquals(1, layouts.size)
-                assertFalse("Badge text overflow: $choice/$mode/$font", layouts.single().hasVisualOverflow)
+                val result = layouts.single()
+                assertFalse("Badge text overflow: $text/$choice/$mode/$font; size=${result.size}; " +
+                    "width=${result.didOverflowWidth}; height=${result.didOverflowHeight}; lines=${result.lineCount}", result.hasVisualOverflow)
             }
             val card = compose.onNodeWithTag("med_${med.nameEn}").fetchSemanticsNode().boundsInRoot
             val expiry = compose.onNodeWithTag("expiry_${med.id}", useUnmergedTree = true).fetchSemanticsNode().boundsInRoot

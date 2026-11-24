@@ -61,15 +61,16 @@ class ReportControlsUiTest {
         content { ReportMultiPicker("Medication selection", values, selected, true) { selected = it } }
         compose.onNodeWithText("Medication selection").performClick()
         compose.onNode(hasSetTextAction()).performTextInput("Target 099")
-        compose.onNode(hasScrollToIndexAction()).performScrollToNode(hasText("Target 099"))
-        compose.onNodeWithText("Target 099").assertIsDisplayed().performClick()
+        val target = hasText("Target 099") and isToggleable()
+        compose.onNode(hasScrollToIndexAction()).performScrollToNode(target)
+        compose.onNode(target).assertIsDisplayed().performClick()
         compose.runOnIdle { assertEquals(setOf("99"), selected) }
         compose.onNode(hasScrollToIndexAction()).performScrollToIndex(0)
         compose.onNodeWithText(uiText(R.string.report_select_all)).performClick()
         compose.runOnIdle { assertEquals(values.map { it.id }.toSet(), selected) }
         compose.onNodeWithText(uiText(R.string.report_clear_selection)).performClick()
         compose.runOnIdle { assertTrue(selected.isEmpty()) }
-        compose.onNode(hasScrollToIndexAction()).performScrollToNode(hasText("Target 099"))
-        compose.onNodeWithText("Target 099").assertIsOff()
+        compose.onNode(hasScrollToIndexAction()).performScrollToNode(target)
+        compose.onNode(target).assertIsOff()
     }
 }

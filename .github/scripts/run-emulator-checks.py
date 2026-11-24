@@ -237,6 +237,9 @@ SHARING_CASES = (
 )
 
 UI_CASES = (
+    ('ui-backup-backupReaderHasNoExportOrReplacementControls', 'ViewModelInstrumentedTest#backupReaderHasNoExportOrReplacementControls', False),
+    ('ui-backup-backupPassphraseUsesUnicodeCodePointsAndScreenDisposalClearsSecrets', 'ViewModelInstrumentedTest#backupPassphraseUsesUnicodeCodePointsAndScreenDisposalClearsSecrets', False),
+    ('ui-backup-backupExportRemainsDisabledWhileAnotherAdminCommandOwnsTheBusyGate', 'ViewModelInstrumentedTest#backupExportRemainsDisabledWhileAnotherAdminCommandOwnsTheBusyGate', False),
     ('ui-ViewModelInstrumentedTest-searchDebouncesAndNavigationFiltersPersistInSavedState', 'ViewModelInstrumentedTest#searchDebouncesAndNavigationFiltersPersistInSavedState', False),
     ('ui-ViewModelInstrumentedTest-busyCommandRejectsDuplicateAndImmediatelyErasesTransferredSecrets', 'ViewModelInstrumentedTest#busyCommandRejectsDuplicateAndImmediatelyErasesTransferredSecrets', False),
     ('ui-ViewModelInstrumentedTest-failingOrCancelledSecretCommandsEraseInputsAndReleaseBusyState', 'ViewModelInstrumentedTest#failingOrCancelledSecretCommandsEraseInputsAndReleaseBusyState', False),
@@ -329,7 +332,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--suite', choices=('demo', 'standard', 'storage', 'sharing', 'ui'), default='demo')
     args = parser.parse_args()
-    cases = select_cases(args.suite, os.environ.get('CI_RETRY_METHODS', '') if args.suite != 'demo' else '')
+    cases = select_cases(args.suite, os.environ.get('CI_DEMO_RETRY_METHODS' if args.suite == 'demo' else 'CI_RETRY_METHODS', ''))
     flavor = 'demo' if args.suite == 'demo' else 'standard'
     PACKAGE = 'com.aqaqeer.app.demo.debug' if flavor == 'demo' else 'com.aqaqeer.app.debug'
     if not cases:

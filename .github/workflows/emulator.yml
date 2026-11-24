@@ -7,13 +7,18 @@ on:
         description: "Options: true = run demo checks on API 29 and 35; false = skip demo checks for a targeted standard retry. Default: true."
         type: boolean
         default: true
+      demo_retry_methods:
+        description: "Optional comma-separated exact Class#method selectors from the demo offline allowlist, without spaces or duplicates. Default: blank = all demo checks. Applies only when demo_checks=true, on both API 29 and 35."
+        type: string
+        required: false
+        default: ''
       retry_methods:
         description: "Optional comma-separated exact Class#method selectors from the standard offline allowlist, without spaces or duplicates. Default: blank = all selected standard checks. Applies only when standard_functional=true."
         type: string
         required: false
         default: ''
       standard_functional:
-        description: "Options: false = omit standard batches; true = run 220 offline standard checks in four serialized API-35 batches after selected demo checks. Default: false."
+        description: "Options: false = omit standard batches; true = run 223 offline standard checks in four serialized API-35 batches after selected demo checks. Default: false."
         type: boolean
         default: false
 
@@ -26,6 +31,8 @@ concurrency:
 
 jobs:
   emulator:
+    env:
+      CI_DEMO_RETRY_METHODS: ${{ inputs.demo_retry_methods }}
     # Standard public-repository runners only; never select a paid larger runner.
     if: ${{ inputs.demo_checks && github.event.repository.private == false && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
     runs-on: ubuntu-24.04

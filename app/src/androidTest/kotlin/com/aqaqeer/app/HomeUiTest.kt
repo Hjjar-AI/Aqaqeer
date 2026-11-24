@@ -1,6 +1,8 @@
 package com.aqaqeer.app
 
+import androidx.lifecycle.ViewModelProvider
 import androidx.compose.ui.test.*
+import com.aqaqeer.app.ui.CatalogViewModel
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import com.aqaqeer.app.data.*
 import kotlinx.coroutines.flow.first
@@ -17,9 +19,13 @@ class HomeUiTest {
     @get:Rule(order = 1) val compose = createAndroidComposeRule<MainActivity>()
     private val preferences get() = DisplayPreferences(compose.activity.applicationContext)
     private lateinit var original: HomePreferences
+    private var fixturePharmacy: String? = null
+    private var originalSection: String? = null
+    private lateinit var viewModel: CatalogViewModel
     @Before fun start() {
         if (BuildConfig.IS_DEMO) { com.aqaqeer.app.admin.DemoSession.reset(); com.aqaqeer.app.admin.DemoSession.setAdmin(false) }
         original = runBlocking { preferences.home.first() }
+        compose.runOnUiThread { viewModel = ViewModelProvider(compose.activity)[CatalogViewModel::class.java] }
         compose.waitUntil(15_000) { compose.onAllNodesWithTag("home").fetchSemanticsNodes().isNotEmpty() }
     }
     @After fun reset(): Unit = runBlocking {
@@ -27,27 +33,49 @@ class HomeUiTest {
         if (::original.isInitialized) {
             preferences.setSort(original.sort); preferences.setLayout(original.layout); preferences.setNames(original.names)
         }
+        fixturePharmacy?.let { pharmacy ->
+            originalSection?.let { preferences.setSection(pharmacy, it) } ?: preferences.clearSection(pharmacy)
+        }
     }
     private fun card(medication: Medication) = "med_${medication.nameEn ?: medication.id}"
     private fun show(medication: Medication) {
         compose.onNodeWithTag("home").performScrollToNode(hasTestTag(card(medication)))
         compose.onNodeWithTag(card(medication)).assertIsDisplayed()
     }
-    private fun choosePreference(tag: String, saved: (HomePreferences) -> Boolean) {
-        val row = tag.substringBefore('_') + "_preference"
-        compose.onNodeWithTag("settings").performScrollToNode(hasTestTag(row))
-        compose.onNodeWithTag(row).performClick()
-        compose.onNodeWithTag(tag).performScrollTo().performClick()
+    private fun choosePreference(matcher: SemanticsMatcher, saved: (HomePreferences) -> Boolean) {
+        compose.onNodeWithTag("settings").performScrollToNode(matcher)
+        compose.onNode(matcher).performClick()
         compose.waitUntil(15_000) { saved(runBlocking { preferences.home.first() }) }
+    }
+    private fun selectStockedSection(catalog: CatalogSnapshot, vararg medications: Medication): String {
+        val pharmacy = requireNotNull(catalog.pharmacy).pharmacyId
+        fixturePharmacy = pharmacy
+        originalSection = runBlocking { preferences.sections.first()[pharmacy] }
+        val section = catalog.sections.first { section ->
+            section.isActive && medications.all { catalog.status(it.id, section.id) != AvailabilityStatus.OUT }
+        }.id
+        compose.onNodeWithTag("section_$section").performClick()
+        return section
+    }
+    private fun awaitRows(section: String, query: String, vararg medications: Medication) {
+        compose.waitUntil(15_000) {
+            val browse = viewModel.homeBrowse.value
+            browse.sectionId == section && browse.query == query &&
+                medications.all { medication -> browse.visible.any { it.id == medication.id } }
+        }
+        compose.waitForIdle()
     }
     @Test fun searchIsReachableDoesNotAutofocusAndClearRestoresBrowsing() {
         org.junit.Assume.assumeTrue(BuildConfig.IS_DEMO)
         val catalog = BuildSeed.catalog(); val target = catalog.medications.single { it.genericEn == "Sertraline" }
         val other = catalog.medications.single { it.genericEn == "Fluoxetine" }
+        val section = selectStockedSection(catalog, target, other)
+        awaitRows(section, "", target, other)
         compose.onNodeWithTag("search").assertIsDisplayed().assertIsNotFocused().performTextInput("SERTRALINE")
-        compose.waitUntil(5_000) { compose.onAllNodesWithTag(card(target)).fetchSemanticsNodes().isNotEmpty() }
+        awaitRows(section, "SERTRALINE", target)
         show(target); compose.onNodeWithTag(card(other)).assertDoesNotExist()
         compose.onNodeWithTag("clear_search").performClick()
+        awaitRows(section, "", target, other)
         show(other); compose.onNodeWithTag("search").assertIsDisplayed()
     }
     @Test fun adminFilterSheetOffersOnlyThreeStatesAndAppliesOrWithinStatuses() {
@@ -72,18 +100,24 @@ class HomeUiTest {
         show(excluded)
     }
     @Test fun savedSortLayoutAndNamesSurviveRecreationAndNewPreferenceReader() {
+        val medication = if (BuildConfig.IS_DEMO) BuildSeed.catalog().medications.single { it.genericEn == "Sertraline" } else null
+        val section = medication?.let { selectStockedSection(BuildSeed.catalog(), it) }
         compose.onNodeWithTag("home_menu").performClick(); compose.onNodeWithText(uiText(R.string.navigation_settings_title)).performClick()
-        choosePreference("sort_AVAILABILITY") { it.sort == HomeSort.AVAILABILITY }
-        choosePreference("layout_EXPANDED") { it.layout == CardLayout.EXPANDED }
-        choosePreference("names_ARABIC") { it.names == NameDisplay.ARABIC }
+        val displayGroup = hasText(uiText(R.string.review_list_display))
+        compose.onNodeWithTag("settings").performScrollToNode(displayGroup)
+        compose.onNode(displayGroup).performClick()
+        choosePreference(hasTestTag("sort_AVAILABILITY")) { it.sort == HomeSort.AVAILABILITY }
+        choosePreference(hasText(uiText(R.string.settings_card_expanded_label))) { it.layout == CardLayout.EXPANDED }
+        choosePreference(hasTestTag("names_ARABIC")) { it.names == NameDisplay.ARABIC }
         val expected = original.copy(sort = HomeSort.AVAILABILITY, layout = CardLayout.EXPANDED, names = NameDisplay.ARABIC)
         assertEquals(expected, runBlocking { preferences.home.first() })
         compose.activityRule.scenario.recreate()
         compose.waitUntil(15_000) { compose.onAllNodesWithTag("settings").fetchSemanticsNodes().isNotEmpty() }
         assertEquals(expected, runBlocking { DisplayPreferences(compose.activity.applicationContext).home.first() })
         compose.onNodeWithTag("back").performClick()
-        if (BuildConfig.IS_DEMO) {
-            val medication = BuildSeed.catalog().medications.single { it.genericEn == "Sertraline" }
+        if (medication != null) {
+            compose.runOnUiThread { viewModel = ViewModelProvider(compose.activity)[CatalogViewModel::class.java] }
+            awaitRows(requireNotNull(section), "", medication)
             show(medication)
             compose.onNodeWithTag(card(medication)).assertTextContains("سيرترالين", substring = true)
         }

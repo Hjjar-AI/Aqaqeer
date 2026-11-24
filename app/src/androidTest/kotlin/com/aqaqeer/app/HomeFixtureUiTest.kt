@@ -115,9 +115,9 @@ class HomeFixtureUiTest {
             }
         }
         compose.onNodeWithTag("home").performScrollToNode(hasTestTag("med_English only"))
-        compose.onNodeWithTag("expiry_m", useUnmergedTree = true).assertTextEquals(uiText(R.string.catalog_expiring_soon_badge_label))
+        compose.onNode(hasText(uiText(R.string.catalog_expiring_soon_badge_label)) and hasAnyAncestor(hasTestTag("expiry_m")), useUnmergedTree = true).assertIsDisplayed()
         compose.runOnIdle { now = Instant.parse("2026-11-09T21:00:00Z") }
-        compose.onNodeWithTag("expiry_m", useUnmergedTree = true).assertTextEquals("منتهي الصلاحية")
+        compose.onNode(hasText("منتهي الصلاحية") and hasAnyAncestor(hasTestTag("expiry_m")), useUnmergedTree = true).assertIsDisplayed()
         compose.onNodeWithTag("med_English only").assertTextContains("غير متوفر")
     }
     @Test fun futureCompatibilityNoticeKeepsCachedMedicationAndBrowsingAvailable() {
@@ -138,8 +138,7 @@ class HomeFixtureUiTest {
         compose.waitUntil(15_000) {
             compose.onAllNodesWithTag("home").fetchSemanticsNodes(atLeastOneRootRequired=false).isNotEmpty()
         }
-        compose.onNodeWithText("يلزم إصدار متوافق من التطبيق").performScrollTo()
-        compose.onNodeWithText("يلزم إصدار متوافق من التطبيق").assertIsDisplayed()
+        compose.onNodeWithText(uiText(R.string.home_update_required_notice), substring = true).assertIsDisplayed()
         compose.onNodeWithTag("home").performScrollToNode(hasTestTag("med_English only"))
         compose.onNodeWithTag("med_English only").assertIsDisplayed()
         compose.onNodeWithTag("search").assertIsDisplayed()

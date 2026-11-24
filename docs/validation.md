@@ -12,6 +12,12 @@ All four workflow-03 artifact bundles contain a byte-identical current initial-v
 
 Current batch starts at `e7dda678adffca728792e5a5285ba8b0d6797e0f`. The user authorized test authoring, completing the listed work and hosted execution after the test batch is ready. Added 1 JVM / 12 Android methods and offline selector contracts; expanded existing offline selections and prepared an isolated hosted recovery/resource workflow. This entry is an execution checkpoint, not a pass claim: results and original failures will be reconciled below as workflows finish. Physical/live and unavailable human/Windows boundaries remain distinct. No local Gradle/build/lint/device work is resumed by hosted authorization.
 
+Resumed review (same day): existing workflow 07 runs on `Final` at `e808c13`, before the pending edits. Both demo APIs completed 16 invocations: 14 passed and the same two HomeUi methods failed. Standard completed 99: 93 passed, six failed; the separate storage job passed (per-case reconciliation pending). Original per-case logs and failure captures remain under the campaign directory. Workflow 08 / 45390880523 completed release inspection and startup/cleanup successfully; unsigned APK retrieval still encounters connection resets, so packaged notice comparison remains pending.
+
+Workflow 16 / 45391633780 completed all **38 recovery scenarios successfully** (restore/export/simulated maintenance). Profile cleanup and owned package absence passed; the version counter was unchanged. Controlled heap pressure/release/retry passed. The large-history round trip failed with `RESOURCE_LIMIT`; retained measurements show a **192-MiB maximum heap**, distinct from the historical 384-MiB phone campaign. This is not a recovery-scenario failure or large-history pass. The retry source sets the hosted AVD heap explicitly to 384 MiB and supports exact resource-only selection, retaining production memory guards.
+
+Pending repairs preserve search/clear, preference recreation, taxonomy confirmation isolation, report selection and expiry-boundary assertions while adapting to current asynchronous projections and chooser/text semantics. Production badge repairs remove disabled/saving click actions and request intrinsic badge width inside wrapping rows; their Android behavior remains unverified. Three BackupScreen methods from the handoff remain included in the 223-standard-method selection. Targeted demo retry controls preserve the original default selection. Local offline Python checks: **23 passed**; source repository integrity: **346 text files / 327 links, zero problems**; parsed CI policy: **16 workflows, zero problems**. No local Gradle/build/lint/device work occurred. Final hosted lint remains pending after repairs.
+
 ## Production-readiness test extension — 2026-11-24
 
 Started at `25c7ee2af237edeb782a4c7ad39c32dabb1c6b09`, preserving the existing 140 dp card-minimum/docs changes. Added 35 JVM methods across HomeProjectionRegressionTest (13), RefreshPolicyTest (6 added), SnapshotReadSafetyTest (10) and CatalogMergeSafetyTest (6); added 11 Android methods across HomeGridRegressionUiTest (6) and MedicationBadgeRegressionUiTest (5). [Coverage scope](test-coverage.md#production-readiness-test-extension--2026-11-24) records the assertions and limits. No existing behavioral assertions were removed or weakened; no production source was changed by this test batch.
@@ -278,7 +284,11 @@ Production constructor/call-site/transaction/draft review and delimiter/XML/refe
 
 <a id="current-verification-checkpoint--2026-11-22"></a>
 
-## Current verification checkpoint — 2026-11-23
+<a id="current-verification-checkpoint--2026-11-23"></a>
+
+## Historical verification checkpoint — 2026-11-23
+
+The [hosted completion checkpoint](#hosted-completion-batch--2026-11-24) owns current outcomes. This table retains earlier provenance; its older pending statements do not supersede later dated results.
 
 Evidence applies to the recorded source revision and environment. A later source change or a selected check does not inherit an earlier pass automatically.
 

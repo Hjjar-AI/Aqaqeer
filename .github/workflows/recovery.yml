@@ -4,7 +4,12 @@ on:
   workflow_dispatch:
     inputs:
       scenarios:
-        description: "Optional comma-separated exact scenario names listed by tools/run_restore_process_death.py scenarios(), without spaces or duplicates. Default: blank = all restore, export and simulated maintenance scenarios."
+        description: "Optional comma-separated exact scenario names listed by tools/run_restore_process_death.py scenarios(), without spaces or duplicates. Use none to omit recovery scenarios with resources=true. Default: blank = all restore, export and simulated maintenance scenarios."
+        type: string
+        required: false
+        default: ''
+      resource_methods:
+        description: "Optional comma-separated exact method names measuredHistoryRoundTripsBelowBackupCap or controlledHeapPressureRejectsBeforeReplacementAndRecoversAfterRelease, without spaces or duplicates. Default: blank = both resource checks. Applies only when resources=true."
         type: string
         required: false
         default: ''
@@ -37,6 +42,7 @@ jobs:
       - name: Prepare selected recovery scenario arguments
         env:
           CI_RECOVERY_SCENARIOS: ${{ inputs.scenarios }}
+          CI_RECOVERY_RESOURCE_METHODS: ${{ inputs.resource_methods }}
           CI_RECOVERY_RESOURCES: ${{ format('{0}', inputs.resources) }}
         run: python3 .github/scripts/prepare-recovery.py
       - name: Enable runner KVM access
@@ -51,6 +57,7 @@ jobs:
           target: default
           arch: x86_64
           avd-name: aqaqeer-recovery
+          heap-size: 384M
           emulator-port: 5554
           disable-animations: true
           emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none -camera-front none -no-metrics

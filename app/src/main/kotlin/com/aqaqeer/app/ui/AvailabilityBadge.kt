@@ -25,16 +25,16 @@ import com.aqaqeer.app.R
     val canClick = editable && enabled && !saving && onClick != null
     val interaction = if (!editable) Modifier else Modifier
         .sizeIn(minWidth = UiSpacing.touch, minHeight = UiSpacing.touch)
-        .clickable(enabled = canClick, role = Role.Button, onClickLabel = actionLabel) { onClick?.invoke() }
+        .then(if (canClick) Modifier.clickable(role = Role.Button, onClickLabel = actionLabel) { onClick?.invoke() } else Modifier)
         .clearAndSetSemantics {
             role = Role.Button
             contentDescription = actionDescription
             if (saving) stateDescription = savingDescription
             if (!canClick) disabled()
-            if (canClick) this.onClick(label = actionLabel) { onClick?.invoke(); true }
+            if (canClick) this.onClick(label = actionLabel) { onClick.invoke(); true }
         }
     Box(modifier.then(interaction), contentAlignment = Alignment.Center) {
-        Surface(color = container, contentColor = content, shape = CircleShape) {
+        Surface(modifier = Modifier.width(IntrinsicSize.Max), color = container, contentColor = content, shape = CircleShape) {
             Row(Modifier.padding(horizontal = if (dense) UiSpacing.badgeHorizontal else UiSpacing.section,
                 vertical = if (dense) UiSpacing.hair else UiSpacing.badgeVertical), verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(UiSpacing.hair)) {

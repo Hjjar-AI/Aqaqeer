@@ -22,7 +22,7 @@ class EmulatorSelectionTest(unittest.TestCase):
             self.assertEqual(cases, runner.select_cases(name))
             self.assertTrue(cases)
             combined.extend(case[1] for case in cases)
-        self.assertEqual(220, len(combined))
+        self.assertEqual(223, len(combined))
         self.assertEqual(len(combined), len(set(combined)))
 
     def test_exact_retry_keeps_only_requested_methods_in_their_original_batch(self):
@@ -50,6 +50,27 @@ class EmulatorSelectionTest(unittest.TestCase):
         self.assertEqual(16, len(cases))
         self.assertEqual(14, len({case[1] for case in cases}))
         self.assertEqual(3, sum(case[1].startswith('CiPresentationUiTest#') for case in cases))
+
+    def test_demo_retry_selects_exact_methods_and_preserves_theme_variants(self):
+        search = 'HomeUiTest#searchIsReachableDoesNotAutofocusAndClearRestoresBrowsing'
+        self.assertEqual([search], [case[1] for case in runner.select_cases('demo', search)])
+        theme = 'CiPresentationUiTest#arabicLargeTextThemeAndRecreationRemainUsable'
+        self.assertEqual(3, len(runner.select_cases('demo', theme)))
+        with self.assertRaises(ValueError):
+            runner.select_cases('demo', runner.STORAGE_CASES[0][1])
+        with self.assertRaises(ValueError):
+            runner.select_cases('storage', search)
+
+    def test_demo_retry_environment_reaches_selection_before_device_access(self):
+        method = runner.DEMO_CASES[0][1]
+        with patch.dict(os.environ, {'CI_DEMO_RETRY_METHODS': method}), \
+             patch.object(sys, 'argv', ['runner']), \
+             patch.object(runner, 'select_cases', return_value=()) as select, \
+             tempfile.TemporaryDirectory() as directory, patch.object(runner, 'OUTPUT', Path(directory)), \
+             patch.object(runner, 'adb') as adb:
+            runner.main()
+            select.assert_called_once_with('demo', method)
+            adb.assert_not_called()
 
     def test_nonmatching_retry_batch_records_zero_selected_without_adb_calls(self):
         method = runner.STORAGE_CASES[0][1]
