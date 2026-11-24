@@ -10,6 +10,8 @@ Production call-site and state review, Android XML and resource-reference checks
 
 The splash pulse now takes 720 ms per scale leg for a 1,440 ms round trip. The exit fade remains 100 ms. The report controller JVM suite was updated to use the source, scope, options and preview sequence. It retains the original 12 scenarios and adds three for retry and backward navigation, access loss after capture starts, and stale or pending options. These 15 methods have source review only. Test execution and on-device animation timing remain pending.
 
+The focused follow-up at `1b7d4de` adds a sixteenth report controller JVM method and four Android methods. Source review checked their contracts, fault checkpoints and CI selectors. The methods await compilation and execution. Prior hosted results still apply to the earlier selection. [Scenarios and targeted selectors](test-coverage.md#focused-risk-regressions--2026-11-25)
+
 ## Selected matte branding — 2026-11-24
 
 The user adopted the supplied Gemini wordmark, requested matte colors, discarded older logo variants and selected **Cobalt / silver** after comparison previews. The approved 1254 × 1254 RGBA preview, current master and both launcher/splash and in-app/PDF PNG resources share SHA-256 `21f5202985278c0c83c78564887a526878bf26ed594435f63f867e95961a4169`. Two old master PNGs and seven earlier prompts were removed from the working set. The separate comparison previews were later removed in `939c881`. Dated evidence and Git history retain the earlier scope. [Provenance and exact prompts](../assets/branding/launcher-revision.md)

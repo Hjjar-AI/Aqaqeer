@@ -36,6 +36,36 @@ class BackupReleaseRegressionInstrumentedTest {
         p.backups.export(Uri.fromFile(it), password, password)
     }
 
+    @Test fun editDuringDestinationOpenDoesNotMixCapturedCatalogHistoryOrPendingWork(): Unit = runBlocking {
+        val owner = profile()
+        val medication = owner.medication()
+        val captured = owner.admin.transaction { Triple(it.catalog(), it.pending(), it.history()) }
+        val file = File(owner.root, "capture-before-destination.aqbak")
+        val opens = AtomicInteger()
+        writer(owner) {
+            opens.incrementAndGet()
+            runBlocking {
+                withTimeout(10_000) {
+                    owner.admin.saveMedication(medication.copy(note = "committed while opening destination"))
+                }
+            }
+            file.outputStream()
+        }.export(Uri.fromFile(file), password, password)
+
+        assertEquals(1, opens.get())
+        val live = owner.admin.transaction { Triple(it.catalog(), it.pending(), it.history()) }
+        assertEquals("committed while opening destination", live.first.medications.single().note)
+        assertNotEquals(captured.second, live.second)
+        assertTrue(live.third.size > captured.third.size)
+
+        val restored = profile(create = false)
+        restored.backups.restore(Uri.fromFile(file), password, "", false)
+        restored.admin.transaction { dao ->
+            assertEquals(captured, Triple(dao.catalog(), dao.pending(), dao.history()))
+            assertTrue(requireNotNull(dao.control()).restorePaused)
+        }
+    }
+
     @Test fun destinationCloseFailureRetainsDataAndDoesNotRecordSuccessfulBackup(): Unit = runBlocking {
         val p = profile(); p.medication(); val before = state(p)
         val output = File(p.root, "close-failure.aqbak"); val closes = AtomicInteger()

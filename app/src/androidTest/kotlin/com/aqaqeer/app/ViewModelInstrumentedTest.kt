@@ -1,7 +1,21 @@
 package com.aqaqeer.app
 
+import android.app.Activity
+import android.content.Intent
+import android.net.Uri
+import androidx.activity.compose.LocalActivityResultRegistryOwner
+import androidx.activity.result.ActivityResultRegistry
+import androidx.activity.result.ActivityResultRegistryOwner
+import androidx.activity.result.contract.ActivityResultContract
+import androidx.core.app.ActivityOptionsCompat
 import androidx.lifecycle.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.*
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.text.AnnotatedString
@@ -93,6 +107,64 @@ class ViewModelInstrumentedTest {
         } finally { release.complete(Unit) }
         withTimeout(10_000) { vm.adminBusy.first { !it } }
         compose.onNodeWithText(uiText(R.string.backup_choose_export_destination_action)).performScrollTo().assertIsEnabled()
+    }
+
+    @Test fun restorePickerRequiresExactPharmacyAndAcknowledgmentAtLargeRtlText(): Unit = runBlocking {
+        p.medication()
+        val ready = p.ready()
+        assertTrue(ready.pendingCount > 0)
+        val name = requireNotNull(ready.catalog.pharmacy).name
+        var launchedRequestCode = -1
+        var intent: Intent? = null
+        val registry = object : ActivityResultRegistry() {
+            override fun <I, O> onLaunch(requestCode: Int, contract: ActivityResultContract<I, O>,
+                input: I, options: ActivityOptionsCompat?) {
+                intent = contract.createIntent(p.context, input)
+                launchedRequestCode = requestCode
+            }
+        }
+        val owner = object : ActivityResultRegistryOwner {
+            override val activityResultRegistry = registry
+        }
+        compose.setContent {
+            val density = LocalDensity.current.density
+            CompositionLocalProvider(LocalDensity provides Density(density, 2f),
+                LocalActivityResultRegistryOwner provides owner) {
+                AqaqeerTheme(ThemeChoice.LIGHT) {
+                    Box(Modifier.width(320.dp)) { BackupScreen(AppUiState(catalog = ready), vm) }
+                }
+            }
+        }
+        val select = compose.onNodeWithText(uiText(R.string.backup_choose_restore_file_action))
+        select.performScrollTo().assertIsDisplayed().performClick()
+        compose.runOnIdle {
+            assertEquals(Intent.ACTION_OPEN_DOCUMENT, intent?.action)
+            assertTrue(launchedRequestCode >= 0)
+            assertTrue(registry.dispatchResult(launchedRequestCode, Activity.RESULT_OK,
+                Intent().setData(Uri.parse("content://com.aqaqeer.fixture/selected.aqbak"))))
+        }
+        val validate = compose.onNodeWithText(uiText(R.string.backup_validate_restore_action))
+        val typedName = compose.onNodeWithTag(uiText(R.string.backup_current_pharmacy_confirmation_label))
+        val warning = uiText(R.string.backup_replace_local_data_warning_format,
+            MedicationPresentation.displayDigits(ready.pendingCount.toString()))
+        compose.onNodeWithText(warning).performScrollTo().assertIsDisplayed()
+        compose.onNodeWithTag(uiText(R.string.backup_restore_passphrase_label))
+            .performScrollTo().performTextInput("fixture passphrase")
+        typedName.performScrollTo().performTextInput(name)
+        validate.performScrollTo().assertIsNotEnabled()
+        typedName.performScrollTo().performTextInput(" مختلفة")
+        compose.onNodeWithText(uiText(R.string.backup_replace_local_data_acknowledgement_label))
+            .performScrollTo().performClick()
+        validate.performScrollTo().assertIsNotEnabled()
+        typedName.performScrollTo().performTextClearance()
+        typedName.performTextInput(name)
+        validate.performScrollTo().assertIsEnabled()
+
+        compose.onNodeWithText(uiText(R.string.backup_change_restore_file_action)).performScrollTo().performClick()
+        compose.runOnIdle { assertTrue(registry.dispatchResult(launchedRequestCode, Activity.RESULT_CANCELED, null)) }
+        validate.assertDoesNotExist()
+        select.performScrollTo().assertIsDisplayed()
+        assertEquals(ready.pendingCount, p.admin.transaction { it.pendingCount() })
     }
 
     @Test fun searchDebouncesAndNavigationFiltersPersistInSavedState(): Unit = runBlocking {

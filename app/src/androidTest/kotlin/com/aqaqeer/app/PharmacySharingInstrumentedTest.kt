@@ -157,6 +157,60 @@ class PharmacySharingInstrumentedTest {
         assertEquals(1, p.ready().pendingCount)
         remote.duringUpload = {}; sharing.publish(); assertEquals(0, p.ready().pendingCount)
     }
+
+    @Test fun authorizationLostDuringUploadRetainsAttemptAndRetryWritesOnce(): Unit = runBlocking {
+        assumeFalse(BuildConfig.IS_DEMO)
+        val p = profile()
+        p.create()
+        val med = medicine(p)
+        val remote = Remote()
+        val sharing = p.sharing(remote)
+        p.setup(remote, sharing)
+        sharing.publish()
+        assertTrue(sharing.status.value.verified)
+        val original = requireNotNull(remote.current)
+        p.admin.saveMedication(med.copy(note = "retain until verified"))
+        val pending = p.admin.transaction { it.pending() }
+        assertTrue(pending.isNotEmpty())
+
+        remote.duringUpload = {
+            p.admin.transaction { dao ->
+                assertEquals("UPLOAD_STARTED", dao.attempts().single().transportPhase)
+                dao.updateDeviceIdentity(requireNotNull(dao.deviceIdentity()).copy(adminMode = false))
+            }
+        }
+        sharing.publish()
+        assertFalse(sharing.status.value.verified)
+        assertFalse(p.ready().admin)
+        assertEquals(original, remote.current)
+        assertEquals(2, remote.uploads)
+        assertEquals(1, remote.writes)
+        val attempt = p.admin.transaction { dao ->
+            assertEquals(pending, dao.pending())
+            dao.attempts().single()
+        }
+        assertEquals("UPLOAD_STARTED", attempt.transportPhase)
+        assertNull(attempt.uploadedFileId)
+        assertNull(attempt.uploadedMessageId)
+
+        p.admin.promote("123456".toCharArray())
+        remote.duringUpload = {}
+        val retry = p.sharing(remote)
+        retry.publish()
+        assertTrue(retry.status.value.verified)
+        val published = requireNotNull(remote.current)
+        assertEquals(attempt.publishId, published.publication.publishId)
+        assertEquals(original.publication.revision + 1, published.publication.revision)
+        assertEquals(original.messageId, published.messageId)
+        assertEquals(3, remote.uploads)
+        assertEquals(2, remote.writes)
+        p.admin.transaction { dao ->
+            assertEquals("retain until verified", dao.catalog().medications.single().note)
+            assertTrue(dao.pending().isEmpty())
+            assertTrue(dao.attempts().isEmpty())
+        }
+    }
+
     @Test fun appearingPinBlocksBootstrapAndRetainsWork(): Unit = runBlocking {
         assumeFalse(BuildConfig.IS_DEMO)
         val p = profile(); p.create(); medicine(p); val remote = Remote(); val sharing = p.sharing(remote); p.setup(remote, sharing)

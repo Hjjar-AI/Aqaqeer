@@ -8,6 +8,16 @@ Use the [current hosted checkpoint](validation.md#hosted-completion-batch--2026-
 
 [Build](build.md#hosted-emulator-screenshots-and-recordings) owns the current workflow-07 selection and invocation counts. A selector is not a new pass count. Retain passes by revision and environment; the [backup/restore audit](validation.md#backuprestore-requirement-to-evidence-audit--2026-11-22) maps retained per-case results to current obligations and explicit limits.
 
+## Focused risk regressions — 2026-11-25
+
+One JVM method covers authorization lost after the picker result queues a report writer. Four standard Android methods cover a concurrent edit after backup capture, authorization revoked during upload followed by explicit retry, restore-picker result and cancellation at large RTL text, and splash handoff. The picker test controls the system contract result through the activity result registry. The splash method exercises the static handoff with hosted animations disabled and checks the pulse with animations enabled at normal speed. Native launch appearance remains a separate check.
+
+For these new Android methods, use workflow 07 with `demo_checks=false`, `standard_functional=true` and this exact `retry_methods` value on the default branch containing the changes.
+
+```text
+BackupReleaseRegressionInstrumentedTest#editDuringDestinationOpenDoesNotMixCapturedCatalogHistoryOrPendingWork,PharmacySharingInstrumentedTest#authorizationLostDuringUploadRetainsAttemptAndRetryWritesOnce,ViewModelInstrumentedTest#restorePickerRequiresExactPharmacyAndAcknowledgmentAtLargeRtlText,LaunchSplashUiTest#readyDestinationTakesOverDuringSplashWithCurrentAnimationSetting
+```
+
 ## Hosted completion batch — 2026-11-24
 
 The user subsequently authorized completing the listed release work and executing hosted workflows after authoring. Added 1 JVM section-count merge/conflict method, 7 Android backup destination/restore/encryption methods, 3 Android maintenance resume/completion methods and 2 Android lease/reset methods. Offline Python tests cover exact standard/recovery retries and batch safety. Existing UI fixture stock and Reader projection now establish the preconditions required by retained assertions; no assertions were relaxed.

@@ -18,7 +18,7 @@ on:
         required: false
         default: ''
       standard_functional:
-        description: "Options: false = omit standard batches; true = run 223 offline standard checks in four serialized API-35 batches after selected demo checks. Default: false."
+        description: "Options: false = omit standard batches; true = run 227 offline standard checks in four serialized API-35 batches after selected demo checks. Default: false."
         type: boolean
         default: false
 

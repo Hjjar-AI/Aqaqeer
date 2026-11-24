@@ -236,6 +236,22 @@ class ReportControllerTest {
         assertNull(feedback.value)
     }
 
+    @Test fun accessLostAfterPickerResultBlocksQueuedWriter(): Unit = runBlocking {
+        preview()
+        assertTrue(controller.beginReportSave(ReportFormat.PDF, options))
+        controller.saveReport(target) { options }
+        assertEquals(1, commands.size)
+        state = state.copy(admin = false)
+        next()
+        coVerify(exactly = 0) { reports.pdf(any(), any()) }
+        assertNull(feedback.value)
+
+        controller.reconcileAccess(F.pharmacyId to false)
+        assertEquals(ReportStep.SOURCE, controller.reportStep.value)
+        assertNull(controller.reportSnapshot.value)
+        assertFalse(controller.beginReportSave(ReportFormat.PDF, options))
+    }
+
     @Test fun compatibilityMaintenanceAndReaderTransitionsBlockQueuedPreview(): Unit = runBlocking {
         loadSource()
         openOptions()
