@@ -58,6 +58,8 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     add_options(parser)
     parser.add_argument("--serial", required=True)
+    parser.add_argument("--hosted-emulator", action="store_true", help="Require the owned GitHub-hosted aqaqeer-recovery emulator; refuse physical/local devices.")
+    parser.add_argument("--resource-tests", action="store_true", help="Also execute the two isolated resource cases and retain their original measurements.")
     parser.add_argument("--retry-build", action="store_true", help="Rebuild only the affected test APK after a test compilation failure.")
     parser.add_argument("--build-only", action="store_true", help="Compile the complete harness while a physical phone is unavailable.")
     parser.add_argument("--only", action="append", choices=[c["name"] for c in scenarios()],
@@ -65,6 +67,8 @@ def main():
     parser.add_argument("--build-from", type=Path, help="Reuse a prior successful build only if source/APK hashes match.")
     args = parser.parse_args()
     sdk, adb_path, init_script, gradle_args = prepare(args)
+    if args.resource_tests and not args.hosted_emulator:
+        raise ValueError("Resource extension is restricted to the owned hosted emulator")
     run_id = uuid.uuid4().hex
     evidence = ROOT / "local/verification/runs" / ("restore-death-" + datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%fZ"))
     evidence.mkdir(parents=True)
@@ -99,7 +103,28 @@ def main():
             raise RuntimeError("PID does not belong to the isolated verification package")
         return {"pid": pid, "uid": uid, "startTicks": tick, "package": cmd}
 
+    installations = {}
+
+    def installed_identity(package):
+        paths = adb("shell", "pm", "path", package).stdout.strip()
+        details = adb("shell", "dumpsys", "package", package).stdout
+        uid = set(re.findall(r"^\s*(?:userId|appId)=([0-9]+)[ \t]*\r?$", details, re.M))
+        if len(uid) != 1 or not paths.startswith("package:/data/app/"):
+            raise RuntimeError("Ambiguous installed package ownership")
+        fields = {}
+        for name in ("firstInstallTime", "lastUpdateTime"):
+            values = set(re.findall(r"^\s*" + name + r"=(.+)$", details, re.M))
+            if len(values) != 1:
+                raise RuntimeError("Missing install identity: " + name)
+            fields[name] = next(iter(values))
+        return dict(package=package, uid=next(iter(uid)), paths=paths, **fields)
+
+    def require_installation(package):
+        if package not in installations or installed_identity(package) != installations[package]:
+            raise RuntimeError("Installation ownership changed; refusing delayed mutation")
+
     def phase(case, folder, operation, checkpoint="none", cold="first", kill=False):
+        require_installation(PACKAGE)
         event = uuid.uuid4().hex
         adb("shell", "am", "force-stop", PACKAGE)
         values = {"class": case.get("class", CLASS), "crashRun": run_id, "crashCase": case["id"], "crashEvent": event,
@@ -189,7 +214,14 @@ def main():
                   "serial": args.serial, "deviceVerified": False, "buildOnly": args.build_only}
     if not args.build_only:
         adb("get-state")
-        if args.serial.startswith("emulator-") or adb("shell", "getprop", "ro.kernel.qemu").stdout.strip() == "1":
+        qemu = adb("shell", "getprop", "ro.kernel.qemu").stdout.strip()
+        if args.hosted_emulator:
+            if (os.environ.get("GITHUB_ACTIONS") != "true" or os.environ.get("RUNNER_ENVIRONMENT") != "github-hosted"
+                    or args.serial != "emulator-5554" or qemu != "1"
+                    or adb("emu", "avd", "name").stdout.splitlines()[0] != "aqaqeer-recovery"
+                    or adb("shell", "am", "get-current-user").stdout.strip() != "0"):
+                raise RuntimeError("Owned GitHub-hosted recovery emulator required; physical/local devices refused")
+        elif args.serial.startswith("emulator-") or qemu == "1":
             raise RuntimeError("Physical phone required")
         for package in (PACKAGE, TEST_PACKAGE):
             if "package:" in adb("shell", "pm", "path", package, check=False).stdout:
@@ -199,7 +231,7 @@ def main():
                            "api": adb("shell", "getprop", "ro.build.version.sdk").stdout.strip()})
     (evidence / "provenance.json").write_text(json.dumps(provenance, indent=2) + "\n")
     counter = ROOT / "local/versioning/last-code.txt"
-    version_before = counter.read_bytes()
+    version_before = counter.read_bytes() if counter.exists() else None
     owned_packages = []
     last_case = None
     try:
@@ -212,7 +244,7 @@ def main():
                 if hashlib.sha256((ROOT / item["path"]).read_bytes()).hexdigest() != item["sha256"]:
                     raise RuntimeError("Cached APK differs from the verified build")
         else:
-            command = ["./gradlew", *gradle_args, "-I", str(init_script), "--offline", "--no-configuration-cache", "--console=plain", "--continue",
+            command = ["./gradlew", *gradle_args, "-I", str(init_script), *(["--no-daemon"] if args.hosted_emulator else ["--offline"]), "--no-configuration-cache", "--console=plain", "--continue",
                        *([":app:packageStandardDebugAndroidTest"] if args.retry_build else [":app:packageStandardDebug", ":app:packageStandardDebugAndroidTest"])]
             (evidence / "build-command.json").write_text(json.dumps(command, indent=2) + "\n")
             with (evidence / "build.log").open("w") as log:
@@ -223,7 +255,7 @@ def main():
             save()
             if built.returncode:
                 return built.returncode
-        if counter.read_bytes() != version_before:
+        if (counter.read_bytes() if counter.exists() else None) != version_before:
             raise RuntimeError("Version counter changed")
         aapt = sdk / "build-tools" / json.loads((ROOT / ".github/android-toolchain.json").read_text())["buildTools"] / "aapt2"
         artifacts = []
@@ -232,7 +264,9 @@ def main():
             metadata = subprocess.check_output([str(aapt), "dump", "badging", str(apk)], text=True)
             if "package: name='" + package + "'" not in metadata:
                 raise RuntimeError("APK namespace mismatch")
-            artifacts.append({"path": name, "bytes": apk.stat().st_size, "sha256": hashlib.sha256(apk.read_bytes()).hexdigest()})
+            signer = subprocess.check_output([str(aapt.parent / "apksigner"), "verify", "--print-certs", str(apk)], text=True)
+            artifacts.append({"path": name, "bytes": apk.stat().st_size,
+                              "sha256": hashlib.sha256(apk.read_bytes()).hexdigest(), "signer": signer})
         (evidence / "artifacts.json").write_text(json.dumps(artifacts, indent=2) + "\n")
         if args.build_only:
             state["buildOnly"] = True
@@ -240,6 +274,8 @@ def main():
         for name, package in zip(APKS, (PACKAGE, TEST_PACKAGE)):
             adb("install", "-t", str(ROOT / name), timeout=120)
             owned_packages.append(package)
+            installations[package] = installed_identity(package)
+            (evidence / "installations.json").write_text(json.dumps(installations, indent=2) + "\n")
         instrumentation = adb("shell", "pm", "list", "instrumentation").stdout
         if RUNNER + " (target=" + PACKAGE + ")" not in instrumentation:
             raise RuntimeError("Instrumentation target mismatch")
@@ -286,6 +322,24 @@ def main():
             print(case["name"] + ": " + case["status"], flush=True)
             if failed_prepare:
                 break
+        if args.resource_tests:
+            state["resourceCases"] = []
+            for method in ("measuredHistoryRoundTripsBelowBackupCap", "controlledHeapPressureRejectsBeforeReplacementAndRecoversAfterRelease"):
+                require_installation(PACKAGE)
+                adb("shell", "am", "force-stop", PACKAGE)
+                result = adb("shell", "am", "instrument", "-w", "-r", "-e", "class",
+                    "com.aqaqeer.app.AcceptanceResourceInstrumentedTest#" + method,
+                    "-e", "acceptanceRun", run_id, RUNNER, check=False, timeout=600)
+                transcript = result.stdout + result.stderr
+                (evidence / (method + ".log")).write_text(transcript)
+                passed = result.returncode == 0 and "OK (1 test)" in transcript and "INSTRUMENTATION_CODE: -1" in transcript
+                passed = passed and "FAILURES!!!" not in transcript and "INSTRUMENTATION_STATUS_CODE: -3" not in transcript
+                state["resourceCases"].append({"method": method, "status": "passed" if passed else "failed"})
+                for name in ("roundtrips", "pressure-before-retry", "pressure"):
+                    report = adb("shell", "run-as", PACKAGE, "cat", "no_backup/acceptance-" + run_id + "/" + name + ".json", check=False)
+                    if report.returncode == 0:
+                        (evidence / (name + ".json")).write_text(json.dumps(json.loads(report.stdout), indent=2) + "\n")
+                save()
     finally:
         if last_case and TEST_PACKAGE in owned_packages:
             try:
@@ -300,20 +354,22 @@ def main():
         for package in reversed(owned_packages):
             try:
                 adb("get-state")
+                require_installation(package)
                 adb("shell", "am", "force-stop", package, check=False)
                 removed = adb("uninstall", package, check=False, timeout=120)
                 adb("get-state")
                 absent = "package:" not in adb("shell", "pm", "path", package, check=False).stdout
                 cleanup.append({"package": package, "uninstallExit": removed.returncode, "absent": absent})
-            except (subprocess.SubprocessError, OSError):
+            except (subprocess.SubprocessError, OSError, RuntimeError):
                 cleanup.append({"package": package, "absent": False, "error": "Device unavailable; cleanup not verified"})
         state["packageCleanup"] = cleanup
-        state["versionCounterUnchanged"] = counter.read_bytes() == version_before
+        state["versionCounterUnchanged"] = (counter.read_bytes() if counter.exists() else None) == version_before
         state["unexecuted"] = [c["name"] for c in chosen if c["name"] not in {s["name"] for s in state["scenarios"]}]
         save()
     return 0 if (not state["unexecuted"] and all(c["status"] == "passed" for c in state["scenarios"])
                  and all(c["absent"] for c in state["packageCleanup"]) and state["versionCounterUnchanged"]
-                 and state.get("profileCleanup") == "passed") else 1
+                 and state.get("profileCleanup") == "passed"
+                 and (not args.resource_tests or len(state.get("resourceCases", [])) == 2 and all(r["status"] == "passed" for r in state["resourceCases"]))) else 1
 
 
 if __name__ == "__main__":

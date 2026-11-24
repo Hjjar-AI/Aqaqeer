@@ -62,7 +62,8 @@ class UiEnhancementTest {
     private fun many(): CatalogSnapshot {
         val c = F.catalog(); val med = c.medications.single()
         return c.copy(sections = c.sections + c.sections.first().copy(id = "second", nameAr = "القسم الثاني"),
-            medications = (0..29).map { med.copy(id = "item$it", nameEn = "Item %02d".format(it), genericEn = "Substance %02d".format(it)) }, availability = emptyList())
+            medications = (0..29).map { med.copy(id = "item$it", nameEn = "Item %02d".format(it), genericEn = "Substance %02d".format(it)) }).let { fixture -> fixture.copy(availability = fixture.medications.flatMap { medication ->
+                fixture.sections.map { section -> Availability(medication.id, section.id, AvailabilityStatus.AVAILABLE, F.time) } }) }
     }
 
     @Test fun selectionStaysPinnedAndPreviewIncludesHiddenSelection() {
@@ -99,7 +100,7 @@ class UiEnhancementTest {
         val c = many(); var state by mutableStateOf(AppUiState()); var admin by mutableStateOf(true)
         compose.setContent { AqaqeerTheme(ThemeChoice.LIGHT) {
             HomeScreen(CatalogState.Ready(c,false,admin=admin), state, F.time,
-                projection = homeProjection(c, state),
+                projection = homeProjection(c, state, readerStockOnly = !admin),
                 actions = rememberHomeActions(HomeCallbacks(
                     selectSection = { state = state.copy(sectionId=it) },
                     setQuery = {},

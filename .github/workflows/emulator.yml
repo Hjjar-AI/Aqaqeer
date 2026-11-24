@@ -3,8 +3,17 @@ name: 07 - Verify - Emulator with visual evidence
 on:
   workflow_dispatch:
     inputs:
+      demo_checks:
+        description: "Options: true = run demo checks on API 29 and 35; false = skip demo checks for a targeted standard retry. Default: true."
+        type: boolean
+        default: true
+      retry_methods:
+        description: "Optional comma-separated exact Class#method selectors from the standard offline allowlist, without spaces or duplicates. Default: blank = all selected standard checks. Applies only when standard_functional=true."
+        type: string
+        required: false
+        default: ''
       standard_functional:
-        description: "Options: false = demo checks only; true = also run 99 offline standard CSV/report, Excel/PDF, preferences, bulk/PIN, grid/badge and review/UI regression cases on API 35 after demo checks. Default: false."
+        description: "Options: false = omit standard batches; true = run 220 offline standard checks in four serialized API-35 batches after selected demo checks. Default: false."
         type: boolean
         default: false
 
@@ -18,7 +27,7 @@ concurrency:
 jobs:
   emulator:
     # Standard public-repository runners only; never select a paid larger runner.
-    if: ${{ github.event.repository.private == false && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
+    if: ${{ inputs.demo_checks && github.event.repository.private == false && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
     runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
@@ -64,7 +73,7 @@ jobs:
           profile: pixel_2
           emulator-port: 5554
           disable-animations: true
-          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none -camera-front none
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none -camera-front none -no-metrics
           script: python3 .github/scripts/run-emulator-checks.py
 
       - name: Write run summary
@@ -88,7 +97,15 @@ jobs:
           if-no-files-found: error
 
   standard-functional:
-    name: Standard functional regressions (API 35)
+    name: Standard ${{ matrix.suite }} regressions (API 35)
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        suite: [standard, storage, sharing, ui]
+    env:
+      CI_STANDARD_SUITE: ${{ matrix.suite }}
+      CI_RETRY_METHODS: ${{ inputs.retry_methods }}
     # Wait for the demo matrix so only one emulator runs at a time. Demo failures do not mask this selection.
     needs: emulator
     # Standard public-repository runners only; never select a paid larger runner.
@@ -133,8 +150,8 @@ jobs:
           profile: pixel_2
           emulator-port: 5554
           disable-animations: true
-          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none -camera-front none
-          script: python3 .github/scripts/run-emulator-checks.py --suite standard
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none -camera-front none -no-metrics
+          script: python3 .github/scripts/run-emulator-checks.py --suite "$CI_STANDARD_SUITE"
 
       - name: Write run summary
         if: ${{ !cancelled() }}
@@ -151,7 +168,7 @@ jobs:
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: emulator-standard-functional-api35-${{ github.run_number }}-${{ github.run_attempt }}
+          name: emulator-${{ matrix.suite }}-functional-api35-${{ github.run_number }}-${{ github.run_attempt }}
           path: ci-output/emulator/
           retention-days: 1
           if-no-files-found: error

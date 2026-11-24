@@ -2,6 +2,10 @@
 
 [Requirements](requirements.md) define acceptance; [plan](plan.md) owns remaining work. The evidence manifest (local-only: `../local/verification/manifest.json`) retains original results, public hashes and provenance. Ignored evidence may be absent in fresh checkouts. Source checks, compilation, runtime results and human acceptance remain distinct.
 
+## Hosted completion batch — 2026-11-24
+
+Current batch starts at `e7dda678adffca728792e5a5285ba8b0d6797e0f`. The user authorized test authoring, completing the listed work and hosted execution after the test batch is ready. Added 1 JVM / 12 Android methods and offline selector contracts; expanded existing offline selections and prepared an isolated hosted recovery/resource workflow. This entry is an execution checkpoint, not a pass claim: results and original failures will be reconciled below as workflows finish. Physical/live and unavailable human/Windows boundaries remain distinct. No local Gradle/build/lint/device work is resumed by hosted authorization.
+
 ## Production-readiness test extension — 2026-11-24
 
 Started at `25c7ee2af237edeb782a4c7ad39c32dabb1c6b09`, preserving the existing 140 dp card-minimum/docs changes. Added 35 JVM methods across HomeProjectionRegressionTest (13), RefreshPolicyTest (6 added), SnapshotReadSafetyTest (10) and CatalogMergeSafetyTest (6); added 11 Android methods across HomeGridRegressionUiTest (6) and MedicationBadgeRegressionUiTest (5). [Coverage scope](test-coverage.md#production-readiness-test-extension--2026-11-24) records the assertions and limits. No existing behavioral assertions were removed or weakened; no production source was changed by this test batch.

@@ -8,6 +8,14 @@ Use the [current checkpoint](validation.md#current-verification-checkpoint--2026
 
 [Build](build.md#hosted-emulator-screenshots-and-recordings) owns the current workflow-07 selection and invocation counts. A selector is not a new pass count. Later UI/session/source changes and offline Python reservation cases still need applicable compilation/execution evidence; the [backup/restore audit](validation.md#backuprestore-requirement-to-evidence-audit--2026-11-22) maps recorded results to current obligations without inspecting test source.
 
+## Hosted completion batch — 2026-11-24
+
+The user subsequently authorized completing the listed release work and executing hosted workflows after authoring. Added 1 JVM section-count merge/conflict method, 7 Android backup destination/restore/encryption methods, 3 Android maintenance resume/completion methods and 2 Android lease/reset methods. Offline Python tests cover exact standard/recovery retries and batch safety. Existing UI fixture stock and Reader projection now establish the preconditions required by retained assertions; no assertions were relaxed.
+
+Selection mapping: V1 uses BackupRestoreInstrumentedTest, BackupReleaseRegressionInstrumentedTest, MaintenanceInstrumentedTest, workflow-16 restore/export/simulated-maintenance phases and AcceptanceResourceInstrumentedTest; C1 uses current KSP schema exports and the three initial-schema/unsupported-version tests; UI1/UI2 use the retained grid/card/Home/Settings and additional UI/ViewModel/lifecycle methods; F1 retains all report/CSV cases; S1 adds all remaining offline reader-activation/connection/publication/recovery methods and the new lease/merge cases; REL1/CI1 use the existing release/tooling/security helpers and offline Python contracts; REL2 requires the actual release runtime-components artifact. Ordinary standard selection totals 220 methods in four serial API-35 batches, demo 16 invocations per API, totaling 252 invocations / 234 unique methods. Workflow 16 results count semantic scenarios separately from phase invocations. Initial-schema tests do not authorize or implement a migration chain.
+
+Authoring and selection do not close audit rows. Actual per-case evidence must establish each runtime obligation; Windows behavior, real live-PIN/token effects, human print/spoken acceptance, OS low-memory termination and power loss retain their existing limits. Final hosted lint follows all source repairs. Current execution results belong in [validation](validation.md).
+
 ## Production-readiness test extension — 2026-11-24
 
 Authored against `25c7ee2` with the prior 140 dp card-minimum change retained: **35 new JVM methods and 11 new Android methods**. No existing behavioral assertions were removed or relaxed. This is source authoring, not an execution or coverage result.

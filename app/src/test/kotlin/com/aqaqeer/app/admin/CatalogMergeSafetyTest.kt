@@ -7,6 +7,30 @@ import org.junit.Test
 
 /** Guards against silent loss when individually valid branches are combined. */
 class CatalogMergeSafetyTest {
+    @Test fun concurrentSectionAdditionsRequireReviewBeforeExceedingFiveAndChoicesRetainOnlyTheirBranch() {
+        val seed = F.catalog()
+        val extra = (1..5).map { Section(newId(), "قسم إضافي $it") }
+        val base = seed.copy(sections = seed.sections + extra.take(3))
+        val local = base.copy(sections = base.sections + extra[3])
+        val remote = base.copy(sections = base.sections + extra[4], availability = base.availability +
+            Availability(base.medications.single().id, extra[4].id, AvailabilityStatus.LOW, F.time))
+        CatalogRules.validate(local); CatalogRules.validate(remote)
+        val ops = CatalogEdits.diff(base, local, F.time, F.publishId)
+        val conflict = CatalogEdits.merge(base, local, remote, ops).conflicts.single()
+        assertTrue(conflict.key.startsWith("sections:"))
+        for (mine in listOf(true, false)) {
+            val result = CatalogEdits.merge(base, local, remote, ops, mapOf(conflict.key to mine))
+            assertTrue(result.conflicts.isEmpty())
+            assertEquals((if (mine) local else remote).sections.map { it.id }.toSet(), result.catalog.sections.map { it.id }.toSet())
+            assertEquals(if (mine) base.availability else remote.availability, result.catalog.availability)
+            assertEquals(base.medications, result.catalog.medications)
+            CatalogRules.validate(result.catalog)
+        }
+        val changed = remote.copy(sections = remote.sections.map { if (it.id == extra[4].id) it.copy(nameAr = "اسم أحدث") else it })
+        val review = CatalogEdits.merge(base, local, changed, ops, mapOf(conflict.key to true))
+        assertTrue(review.conflicts.any { it.key.startsWith("sections:") && it.key != conflict.key })
+    }
+
     private val seed = F.catalog()
     private fun merge(base: CatalogSnapshot, local: CatalogSnapshot, remote: CatalogSnapshot,
         choices: Map<String, Boolean> = emptyMap(), operations: List<PendingOperation> =

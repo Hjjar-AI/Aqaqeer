@@ -16,6 +16,12 @@ OUTPUT = ROOT / 'ci-output/emulator'
 SERIAL = 'emulator-5554'
 PACKAGE = 'com.aqaqeer.app.demo.debug'
 DEMO_CASES = (
+    ('demo-HomeUiTest-searchIsReachableDoesNotAutofocusAndClearRestoresBrowsing', 'HomeUiTest#searchIsReachableDoesNotAutofocusAndClearRestoresBrowsing', False),
+    ('demo-HomeUiTest-adminFilterSheetOffersOnlyThreeStatesAndAppliesOrWithinStatuses', 'HomeUiTest#adminFilterSheetOffersOnlyThreeStatesAndAppliesOrWithinStatuses', False),
+    ('demo-HomeUiTest-savedSortLayoutAndNamesSurviveRecreationAndNewPreferenceReader', 'HomeUiTest#savedSortLayoutAndNamesSurviveRecreationAndNewPreferenceReader', False),
+    ('demo-ReadOnlyUiTest-settingsAboutAndEmailAreReachableWithoutSendingMail', 'ReadOnlyUiTest#settingsAboutAndEmailAreReachableWithoutSendingMail', False),
+    ('demo-ReadOnlyUiTest-themeAndAboutRouteSurviveActivityRecreation', 'ReadOnlyUiTest#themeAndAboutRouteSurviveActivityRecreation', False),
+    ('demo-DemoParityInstrumentedTest-demoBackupRestoreDoesNotAuthorizeOrMutateInstalledCatalog', 'DemoParityInstrumentedTest#demoBackupRestoreDoesNotAuthorizeOrMutateInstalledCatalog', False),
     ('demo-pdf-reports', 'DemoParityInstrumentedTest#demoPdfExportsAllPresetsThroughRealProviderWithRenderableA5Pages', False),
     ('demo-excel-reports', 'DemoParityInstrumentedTest#demoExcelExportsEveryCapturedMedicationAndSummaryThroughRealProvider', False),
     ('other-section-settings', 'BottomPlacementSettingsUiTest#otherSectionHintsSwitchPersistsAcrossRecreationAndCanBeDisabled', False),
@@ -131,6 +137,154 @@ STANDARD_CASES = (
 )
 
 
+STORAGE_CASES = (
+    ('storage-BackupRestoreInstrumentedTest-draftRoundTripRetainsHistoryPendingAndCatalogButExcludesIdentityAndAuthorization', 'BackupRestoreInstrumentedTest#draftRoundTripRetainsHistoryPendingAndCatalogButExcludesIdentityAndAuthorization', False),
+    ('storage-BackupRestoreInstrumentedTest-wrongPassphraseCorruptionAndMissingConfirmationPreserveExistingData', 'BackupRestoreInstrumentedTest#wrongPassphraseCorruptionAndMissingConfirmationPreserveExistingData', False),
+    ('storage-BackupRestoreInstrumentedTest-successfulCloseAdvancesReminderButFailedExportDoesNot', 'BackupRestoreInstrumentedTest#successfulCloseAdvancesReminderButFailedExportDoesNot', False),
+    ('storage-BackupRestoreInstrumentedTest-readersCannotExportOrReplaceConfiguredCatalog', 'BackupRestoreInstrumentedTest#readersCannotExportOrReplaceConfiguredCatalog', False),
+    ('storage-BackupRestoreInstrumentedTest-cancellationAndMismatchedPassphrasesEraseInputsAndDoNotAdvanceSuccess', 'BackupRestoreInstrumentedTest#cancellationAndMismatchedPassphrasesEraseInputsAndDoNotAdvanceSuccess', False),
+    ('storage-BackupRestoreInstrumentedTest-sharedRestoreRetainsCredentialsButPausesAutomaticPublicationAndRevokesAdmin', 'BackupRestoreInstrumentedTest#sharedRestoreRetainsCredentialsButPausesAutomaticPublicationAndRevokesAdmin', False),
+    ('storage-BackupRestoreInstrumentedTest-androidStreamingEnvelopeAuthenticatesUnicodeAndRejectsInsufficientWorkspace', 'BackupRestoreInstrumentedTest#androidStreamingEnvelopeAuthenticatesUnicodeAndRejectsInsufficientWorkspace', False),
+    ('storage-BackupRestoreInstrumentedTest-historyAboveSnapshotLimitSurvivesArchiveAndRepositoryRoundTrip', 'BackupRestoreInstrumentedTest#historyAboveSnapshotLimitSurvivesArchiveAndRepositoryRoundTrip', False),
+    ('storage-BackupReleaseRegressionInstrumentedTest-destinationCloseFailureRetainsDataAndDoesNotRecordSuccessfulBackup', 'BackupReleaseRegressionInstrumentedTest#destinationCloseFailureRetainsDataAndDoesNotRecordSuccessfulBackup', False),
+    ('storage-BackupReleaseRegressionInstrumentedTest-nullDestinationAndWriteFailureLeaveTheEntireExistingStateUntouched', 'BackupReleaseRegressionInstrumentedTest#nullDestinationAndWriteFailureLeaveTheEntireExistingStateUntouched', False),
+    ('storage-BackupReleaseRegressionInstrumentedTest-cancellationDuringDestinationWriteClosesOutputWithoutAdvancingSuccess', 'BackupReleaseRegressionInstrumentedTest#cancellationDuringDestinationWriteClosesOutputWithoutAdvancingSuccess', False),
+    ('storage-BackupReleaseRegressionInstrumentedTest-samePharmacyRestorePreservesTargetIdentityAndLocalReminderCheckpoints', 'BackupReleaseRegressionInstrumentedTest#samePharmacyRestorePreservesTargetIdentityAndLocalReminderCheckpoints', False),
+    ('storage-BackupReleaseRegressionInstrumentedTest-differentPharmacyReplacementPreservesTargetIdentityAndResetsLocalReminders', 'BackupReleaseRegressionInstrumentedTest#differentPharmacyReplacementPreservesTargetIdentityAndResetsLocalReminders', False),
+    ('storage-BackupReleaseRegressionInstrumentedTest-olderBackupCannotEraseAProtectedSamePharmacyUpdateRequirement', 'BackupReleaseRegressionInstrumentedTest#olderBackupCannotEraseAProtectedSamePharmacyUpdateRequirement', False),
+    ('storage-BackupReleaseRegressionInstrumentedTest-repeatedExportsUseFreshEncryptionAndBothAuthenticateWithExactUnicodePassphrase', 'BackupReleaseRegressionInstrumentedTest#repeatedExportsUseFreshEncryptionAndBothAuthenticateWithExactUnicodePassphrase', False),
+    ('storage-MaintenanceInstrumentedTest-preparingJournalWithoutBaselineRebuildsItOnRecreationWithoutRemoteWrites', 'MaintenanceInstrumentedTest#preparingJournalWithoutBaselineRebuildsItOnRecreationWithoutRemoteWrites', False),
+    ('storage-MaintenanceInstrumentedTest-postActivationVerificationFailureRetainsJournalAndCanRetryWithoutUploading', 'MaintenanceInstrumentedTest#postActivationVerificationFailureRetainsJournalAndCanRetryWithoutUploading', False),
+    ('storage-MaintenanceInstrumentedTest-committedCompletionCheckpointFinishesLogicalCleanupAfterRecreation', 'MaintenanceInstrumentedTest#committedCompletionCheckpointFinishesLogicalCleanupAfterRecreation', False),
+    ('storage-MaintenanceInstrumentedTest-beginPausesEditsAndRecreationRetainsBaselineThenCancellationCleansOwnedState', 'MaintenanceInstrumentedTest#beginPausesEditsAndRecreationRetainsBaselineThenCancellationCleansOwnedState', False),
+    ('storage-MaintenanceInstrumentedTest-pendingWorkAndReaderRoleBlockRotationBeforeAnyRemoteWrite', 'MaintenanceInstrumentedTest#pendingWorkAndReaderRoleBlockRotationBeforeAnyRemoteWrite', False),
+    ('storage-MaintenanceInstrumentedTest-sourcePreparationRequiresFreshSuccessfulBackupBeforeTokenGuide', 'MaintenanceInstrumentedTest#sourcePreparationRequiresFreshSuccessfulBackupBeforeTokenGuide', False),
+    ('storage-MaintenanceInstrumentedTest-unsuccessfulBackupCannotCreateReceiptAndErasesPassphraseInputs', 'MaintenanceInstrumentedTest#unsuccessfulBackupCannotCreateReceiptAndErasesPassphraseInputs', False),
+    ('storage-MaintenanceInstrumentedTest-candidateCannotActivateWithoutCommittedRoomCheckpoint', 'MaintenanceInstrumentedTest#candidateCannotActivateWithoutCommittedRoomCheckpoint', False),
+    ('storage-MaintenanceInstrumentedTest-missingStagingFailsClosedRatherThanReplacingLiveCatalog', 'MaintenanceInstrumentedTest#missingStagingFailsClosedRatherThanReplacingLiveCatalog', False),
+    ('storage-MaintenanceInstrumentedTest-rotationPublishesFreshKeyThenCompletesAfterVerifiedReadback', 'MaintenanceInstrumentedTest#rotationPublishesFreshKeyThenCompletesAfterVerifiedReadback', False),
+    ('storage-MaintenanceInstrumentedTest-lostRotationWriteResponseResumesByReadbackWithoutDuplicateUpload', 'MaintenanceInstrumentedTest#lostRotationWriteResponseResumesByReadbackWithoutDuplicateUpload', False),
+    ('storage-MaintenanceInstrumentedTest-readerCanReplaceSamePharmacyConnectionWithoutBeingPromoted', 'MaintenanceInstrumentedTest#readerCanReplaceSamePharmacyConnectionWithoutBeingPromoted', False),
+    ('storage-MaintenanceInstrumentedTest-missingMigrationSourceRequiresExplicitRetainedReviewAndNeverWritesAutomatically', 'MaintenanceInstrumentedTest#missingMigrationSourceRequiresExplicitRetainedReviewAndNeverWritesAutomatically', False),
+    ('storage-DatabaseLeaseRegressionInstrumentedTest-resetWaitsForEveryLeaseAndBlocksNewAcquisitionWithoutLosingData', 'DatabaseLeaseRegressionInstrumentedTest#resetWaitsForEveryLeaseAndBlocksNewAcquisitionWithoutLosingData', False),
+    ('storage-DatabaseLeaseRegressionInstrumentedTest-cancelledResetReleasesTheGateAndLeavesTheBorrowedDatabaseUsable', 'DatabaseLeaseRegressionInstrumentedTest#cancelledResetReleasesTheGateAndLeavesTheBorrowedDatabaseUsable', False),
+    ('storage-StorageInstrumentedTest-encryptedRoomDatabaseReopensWithTheSameKeystoreWrappedKey', 'StorageInstrumentedTest#encryptedRoomDatabaseReopensWithTheSameKeystoreWrappedKey', False),
+    ('storage-StorageInstrumentedTest-secureStoreUsesFreshNoncesAndNeedsNoUserAuthentication', 'StorageInstrumentedTest#secureStoreUsesFreshNoncesAndNeedsNoUserAuthentication', False),
+    ('storage-StorageInstrumentedTest-aWrongDatabaseKeyCannotDeleteExistingData', 'StorageInstrumentedTest#aWrongDatabaseKeyCannotDeleteExistingData', False),
+    ('storage-StorageInstrumentedTest-missingKeystoreKeyDoesNotOverwriteWrappedDataOrGenerateAnotherKey', 'StorageInstrumentedTest#missingKeystoreKeyDoesNotOverwriteWrappedDataOrGenerateAnotherKey', False),
+    ('storage-MigrationInstrumentedTest-initialSchemaReopensPreservingDataAndRestoreDefaults', 'MigrationInstrumentedTest#initialSchemaReopensPreservingDataAndRestoreDefaults', False),
+    ('storage-MigrationInstrumentedTest-unsupportedVersionTwoIsRejectedWithoutDeletingData', 'MigrationInstrumentedTest#unsupportedVersionTwoIsRejectedWithoutDeletingData', False),
+    ('storage-MigrationInstrumentedTest-unsupportedVersionThreeIsRejectedWithoutDeletingData', 'MigrationInstrumentedTest#unsupportedVersionThreeIsRejectedWithoutDeletingData', False),
+)
+
+SHARING_CASES = (
+    ('sharing-ReaderActivationInstrumentedTest-activationRechecksLiveDataAndCommitsReaderBaselineWithoutImportedHistory', 'ReaderActivationInstrumentedTest#activationRechecksLiveDataAndCommitsReaderBaselineWithoutImportedHistory', False),
+    ('sharing-ReaderActivationInstrumentedTest-existingObserverSeesAtomicActivationThroughSeparateDatabaseHandle', 'ReaderActivationInstrumentedTest#existingObserverSeesAtomicActivationThroughSeparateDatabaseHandle', False),
+    ('sharing-ReaderActivationInstrumentedTest-futureSchemaObservationPersistsRestrictionWithoutApplyingCatalog', 'ReaderActivationInstrumentedTest#futureSchemaObservationPersistsRestrictionWithoutApplyingCatalog', False),
+    ('sharing-ReaderActivationInstrumentedTest-retainedRequirementsRejectOlderLiveContentBeforeNetworkAndSurviveRestart', 'ReaderActivationInstrumentedTest#retainedRequirementsRejectOlderLiveContentBeforeNetworkAndSurviveRestart', False),
+    ('sharing-ReaderActivationInstrumentedTest-networkIdentityCaptionAndMediaFailuresLeaveSeedAndPendingIntact', 'ReaderActivationInstrumentedTest#networkIdentityCaptionAndMediaFailuresLeaveSeedAndPendingIntact', False),
+    ('sharing-ReaderActivationInstrumentedTest-staleStageAndDemoActivationCannotStartNetwork', 'ReaderActivationInstrumentedTest#staleStageAndDemoActivationCannotStartNetwork', False),
+    ('sharing-ReaderActivationInstrumentedTest-configuredActivationIsRejectedWithoutNetworkOrCatalogReplacement', 'ReaderActivationInstrumentedTest#configuredActivationIsRejectedWithoutNetworkOrCatalogReplacement', False),
+    ('sharing-ReaderActivationInstrumentedTest-cancellationDuringNetworkPreservesPendingWithoutActiveCredentials', 'ReaderActivationInstrumentedTest#cancellationDuringNetworkPreservesPendingWithoutActiveCredentials', False),
+    ('sharing-ReaderActivationInstrumentedTest-activeCredentialWriteFailureLeavesSeedAndRetrySucceeds', 'ReaderActivationInstrumentedTest#activeCredentialWriteFailureLeavesSeedAndRetrySucceeds', False),
+    ('sharing-ReaderActivationInstrumentedTest-failureAfterActiveWriteRollsBackCatalogAndCanBeRetried', 'ReaderActivationInstrumentedTest#failureAfterActiveWriteRollsBackCatalogAndCanBeRetried', False),
+    ('sharing-ReaderActivationInstrumentedTest-pendingCleanupFailureKeepsCommittedCatalogAndReopensWithoutNetwork', 'ReaderActivationInstrumentedTest#pendingCleanupFailureKeepsCommittedCatalogAndReopensWithoutNetwork', False),
+    ('sharing-ReaderActivationInstrumentedTest-cancellationAtActiveWriteCompletesCommitAndCleanupWithoutAdminPromotion', 'ReaderActivationInstrumentedTest#cancellationAtActiveWriteCompletesCommitAndCleanupWithoutAdminPromotion', False),
+    ('sharing-ReaderActivationInstrumentedTest-startupFinishesInterruptedPostCommitCleanupLocally', 'ReaderActivationInstrumentedTest#startupFinishesInterruptedPostCommitCleanupLocally', False),
+    ('sharing-ReaderActivationInstrumentedTest-discardingPreCommitJournalClearsCredentialsButRetainsKnownRequirements', 'ReaderActivationInstrumentedTest#discardingPreCommitJournalClearsCredentialsButRetainsKnownRequirements', False),
+    ('sharing-ReaderActivationInstrumentedTest-reopenedCachedCatalogRetainsFutureRequirementAndNeverUsesNetwork', 'ReaderActivationInstrumentedTest#reopenedCachedCatalogRetainsFutureRequirementAndNeverUsesNetwork', False),
+    ('sharing-ReaderActivationInstrumentedTest-corruptedActiveCredentialsFailClosedWithoutDeletingCatalog', 'ReaderActivationInstrumentedTest#corruptedActiveCredentialsFailClosedWithoutDeletingCatalog', False),
+    ('sharing-ReaderActivationInstrumentedTest-corruptedRequirementsRejectActivationBeforeNetwork', 'ReaderActivationInstrumentedTest#corruptedRequirementsRejectActivationBeforeNetwork', False),
+    ('sharing-ReaderActivationInstrumentedTest-initialActivationRefusesEveryKindOfExistingLocalWorkWithoutDeletingIt', 'ReaderActivationInstrumentedTest#initialActivationRefusesEveryKindOfExistingLocalWorkWithoutDeletingIt', False),
+    ('sharing-ReaderActivationInstrumentedTest-cancellationAfterRequirementObservationStopsBeforeCatalogCommit', 'ReaderActivationInstrumentedTest#cancellationAfterRequirementObservationStopsBeforeCatalogCommit', False),
+    ('sharing-ReaderActivationInstrumentedTest-databaseFailureAfterSeedReplacementRollsBackAllCatalogAndIdentityChanges', 'ReaderActivationInstrumentedTest#databaseFailureAfterSeedReplacementRollsBackAllCatalogAndIdentityChanges', False),
+    ('sharing-ConnectionVerificationInstrumentedTest-startupImportSummaryMakesNoNetworkCallAndConfiguredOrDemoCommandsAreRejected', 'ConnectionVerificationInstrumentedTest#startupImportSummaryMakesNoNetworkCallAndConfiguredOrDemoCommandsAreRejected', False),
+    ('sharing-ConnectionVerificationInstrumentedTest-supportedVerificationReturnsMetadataWithoutActivatingPharmacy', 'ConnectionVerificationInstrumentedTest#supportedVerificationReturnsMetadataWithoutActivatingPharmacy', False),
+    ('sharing-ConnectionVerificationInstrumentedTest-actualContentUriImportRejectsWrongPasswordThenStagesWithoutNetwork', 'ConnectionVerificationInstrumentedTest#actualContentUriImportRejectsWrongPasswordThenStagesWithoutNetwork', False),
+    ('sharing-ConnectionVerificationInstrumentedTest-actualProviderIgnoresFalseSizeAndRejectsInvalidAndOversizedInputWithoutSaving', 'ConnectionVerificationInstrumentedTest#actualProviderIgnoresFalseSizeAndRejectsInvalidAndOversizedInputWithoutSaving', False),
+    ('sharing-ConnectionVerificationInstrumentedTest-futureRequirementsSurviveProtectedReopenDiscardReimportAndOlderLiveSnapshot', 'ConnectionVerificationInstrumentedTest#futureRequirementsSurviveProtectedReopenDiscardReimportAndOlderLiveSnapshot', False),
+    ('sharing-ConnectionVerificationInstrumentedTest-networkWrongPharmacyCaptionAndMediaRaceDoNotPersistRequirementsOrLosePendingState', 'ConnectionVerificationInstrumentedTest#networkWrongPharmacyCaptionAndMediaRaceDoNotPersistRequirementsOrLosePendingState', False),
+    ('sharing-ConnectionVerificationInstrumentedTest-stalePendingIdCannotStartNetworkVerification', 'ConnectionVerificationInstrumentedTest#stalePendingIdCannotStartNetworkVerification', False),
+    ('sharing-ConnectionVerificationInstrumentedTest-cancellationBeforeObservationPreservesPendingAndClosesCredentialScope', 'ConnectionVerificationInstrumentedTest#cancellationBeforeObservationPreservesPendingAndClosesCredentialScope', False),
+    ('sharing-ConnectionVerificationInstrumentedTest-cancellationAtSecurityWriteRetainsAuthenticatedUpdateRequirements', 'ConnectionVerificationInstrumentedTest#cancellationAtSecurityWriteRetainsAuthenticatedUpdateRequirements', False),
+    ('sharing-ConnectionVerificationInstrumentedTest-corruptProtectedRequirementBlocksFreshObservationWithoutReplacingEitherRecord', 'ConnectionVerificationInstrumentedTest#corruptProtectedRequirementBlocksFreshObservationWithoutReplacingEitherRecord', False),
+    ('sharing-PharmacySharingInstrumentedTest-createEditPublishExportJoinUpdatePublishAndRefreshAcrossTwoInstallations', 'PharmacySharingInstrumentedTest#createEditPublishExportJoinUpdatePublishAndRefreshAcrossTwoInstallations', False),
+    ('sharing-PharmacySharingInstrumentedTest-lostPinResponseReconcilesWithoutDuplicatePublication', 'PharmacySharingInstrumentedTest#lostPinResponseReconcilesWithoutDuplicatePublication', False),
+    ('sharing-PharmacySharingInstrumentedTest-editsDuringUploadRemainPendingForNextPublication', 'PharmacySharingInstrumentedTest#editsDuringUploadRemainPendingForNextPublication', False),
+    ('sharing-PharmacySharingInstrumentedTest-appearingPinBlocksBootstrapAndRetainsWork', 'PharmacySharingInstrumentedTest#appearingPinBlocksBootstrapAndRetainsWork', False),
+    ('sharing-PharmacySharingInstrumentedTest-authorizationRestrictionAndDraftPersistAcrossRepositoryRecreation', 'PharmacySharingInstrumentedTest#authorizationRestrictionAndDraftPersistAcrossRepositoryRecreation', False),
+    ('sharing-PharmacySharingInstrumentedTest-repeatedEditsReturningToBaseLeaveHistoryWithoutNetPendingChanges', 'PharmacySharingInstrumentedTest#repeatedEditsReturningToBaseLeaveHistoryWithoutNetPendingChanges', False),
+    ('sharing-PharmacySharingInstrumentedTest-creatingEditingAndDeletingAnUnpublishedMedicationRemovesNetWorkOnly', 'PharmacySharingInstrumentedTest#creatingEditingAndDeletingAnUnpublishedMedicationRemovesNetWorkOnly', False),
+    ('sharing-PharmacySharingInstrumentedTest-editDuringConflictResolvedUploadCanBeReviewedAfterVerifiedRemoteWrite', 'PharmacySharingInstrumentedTest#editDuringConflictResolvedUploadCanBeReviewedAfterVerifiedRemoteWrite', False),
+    ('sharing-PharmacySharingInstrumentedTest-pendingOrderUsesInsertionRatherThanDeviceTimeOrUuid', 'PharmacySharingInstrumentedTest#pendingOrderUsesInsertionRatherThanDeviceTimeOrUuid', False),
+    ('sharing-PinRecoveryInstrumentedTest-unpinFailureRetainsAttemptAndNeverPinsReplacement', 'PinRecoveryInstrumentedTest#unpinFailureRetainsAttemptAndNeverPinsReplacement', False),
+    ('sharing-PinRecoveryInstrumentedTest-revealingOlderPinStopsBeforeReplacementAndRetainsReviewedAttempt', 'PinRecoveryInstrumentedTest#revealingOlderPinStopsBeforeReplacementAndRetainsReviewedAttempt', False),
+    ('sharing-PinRecoveryInstrumentedTest-lostUnpinResponseRequiresFreshReviewWithoutRepeatingOldUnpin', 'PinRecoveryInstrumentedTest#lostUnpinResponseRequiresFreshReviewWithoutRepeatingOldUnpin', False),
+    ('sharing-PinRecoveryInstrumentedTest-draftSetupUnpinsOnlyReviewedMessageWithoutSavingOrPublishing', 'PinRecoveryInstrumentedTest#draftSetupUnpinsOnlyReviewedMessageWithoutSavingOrPublishing', False),
+    ('sharing-PinRecoveryInstrumentedTest-changedSetupPinAndBotOwnedDocumentRejectWithoutUnpinning', 'PinRecoveryInstrumentedTest#changedSetupPinAndBotOwnedDocumentRejectWithoutUnpinning', False),
+    ('sharing-SnapshotRefreshInstrumentedTest-demoAndUnconfiguredRefreshRejectBeforeNetwork', 'SnapshotRefreshInstrumentedTest#demoAndUnconfiguredRefreshRejectBeforeNetwork', False),
+    ('sharing-SnapshotRefreshInstrumentedTest-unchangedRefreshUsesValidatedCacheUpdatesOnlyLocalTimeAndPreservesHistory', 'SnapshotRefreshInstrumentedTest#unchangedRefreshUsesValidatedCacheUpdatesOnlyLocalTimeAndPreservesHistory', False),
+    ('sharing-SnapshotRefreshInstrumentedTest-descendantAppliesAllFieldsAndRecordsOnlyObservedChangesOnce', 'SnapshotRefreshInstrumentedTest#descendantAppliesAllFieldsAndRecordsOnlyObservedChangesOnce', False),
+    ('sharing-SnapshotRefreshInstrumentedTest-sameMessageMediaChangeCannotReuseSamePublicationWithDifferentContents', 'SnapshotRefreshInstrumentedTest#sameMessageMediaChangeCannotReuseSamePublicationWithDifferentContents', False),
+    ('sharing-SnapshotRefreshInstrumentedTest-failedNetworkAuthenticationAndReadbackLeaveCatalogHistoryAndRefreshTimeUntouched', 'SnapshotRefreshInstrumentedTest#failedNetworkAuthenticationAndReadbackLeaveCatalogHistoryAndRefreshTimeUntouched', False),
+    ('sharing-SnapshotRefreshInstrumentedTest-unsupportedObservationRetainsUsableCacheAndPersistsRestrictionsAcrossRestart', 'SnapshotRefreshInstrumentedTest#unsupportedObservationRetainsUsableCacheAndPersistsRestrictionsAcrossRestart', False),
+    ('sharing-SnapshotRefreshInstrumentedTest-pendingAndUncertainAttemptsArePreservedAndChangedRemoteCandidateIsRetained', 'SnapshotRefreshInstrumentedTest#pendingAndUncertainAttemptsArePreservedAndChangedRemoteCandidateIsRetained', False),
+    ('sharing-SnapshotRefreshInstrumentedTest-sqlFailureAfterHistoryInsertionRollsBackCatalogHistoryAndTimestamps', 'SnapshotRefreshInstrumentedTest#sqlFailureAfterHistoryInsertionRollsBackCatalogHistoryAndTimestamps', False),
+    ('sharing-SnapshotRefreshInstrumentedTest-overlappingRefreshRequestsShareNetworkAndOneCancelledWaiterCannotAbortTheOther', 'SnapshotRefreshInstrumentedTest#overlappingRefreshRequestsShareNetworkAndOneCancelledWaiterCannotAbortTheOther', False),
+    ('sharing-SnapshotRefreshInstrumentedTest-localStateChangedDuringNetworkCannotBeSilentlyOverwritten', 'SnapshotRefreshInstrumentedTest#localStateChangedDuringNetworkCannotBeSilentlyOverwritten', False),
+    ('sharing-SnapshotRefreshInstrumentedTest-changedPinVerifierRevokesAuthorizationButPreservesDeviceIdentity', 'SnapshotRefreshInstrumentedTest#changedPinVerifierRevokesAuthorizationButPreservesDeviceIdentity', False),
+    ('sharing-SnapshotRefreshInstrumentedTest-remoteDeletionReplacesAvailabilityAndTombstonesWhileKeepingPriorLocalHistory', 'SnapshotRefreshInstrumentedTest#remoteDeletionReplacesAvailabilityAndTombstonesWhileKeepingPriorLocalHistory', False),
+)
+
+UI_CASES = (
+    ('ui-ViewModelInstrumentedTest-searchDebouncesAndNavigationFiltersPersistInSavedState', 'ViewModelInstrumentedTest#searchDebouncesAndNavigationFiltersPersistInSavedState', False),
+    ('ui-ViewModelInstrumentedTest-busyCommandRejectsDuplicateAndImmediatelyErasesTransferredSecrets', 'ViewModelInstrumentedTest#busyCommandRejectsDuplicateAndImmediatelyErasesTransferredSecrets', False),
+    ('ui-ViewModelInstrumentedTest-failingOrCancelledSecretCommandsEraseInputsAndReleaseBusyState', 'ViewModelInstrumentedTest#failingOrCancelledSecretCommandsEraseInputsAndReleaseBusyState', False),
+    ('ui-ViewModelInstrumentedTest-presentationPreferenceEmitsAndPersistsWithoutChangingCatalog', 'ViewModelInstrumentedTest#presentationPreferenceEmitsAndPersistsWithoutChangingCatalog', False),
+    ('ui-UiEnhancementTest-fieldErrorsWaitForInteractionAndDisappearAfterCorrection', 'UiEnhancementTest#fieldErrorsWaitForInteractionAndDisappearAfterCorrection', False),
+    ('ui-UiEnhancementTest-bulkCardIsOneCheckboxAndDoesNotNavigate', 'UiEnhancementTest#bulkCardIsOneCheckboxAndDoesNotNavigate', False),
+    ('ui-UiEnhancementTest-selectionStaysPinnedAndPreviewIncludesHiddenSelection', 'UiEnhancementTest#selectionStaysPinnedAndPreviewIncludesHiddenSelection', False),
+    ('ui-UiEnhancementTest-sectionChangeClearsSelectionAndRestrictedReaderHasNoBulkAction', 'UiEnhancementTest#sectionChangeClearsSelectionAndRestrictedReaderHasNoBulkAction', False),
+    ('ui-UiEnhancementTest-filterSummaryCountsSelectionsAndResetClearsBothGroups', 'UiEnhancementTest#filterSummaryCountsSelectionsAndResetClearsBothGroups', False),
+    ('ui-UiEnhancementTest-longContentAndActionsRemainReachableAcrossThemeFontAndViewportMatrix', 'UiEnhancementTest#longContentAndActionsRemainReachableAcrossThemeFontAndViewportMatrix', False),
+    ('ui-UiEnhancementTest-longDialogPreviewScrollsWhileSaveAndCancelStayReachable', 'UiEnhancementTest#longDialogPreviewScrollsWhileSaveAndCancelStayReachable', False),
+    ('ui-UiEnhancementTest-busySelectionBarPreventsPreviewAndCancellation', 'UiEnhancementTest#busySelectionBarPreventsPreviewAndCancellation', False),
+    ('ui-PresentationUiTest-hijriIsOptionalAndGregorianInputDateIsUnchanged', 'PresentationUiTest#hijriIsOptionalAndGregorianInputDateIsUnchanged', False),
+    ('ui-PresentationUiTest-quickAvailabilityCancelIsInertAndSaveUsesChosenStatus', 'PresentationUiTest#quickAvailabilityCancelIsInertAndSaveUsesChosenStatus', False),
+    ('ui-PresentationUiTest-bulkSelectionRequiresPreviewAndBusyDisablesSaveAndCancel', 'PresentationUiTest#bulkSelectionRequiresPreviewAndBusyDisablesSaveAndCancel', False),
+    ('ui-PresentationUiTest-historyRedactionAndDeletedNamesAreVisibleWithoutSensitiveValues', 'PresentationUiTest#historyRedactionAndDeletedNamesAreVisibleWithoutSensitiveValues', False),
+    ('ui-ConnectionImportUiTest-explicitVerificationButtonTargetsPendingIdAndBusyStateDisablesDuplicateRequests', 'ConnectionImportUiTest#explicitVerificationButtonTargetsPendingIdAndBusyStateDisablesDuplicateRequests', False),
+    ('ui-ConnectionImportUiTest-savedUpdateRequirementIsVisibleWithoutStartingVerificationAndDiscardNeedsConfirmation', 'ConnectionImportUiTest#savedUpdateRequirementIsVisibleWithoutStartingVerificationAndDiscardNeedsConfirmation', False),
+    ('ui-ConnectionImportUiTest-activationIsExplicitTargetsTheStagedIdAndBusyStatePreventsDuplicateActivation', 'ConnectionImportUiTest#activationIsExplicitTargetsTheStagedIdAndBusyStatePreventsDuplicateActivation', False),
+    ('ui-ConnectionImportUiTest-retainedFutureRequirementsDisableActivationButKeepVerificationAvailable', 'ConnectionImportUiTest#retainedFutureRequirementsDisableActivationButKeepVerificationAvailable', False),
+    ('ui-AdminHistoryInstrumentedTest-staleBulkPreviewAndMissingTargetsRollBackEveryRow', 'AdminHistoryInstrumentedTest#staleBulkPreviewAndMissingTargetsRollBackEveryRow', False),
+    ('ui-AdminHistoryInstrumentedTest-unchangedMissingOutSaveCreatesNoHistoryOrPendingWork', 'AdminHistoryInstrumentedTest#unchangedMissingOutSaveCreatesNoHistoryOrPendingWork', False),
+    ('ui-AdminHistoryInstrumentedTest-categoryDeletionReassignsAndSystemEntitiesAndLastSectionAreProtected', 'AdminHistoryInstrumentedTest#categoryDeletionReassignsAndSystemEntitiesAndLastSectionAreProtected', False),
+    ('ui-AdminHistoryInstrumentedTest-historyCombinesTimezoneAndMedicationFiltersAndRedactsVerifiers', 'AdminHistoryInstrumentedTest#historyCombinesTimezoneAndMedicationFiltersAndRedactsVerifiers', False),
+    ('ui-AdminHistoryInstrumentedTest-historyPagesAreStableRetainDeletedNamesAndRejectReaderAccess', 'AdminHistoryInstrumentedTest#historyPagesAreStableRetainDeletedNamesAndRejectReaderAccess', False),
+    ('ui-AdminHistoryInstrumentedTest-pinChangeBindsOwnOperationAndErasesAllCallerSecrets', 'AdminHistoryInstrumentedTest#pinChangeBindsOwnOperationAndErasesAllCallerSecrets', False),
+    ('ui-AdminHistoryInstrumentedTest-wrongPinAndMismatchedConfirmationLeaveCatalogAndHistoryUnchanged', 'AdminHistoryInstrumentedTest#wrongPinAndMismatchedConfirmationLeaveCatalogAndHistoryUnchanged', False),
+    ('ui-HiltGraphInstrumentedTest-fullGraphUsesReplacementStorageClockAndTransportBindings', 'HiltGraphInstrumentedTest#fullGraphUsesReplacementStorageClockAndTransportBindings', False),
+)
+
+STANDARD_BATCHES = {'standard': STANDARD_CASES, 'storage': STORAGE_CASES,
+                    'sharing': SHARING_CASES, 'ui': UI_CASES}
+
+
+def select_cases(suite, methods=''):
+    """Exact allowlist only; optional retry selects failed/unexecuted methods across batches."""
+    all_cases = DEMO_CASES if suite == 'demo' else tuple(case for batch in STANDARD_BATCHES.values() for case in batch)
+    cases = DEMO_CASES if suite == 'demo' else STANDARD_BATCHES[suite]
+    if not methods:
+        return cases
+    requested = methods.split(',')
+    if any(not method or method != method.strip() for method in requested) or len(set(requested)) != len(requested):
+        raise ValueError('Use unique exact Class#method selectors separated by commas without spaces')
+    if not set(requested) <= {case[1] for case in all_cases}:
+        raise ValueError('Retry selector is not in the offline allowlist for this flavor')
+    return tuple(case for case in cases if case[1] in requested)
+
+
 def adb(*args, timeout=30, check=True):
     return subprocess.run(['adb', '-s', SERIAL, *args], capture_output=True, timeout=timeout, check=check)
 
@@ -173,10 +327,16 @@ def save_results(suite, cases, results, capture_errors):
 def main():
     global PACKAGE
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--suite', choices=('demo', 'standard'), default='demo')
+    parser.add_argument('--suite', choices=('demo', 'standard', 'storage', 'sharing', 'ui'), default='demo')
     args = parser.parse_args()
-    cases = STANDARD_CASES if args.suite == 'standard' else DEMO_CASES
-    PACKAGE = 'com.aqaqeer.app.debug' if args.suite == 'standard' else 'com.aqaqeer.app.demo.debug'
+    cases = select_cases(args.suite, os.environ.get('CI_RETRY_METHODS', '') if args.suite != 'demo' else '')
+    flavor = 'demo' if args.suite == 'demo' else 'standard'
+    PACKAGE = 'com.aqaqeer.app.demo.debug' if flavor == 'demo' else 'com.aqaqeer.app.debug'
+    if not cases:
+        OUTPUT.mkdir(parents=True, exist_ok=True)
+        save_results(args.suite, cases, [], [])
+        print('No retry methods selected for this batch; no device mutation performed.')
+        return
     if os.environ.get('GITHUB_ACTIONS') != 'true' or os.environ.get('RUNNER_ENVIRONMENT') != 'github-hosted':
         raise SystemExit('This helper only runs on ephemeral GitHub-hosted runners.')
     if adb('shell', 'getprop', 'ro.kernel.qemu').stdout.strip() != b'1':
@@ -195,9 +355,12 @@ def main():
                   'user': 0, 'phase': 'APK inspection', 'apks': {}}
     save_results(args.suite, cases, results, capture_errors)
     try:
+        if not cases:
+            provenance['phase'] = 'no methods selected in this retry batch'
+            return
         for label, pattern in (
-            ('application', f'app/build/outputs/apk/{args.suite}/debug/*.apk'),
-            ('instrumentation', f'app/build/outputs/apk/androidTest/{args.suite}/debug/*.apk'),
+            ('application', f'app/build/outputs/apk/{flavor}/debug/*.apk'),
+            ('instrumentation', f'app/build/outputs/apk/androidTest/{flavor}/debug/*.apk'),
         ):
             provenance['phase'] = label + ': APK inspection'
             paths = list(ROOT.glob(pattern))
@@ -256,7 +419,7 @@ def main():
                     command += ['-e', 'ciTheme', name.split('-')[0].upper()]
                 command += [PACKAGE + '.test/com.aqaqeer.app.SuiteRunner']
                 try:
-                    run = adb(*command, timeout=180 if args.suite == 'standard' else 120, check=False)
+                    run = adb(*command, timeout=120 if flavor == 'demo' else 180, check=False)
                     transcript = run.stdout + run.stderr
                     passed = run.returncode == 0 and bool(re.search(rb'OK \(1 tests?\)', transcript))
                     passed &= b'INSTRUMENTATION_CODE: -1' in transcript
@@ -347,8 +510,8 @@ def main():
                  *(['Runner/setup failure: ' + provenance['failure']['message']] if 'failure' in provenance else []),
                  *[f'- {r["case"]}: {r["status"]}' for r in results],
                  *[f'- Capture limitation: {message}' for message in capture_errors], '',
-                 f'Download {"emulator-standard-functional" if args.suite == "standard" else "emulator-evidence"} artifacts within one day; GitHub storage quota can block uploads.',
-                 ('Standard cases retain individual instrumentation logs and post-instrumentation failure PNG/logcat fallbacks; no recordings or human visual acceptance.' if args.suite == 'standard' else 'Clips cover at most the first 45 seconds of each UI case. ui-screenshots holds live-activity captures; host failure PNGs are post-instrumentation fallbacks.')]
+                 f'Download {"emulator-standard-functional" if flavor == "standard" else "emulator-evidence"} artifacts within one day; GitHub storage quota can block uploads.',
+                 ('Standard cases retain individual instrumentation logs and post-instrumentation failure PNG/logcat fallbacks; no recordings or human visual acceptance.' if flavor == 'standard' else 'Clips cover at most the first 45 seconds of each UI case. ui-screenshots holds live-activity captures; host failure PNGs are post-instrumentation fallbacks.')]
         (OUTPUT / 'results.md').write_text('\n'.join(lines) + '\n')
     if len(results) != len(cases) or any(r['status'] != 'passed' for r in results) or capture_errors:
         raise SystemExit(1)

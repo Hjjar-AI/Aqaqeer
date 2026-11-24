@@ -1,0 +1,8 @@
+// Isolated hosted recovery package. No signing, version or cache overrides.
+gradle.beforeProject { project ->
+    project.pluginManager.withPlugin('com.android.application') {
+        project.extensions.getByName('androidComponents').finalizeDsl { androidDsl ->
+            androidDsl.buildTypes.getByName('debug').applicationIdSuffix = '.verification.creation.debug'
+        }
+    }
+}

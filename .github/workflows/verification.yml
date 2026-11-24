@@ -45,9 +45,9 @@ jobs:
         with:
           diagnostics-directory: ci-output/verification
 
-      - name: Verify dependency retry boundaries without Gradle or network
+      - name: Verify offline CI helper contracts without Gradle or network
         if: ${{ matrix.check == 'standard-unit-tests' }}
-        run: python3 -m unittest discover -s .github/scripts/tests -p test_gradle_ci.py
+        run: python3 -m unittest discover -s .github/scripts/tests -p 'test_*.py'
 
       # Exact tasks only: no connected/device tasks, packaging or version reservation.
       - name: Run selected check
@@ -87,6 +87,7 @@ jobs:
         with:
           name: verification-${{ matrix.check }}-${{ github.run_number }}-${{ github.run_attempt }}
           path: |
+            app/schemas/
             ci-output/verification/
             app/build/reports/coverage/
             app/build/reports/tests/

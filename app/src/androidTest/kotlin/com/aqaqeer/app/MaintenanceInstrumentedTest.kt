@@ -22,6 +22,64 @@ class MaintenanceInstrumentedTest {
         Assume.assumeFalse(BuildConfig.IS_DEMO); p = SuiteProfile(); p.create(); p.medication(); remote = SuiteRemote(); p.publish(remote)
     }
     @After fun cleanup() { if (::p.isInitialized) p.close() }
+    @Test fun preparingJournalWithoutBaselineRebuildsItOnRecreationWithoutRemoteWrites(): Unit = runBlocking {
+        val flow = coordinator(); flow.begin(MaintenanceKind.ROTATION)
+        val store = MaintenanceStore(p.secure); val original = flow.journal()
+        val before = p.admin.transaction { it.catalog() }
+        val uploads = remote.uploads; val writes = remote.writes
+        MaintenanceStage(p.context).clear()
+        store.write(original.copy(stateDigest = null, sourceId = null, sourceRevision = null, sourceTime = null))
+        val resumed = coordinator().journal()
+        assertEquals(original.id, resumed.id); assertEquals(MaintenancePhase.PREPARING, resumed.phase)
+        assertNotNull(resumed.stateDigest)
+        assertEquals(before, MaintenanceStage(p.context).baseline(original.id).catalog)
+        assertEquals(uploads, remote.uploads); assertEquals(writes, remote.writes)
+        assertThrows(AdminProblem::class.java) { runBlocking { p.medication("still blocked") } }
+        coordinator().cancel()
+    }
+
+    private suspend fun rotated(): MaintenanceCoordinator {
+        val flow = coordinator(); flow.begin(MaintenanceKind.ROTATION); flow.prepareSource(false)
+        flow.backup(Uri.fromFile(File(p.root, "recovery.aqbak")), "passphrase".toCharArray(),
+            "passphrase".toCharArray(), flow.journal().id)
+        flow.revocationGuide(); flow.rotationToken(M3Fixtures.token); flow.publishMaintenance()
+        assertEquals(MaintenancePhase.COMPLETE, flow.journal().phase)
+        return flow
+    }
+
+    @Test fun postActivationVerificationFailureRetainsJournalAndCanRetryWithoutUploading(): Unit = runBlocking {
+        val flow = rotated(); val journal = flow.journal()
+        val pin = remote.current; val uploads = remote.uploads; val writes = remote.writes
+        remote.current = null
+        assertThrows(SnapshotReadException::class.java) { runBlocking { coordinator().complete() } }
+        assertEquals(journal, MaintenanceStore(p.secure).read())
+        assertNotNull(PendingConnectionStore(p.secure, "active-connection").info())
+        remote.current = pin
+        coordinator().complete()
+        assertNull(MaintenanceStore(p.secure).read())
+        assertEquals(uploads, remote.uploads); assertEquals(writes, remote.writes)
+    }
+
+    @Test fun committedCompletionCheckpointFinishesLogicalCleanupAfterRecreation(): Unit = runBlocking {
+        val flow = rotated(); val store = MaintenanceStore(p.secure)
+        val finishing = flow.journal().copy(checkpointId = newId())
+        val before = p.admin.transaction { it.catalog() }; val uploads = remote.uploads
+        store.write(finishing)
+        // Stop at the durable checkpoint, before logical cleanup, then use startup recovery.
+        p.admin.transaction { recordMaintenanceCheckpoint(it, finishing, "maintenanceFinished") }
+        assertNotNull(store.read())
+        p.admin.transaction { finishMaintenanceActivation(it, MaintenanceStore(p.secure), MaintenanceStage(p.context)) }
+        p.admin.transaction { finishMaintenanceActivation(it, MaintenanceStore(p.secure), MaintenanceStage(p.context)) }
+        assertNull(store.read())
+        for (entry in listOf("old", "candidate", "transport")) assertNull(store.connection(entry).info())
+        assertEquals(before, p.admin.transaction { it.catalog() }); assertEquals(uploads, remote.uploads)
+        val factory = DatabaseFactory(p.context, "maintenance_stage")
+        assertTrue(p.context.getDatabasePath(factory.databaseName).isFile)
+        val db = factory.open()
+        try { assertNull(db.catalogDao().pharmacy()); assertTrue(db.catalogDao().attempts().isEmpty()) }
+        finally { db.close() }
+    }
+
     @Test fun beginPausesEditsAndRecreationRetainsBaselineThenCancellationCleansOwnedState(): Unit = runBlocking {
         coordinator().begin(MaintenanceKind.ROTATION)
         val journal = coordinator().journal(); assertNotNull(journal.stateDigest)
