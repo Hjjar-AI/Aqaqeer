@@ -24,7 +24,7 @@ import kotlinx.serialization.json.*
         if (ready.admin) FormField(uiText(R.string.catalog_leave_pharmacy_name_label), leaveName, { leaveName = it }, submitted = formSubmitted, required = true, validate = { if (it == catalog.pharmacy?.name) null else uiText(R.string.catalog_leave_pharmacy_name_mismatch_error) })
         CheckChoiceRow(confirmedLeave, uiText(R.string.catalog_leave_acknowledgement_label)) { confirmedLeave = it }
         if (ready.uncertain) NoticeStrip(Notice(uiText(R.string.catalog_leave_uncertain_publication_warning), NoticeSeverity.WARNING))
-        AppButton(colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error, contentColor = MaterialTheme.colorScheme.onError), enabled = confirmedLeave && !busy, onClick = {
+        AppButton(variant = AppButtonVariant.DESTRUCTIVE, enabled = confirmedLeave && !busy, onClick = {
             formSubmitted = true
             if (ready.admin && leaveName != catalog.pharmacy?.name) { revealInvalid(); return@AppButton }
             vm.command(Route.Home) { vm.admin.leave(leaveName, true) }

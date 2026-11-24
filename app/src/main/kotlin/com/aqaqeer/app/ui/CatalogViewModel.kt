@@ -94,23 +94,63 @@ class CatalogViewModel @Inject constructor(
     internal fun commitCsv() = exchangeController.commitCsv()
     internal fun beginCsvSave(kind: CsvSaveKind) = exchangeController.beginCsvSave(kind)
     internal fun saveCsv(uri: Uri?) = exchangeController.saveCsv(uri)
-    internal fun prepareReport(request: ReportRequest) = exchangeController.prepareReport(request)
     internal val reportSource = exchangeController.reportSource
     internal val reportDraft = exchangeController.reportDraft
-    internal val reportOptions: StateFlow<ReportOptions?> = preferences.reportOptions
+    internal val reportStep = exchangeController.reportStep
+    private val reportOptionsReload = MutableStateFlow(0L)
+    private val loadedReportOptions = reportOptionsReload.flatMapLatest { revision ->
+        preferences.reportOptions.map { revision to it }
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, null)
+    internal val reportOptions: StateFlow<ReportOptions?> = loadedReportOptions.map { it?.second }
         .stateIn(viewModelScope, SharingStarted.Eagerly, null)
-    internal fun reviseReport(request: ReportRequest) = exchangeController.reviseReport(request)
-    internal fun loadReportSource() = exchangeController.loadReportSource()
+    private val writingReportOptions = MutableStateFlow(false)
+    internal val reportOptionsWriting = writingReportOptions.asStateFlow()
+
+    private fun canHandleReport() = route.value == "reports" && !adminBusy.value
+    private fun currentReportOptions(): ReportOptions? = loadedReportOptions.value?.second.takeUnless { writingReportOptions.value }
+
+    internal fun moveReportStep(forward: Boolean) {
+        if (!canHandleReport()) return
+        val previous = reportStep.value
+        exchangeController.moveReportStep(forward)
+        if (reportStep.value != previous) adminMessage.value = null
+    }
+    internal fun reviseReport(request: ReportRequest) {
+        if (canHandleReport()) exchangeController.reviseReport(request)
+    }
+    internal fun loadReportSource() {
+        if (canHandleReport()) exchangeController.loadReportSource()
+    }
+    internal fun prepareReport(request: ReportRequest) {
+        if (canHandleReport() && currentReportOptions() == request.options)
+            exchangeController.prepareReport(request, ::currentReportOptions)
+    }
     internal fun setReportOptions(value: ReportOptions) {
+        if (!canHandleReport() || reportStep.value != ReportStep.OPTIONS) return
+        val current = currentReportOptions() ?: return
+        if (current == value) return
         exchangeController.invalidateReport()
+        writingReportOptions.value = true
         viewModelScope.launch {
-            try { preferences.setReportOptions(value) }
+            try {
+                preferences.setReportOptions(value)
+                // Reopen the preference observation in case a previous read fell back after an I/O error.
+                val revision = reportOptionsReload.value + 1
+                reportOptionsReload.value = revision
+                loadedReportOptions.first { it?.first == revision }
+            }
             catch (error: CancellationException) { throw error }
-            catch (_: Exception) { feedback.value = UiFeedback(uiText(R.string.shared_operation_failed_message), route.value) }
+            catch (_: Exception) {
+                if (route.value == "reports") feedback.value = UiFeedback(uiText(R.string.shared_operation_failed_message), "reports")
+            }
+            finally { writingReportOptions.value = false }
         }
     }
-    internal fun beginReportSave(format: ReportFormat) = exchangeController.beginReportSave(format)
-    internal fun saveReport(uri: Uri?) = exchangeController.saveReport(uri)
+    internal fun beginReportSave(format: ReportFormat): Boolean =
+        canHandleReport() && exchangeController.beginReportSave(format, currentReportOptions())
+
+    internal fun saveReport(uri: Uri?) =
+        exchangeController.saveReport(uri.takeIf { canHandleReport() }, ::currentReportOptions)
 
     private val connectivity = context.getSystemService(ConnectivityManager::class.java)
     private var online = connectivity.getNetworkCapabilities(connectivity.activeNetwork)?.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED) == true
@@ -285,6 +325,12 @@ class CatalogViewModel @Inject constructor(
         AppUiState(theme = theme, accent = accent)
     })
     init {
+        viewModelScope.launch {
+            loadedReportOptions.filterNotNull().collect { (_, options) ->
+                if (reportSnapshot.value?.request?.options?.let { it != options } == true)
+                    exchangeController.invalidateReport()
+            }
+        }
         viewModelScope.launch {
             state.collect { current ->
                 if (BuildConfig.IS_DEMO && current.catalog is CatalogState.Ready && !demoRouteAllowed(current.destination)) navigate(Route.Home)

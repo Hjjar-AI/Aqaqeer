@@ -1,9 +1,12 @@
 <resources>
     <color name="accent_violet_light">#80349F</color>
-    <color name="launch_violet">#FCF7FD</color>
-    <color name="launch_blue">#F6FAFF</color>
-    <color name="launch_green">#F5FCF8</color>
-    <color name="launch_rose">#FFF6F9</color>
+    <color name="launch_violet">#FAF3FC</color>
+    <color name="launch_blue">#F0F7FF</color>
+    <color name="launch_green">#EFFAF4</color>
+    <color name="launch_rose">#FFF1F6</color>
     <color name="launch_dark">#16151C</color>
+    <color name="launch_blue_dark">#121821</color>
+    <color name="launch_green_dark">#121B17</color>
+    <color name="launch_rose_dark">#1D151A</color>
     <color name="launch_black">#000000</color>
 </resources>

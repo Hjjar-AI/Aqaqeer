@@ -54,14 +54,14 @@ import com.aqaqeer.app.data.*
             }
         }
     }, navigationIcon = {
-        if (homeDestination) IconButton(
+        if (homeDestination) AppIconButton(
             enabled = !homeModalOpen && !dataTimesOpen,
             onClick = {
                 if (!homeModalOpen && !dataTimesOpen) openMenu()
             }, modifier = Modifier.testTag("home_menu")) {
             AppIcon(if (drawerEligible) UiIcon.MENU else UiIcon.SETTINGS, description = if (drawerEligible) uiText(R.string.navigation_open_drawer_description) else uiText(R.string.navigation_settings_title))
         }
-        if (!homeDestination) IconButton(enabled = !adminBusy, onClick = back, modifier = Modifier.testTag("back")) {
+        if (!homeDestination) AppIconButton(enabled = !adminBusy, onClick = back, modifier = Modifier.testTag("back")) {
             AppIcon(UiIcon.BACK, description = uiText(R.string.navigation_back_description))
         }
     }, actions = {

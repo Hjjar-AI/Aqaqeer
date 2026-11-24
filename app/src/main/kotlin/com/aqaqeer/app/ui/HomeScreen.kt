@@ -245,7 +245,7 @@ internal enum class HomeLeadingItem { BULK_HELP, OPERATION, NO_SECTION, SEARCH_S
                     }
                 }
             }
-            if (gridState.canScrollBackward) HorizontalDivider()
+            if (gridState.canScrollBackward) AppDivider()
             HomeNoticeStrip(ready, state, pageHeader, refresh, publicationBusy, publicationBlockReason,
                 maxHeight = noticeMaxHeight, compact = compactHeight,
                 onDialogVisibilityChanged = { noticeDialogOpen = it })

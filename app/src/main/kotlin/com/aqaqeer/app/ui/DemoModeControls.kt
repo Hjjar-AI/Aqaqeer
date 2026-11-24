@@ -14,8 +14,9 @@ import com.aqaqeer.app.uiText
         RadioChoiceRows(listOf(false, true), admin, change,
             label = { uiText(if (it) R.string.review_demo_admin else R.string.review_demo_reader) })
         SupportingText(uiText(R.string.review_demo_edit_help))
-        AppButton(variant = AppButtonVariant.SECONDARY, onClick = { confirmReset = true }, colors = ButtonDefaults.outlinedButtonColors(
-            contentColor = MaterialTheme.colorScheme.error)) { Text(uiText(R.string.review_demo_reset)) }
+        AppButton(variant = AppButtonVariant.DESTRUCTIVE_OUTLINED, onClick = { confirmReset = true }) {
+            Text(uiText(R.string.review_demo_reset))
+        }
     }
     if (confirmReset) AppDialog(onDismissRequest = { confirmReset = false },
         title = { Text(uiText(R.string.review_demo_reset)) },

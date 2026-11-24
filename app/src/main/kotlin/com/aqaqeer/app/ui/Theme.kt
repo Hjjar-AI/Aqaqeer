@@ -11,6 +11,7 @@ import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
@@ -21,6 +22,7 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.sp
 import android.content.res.Resources
 import android.content.res.Configuration
+import android.graphics.drawable.ColorDrawable
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import com.aqaqeer.app.R
@@ -110,7 +112,7 @@ private fun accentColors(accent: ThemeAccent, dark: Boolean, resources: Resource
         ThemeAccent.ROSE -> AccentPalette(Color(0xFFA12D57),
             Color(0xFFFFD9E5), Color(0xFF480D26), Color(0xFFFFA6C4), Color(0xFF702343))
     }
-    val base = if (dark) DarkColors.copy(background = launchColor(resources, R.color.launch_dark)) else LightColors
+    val base = if (dark) DarkColors else LightColors
     val primary = if (dark) palette.darkPrimary else palette.primary
     val onPrimary = if (dark) palette.deep else Color.White
     val container = if (dark) palette.darkContainer else palette.lightContainer
@@ -127,7 +129,7 @@ private fun accentColors(accent: ThemeAccent, dark: Boolean, resources: Resource
 
 /** Black backgrounds/cards with subtly lifted interactive and elevated containers. */
 private fun amoledColors(colors: ColorScheme): ColorScheme = colors.copy(
-    background = Color.Black, onBackground = Color(0xFFF1F1F1),
+    onBackground = Color(0xFFF1F1F1),
     surface = Color.Black, onSurface = Color(0xFFF1F1F1),
     surfaceDim = Color.Black, surfaceBright = Color(0xFF141414), surfaceVariant = Color(0xFF121212),
     surfaceContainerLowest = Color(0xFF0E0E0E), surfaceContainerLow = Color(0xFF101010),
@@ -166,10 +168,17 @@ internal fun lightBackground(accent: ThemeAccent, resources: Resources): Color =
     ThemeAccent.ROSE -> R.color.launch_rose
 })
 
-private fun lightModeColors(colors: ColorScheme, accent: ThemeAccent, resources: Resources): ColorScheme = colors.copy(
-    background = lightBackground(accent, resources), surface = Color.White, surfaceBright = Color.White,
+private fun darkBackground(accent: ThemeAccent, resources: Resources): Color = launchColor(resources, when (accent) {
+    ThemeAccent.BLUE -> R.color.launch_blue_dark
+    ThemeAccent.GREEN -> R.color.launch_green_dark
+    ThemeAccent.PURPLE -> R.color.launch_dark
+    ThemeAccent.ROSE -> R.color.launch_rose_dark
+})
+
+private fun lightModeColors(colors: ColorScheme): ColorScheme = colors.copy(
+    surface = Color.White, surfaceBright = Color.White,
     surfaceDim = lerp(Color.White, colors.primary, 0.10f),
-    surfaceContainerLowest = Color.White, surfaceContainerLow = lightBackground(accent, resources),
+    surfaceContainerLowest = Color.White, surfaceContainerLow = colors.background,
     surfaceContainer = lerp(Color.White, colors.primary, 0.035f),
     surfaceContainerHigh = lerp(Color.White, colors.primary, 0.05f),
     surfaceContainerHighest = lerp(Color.White, colors.primary, 0.07f),
@@ -179,10 +188,15 @@ private fun lightModeColors(colors: ColorScheme, accent: ThemeAccent, resources:
 
 internal fun appColorScheme(choice: ThemeChoice, accent: ThemeAccent, systemDark: Boolean, resources: Resources): ColorScheme {
     val dark = themeIsDark(choice, systemDark)
-    val colors = accentColors(accent, dark, resources)
+    val background = when {
+        choice == ThemeChoice.AMOLED -> launchColor(resources, R.color.launch_black)
+        dark -> darkBackground(accent, resources)
+        else -> lightBackground(accent, resources)
+    }
+    val colors = accentColors(accent, dark, resources).copy(background = background)
     return when {
         choice == ThemeChoice.AMOLED -> amoledColors(colors)
-        !dark -> lightModeColors(colors, accent, resources)
+        !dark -> lightModeColors(colors)
         else -> colors
     }
 }
@@ -204,6 +218,10 @@ internal fun appColorScheme(choice: ThemeChoice, accent: ThemeAccent, systemDark
     val view = LocalView.current
     if (!view.isInEditMode) SideEffect {
         (view.context as? android.app.Activity)?.let { activity ->
+            val background = colors.background.toArgb()
+            if ((view.rootView.background as? ColorDrawable)?.color != background) {
+                activity.window.setBackgroundDrawable(ColorDrawable(background))
+            }
             WindowCompat.getInsetsController(activity.window, view).apply {
                 isAppearanceLightStatusBars = !dark
                 isAppearanceLightNavigationBars = !dark

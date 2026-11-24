@@ -25,7 +25,7 @@ import kotlinx.serialization.json.*
     if (ready.lifecycle == "LOCAL_DRAFT") InformationCard(uiText(R.string.publication_local_draft_label), uiText(R.string.publication_local_draft_help))
     NavigationGroup(uiText(R.string.catalog_device_connection_heading)) {
         NavigationRow(uiText(R.string.navigation_history_title), { vm.openHistory() })
-        HorizontalDivider()
+        AppDivider()
         NavigationRow(uiText(R.string.maintenance_connection_pin_action), { vm.navigate(Route.Maintenance) })
     }
     if (ready.maintenancePaused) {
@@ -40,18 +40,18 @@ import kotlinx.serialization.json.*
     }
     NavigationGroup(uiText(R.string.catalog_catalog_heading)) {
         NavigationRow(uiText(R.string.navigation_add_medication_title), { vm.navigate(Route.EditMedication()) })
-        HorizontalDivider()
+        AppDivider()
         NavigationRow(uiText(R.string.navigation_taxonomy_title), { vm.navigate(Route.Taxonomy) })
-        HorizontalDivider()
+        AppDivider()
         NavigationRow(uiText(R.string.exchange_csv_import_navigation_label), { vm.navigate(Route.CsvImport) })
-        HorizontalDivider()
+        AppDivider()
         NavigationRow(uiText(R.string.exchange_reports_navigation_label), { vm.navigate(Route.Reports) })
     }
     NavigationGroup(uiText(R.string.connection_sharing_heading)) {
         if (ready.lifecycle == "LOCAL_DRAFT" || ready.isDemo) NavigationRow(uiText(R.string.navigation_telegram_setup_title), { vm.navigate(Route.Setup) })
-        if (ready.lifecycle == "LOCAL_DRAFT" || ready.isDemo) HorizontalDivider()
+        if (ready.lifecycle == "LOCAL_DRAFT" || ready.isDemo) AppDivider()
         NavigationRow(uiText(R.string.navigation_publication_review_title), vm::review)
-        HorizontalDivider()
+        AppDivider()
         NavigationRow(uiText(R.string.navigation_connection_export_title), { vm.navigate(Route.ExportConnection) }, enabled = ready.lifecycle == "SHARED" && !ready.restorePaused)
     }
 }

@@ -22,7 +22,7 @@ import com.aqaqeer.app.data.MedicationPresentation
                 val countText = uiText(R.string.availability_selection_count_format, MedicationPresentation.displayDigits(count.toString()), section)
                 val actions: @Composable () -> Unit = {
                     AppButton(variant = AppButtonVariant.QUIET, enabled = !busy && visibleCount > 0, onClick = selectVisible) { Text(uiText(R.string.availability_select_visible_action)) }
-                    IconButton(enabled = !busy, onClick = cancel) { AppIcon(UiIcon.CLOSE, description = uiText(R.string.availability_finish_selection_description)) }
+                    AppIconButton(enabled = !busy, onClick = cancel) { AppIcon(UiIcon.CLOSE, description = uiText(R.string.availability_finish_selection_description)) }
                 }
                 if (maxWidth < LayoutTokens.bulkHeaderStackWidth * maxOf(1f, LocalLayoutMetrics.current.fontScale)) {
                     Column {

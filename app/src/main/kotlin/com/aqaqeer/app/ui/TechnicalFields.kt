@@ -48,7 +48,7 @@ import java.time.ZoneOffset
     val uiText = rememberUiText()
     var open by rememberSaveable(label) { mutableStateOf(false) }
     FormField(label, value, { change(MedicationPresentation.westernDigits(it)) }, supportingText = uiText(R.string.shared_gregorian_date_format_help), required = required, submitted = submitted, validate = FormGuidance::date, tag = tag, ltr = true, trailingContent = {
-            IconButton(onClick = { open = true }) {
+            AppIconButton(onClick = { open = true }) {
                 AppIcon(UiIcon.CALENDAR, description = uiText(R.string.shared_gregorian_picker_description, label))
             }
         })

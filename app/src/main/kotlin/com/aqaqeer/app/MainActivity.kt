@@ -43,11 +43,18 @@ class MainActivity : ComponentActivity() {
         val dark = themeIsDark(launchTheme, systemDark)
         setTheme(when {
             launchTheme == ThemeChoice.AMOLED -> R.style.Theme_Aqaqeer_Starting_Black
-            !dark && launchAccent == ThemeAccent.ROSE -> R.style.Theme_Aqaqeer_Starting_RoseLight
-            !dark && launchAccent == ThemeAccent.BLUE -> R.style.Theme_Aqaqeer_Starting_BlueLight
-            !dark && launchAccent == ThemeAccent.GREEN -> R.style.Theme_Aqaqeer_Starting_GreenLight
-            dark -> R.style.Theme_Aqaqeer_Starting_Dark
-            else -> R.style.Theme_Aqaqeer_Starting_Light
+            dark -> when (launchAccent) {
+                ThemeAccent.PURPLE -> R.style.Theme_Aqaqeer_Starting_Dark
+                ThemeAccent.BLUE -> R.style.Theme_Aqaqeer_Starting_BlueDark
+                ThemeAccent.GREEN -> R.style.Theme_Aqaqeer_Starting_GreenDark
+                ThemeAccent.ROSE -> R.style.Theme_Aqaqeer_Starting_RoseDark
+            }
+            else -> when (launchAccent) {
+                ThemeAccent.PURPLE -> R.style.Theme_Aqaqeer_Starting_Light
+                ThemeAccent.BLUE -> R.style.Theme_Aqaqeer_Starting_BlueLight
+                ThemeAccent.GREEN -> R.style.Theme_Aqaqeer_Starting_GreenLight
+                ThemeAccent.ROSE -> R.style.Theme_Aqaqeer_Starting_RoseLight
+            }
         })
         val splash = installSplashScreen()
         super.onCreate(savedInstanceState)

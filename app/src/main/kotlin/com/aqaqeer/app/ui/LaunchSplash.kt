@@ -37,7 +37,7 @@ internal fun LaunchSplash(waitingForStartup: Boolean, artwork: ImageBitmap, onDi
     LaunchedEffect(waitingForStartup, animate) {
         if (waitingForStartup) {
             if (animate) {
-                val leg = tween<Float>(durationMillis = 360, easing = FastOutSlowInEasing)
+                val leg = tween<Float>(durationMillis = 720, easing = FastOutSlowInEasing)
                 while (isActive) {
                     scale.animateTo(1.65f, leg)
                     scale.animateTo(1f, leg)

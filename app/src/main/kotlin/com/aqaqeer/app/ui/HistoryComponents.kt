@@ -77,7 +77,7 @@ import kotlinx.serialization.json.*
         if (observed) SupportingText(uiText(R.string.history_observed_time_caveat_help))
         AppButton(variant = AppButtonVariant.QUIET, onClick = { details = !details }) { Text(if (details) uiText(R.string.history_hide_technical_details_action) else uiText(R.string.history_technical_details_title)) }
         if (details) {
-            HorizontalDivider()
+            AppDivider()
             CopyableValue(uiText(R.string.history_event_identifier_label), entry.id)
             CopyableValue(if (publication || recovery) uiText(R.string.history_publication_identifier_label) else uiText(R.string.history_entity_identifier_label), entry.entityId)
             if (publication) Text(uiText(R.string.history_publication_attribution_help))

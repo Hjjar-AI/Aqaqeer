@@ -129,7 +129,7 @@ internal data class Notice(val text: String, val severity: NoticeSeverity = Noti
     val uiText = rememberUiText()
     Box(if (editable) Modifier.sizeIn(minWidth = UiSpacing.touch, minHeight = UiSpacing.touch) else Modifier, contentAlignment = Alignment.Center) {
         StatusBadge(status, onOpen, dense = dense, editable = editable, enabled = enabled, saving = saving)
-        DropdownMenu(expanded = expanded, onDismissRequest = dismiss) {
+        AppPopupMenu(expanded = expanded, onDismissRequest = dismiss) {
             com.aqaqeer.app.data.MedicationPresentation.editableStatuses.forEach { candidate ->
                 DropdownMenuItem(text = { Text(statusLabel(candidate, text = uiText)) }, enabled = enabled && !saving && candidate != status,
                     onClick = { choose(candidate) }, trailingIcon = if (candidate == status) ({ AppIcon(UiIcon.CHECK) }) else null)
@@ -179,7 +179,7 @@ internal data class Notice(val text: String, val severity: NoticeSeverity = Noti
     AppChip(selected == layout, onClick = { change(layout) }, modifier = Modifier.fillMaxWidth(), shape = MaterialTheme.shapes.medium, label = {
         Column { Text(uiText(if (layout == com.aqaqeer.app.data.CardLayout.COMPACT) R.string.settings_card_compact_label else R.string.settings_card_expanded_label))
             repeat(if (layout == com.aqaqeer.app.data.CardLayout.COMPACT) 2 else 4) {
-                HorizontalDivider(Modifier.width(Size.layoutPreviewDivider).padding(vertical = Space.xxs))
+                AppDivider(Modifier.width(Size.layoutPreviewDivider).padding(vertical = Space.xxs))
             }
         }
     })

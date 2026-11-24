@@ -4,6 +4,8 @@ import com.aqaqeer.app.uiText
 import com.aqaqeer.app.R
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.lazy.items
@@ -30,12 +32,12 @@ import java.time.LocalDate
     val listState = rememberLazyListState()
     var filtersOpen by rememberSaveable(pharmacyKey(ready), medicationId) { mutableStateOf(false) }
     LaunchedEffect(state.request.page, state.request.filter) { listState.scrollToItem(0) }
-    if (filtersOpen) ModalBottomSheet(onDismissRequest = { filtersOpen = false },
-        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
-        DialogBody(Modifier.padding(UiSpacing.page)) {
-            HistoryFilters(state.request.filter, medicationId, page?.medications.orEmpty(), ready.catalog.pharmacy?.timezone ?: DEFAULT_PRESENTATION_TIMEZONE) {
-                vm.filterHistory(it); filtersOpen = false
-            }
+    if (filtersOpen) AppBottomSheet(dismiss = { filtersOpen = false },
+        state = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+        scroll = Modifier.verticalScroll(rememberScrollState()), maxHeight = viewportHeight(0.65f)) {
+        HistoryFilters(state.request.filter, medicationId, page?.medications.orEmpty(), ready.catalog.pharmacy?.timezone ?: DEFAULT_PRESENTATION_TIMEZONE) {
+            vm.filterHistory(it)
+            filtersOpen = false
         }
     }
     LazyColumn(Modifier.fillMaxSize(), state = listState, contentPadding = PaddingValues(UiSpacing.page), verticalArrangement = Arrangement.spacedBy(UiSpacing.section)) {

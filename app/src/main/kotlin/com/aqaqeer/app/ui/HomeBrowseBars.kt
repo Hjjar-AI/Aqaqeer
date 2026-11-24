@@ -91,7 +91,7 @@ import com.aqaqeer.app.data.*
         val filterCount = filters.statuses.size + filters.categoryIds.size +
             listOf(filters.expiringSoon, filters.unpublishedOnly, filters.fetchedOnly).count { it }
         val leadingAction: @Composable () -> Unit = {
-            if (query.text.isNotEmpty()) IconButton(
+            if (query.text.isNotEmpty()) AppIconButton(
                 onClick = {
                     // Finish the focused field's pending edit before replacing its value.
                     focus.clearFocus()
@@ -103,7 +103,7 @@ import com.aqaqeer.app.data.*
         }
         // Filters stay last; the optional What’s new chip sits immediately before them.
         val filterAction: @Composable () -> Unit = {
-            IconButton(onClick = openFilters, modifier = Modifier.size(UiSpacing.filterButton).semantics {
+            AppIconButton(onClick = openFilters, modifier = Modifier.size(UiSpacing.filterButton).semantics {
                 contentDescription = uiText(R.string.home_filters_action) +
                     if (filterCount > 0) uiText(R.string.home_selected_count_suffix, MedicationPresentation.displayDigits(filterCount.toString())) else ""
             }) {

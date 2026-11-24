@@ -42,7 +42,7 @@ import com.aqaqeer.app.data.*
     val uiText = rememberUiText()
     Column(Modifier.fillMaxSize().padding(UiSpacing.page), verticalArrangement = Arrangement.spacedBy(UiSpacing.section)) {
         Text(uiText(R.string.shared_catalog_loading_message), style = MaterialTheme.typography.bodyMedium)
-        CircularProgressIndicator()
+        AppSpinner()
     }
 }
 

@@ -65,7 +65,7 @@ private data class BulkFieldOption(val value: String?, val label: String)
                 val med = selectedMedications[id]
                 if (med == null) Text(uiText(R.string.logic_missing_medication) + " · " + bidi(id))
                 else {
-                HorizontalDivider()
+                AppDivider()
                 MedicationSummary(med, prominent = true, form = selection.formNames[med.formId])
                 changes.status?.let { result ->
                     Text(uiText(R.string.availability_bulk_status_change_format, statusLabel(selection.expected.getValue(med.id), text = uiText), statusLabel(result, text = uiText)))

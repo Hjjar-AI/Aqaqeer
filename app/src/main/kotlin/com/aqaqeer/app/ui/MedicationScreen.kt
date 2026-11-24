@@ -10,7 +10,6 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.font.FontWeight
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.aqaqeer.app.R
 import com.aqaqeer.app.data.*
@@ -45,7 +44,7 @@ import kotlinx.coroutines.launch
             val captured = editor?.takeIf { it.section.id == section.id }
             val current = captured != null && !captured.restored && captured.expected[medication.id] == catalog.status(medication.id, section.id)
             GroupedCard {
-                Text(section.nameAr + if (section.isActive) "" else uiText(R.string.catalog_closed_section_suffix), fontWeight = FontWeight.Bold)
+                SectionHeading(section.nameAr + if (section.isActive) "" else uiText(R.string.catalog_closed_section_suffix))
                 EditableStatusPill(catalog.status(medication.id, section.id), onOpen = if (canEdit && section.isActive && !busy) ({
                     editor = AvailabilitySelection(requireNotNull(catalog.pharmacy).pharmacyId, section, listOf(medication),
                         mapOf(medication.id to catalog.status(medication.id, section.id)), false)

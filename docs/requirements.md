@@ -379,7 +379,7 @@ Home shows the pharmacy name with the selected small emblem; onboarding includes
 
 V1 includes a branded launch splash and an About screen. Android’s starting window shows the selected عقاقير logo on a solid theme background. The app uses the same artwork and framing and follows the saved theme and system-bar contrast, including pure black in AMOLED. The preceding system frame can use system-mode fallbacks before local preferences are available.
 
-While the local catalog starts, keep a single branded splash on screen. Pulse the logo from 1× to 1.65× and back every 720 ms. As soon as Home, onboarding or recovery can be shown, stop the pulse and fade into the destination over 100 ms if the app splash has drawn. With system animations disabled, keep the logo still and switch directly. Launch adds no separate loader, minimum display time, or wait for Telegram refresh.
+While the local catalog starts, keep a single branded splash on screen. Pulse the logo from 1× to 1.65× and back every 1,440 ms. As soon as Home, onboarding or recovery can be shown, stop the pulse and fade into the destination over 100 ms if the app splash has drawn. With system animations disabled, keep the logo still and switch directly. Launch adds no separate loader, minimum display time, or wait for Telegram refresh.
 
 Required startup failures lead to their recovery screen. About uses the existing Arabic interface and the app-information/developer-credit/contact requirements in section 10.
 

@@ -1,4 +1,8 @@
 <resources>
+    <string name="report_scope_step">نطاق الأدوية</string>
+    <string name="report_options_step">خيارات التقرير</string>
+    <string name="report_next_step_action">التالي</string>
+    <string name="report_previous_step_action">السابق</string>
     <string name="report_overall_heading" formatted="false">"التوافر الموحد"</string>
     <string name="report_combined_rule" formatted="false">"متوفر في أي قسم مختار؛ وإلا محدود في أي قسم؛ وإلا غير متوفر. الأزواج دون سجل غير متوفرة."</string>
     <string name="report_all" formatted="false">"الكل"</string>

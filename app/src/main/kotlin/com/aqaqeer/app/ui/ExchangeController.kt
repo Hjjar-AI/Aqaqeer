@@ -9,6 +9,8 @@ import com.aqaqeer.app.reports.*
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.CancellationException
 
+internal enum class ReportStep { SOURCE, SCOPE, OPTIONS, PREVIEW }
+
 internal class ExchangeController(private val csvImports: CsvImportRepository, private val reports: ReportRepository,
     private val catalogState: () -> CatalogState, private val currentRoute: () -> String,
     private val isOnline: () -> Boolean, private val feedback: MutableStateFlow<UiFeedback?>,
@@ -21,26 +23,74 @@ internal class ExchangeController(private val csvImports: CsvImportRepository, p
     private val reportState = MutableStateFlow<ReportSnapshot?>(null)
     internal val reportSnapshot = reportState.asStateFlow()
     private var csvSaveDraft: Pair<CsvSaveKind, CsvImportState>? = null
-    private var reportSaveDraft: Pair<ReportSnapshot, ReportFormat>? = null
+    private var reportSaveDraft: Pair<Long, ReportFormat>? = null
     private val sourceState = MutableStateFlow<ReportSource?>(null)
     internal val reportSource = sourceState.asStateFlow()
     private val draftState = MutableStateFlow(ReportRequest())
     internal val reportDraft = draftState.asStateFlow()
+    private val stepState = MutableStateFlow(ReportStep.SOURCE)
+    internal val reportStep = stepState.asStateFlow()
     private var reportGeneration = 0L
-    internal fun invalidateReport() { reportGeneration++; reportState.value = null; reportSaveDraft = null }
+
+    internal fun invalidateReport() {
+        reportGeneration++
+        if (stepState.value == ReportStep.PREVIEW) stepState.value = ReportStep.OPTIONS
+        reportState.value = null
+    }
+
+    private fun resetReport(pharmacyId: String? = null) {
+        stepState.value = ReportStep.SOURCE
+        invalidateReport()
+        sourceState.value = null
+        draftState.value = ReportRequest(pharmacyId = pharmacyId)
+    }
+
     internal fun reviseReport(request: ReportRequest) {
-        if (request.includeUnpublished != draftState.value.includeUnpublished) sourceState.value = null
+        val pharmacyId = request.pharmacyId ?: return
+        if (!exchangeEligible(pharmacyId)) return
+        if (draftState.value.pharmacyId != pharmacyId) resetReport(pharmacyId)
+        if (request.includeUnpublished != draftState.value.includeUnpublished) {
+            stepState.value = ReportStep.SOURCE
+            sourceState.value = null
+        }
         draftState.value = request
         invalidateReport()
     }
+
+    private fun hasReportSource(): Boolean {
+        val draft = draftState.value
+        return sourceState.value?.let { it.pharmacyId == draft.pharmacyId && it.includeUnpublished == draft.includeUnpublished } == true
+    }
+
+    internal fun moveReportStep(forward: Boolean) {
+        val pharmacyId = draftState.value.pharmacyId ?: return
+        if (!exchangeEligible(pharmacyId)) return
+        stepState.value = when (stepState.value) {
+            ReportStep.SOURCE -> if (forward && hasReportSource()) ReportStep.SCOPE else ReportStep.SOURCE
+            ReportStep.SCOPE -> if (!forward) ReportStep.SOURCE else if (hasReportSource()) ReportStep.OPTIONS else ReportStep.SCOPE
+            ReportStep.OPTIONS -> if (forward) ReportStep.OPTIONS else ReportStep.SCOPE
+            ReportStep.PREVIEW -> if (forward) ReportStep.PREVIEW else ReportStep.OPTIONS
+        }
+    }
+
+    private fun currentReportRequest(options: ReportOptions?): ReportRequest? {
+        val draft = draftState.value
+        val pharmacyId = draft.pharmacyId ?: return null
+        if (options == null || !exchangeEligible(pharmacyId) || !hasReportSource()) return null
+        return draft.copy(options = options)
+    }
+
     internal fun loadReportSource() = command(queueOffline = false) {
+        val pharmacy = (catalogState() as? CatalogState.Ready)?.catalog?.pharmacy?.pharmacyId ?: return@command
+        if (!exchangeEligible(pharmacy)) return@command
+        if (draftState.value.pharmacyId != pharmacy) resetReport(pharmacy)
+        stepState.value = ReportStep.SOURCE
         val draft = draftState.value
         sourceState.value = null
         invalidateReport()
-        val pharmacy = (catalogState() as? CatalogState.Ready)?.catalog?.pharmacy?.pharmacyId ?: return@command
         val source = reports.source(draft.includeUnpublished)
         check(exchangeEligible(pharmacy) && source.pharmacyId == pharmacy)
-        if (draftState.value.includeUnpublished == draft.includeUnpublished) sourceState.value = source
+        if (draftState.value === draft) sourceState.value = source
     }
 
     internal fun loadCsv(uri: Uri) = command(queueOffline = false) {
@@ -97,18 +147,40 @@ internal class ExchangeController(private val csvImports: CsvImportRepository, p
             if (currentRoute() == "csv-import") feedback.value = UiFeedback(uiText(R.string.exchange_csv_file_saved_message), "csv-import")
         }
     }
-    internal fun prepareReport(request: ReportRequest) = command(queueOffline = false) {
+    internal fun prepareReport(request: ReportRequest, options: () -> ReportOptions?) = command(queueOffline = false) {
+        if (stepState.value != ReportStep.OPTIONS || request != currentReportRequest(options())) return@command
+        invalidateReport()
         val generation = reportGeneration
         val snapshot = reports.capture(request)
         check(exchangeEligible(snapshot.pharmacyId))
-        if (generation == reportGeneration) reportState.value = snapshot
+        if (generation == reportGeneration && snapshot.request == currentReportRequest(options())) {
+            reportState.value = snapshot
+            stepState.value = ReportStep.PREVIEW
+        }
     }
-    internal fun beginReportSave(format: ReportFormat) { reportState.value?.let { reportSaveDraft = it to format } }
-    internal fun saveReport(uri: Uri?) {
-        val draft = reportSaveDraft; reportSaveDraft = null
-        if (uri == null || draft == null) return
+
+    private fun currentPreview(options: ReportOptions?): ReportSnapshot? {
+        if (stepState.value != ReportStep.PREVIEW) return null
+        return reportState.value?.takeIf { it.request == currentReportRequest(options) }
+    }
+
+    internal fun beginReportSave(format: ReportFormat, options: ReportOptions?): Boolean {
+        if (reportSaveDraft != null || currentPreview(options) == null) return false
+        reportSaveDraft = reportGeneration to format
+        return true
+    }
+
+    internal fun saveReport(uri: Uri?, options: () -> ReportOptions?) {
+        val (generation, format) = reportSaveDraft ?: return
+        reportSaveDraft = null
+        if (uri == null || generation != reportGeneration) return
         command(queueOffline = false) {
-            when (draft.second) { ReportFormat.PDF -> reports.pdf(uri, draft.first); ReportFormat.XLSX -> reports.excel(uri, draft.first) }
+            val preview = currentPreview(options()) ?: return@command
+            if (generation != reportGeneration) return@command
+            when (format) {
+                ReportFormat.PDF -> reports.pdf(uri, preview)
+                ReportFormat.XLSX -> reports.excel(uri, preview)
+            }
             if (currentRoute() == "reports") feedback.value = UiFeedback(uiText(R.string.exchange_report_file_saved_message), "reports")
         }
     }
@@ -121,11 +193,6 @@ internal class ExchangeController(private val csvImports: CsvImportRepository, p
         if (access?.second != true || (csvState.value.session?.pharmacyId?.let { it != pharmacyId } == true)) {
             csvState.value = CsvImportState(); csvSaveDraft = null
         }
-        if (access?.second != true || (reportState.value?.pharmacyId?.let { it != pharmacyId } == true) ||
-            sourceState.value?.pharmacyId?.let { it != pharmacyId } == true ||
-            draftState.value.pharmacyId?.let { it != pharmacyId } == true) {
-            invalidateReport(); sourceState.value = null
-            draftState.value = ReportRequest()
-        }
+        if (access?.second != true || draftState.value.pharmacyId?.let { it != pharmacyId } == true) resetReport()
     }
 }

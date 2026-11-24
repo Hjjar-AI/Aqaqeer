@@ -122,13 +122,13 @@ import kotlinx.coroutines.flow.collect
     val medicationActions: @Composable (CatalogState.Ready, Medication) -> Unit = { ready, medication ->
         val editable = ready.canEditCatalog
         var detailMenuOpen by remember(medication.id) { mutableStateOf(false) }
-        if (editable) IconButton(enabled = !adminBusy,
+        if (editable) AppIconButton(enabled = !adminBusy,
             onClick = { navigate(Route.EditMedication(medication.id)) }) {
             AppIcon(UiIcon.EDIT, description = uiText(R.string.catalog_edit_medication_availability_description))
         }
         if (ready.admin) Box {
-            IconButton(onClick = { detailMenuOpen = true }) { AppIcon(UiIcon.MORE, description = uiText(R.string.catalog_medication_options_description)) }
-            DropdownMenu(expanded = detailMenuOpen, onDismissRequest = { detailMenuOpen = false }) {
+            AppIconButton(onClick = { detailMenuOpen = true }) { AppIcon(UiIcon.MORE, description = uiText(R.string.catalog_medication_options_description)) }
+            AppPopupMenu(expanded = detailMenuOpen, onDismissRequest = { detailMenuOpen = false }) {
                 DropdownMenuItem(text = { Text(uiText(R.string.history_medication_history_action)) },
                     leadingIcon = { AppIcon(UiIcon.HISTORY) },
                     onClick = { detailMenuOpen = false; viewModel.openHistory(medication.id) })
@@ -197,7 +197,7 @@ import kotlinx.coroutines.flow.collect
                             else navigate(Route.Settings)
                         }
                     }, back = back, review = viewModel::review, medicationActions = medicationActions)
-            }, snackbarHost = { SnackbarHost(snackbar) },
+            }, snackbarHost = { AppSnackbarHost(snackbar) },
         ) { insets ->
             ScreenFrame(wide = state.destination.isWide, form = state.destination.isForm,
                 modifier = Modifier.padding(insets).consumeWindowInsets(insets).imePadding()) {

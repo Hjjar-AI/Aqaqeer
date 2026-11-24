@@ -31,6 +31,7 @@ import kotlinx.coroutines.launch
     val uiText = rememberUiText()
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
+    val exportReport = rememberReportDocumentPicker(viewModel)
     AnimatedContent(targetState = state, modifier = Modifier.graphicsLayer {
         scaleX = 1f - 0.04f * backProgress
         scaleY = scaleX
@@ -73,7 +74,7 @@ import kotlinx.coroutines.launch
                 Route.Maintenance -> MaintenanceScreen(state.catalog as? CatalogState.Ready, viewModel)
                 Route.Backup -> BackupScreen(state, viewModel)
                 Route.CsvImport -> CsvImportScreen(state.catalog as? CatalogState.Ready, viewModel)
-                Route.Reports -> ReportsScreen(state.catalog as? CatalogState.Ready, viewModel)
+                Route.Reports -> ReportsScreen(state.catalog as? CatalogState.Ready, viewModel, exportReport)
                 Route.About -> AboutScreen {
                     try {
                         context.startActivity(Intent(Intent.ACTION_SENDTO,

@@ -73,7 +73,7 @@ import java.time.Instant
                     modifier = Modifier.weight(1f), maxLines = if (compact) 1 else 2, overflow = TextOverflow.Ellipsis)
                 ExpansionChevron(expanded)
             }
-            IconButton(onClick = {
+            AppIconButton(onClick = {
                 val notice = notices.first()
                 UiSession.dismiss(listOf(noticeScope, "home", notice.kind), notice.content)
                 expanded = false

@@ -21,6 +21,15 @@
         <item name="windowSplashScreenBackground">@color/launch_dark</item>
         <item name="android:windowLightStatusBar">false</item>
     </style>
+    <style name="Theme.Aqaqeer.Starting.BlueDark" parent="Theme.Aqaqeer.Starting.Dark">
+        <item name="windowSplashScreenBackground">@color/launch_blue_dark</item>
+    </style>
+    <style name="Theme.Aqaqeer.Starting.GreenDark" parent="Theme.Aqaqeer.Starting.Dark">
+        <item name="windowSplashScreenBackground">@color/launch_green_dark</item>
+    </style>
+    <style name="Theme.Aqaqeer.Starting.RoseDark" parent="Theme.Aqaqeer.Starting.Dark">
+        <item name="windowSplashScreenBackground">@color/launch_rose_dark</item>
+    </style>
     <style name="Theme.Aqaqeer.Starting.Black" parent="Theme.Aqaqeer.Starting">
         <item name="windowSplashScreenBackground">@color/launch_black</item>
         <item name="android:windowLightStatusBar">false</item>

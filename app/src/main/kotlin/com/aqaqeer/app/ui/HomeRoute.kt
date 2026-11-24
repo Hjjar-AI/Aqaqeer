@@ -91,7 +91,7 @@ import com.aqaqeer.app.data.*
                     Row(Modifier.fillMaxWidth().padding(horizontal = UiSpacing.related),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(UiSpacing.related)) {
-                        IconButton(enabled = !adminBusy && !homeModalOpen && !dataTimesOpen,
+                        AppIconButton(enabled = !adminBusy && !homeModalOpen && !dataTimesOpen,
                             onClick = back, modifier = Modifier.testTag("back")) {
                             AppIcon(UiIcon.BACK, description = uiText(R.string.navigation_back_description))
                         }

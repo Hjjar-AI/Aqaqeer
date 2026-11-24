@@ -72,7 +72,7 @@ import com.aqaqeer.app.data.CatalogSnapshot
         keyboardActions = KeyboardActions(onNext = { focus.moveFocus(FocusDirection.Next) },
             onDone = { focus.clearFocus(); onDone?.invoke() }),
         visualTransformation = if (secret && !visible) PasswordVisualTransformation() else VisualTransformation.None,
-        trailingIcon = if (secret) ({ IconButton(onClick = { visible = !visible }) {
+        trailingIcon = if (secret) ({ AppIconButton(onClick = { visible = !visible }) {
             AppIcon(UiIcon.VISIBILITY, description = if (visible) uiText(R.string.shared_secret_hide_description, shortLabel) else uiText(R.string.shared_secret_show_description, shortLabel))
         } }) else trailingContent,
         modifier = modifier.fillMaxWidth().testTag(tag).bringIntoViewRequester(reveal).focusRequester(focusRequester).onFocusChanged {

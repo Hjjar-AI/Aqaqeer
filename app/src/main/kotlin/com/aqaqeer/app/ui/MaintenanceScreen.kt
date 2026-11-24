@@ -31,7 +31,7 @@ import com.aqaqeer.app.maintenance.*
         InformationCard(uiText(R.string.maintenance_protected_state_unreadable_title), uiText(R.string.maintenance_protected_state_retained_help))
         return
     }
-    if (status.loading) { Box(Modifier.fillMaxSize(), contentAlignment = androidx.compose.ui.Alignment.Center) { CircularProgressIndicator() }; return }
+    if (status.loading) { Box(Modifier.fillMaxSize(), contentAlignment = androidx.compose.ui.Alignment.Center) { AppSpinner() }; return }
     var choices by remember(j?.id) { mutableStateOf<Map<String, Boolean>>(emptyMap()) }
     fun run(action: suspend () -> Unit) { vm.command(queueOffline = false, action = action) }
     FormPage(showFieldConvention = true) {

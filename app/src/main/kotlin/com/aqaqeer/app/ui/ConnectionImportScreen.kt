@@ -39,7 +39,7 @@ import com.aqaqeer.app.BuildConfig
         if (eligible) item { StepHeader(listOf(uiText(R.string.review_select_file), uiText(R.string.review_check_connection), uiText(R.string.review_apply_file)),
             if (state.verification != null) 2 else if (state.pending != null) 1 else 0) }
         if (catalog is CatalogState.Loading || state.loading) {
-            item { Box(Modifier.fillMaxWidth(), contentAlignment = androidx.compose.ui.Alignment.Center) { CircularProgressIndicator() } }
+            item { Box(Modifier.fillMaxWidth(), contentAlignment = androidx.compose.ui.Alignment.Center) { AppSpinner() } }
         } else if (!eligible) {
             item { InformationCard(uiText(R.string.connection_import_unavailable_title), when {
                 ready?.isDemo == true -> uiText(R.string.connection_import_demo_unavailable_help)
@@ -81,7 +81,7 @@ import com.aqaqeer.app.BuildConfig
                         modifier = Modifier.testTag("activate_pending_connection")) {
                         Text(uiText(R.string.connection_import_activate_reader_action))
                     } }
-                    item { AppButton(variant = AppButtonVariant.QUIET, colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error), onClick = { confirmDiscard = true }, enabled = !state.busy) { Text(uiText(R.string.connection_import_discard_pending_action)) } }
+                    item { AppButton(variant = AppButtonVariant.DESTRUCTIVE_TEXT, onClick = { confirmDiscard = true }, enabled = !state.busy) { Text(uiText(R.string.connection_import_discard_pending_action)) } }
                 } else if (!state.busy) {
                     item {
                         AppButton(onClick = {
@@ -123,7 +123,7 @@ import com.aqaqeer.app.BuildConfig
         AppDialog(onDismissRequest = { if (!state.busy) confirmDiscard = false },
             title = { Text(uiText(R.string.connection_import_discard_confirmation_title)) },
             body = { Text(uiText(R.string.connection_import_discard_confirmation_help_format, pending.pharmacyName)) },
-            confirmButton = { AppButton(variant = AppButtonVariant.QUIET, colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error), onClick = { confirmDiscard = false; discard(pending.id) }, enabled = !state.busy) { Text(uiText(R.string.connection_import_confirm_discard_action)) } },
+            confirmButton = { AppButton(variant = AppButtonVariant.DESTRUCTIVE_TEXT, onClick = { confirmDiscard = false; discard(pending.id) }, enabled = !state.busy) { Text(uiText(R.string.connection_import_confirm_discard_action)) } },
             dismissButton = { AppButton(variant = AppButtonVariant.QUIET, onClick = { confirmDiscard = false }, enabled = !state.busy) { Text(uiText(R.string.connection_import_keep_pending_action)) } })
     }
 }

@@ -4,10 +4,11 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.key
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Shape
 
-internal enum class AppButtonVariant { PRIMARY, SECONDARY, QUIET, DESTRUCTIVE }
+internal enum class AppButtonVariant { PRIMARY, SECONDARY, QUIET, DESTRUCTIVE, DESTRUCTIVE_OUTLINED, DESTRUCTIVE_TEXT }
 
 /** Workflow state and authorization remain with the caller. */
 @Composable internal fun AppButton(onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true,
@@ -21,13 +22,60 @@ internal enum class AppButtonVariant { PRIMARY, SECONDARY, QUIET, DESTRUCTIVE }
                 containerColor = MaterialTheme.colorScheme.error, contentColor = MaterialTheme.colorScheme.onError)
                 else ButtonDefaults.buttonColors(),
             contentPadding = contentPadding ?: ButtonDefaults.ContentPadding, content = content)
-        AppButtonVariant.SECONDARY -> OutlinedButton(onClick = onClick, modifier = modifier, enabled = enabled,
+        AppButtonVariant.SECONDARY, AppButtonVariant.DESTRUCTIVE_OUTLINED -> OutlinedButton(
+            onClick = onClick, modifier = modifier, enabled = enabled,
             shape = shape, border = border ?: ButtonDefaults.outlinedButtonBorder(enabled),
-            colors = colors ?: ButtonDefaults.outlinedButtonColors(),
+            colors = colors ?: if (variant == AppButtonVariant.DESTRUCTIVE_OUTLINED)
+                ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error)
+                else ButtonDefaults.outlinedButtonColors(),
             contentPadding = contentPadding ?: ButtonDefaults.ContentPadding, content = content)
-        AppButtonVariant.QUIET -> TextButton(onClick = onClick, modifier = modifier, enabled = enabled,
-            shape = shape, border = border, colors = colors ?: ButtonDefaults.textButtonColors(),
+        AppButtonVariant.QUIET, AppButtonVariant.DESTRUCTIVE_TEXT -> TextButton(
+            onClick = onClick, modifier = modifier, enabled = enabled, shape = shape, border = border,
+            colors = colors ?: if (variant == AppButtonVariant.DESTRUCTIVE_TEXT)
+                ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
+                else ButtonDefaults.textButtonColors(),
             contentPadding = contentPadding ?: ButtonDefaults.TextButtonContentPadding, content = content)
+    }
+}
+
+@Composable internal fun AppIconButton(onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true,
+    content: @Composable () -> Unit) {
+    IconButton(onClick = onClick, modifier = modifier, enabled = enabled, content = content)
+}
+
+@Composable internal fun AppSpinner() {
+    CircularProgressIndicator()
+}
+
+@Composable internal fun AppPopupMenu(expanded: Boolean, onDismissRequest: () -> Unit,
+    content: @Composable ColumnScope.() -> Unit) {
+    DropdownMenu(expanded = expanded, onDismissRequest = onDismissRequest, content = content)
+}
+
+@Composable internal fun AppDivider(modifier: Modifier = Modifier) {
+    HorizontalDivider(modifier)
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable internal fun AppSnackbarHost(state: SnackbarHostState) {
+    SnackbarHost(state) { data ->
+        key(data) {
+            SwipeToDismissBox(
+                state = rememberSwipeToDismissBoxState(),
+                backgroundContent = {},
+                onDismiss = { if (state.currentSnackbarData === data) data.dismiss() },
+            ) {
+                val colors = MaterialTheme.colorScheme
+                Snackbar(
+                    snackbarData = data,
+                    containerColor = colors.surface,
+                    contentColor = colors.onSurface,
+                    actionColor = colors.primary,
+                    actionContentColor = colors.primary,
+                    dismissActionContentColor = colors.onSurfaceVariant,
+                )
+            }
+        }
     }
 }
 
