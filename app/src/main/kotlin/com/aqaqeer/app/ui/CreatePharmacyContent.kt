@@ -25,7 +25,7 @@ import kotlinx.serialization.json.*
     var pin by remember { mutableStateOf("") }; var confirm by remember { mutableStateOf("") }
     var pinEntryVersion by remember { mutableStateOf(0) }
     val focus = LocalFocusManager.current
-    val creating = busy || vm.adminBusy.value
+    val creating = busy
     GroupedCard(title = uiText(R.string.catalog_pharmacy_setup_title)) {
         FormField(uiText(R.string.catalog_pharmacy_name_label), name, { name = it }, submitted = formSubmitted, required = true); TimezoneField(zone) { zone = it }
         FormField(uiText(R.string.catalog_initial_section_name_label), section, { section = it }, submitted = formSubmitted, required = true)

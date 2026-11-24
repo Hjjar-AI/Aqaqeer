@@ -77,7 +77,7 @@ import kotlinx.coroutines.launch
                 Route.About -> AboutScreen {
                     try {
                         context.startActivity(Intent(Intent.ACTION_SENDTO,
-                            ("mailto:" + context.getString(R.string.contact_email)).toUri()))
+                            ("mailto:" + uiText(R.string.contact_email)).toUri()))
                     } catch (_: ActivityNotFoundException) {
                         scope.launch { snackbar.showSnackbar(uiText(R.string.navigation_email_app_missing_message), withDismissAction = true, duration = SnackbarDuration.Short) }
                     } catch (_: SecurityException) {

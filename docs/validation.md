@@ -29,7 +29,7 @@ Source repairs preserve behavioral assertions while matching current UI and asyn
 
 The helper batch passed27 offline Python checks; current lightweight checks cover454 text files/328 local links and16 parsed workflows with zero problems, plus whitespace. Empty emulator retry batches skip Android tooling, packaging, KVM and startup. The registry reader supports gh2.46 paginated JSON; local version state is preserved. Scoped Gitleaks exceptions cover two canonical public vectors; the private full-history scan and synthetic controls0/1/1 passed. Raw private reports and credentials are excluded from public evidence/hashes.
 
-Final hosted lint remains pending after source fixes, signing and cleanup. Windows, physical/live-PIN/token effects, installed updates and human visual/print/spoken acceptance remain distinct unavailable boundaries.
+Hosted lint04 `45444132827` at `35c2722` failed with7 errors,82 warnings and10 hints per flavor; workflow validation passed. The source repair moves API27 navigation attributes into qualified themes, uses the existing configuration-aware string reader for contact email, and reuses the lifecycle-collected creation busy flag while retaining the live click guard. Candidate32 predates these repairs. Affected About/theme retries and final lint remain pending; a refreshed signed candidate would consume a new code and requires authorization. Windows, physical/live-PIN/token effects, installed updates and human visual/print/spoken acceptance remain distinct unavailable boundaries.
 
 ## Production-readiness test extension — 2026-11-24
 
