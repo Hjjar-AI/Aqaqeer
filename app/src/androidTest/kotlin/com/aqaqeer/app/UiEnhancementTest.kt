@@ -90,10 +90,10 @@ class UiEnhancementTest {
         compose.onNodeWithText("تعديل المحدد").assertIsEnabled()
         compose.runOnIdle { state = state.copy(appliedQuery = "no match") }
         compose.onNodeWithText("تعديل المحدد").performClick()
-        compose.onNodeWithText("التوافر", useUnmergedTree = true).performClick()
         compose.onNodeWithText("غير متوفر", useUnmergedTree = true).performScrollTo().performClick()
-        compose.onNodeWithText("معاينة").performClick()
-        compose.onNodeWithText("Item 00", substring = true).assertExists()
+        compose.onNodeWithText(uiText(R.string.availability_bulk_preview_action)).performScrollTo().performClick()
+        compose.onNode(hasScrollToIndexAction()).performScrollToNode(hasText("Item 00", substring = true))
+        compose.onNodeWithText("Item 00", substring = true).assertIsDisplayed()
     }
 
     @Test fun sectionChangeClearsSelectionAndRestrictedReaderHasNoBulkAction() {
@@ -172,14 +172,19 @@ class UiEnhancementTest {
         compose.setContent {
             val d=LocalDensity.current
             CompositionLocalProvider(LocalDensity provides Density(d.density,2f)) {
-                AqaqeerTheme(ThemeChoice.DARK) { BulkMedicationEditor(selection,c,false,null,{cancellations++},{saves++},{true}) }
+                AqaqeerTheme(ThemeChoice.DARK) {
+                    HomeBulkSheet(selection, c, false, null, { false }, { false }, { true },
+                        saveBulk = { _, _, _ -> saves++ }, isCurrent = { true },
+                        dismissSheet = { cancellations++ }, exitBulk = { cancellations++ }, complete = {})
+                }
             }
         }
         compose.onNodeWithText("غير متوفر").performScrollTo().performClick()
         compose.onNodeWithText(uiText(R.string.availability_bulk_preview_action)).performClick()
-        compose.onNodeWithText("Item 29",substring=true).performScrollTo().assertIsDisplayed()
-        compose.onNodeWithText(uiText(R.string.catalog_save_local_action)).assertIsDisplayed().performClick()
-        compose.onNodeWithText("إلغاء").assertIsDisplayed().performClick()
+        compose.onNode(hasScrollToIndexAction()).performScrollToNode(hasText("Item 29", substring = true))
+        compose.onNodeWithText("Item 29", substring = true).assertIsDisplayed()
+        compose.onNodeWithText(uiText(R.string.catalog_save_local_action)).performScrollTo().assertIsDisplayed().performClick()
+        compose.onNodeWithText("إلغاء").performScrollTo().assertIsDisplayed().performClick()
         compose.runOnIdle { assertEquals(1,saves);assertEquals(1,cancellations) }
     }
 

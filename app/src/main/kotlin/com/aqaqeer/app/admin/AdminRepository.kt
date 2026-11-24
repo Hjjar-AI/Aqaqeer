@@ -369,7 +369,7 @@ class AdminRepository @Inject constructor(private val factory: DatabaseFactory,
                 if (it.categoryId == id) it.copy(categoryId = CatalogSeeds.UNCATEGORIZED_ID, updatedAt = now) else it }) }
             "form" -> { adminRequire(c.forms.none { it.id == id && it.isSystem }); c.copy(forms = c.forms.filterNot { it.id == id }, medications = c.medications.map {
                 if (it.formId == id) it.copy(formId = CatalogSeeds.OTHER_FORM_ID, updatedAt = now) else it }) }
-            "section" -> { adminRequire(c.sections.find { it.id == id }?.nameAr == typedName) { "اكتب اسم القسم لتأكيد الحذف" }; c.copy(sections = c.sections.filterNot { it.id == id }, availability = c.availability.filterNot { it.sectionId == id }) }
+            "section" -> { adminRequire(c.sections.size > 1) { uiText(R.string.delete_last_section) }; adminRequire(c.sections.find { it.id == id }?.nameAr == typedName) { "اكتب اسم القسم لتأكيد الحذف" }; c.copy(sections = c.sections.filterNot { it.id == id }, availability = c.availability.filterNot { it.sectionId == id }) }
             else -> error("نوع غير صالح")
         }
         next.copy(tombstones = next.tombstones + Tombstone(type, id, now, tx))

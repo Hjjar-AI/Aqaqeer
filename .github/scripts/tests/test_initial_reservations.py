@@ -31,9 +31,15 @@ class InitialReservationsTest(unittest.TestCase):
                  {'ref': 'refs/tags/android-initial-build-2'},
                  {'ref': 'refs/tags/android-initial-build-01'}],
                 [{'ref': 'refs/tags/android-initial-build-4'}]]
-        with patch.object(registry.subprocess, 'run', return_value=SimpleNamespace(stdout=json.dumps(refs))) as call:
+        with patch.object(registry.subprocess, 'run', return_value=SimpleNamespace(stdout='\n'.join(json.dumps(page) for page in refs))) as call:
             self.assertEqual([2, 4], registry.remote_codes('owner/repo'))
         self.assertEqual('repos/owner/repo/git/matching-refs/tags/android-initial-build-', call.call_args.args[0][-1])
+
+    def test_registry_rejects_missing_malformed_or_non_array_pages(self):
+        for payload in ('', '{}', '[]\n{', '[{"ref": 12}]', '[]\n{"message":"not a registry page"}'):
+            with self.subTest(payload=payload), patch.object(registry.subprocess, 'run', return_value=SimpleNamespace(stdout=payload)):
+                with self.assertRaises(ValueError):
+                    registry.remote_codes('owner/repo')
 
     def test_empty_initial_registry_reserves_one_without_touching_old_tags(self):
         with tempfile.TemporaryDirectory() as directory:

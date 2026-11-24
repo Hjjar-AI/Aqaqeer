@@ -32,10 +32,10 @@ class PresentationUiTest {
             EditableStatusPill(AvailabilityStatus.AVAILABLE, { expanded = true }, expanded,
                 { cancelled++; expanded = false }, { saved += it; expanded = false })
         } }
-        compose.onNodeWithText(MedicationPresentation.statusLabel(AvailabilityStatus.AVAILABLE)).performClick()
+        compose.onNodeWithContentDescription(MedicationPresentation.statusLabel(AvailabilityStatus.AVAILABLE), substring = true).assertHasClickAction().performClick()
         compose.onNodeWithText(MedicationPresentation.statusLabel(AvailabilityStatus.OUT)).performClick()
         compose.runOnIdle { assertEquals(listOf(AvailabilityStatus.OUT), saved) }
-        compose.onNodeWithText(MedicationPresentation.statusLabel(AvailabilityStatus.AVAILABLE)).performClick()
+        compose.onNodeWithContentDescription(MedicationPresentation.statusLabel(AvailabilityStatus.AVAILABLE), substring = true).assertHasClickAction().performClick()
         androidx.test.espresso.Espresso.pressBack()
         compose.runOnIdle { assertEquals(1, cancelled); assertEquals(1, saved.size) }
     }

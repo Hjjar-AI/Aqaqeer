@@ -21,6 +21,10 @@ class ConnectionImportUiTest {
             compose.onAllNodesWithTag("connection_import").fetchSemanticsNodes(atLeastOneRootRequired = false).isNotEmpty()
         }
     }
+    private fun importNode(matcher: SemanticsMatcher): SemanticsNodeInteraction {
+        compose.onNodeWithTag("connection_import").performScrollToNode(matcher)
+        return compose.onNode(matcher)
+    }
     @Test fun explicitVerificationButtonTargetsPendingIdAndBusyStateDisablesDuplicateRequests() {
         var state by mutableStateOf(ConnectionImportUiState(loading=false,storageReady=true,pending=pending))
         var calls=0; var selected: String?=null
@@ -30,10 +34,10 @@ class ConnectionImportUiTest {
             }, {})
         } }
         awaitImportScreen()
-        compose.onNodeWithTag("verify_pending_connection").performScrollTo().performClick()
+        importNode(hasTestTag("verify_pending_connection")).performClick()
         compose.runOnIdle { assertEquals(1,calls); assertEquals(pending.id,selected) }
-        compose.onNodeWithTag("verify_pending_connection").assertIsNotEnabled()
-        compose.onNodeWithText("جار التحقق عبر تيليغرام…").performScrollTo().assertIsDisplayed()
+        importNode(hasTestTag("verify_pending_connection")).assertIsNotEnabled()
+        importNode(hasText(uiText(R.string.connection_import_verification_progress))).assertIsDisplayed()
     }
     @Test fun savedUpdateRequirementIsVisibleWithoutStartingVerificationAndDiscardNeedsConfirmation() {
         var verifyCalls=0; var discardCalls=0
@@ -43,8 +47,8 @@ class ConnectionImportUiTest {
                 { discardCalls++ },{}, { verifyCalls++ }, {})
         } }
         awaitImportScreen()
-        compose.onNodeWithText("يلزم إصدار متوافق من التطبيق").performScrollTo().assertIsDisplayed()
-        compose.onNodeWithText("إلغاء الاتصال المعلق").performScrollTo().performClick()
+        importNode(hasText(uiText(R.string.home_update_required_title))).assertIsDisplayed()
+        importNode(hasText(uiText(R.string.connection_import_discard_pending_action))).performClick()
         compose.runOnIdle { assertEquals(0,verifyCalls); assertEquals(0,discardCalls) }
         compose.onNodeWithText("احتفاظ").performClick()
         compose.runOnIdle { assertEquals(0,discardCalls) }
@@ -60,11 +64,11 @@ class ConnectionImportUiTest {
         } }
         awaitImportScreen()
         compose.runOnIdle { assertEquals(0,calls) }
-        compose.onNodeWithTag("activate_pending_connection").performScrollTo().performClick()
+        importNode(hasTestTag("activate_pending_connection")).performClick()
         compose.runOnIdle { assertEquals(1,calls); assertEquals(pending.id,target) }
-        compose.onNodeWithTag("activate_pending_connection").assertIsNotEnabled()
-        compose.onNodeWithTag("verify_pending_connection").assertIsNotEnabled()
-        compose.onNodeWithText("جار التحقق وتفعيل الصيدلية…").performScrollTo().assertIsDisplayed()
+        importNode(hasTestTag("activate_pending_connection")).assertIsNotEnabled()
+        importNode(hasTestTag("verify_pending_connection")).assertIsNotEnabled()
+        importNode(hasText(uiText(R.string.connection_import_activation_progress))).assertIsDisplayed()
     }
     @Test fun retainedFutureRequirementsDisableActivationButKeepVerificationAvailable() {
         compose.setContent { AqaqeerTheme(com.aqaqeer.app.data.ThemeChoice.SYSTEM) {
@@ -73,8 +77,8 @@ class ConnectionImportUiTest {
                 {}, {}, {}, {}, {}, {}, {})
         } }
         awaitImportScreen()
-        compose.onNodeWithTag("activate_pending_connection").performScrollTo().assertIsNotEnabled()
-        compose.onNodeWithTag("verify_pending_connection").performScrollTo().assertIsEnabled()
+        importNode(hasTestTag("activate_pending_connection")).assertIsNotEnabled()
+        importNode(hasTestTag("verify_pending_connection")).assertIsEnabled()
     }
 
 }

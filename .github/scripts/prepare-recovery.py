@@ -35,14 +35,39 @@ def selected_resources(value):
     return requested
 
 
+def configure_avd(avd_home):
+    directory = avd_home / 'aqaqeer-recovery.avd'
+    config = directory / 'config.ini'
+    if directory.is_symlink() or config.is_symlink() or not config.is_file():
+        raise ValueError('Expected the owned newly created recovery AVD configuration')
+    before = config.read_text()
+    lines = before.splitlines()
+    values = [line.split('=', 1)[1].strip() for line in lines if line.startswith('AvdId=')]
+    if values != ['aqaqeer-recovery']:
+        raise ValueError('Unexpected recovery AVD identity')
+    if sum(line.startswith('vm.heapSize=') for line in lines) > 1:
+        raise ValueError('Ambiguous AVD heap setting')
+    # The pinned runner writes hw.heapSize, which is not the emulator's vm.heapSize key.
+    lines = [line for line in lines if not line.startswith(('vm.heapSize=', 'hw.heapSize='))]
+    config.write_text('\n'.join(lines + ['vm.heapSize=384']) + '\n')
+    return {'avdId': values[0], 'configuredVmHeapSizeMiB': 384,
+            'previousHeapSettings': [line for line in before.splitlines() if line.startswith(('vm.heapSize=', 'hw.heapSize='))]}
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--run', action='store_true')
+    mode = parser.add_mutually_exclusive_group()
+    mode.add_argument('--run', action='store_true')
+    mode.add_argument('--configure-avd', action='store_true')
     args = parser.parse_args()
     if os.environ.get('GITHUB_ACTIONS') != 'true' or os.environ.get('RUNNER_ENVIRONMENT') != 'github-hosted':
         raise ValueError('GitHub-hosted runner required')
     output = ROOT / 'ci-output/recovery'
     output.mkdir(parents=True, exist_ok=True)
+    if args.configure_avd:
+        receipt = configure_avd(Path(os.environ['ANDROID_AVD_HOME']))
+        (output / 'avd-heap.json').write_text(json.dumps(receipt, indent=2) + '\n')
+        return
     path = output / 'arguments.json'
     if not args.run:
         resources = os.environ.get('CI_RECOVERY_RESOURCES', 'true')

@@ -58,23 +58,36 @@ class AcceptanceResourceInstrumentedTest {
     }
     @Test fun measuredHistoryRoundTripsBelowBackupCap(): Unit = runBlocking {
         val measurements=mutableListOf<JsonElement>()
+        val runtime = Runtime.getRuntime()
+        report("roundtrips-progress", buildJsonObject { put("phase", "heap-precondition"); put("maxHeapBytes", runtime.maxMemory()) })
+        assertTrue("Large-history fixture requires at least a 384-MiB application heap; observed ${runtime.maxMemory()}", runtime.maxMemory() >= 384L * 1024 * 1024)
         for(rows in listOf(180,480)) {
             val donor=profile();seed(donor,rows)
             val count=donor.admin.transaction { it.historyCount() };val expected=digest(donor)
             val file=File(donor.root,"measured-$rows.aqbak")
             System.gc();delay(200)
             val sampler=MemorySampler(base)
+            var phase = "export"
             try {
                 donor.backups.export(Uri.fromFile(file),password,password)
                 assertTrue("Fixture must exceed snapshot cap",file.length()>10L*1024*1024)
                 assertTrue("Complete exported envelope must fit the backup reader",file.length()<=V1BackupEnvelope.LIMIT)
+                phase = "restore"
                 val restored=SuiteProfile().also { profiles+=it;it.ready() }
                 restored.backups.restore(Uri.fromFile(file),password,"",false)
                 assertEquals(count,restored.admin.transaction { it.historyCount() })
                 assertEquals(expected,digest(restored))
                 assertFalse(restored.ready().admin);assertTrue(restored.ready().restorePaused)
                 measurements+=buildJsonObject { put("historyRows",rows);put("envelopeBytes",file.length());put("memory",sampler.finish()) }
-            } finally { sampler.close() }
+                phase = "verified"
+            } finally {
+                sampler.close()
+                report("roundtrips-progress", buildJsonObject {
+                    put("phase", phase); put("historyRows", rows); put("envelopeBytes", file.length())
+                    put("headroomBytes", runtime.maxMemory() - (runtime.totalMemory() - runtime.freeMemory()))
+                    put("memory", sampler.finish()); put("completedMeasurements", JsonArray(measurements))
+                })
+            }
         }
         report("roundtrips",buildJsonObject { put("measurements",JsonArray(measurements));put("historyPreserved",true) })
     }

@@ -6412,6 +6412,7 @@
           "kind": "class",
           "line": 44,
           "directTestReferences": [
+            "app/src/androidTest/kotlin/com/aqaqeer/app/HomeUiTest.kt",
             "app/src/androidTest/kotlin/com/aqaqeer/app/ViewModelInstrumentedTest.kt",
             "app/src/androidTest/kotlin/com/aqaqeer/app/fixtures/RestoreCrashProfile.kt"
           ]

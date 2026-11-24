@@ -61,3 +61,21 @@ class RecoverySelectionTest(unittest.TestCase):
             self.assertIn('--hosted-emulator', command)
             with patch.dict(os.environ, {'CI_RECOVERY_RESOURCES': 'false'}), self.assertRaises(ValueError):
                 selection.main()
+
+    def test_owned_avd_configuration_sets_real_vm_heap_key_and_preserves_other_settings(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory); avd = root / 'aqaqeer-recovery.avd'; avd.mkdir()
+            config = avd / 'config.ini'
+            config.write_text('AvdId=aqaqeer-recovery\nvm.heapSize=192\nhw.heapSize=384M\nhw.ramSize=1536\n')
+            receipt = selection.configure_avd(root)
+            self.assertEqual(384, receipt['configuredVmHeapSizeMiB'])
+            self.assertEqual('AvdId=aqaqeer-recovery\nhw.ramSize=1536\nvm.heapSize=384\n', config.read_text())
+            config.write_text('AvdId=other\nvm.heapSize=192\n')
+            with self.assertRaises(ValueError):
+                selection.configure_avd(root)
+            self.assertEqual('AvdId=other\nvm.heapSize=192\n', config.read_text())
+            config.unlink(); actual = root / 'unowned.ini'; actual.write_text('AvdId=aqaqeer-recovery\n')
+            config.symlink_to(actual)
+            with self.assertRaises(ValueError):
+                selection.configure_avd(root)
+            self.assertEqual('AvdId=aqaqeer-recovery\n', actual.read_text())

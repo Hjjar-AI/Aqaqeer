@@ -57,7 +57,8 @@ jobs:
           target: default
           arch: x86_64
           avd-name: aqaqeer-recovery
-          heap-size: 384M
+          force-avd-creation: 'true'
+          pre-emulator-launch-script: python3 .github/scripts/prepare-recovery.py --configure-avd
           emulator-port: 5554
           disable-animations: true
           emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none -camera-front none -no-metrics

@@ -349,7 +349,7 @@ def main():
                 passed = result.returncode == 0 and "OK (1 test)" in transcript and "INSTRUMENTATION_CODE: -1" in transcript
                 passed = passed and "FAILURES!!!" not in transcript and "INSTRUMENTATION_STATUS_CODE: -3" not in transcript
                 state["resourceCases"].append({"method": method, "status": "passed" if passed else "failed"})
-                for name in ("roundtrips", "pressure-before-retry", "pressure"):
+                for name in ("roundtrips", "roundtrips-progress", "pressure-before-retry", "pressure"):
                     report = adb("shell", "run-as", PACKAGE, "cat", "no_backup/acceptance-" + run_id + "/" + name + ".json", check=False)
                     if report.returncode == 0:
                         (evidence / (name + ".json")).write_text(json.dumps(json.loads(report.stdout), indent=2) + "\n")

@@ -41,7 +41,10 @@ class AdminHistoryInstrumentedTest {
         assertEquals(CatalogSeeds.UNCATEGORIZED_ID, p.ready().catalog.medications.single().categoryId)
         assertThrows(AdminProblem::class.java) { runBlocking { p.admin.delete("category", CatalogSeeds.UNCATEGORIZED_ID) } }
         val section = p.ready().catalog.sections.single()
-        assertThrows(AdminProblem::class.java) { runBlocking { p.admin.delete("section", section.id, section.nameAr) } }
+        val before = p.admin.transaction { listOf(it.catalog(), it.pending(), it.historyCount()) }
+        val failure = assertThrows(AdminProblem::class.java) { runBlocking { p.admin.delete("section", section.id, section.nameAr) } }
+        assertEquals(uiText(R.string.delete_last_section), failure.reason)
+        assertEquals(before, p.admin.transaction { listOf(it.catalog(), it.pending(), it.historyCount()) })
     }
     @Test fun missingDeletionTargetsReturnSpecificErrorsWithoutCreatingAnyWork(): Unit = runBlocking {
         p.medication()

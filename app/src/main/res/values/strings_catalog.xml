@@ -103,6 +103,7 @@
     <string name="delete_missing_category">لم يعد التصنيف موجوداً</string>
     <string name="delete_missing_form">لم يعد الشكل موجوداً</string>
     <string name="delete_missing_medication">لم يعد الدواء موجوداً</string>
+    <string name="delete_last_section">لا يمكن حذف القسم الأخير</string>
     <string name="delete_missing_section">لم يعد القسم موجوداً</string>
     <string name="logic_duplicate_confirm">يوجد دواء بالاسم والتركيز والشكل نفسه؛ أؤكد حفظ هذا السجل مستقلاً</string>
     <string name="logic_duplicate_warning">يوجد دواء بالاسم والتركيز والشكل نفسه؛ أكد إنشاء سجل مستقل أو تعديل هذا السجل</string>
