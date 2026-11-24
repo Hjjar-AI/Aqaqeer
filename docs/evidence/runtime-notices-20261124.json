@@ -35,7 +35,7 @@
         "runtimeComponentsSha256": "9bcdd3f721310f9135359c717afc25d37ca8530287011af3902f8e76f3f55502"
       }
     ],
-    "limit": "These APKs predate the added Protobuf/Jakarta notices. Packaging of the updated notice texts and production signing remain pending."
+    "limit": "Historical unsigned APKs predate the added Protobuf/Jakarta notices; the signedPackagedComparison below verifies updated notices in all three code-32 signed outputs."
   },
   "components": [
     {
@@ -1185,5 +1185,57 @@
       "metadataSource": "embedded name table IDs 0/1/13/14"
     }
   ],
-  "limits": "Resolved components include metadata/platform artifacts; the list does not imply every module contributes executable code. Original retained notices remain unchanged. Signed final APK inventory and notices must match before distribution."
+  "limits": "Resolved coordinates include metadata/platform artifacts; not every module contributes executable code. All three code-32 signed APKs match the reviewed graph and complete source notice bytes. No installed-update, physical-device or human acceptance is established.",
+  "signedPackagedComparison": {
+    "run": 45441539025,
+    "source": "c9a46d0ca6022c3d953004bb3ef20f3b6da02ab1",
+    "versionCode": 32,
+    "versionName": "0.0.32",
+    "artifacts": [
+      {
+        "name": "Aqaqeer-v0.0.32-universal-release.apk",
+        "architecture": "universal",
+        "sha256": "36d5a4e1ebaefe5c0db219ee6675a8cf81c98cc8f474dd69aeb0709ffd15b7c0",
+        "runtimeComponentsSha256": "9bcdd3f721310f9135359c717afc25d37ca8530287011af3902f8e76f3f55502",
+        "exactRuntimeCoordinates": 139,
+        "exactNoticeAssets": 12,
+        "certificateSha256": "a0ab575e3ea4a579dfb7927e1a07d557e01e814519f3c2513c230700473f266c"
+      },
+      {
+        "name": "Aqaqeer-v0.0.32-armeabi-v7a-release.apk",
+        "architecture": "armeabi-v7a",
+        "sha256": "d6baf50a0d6b77e6a18af5867efb060279896a0621923222763cfb79c9546d71",
+        "runtimeComponentsSha256": "9bcdd3f721310f9135359c717afc25d37ca8530287011af3902f8e76f3f55502",
+        "exactRuntimeCoordinates": 139,
+        "exactNoticeAssets": 12,
+        "certificateSha256": "a0ab575e3ea4a579dfb7927e1a07d557e01e814519f3c2513c230700473f266c"
+      },
+      {
+        "name": "Aqaqeer-v0.0.32-arm64-v8a-release.apk",
+        "architecture": "arm64-v8a",
+        "sha256": "08de767e5deb5dd3818ebc352dc687fdef8b4787c803dadad42dbba7457c67f1",
+        "runtimeComponentsSha256": "9bcdd3f721310f9135359c717afc25d37ca8530287011af3902f8e76f3f55502",
+        "exactRuntimeCoordinates": 139,
+        "exactNoticeAssets": 12,
+        "certificateSha256": "a0ab575e3ea4a579dfb7927e1a07d557e01e814519f3c2513c230700473f266c"
+      }
+    ],
+    "downloadedBundleChecksums": "all listed files verified; no unlisted bundle files",
+    "noticeAssets": {
+      "assets/Noto-fonts-copyright.txt": "075f91382875da1c4b491f1facf2586f55448705133264d98ce15cab6211b125",
+      "assets/Aqaqeer-NOTICE.txt": "0e8df0a8f8537f4207dec7fe5b1183556485b04dfe623bc6b8b9cdf9d19058a2",
+      "assets/THIRD-PARTY-NOTICES.txt": "3c8a00dd9c28a627e87e12751f2acac0acd0b91c7326b7a5b0562c8835a69154",
+      "assets/Apache-2.0.txt": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "assets/upstream-inventory.json": "d864b5303a24531fbd58c6e08a362b1f54f7d6ade25fe42d3b65a75933a2205b",
+      "assets/SQLCipher-Android-LICENSE.txt": "09e4af560ce2e3c9c2aa6b564e35947b03db7d1ae345f22a32793ed46542cc14",
+      "assets/upstream/Jakarta-Inject-NOTICE.md": "992ed62dd3ee17d73ce6a4a5e02dd0fed9eb326bf386aa5304e6a512214df540",
+      "assets/upstream/DataStore-Protobuf-LICENSE.txt": "a01b712fbb30f80b86851468b6fa58e80eab68f69f325e88bbc7ddf47cf1b063",
+      "assets/upstream/Room-external-ANTLR-LICENSE.txt": "a01b712fbb30f80b86851468b6fa58e80eab68f69f325e88bbc7ddf47cf1b063",
+      "assets/upstream/Protobuf-LICENSE.txt": "6e5e117324afd944dcf67f36cf329843bc1a92229a8cd9bb573d7a83130fea7d",
+      "assets/upstream/Apache-2.0-upstream.txt": "809fa1ed21450f59827d1e9aec720bbc4b687434fa22283c6cb5dd82a47ab9c0",
+      "assets/licenses/NotoSansArabic-OFL.txt": "07fc70bfeb985cc1a87a8587d0a0c80bab11c86c9dc3fd95b6f0cb332f983e96"
+    },
+    "signatures": "hosted apksigner verification and expected permanent certificate checks recorded in per-APK inspections",
+    "limits": "Archive/hash comparison and hosted signing inspection; no local SDK execution or installed-update/human acceptance"
+  }
 }
