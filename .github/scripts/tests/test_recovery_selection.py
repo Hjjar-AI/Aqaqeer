@@ -1,5 +1,6 @@
 """Offline recovery selection contracts; importing the campaign never executes it."""
 import importlib.util
+import json
 from pathlib import Path
 import unittest
 import os
@@ -49,6 +50,8 @@ class RecoverySelectionTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory, patch.object(selection, 'ROOT', Path(directory)), \
              patch.dict(os.environ, environment), patch.object(sys, 'argv', ['prepare-recovery']):
             selection.main()
+            (Path(directory) / 'ci-output/recovery/avd-heap.json').write_text(json.dumps(
+                {'avdId': 'aqaqeer-recovery', 'configuredVmHeapSizeMiB': 384}))
             with patch.object(sys, 'argv', ['prepare-recovery', '--run']), \
                  patch.object(selection.subprocess, 'run', return_value=Mock(returncode=0)) as run, \
                  self.assertRaises(SystemExit) as result:
@@ -66,10 +69,19 @@ class RecoverySelectionTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory); avd = root / 'aqaqeer-recovery.avd'; avd.mkdir()
             config = avd / 'config.ini'
+            registration = root / 'aqaqeer-recovery.ini'
+            registration.write_text(f'path={avd.resolve()}\n')
             config.write_text('AvdId=aqaqeer-recovery\nvm.heapSize=192\nhw.heapSize=384M\nhw.ramSize=1536\n')
             receipt = selection.configure_avd(root)
             self.assertEqual(384, receipt['configuredVmHeapSizeMiB'])
             self.assertEqual('AvdId=aqaqeer-recovery\nhw.ramSize=1536\nvm.heapSize=384\n', config.read_text())
+            config.write_text('vm.heapSize = 192\nhw.ramSize=1536\n')
+            selection.configure_avd(root)
+            self.assertEqual('hw.ramSize=1536\nvm.heapSize=384\n', config.read_text())
+            registration.write_text('path=/unexpected/other.avd\n')
+            with self.assertRaises(ValueError):
+                selection.configure_avd(root)
+            registration.write_text(f'path={avd.resolve()}\n')
             config.write_text('AvdId=other\nvm.heapSize=192\n')
             with self.assertRaises(ValueError):
                 selection.configure_avd(root)

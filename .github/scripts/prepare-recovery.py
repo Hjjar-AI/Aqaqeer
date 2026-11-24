@@ -40,18 +40,31 @@ def configure_avd(avd_home):
     config = directory / 'config.ini'
     if directory.is_symlink() or config.is_symlink() or not config.is_file():
         raise ValueError('Expected the owned newly created recovery AVD configuration')
+    registration = avd_home / 'aqaqeer-recovery.ini'
+    if registration.is_symlink() or not registration.is_file():
+        raise ValueError('Missing owned recovery AVD registration')
+    def entries(text):
+        return [(key.strip(), value.strip()) for line in text.splitlines()
+                if '=' in line for key, value in [line.split('=', 1)]]
+    registered = [value for key, value in entries(registration.read_text()) if key == 'path']
+    if registered != [str(directory.resolve())]:
+        raise ValueError('Unexpected recovery AVD registration path')
     before = config.read_text()
     lines = before.splitlines()
-    values = [line.split('=', 1)[1].strip() for line in lines if line.startswith('AvdId=')]
-    if values != ['aqaqeer-recovery']:
+    values = [value for key, value in entries(before) if key == 'AvdId']
+    # Command-line avdmanager can omit the optional AvdId; its registration owns the path.
+    if values not in ([], ['aqaqeer-recovery']):
         raise ValueError('Unexpected recovery AVD identity')
-    if sum(line.startswith('vm.heapSize=') for line in lines) > 1:
+    if sum(key == 'vm.heapSize' for key, _ in entries(before)) > 1:
         raise ValueError('Ambiguous AVD heap setting')
+    def heap_line(line):
+        return line.split('=', 1)[0].strip() in ('vm.heapSize', 'hw.heapSize')
     # The pinned runner writes hw.heapSize, which is not the emulator's vm.heapSize key.
-    lines = [line for line in lines if not line.startswith(('vm.heapSize=', 'hw.heapSize='))]
+    lines = [line for line in lines if not heap_line(line)]
     config.write_text('\n'.join(lines + ['vm.heapSize=384']) + '\n')
-    return {'avdId': values[0], 'configuredVmHeapSizeMiB': 384,
-            'previousHeapSettings': [line for line in before.splitlines() if line.startswith(('vm.heapSize=', 'hw.heapSize='))]}
+    return {'avdId': 'aqaqeer-recovery', 'registeredPath': registered[0],
+            'configuredVmHeapSizeMiB': 384,
+            'previousHeapSettings': [line for line in before.splitlines() if heap_line(line)]}
 
 
 def main():
@@ -78,6 +91,9 @@ def main():
         path.write_text(json.dumps({'resourceMethods': selected_resources(os.environ.get('CI_RECOVERY_RESOURCE_METHODS', '')), 'scenarios': selected_scenarios(os.environ.get('CI_RECOVERY_SCENARIOS', '')),
                                     'resources': resources == 'true'}, indent=2) + '\n')
         return
+    heap = json.loads((output / 'avd-heap.json').read_text())
+    if heap.get('avdId') != 'aqaqeer-recovery' or heap.get('configuredVmHeapSizeMiB') != 384:
+        raise ValueError('Recovery AVD prelaunch configuration did not complete')
     selection = json.loads(path.read_text())
     names = selection['scenarios']
     if (not isinstance(names, list) or selected_scenarios(','.join(names) if names else 'none') != names

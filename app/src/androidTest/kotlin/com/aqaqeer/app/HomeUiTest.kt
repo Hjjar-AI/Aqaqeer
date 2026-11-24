@@ -1,6 +1,7 @@
 package com.aqaqeer.app
 
 import androidx.lifecycle.ViewModelProvider
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.*
 import com.aqaqeer.app.ui.CatalogViewModel
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
@@ -61,7 +62,11 @@ class HomeUiTest {
         compose.waitUntil(15_000) {
             val browse = viewModel.homeBrowse.value
             browse.sectionId == section && browse.query == query &&
-                medications.all { medication -> browse.visible.any { it.id == medication.id } }
+                medications.all { medication -> browse.visible.any { it.id == medication.id } } &&
+                compose.onNodeWithTag("home").fetchSemanticsNode().config
+                    .getOrNull(SemanticsActions.IndexForKey)?.action?.let { index ->
+                        medications.all { index(it.id) >= 0 }
+                    } == true
         }
         compose.waitForIdle()
     }
