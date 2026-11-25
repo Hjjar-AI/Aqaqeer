@@ -1,6 +1,7 @@
 package com.aqaqeer.app.ui
 
-import androidx.compose.foundation.background
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -10,8 +11,11 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.Alignment
@@ -35,41 +39,59 @@ import com.aqaqeer.app.data.*
     outCounts: Map<String, Int>, selectSection: (String) -> Unit, availableSearchSections: Set<String> = emptySet()) {
     val uiText = rememberUiText()
     if (active.isNotEmpty()) BoxWithConstraints(Modifier.fillMaxWidth()) {
-        val measurer = androidx.compose.ui.text.rememberTextMeasurer()
+        val colors = MaterialTheme.colorScheme
+        val measurer = rememberTextMeasurer()
         val style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold)
         val density = LocalDensity.current
-        val required = remember(active, style, density) {
-            active.maxOf { section -> with(density) {
-                measurer.measure(androidx.compose.ui.text.AnnotatedString(section.nameAr), style).size.width.toDp()
-            } + UiSpacing.tabMeasurementAllowance } * active.size
+        val labelWidths = remember(active, style, density, measurer) {
+            active.associate { section ->
+                section.id to with(density) { measurer.measure(AnnotatedString(section.nameAr), style).size.width.toDp() }
+            }
         }
+        val required = (labelWidths.values.max() + UiSpacing.tabMeasurementAllowance) * active.size
+        val selectedIndex = active.indexOfFirst { it.id == selectedId }.coerceAtLeast(0)
+        val matchFill = lerp(colors.background, colors.secondaryContainer, 0.35f)
         val tabs: @Composable () -> Unit = {
             active.forEach { section ->
-                val selected = selectedId == section.id
-                val searchMatch = section.id in availableSearchSections
-                Tab(selected = selected, onClick = { selectSection(section.id) },
-                    selectedContentColor = MaterialTheme.colorScheme.onPrimary,
-                    unselectedContentColor = if (searchMatch) MaterialTheme.colorScheme.onSecondaryContainer else MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.clip(MaterialTheme.shapes.medium)
-                        .background(when { selected -> MaterialTheme.colorScheme.primary; searchMatch -> MaterialTheme.colorScheme.secondaryContainer; else -> Color.Transparent })
-                        .testTag("section_${section.id}").semantics {
-                        contentDescription = section.nameAr + if (searchMatch) " · " + uiText(R.string.review_section_search_stock) else ""
-                    }) {
-                    Row(Modifier.heightIn(min = UiSpacing.touch).padding(horizontal = UiSpacing.related),
-                        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(UiSpacing.hair)) {
-                        Box(Modifier.size(Size.tabIconSlot)) { if (searchMatch) AppIcon(UiIcon.SEARCH, Modifier.fillMaxSize()) }
-                        Text(section.nameAr, style = style, fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium)
+                key(section.id) {
+                    val selected = active[selectedIndex].id == section.id
+                    val searchMatch = section.id in availableSearchSections
+                    val fill = animateColorAsState(
+                        targetValue = when {
+                            selected -> colors.primaryContainer
+                            searchMatch -> matchFill
+                            else -> colors.background
+                        },
+                        animationSpec = tween(Motion.standard),
+                        label = "section tab fill",
+                    )
+                    Tab(selected = selected, onClick = { selectSection(section.id) },
+                        selectedContentColor = colors.onPrimaryContainer,
+                        unselectedContentColor = colors.onSurfaceVariant,
+                        modifier = Modifier.padding(bottom = Space.xs)
+                            .clip(MaterialTheme.shapes.medium)
+                            .drawBehind { drawRect(fill.value) }
+                            .testTag("section_${section.id}").semantics {
+                            contentDescription = section.nameAr + if (searchMatch) " · " + uiText(R.string.review_section_search_stock) else ""
+                        }) {
+                        Row(Modifier.heightIn(min = UiSpacing.touch).padding(horizontal = UiSpacing.related),
+                            verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(UiSpacing.hair)) {
+                            Box(Modifier.size(Size.tabIconSlot)) { if (searchMatch) AppIcon(UiIcon.SEARCH, Modifier.fillMaxSize()) }
+                            Box(Modifier.widthIn(min = labelWidths.getValue(section.id)), contentAlignment = Alignment.Center) {
+                                Text(section.nameAr, style = style, fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium)
+                            }
+                        }
                     }
                 }
             }
         }
         Surface(modifier = Modifier.fillMaxWidth(), shape = MaterialTheme.shapes.large,
-            color = MaterialTheme.colorScheme.background,
-            border = BorderStroke(AppStroke.hairline, MaterialTheme.colorScheme.outlineVariant)) {
-            if (required <= maxWidth) PrimaryTabRow(selectedTabIndex = active.indexOfFirst { it.id == selectedId }.coerceAtLeast(0),
-                containerColor = MaterialTheme.colorScheme.background, divider = {}, tabs = tabs)
-            else PrimaryScrollableTabRow(selectedTabIndex = active.indexOfFirst { it.id == selectedId }.coerceAtLeast(0), edgePadding = Space.none,
-                containerColor = MaterialTheme.colorScheme.background, divider = {}, tabs = tabs)
+            color = colors.background, border = BorderStroke(AppStroke.hairline, colors.outlineVariant)) {
+            // Material slides the primary-color indicator underneath the tonal tab fill.
+            if (required <= maxWidth) PrimaryTabRow(selectedTabIndex = selectedIndex,
+                containerColor = colors.background, divider = {}, tabs = tabs)
+            else PrimaryScrollableTabRow(selectedTabIndex = selectedIndex, edgePadding = Space.none,
+                containerColor = colors.background, divider = {}, tabs = tabs)
         }
     }
 }

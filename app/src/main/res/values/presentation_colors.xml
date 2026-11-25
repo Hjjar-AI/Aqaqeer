@@ -1,12 +1,13 @@
 <resources>
-    <color name="accent_violet_light">#80349F</color>
-    <color name="launch_violet">#FAF3FC</color>
-    <color name="launch_blue">#F0F7FF</color>
-    <color name="launch_green">#EFFAF4</color>
-    <color name="launch_rose">#FFF1F6</color>
-    <color name="launch_dark">#16151C</color>
-    <color name="launch_blue_dark">#121821</color>
-    <color name="launch_green_dark">#121B17</color>
-    <color name="launch_rose_dark">#1D151A</color>
+    <!-- The violet resource names still serve the original default accent slot, now Copper. -->
+    <color name="accent_violet_light">#8B4C23</color>
+    <color name="launch_violet">#FCF6F0</color>
+    <color name="launch_blue">#F2F6FF</color>
+    <color name="launch_green">#EFFAF5</color>
+    <color name="launch_rose">#FFF2F8</color>
+    <color name="launch_dark">#1D1713</color>
+    <color name="launch_blue_dark">#131925</color>
+    <color name="launch_green_dark">#111B17</color>
+    <color name="launch_rose_dark">#20151C</color>
     <color name="launch_black">#000000</color>
 </resources>

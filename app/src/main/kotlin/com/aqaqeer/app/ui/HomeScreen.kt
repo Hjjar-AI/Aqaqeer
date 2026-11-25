@@ -148,12 +148,14 @@ internal enum class HomeLeadingItem { BULK_HELP, OPERATION, NO_SECTION, SEARCH_S
             }, clearFilters = clearFilters, compact = state.homePreferences.searchAtBottom,
             showFetchedChip = !ready.admin && (state.fetchedIds.isNotEmpty() || state.filters.fetchedOnly),
             toggleFetched = { toggleExtraFilter("fetched") },
-            addMedication = if (canEdit && contextValid && !bulkMode) openAddMedication?.let { add -> ({
-                if (editor == null && !filtersOpen && !availabilityInProgress() && canOpenHomeModal()) {
+            // Adding belongs to the pharmacy, so resetting section-scoped selections must not move the search field.
+            addMedication = if (canEdit && !bulkMode) openAddMedication?.let { add -> ({
+                if (editor == null && !filtersOpen && !bulkSheetOpen && !noticeDialogOpen &&
+                    !availabilityInProgress() && canOpenHomeModal()) {
                     focus.clearFocus(); add()
                 }
             }) } else null,
-            addEnabled = !availabilityBusy && editor == null && !filtersOpen && !noticeDialogOpen)
+            addEnabled = !availabilityBusy && editor == null && !filtersOpen && !bulkSheetOpen && !noticeDialogOpen)
     }
     BoxWithConstraints(Modifier.fillMaxSize()) {
         val compactHeight = LocalLayoutMetrics.current.compact(maxHeight)
