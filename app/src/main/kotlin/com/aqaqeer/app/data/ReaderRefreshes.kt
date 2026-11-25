@@ -133,7 +133,7 @@ internal class ReaderRefreshes(
             val remote = error as? SnapshotReadException
             val code = remote?.error
             val rateLimited = remote?.error == SnapshotReadError.RATE_LIMITED
-            val serverWait = if (rateLimited) now + maxOf(2, remote?.retryAfterSeconds ?: 0) * 1000L else issued.serverWaitUntil
+            val serverWait = if (rateLimited) now + maxOf(2, remote.retryAfterSeconds) * 1000L else issued.serverWaitUntil
             val retry = !plan.retryPending && code in setOf(SnapshotReadError.NETWORK, SnapshotReadError.CHANGED_DURING_READ, SnapshotReadError.RATE_LIMITED)
             val scheduled = if (retry) now + retryDelay() else regularDeadline(now)
             val next = if (rateLimited) maxOf(scheduled, serverWait + Random.nextLong(15_000, minuteMillis)) else scheduled

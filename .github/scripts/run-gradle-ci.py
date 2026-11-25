@@ -1,4 +1,4 @@
-"""Run an existing CI Gradle command, retrying only dependency-resolution HTTP 429.
+"""Run an existing CI Gradle command with bounded retries for known resolution failures.
 
 No task selection, cache replacement, version reservation or workflow dispatch occurs here.
 Keep every attempt in the diagnostics directory; compiler/test failures stop immediately.
@@ -30,6 +30,26 @@ def dependency_rate_limit(output):
     if re.search(r'(^e: |Kotlin compiler error|There were failing tests|\d+ tests completed)', output, re.M):
         return False
     return True
+
+
+def compose_plugin_resolution_failure(output):
+    # A cold runner failed before tasks when resolving this marker, while the
+    # same pin resolved in the other jobs. The diagnostic has no HTTP status.
+    if len(re.findall(r'^FAILURE:', output, re.M)) != 1 or re.search(r'^> Task |^e: ', output, re.M):
+        return False
+    causes = re.findall(r'^\* What went wrong:\n(.*?)\n\n\* Try:', output, re.M | re.S)
+    if len(causes) != 1:
+        return False
+    return re.fullmatch(
+        r"Plugin \[id: 'org\.jetbrains\.kotlin\.plugin\.compose', version: '(\d+\.\d+\.\d+)', apply: false\]"
+        r" was not found in any of the following sources:\n\n"
+        r"- Gradle Core Plugins [^\n]+\n"
+        r"- Included Builds [^\n]+\n"
+        r"- Plugin Repositories \(could not resolve plugin artifact "
+        r"'org\.jetbrains\.kotlin\.plugin\.compose:org\.jetbrains\.kotlin\.plugin\.compose\.gradle\.plugin:\1'\)\n"
+        r"  Searched in the following repositories:(?:\n    [^\n]+)+",
+        causes[0],
+    ) is not None
 
 
 def main():
@@ -74,14 +94,20 @@ def main():
             combined.flush()
             if status == 0:
                 return 0
-            if status < 0 or attempt == 3 or not dependency_rate_limit(attempt_log.read_text(encoding='utf-8')):
+            if status < 0 or attempt == 3:
                 return status if status > 0 else 128 - status
-            # Maven Central throttling outlasted the former 20/40-second waits.
-            # Keep three attempts, with a bounded six-minute cooldown budget.
-            delay = 120 * attempt
+            output = attempt_log.read_text(encoding='utf-8')
+            if dependency_rate_limit(output):
+                delay = 120 * attempt
+                reason = 'dependency HTTP 429'
+            elif attempt == 1 and compose_plugin_resolution_failure(output):
+                delay = 30
+                reason = 'Kotlin Compose plugin resolution failed before tasks'
+            else:
+                return status
             if deadline and time.monotonic() + delay >= deadline:
                 return status
-            message = f'CI: dependency HTTP 429; retry {attempt + 1}/3 after {delay}s.\n'
+            message = f'CI: {reason}; retry {attempt + 1}/3 after {delay}s.\n'
             print(message, end='', flush=True)
             combined.write(message)
             combined.flush()

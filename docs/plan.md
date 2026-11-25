@@ -60,9 +60,9 @@ The retained live-PIN/manual-republication/reader-connection extension remains o
 
 ## Ordered delivery backlog
 
-Run workflow 03 from the default branch containing the PDF compiler and wrapper-cache repairs with `scope=all` and `coverage=false`. Check wrapper provisioning and its early save in the logs on a cold miss. After compilation is confirmed, workflow 06 with `flavor=both` checks both APK builds and signing. Its new run reserves the next available code. Retain reservation 5 from the failed run.
+Run workflow 03 on the commit with the Kotlin Compose resolution retry and Reader compiler-warning repair using `scope=all` and `coverage=false`. If plugin resolution fails again after the bounded retry, retain both attempt logs and check the repository response before changing the plugin pin. Keep the JVM, debug/instrumentation compilation and wrapper-cache evidence from run `45591154331` at `932f2a9`. Workflow 06 already built and signed both debug flavors with code 6. Keep reservations 5 and 6. [Hosted results](validation.md#hosted-workflows-03-and-06--2026-11-25)
 
-Reader refresh needs workflow 03 (`scope=all`, `coverage=false`) for the coordinator, transport, refresh presentation and permission tests and workflow 08 for WorkManager's merged manifest and runtime notices. Workflow 07 has a focused fetched-marker case. Android verification still needs actual WorkManager wake-ups under network and battery constraints, restart and reboot, and confirmation that the foreground error clears after a worker commits a successful check. [Exact test inputs](test-coverage.md#reader-refresh-scheduling--2026-11-25)
+Reader refresh still needs workflow 08 for WorkManager's merged manifest and runtime notices. Workflow 07 has a focused fetched-marker case. Android verification still needs actual WorkManager wake-ups under network and battery constraints, restart and reboot, and confirmation that the foreground error clears after a worker commits a successful check. [Exact test inputs](test-coverage.md#reader-refresh-scheduling--2026-11-25)
 
 Old IDs remain for traceability; consolidated rows replace overlapping checklists. Use the current checkpoint above and retain dated passes unless relevant source changes invalidate them. Hosted authorization does not resume local build/lint/device/live work.
 
