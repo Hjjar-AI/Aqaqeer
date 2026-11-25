@@ -60,7 +60,7 @@ The retained live-PIN/manual-republication/reader-connection extension remains o
 
 ## Ordered delivery backlog
 
-Reader refresh needs workflow 03 (`scope=all`, `coverage=false`) for the coordinator, transport and permission tests and workflow 08 for WorkManager's merged manifest and runtime notices. Workflow 07 has a focused fetched-marker case. Android verification still needs actual WorkManager wake-ups under network and battery constraints, restart and reboot, and foreground refresh feedback after a background success. [Exact test inputs](test-coverage.md#reader-refresh-scheduling--2026-11-25)
+Reader refresh needs workflow 03 (`scope=all`, `coverage=false`) for the coordinator, transport, refresh presentation and permission tests and workflow 08 for WorkManager's merged manifest and runtime notices. Workflow 07 has a focused fetched-marker case. Android verification still needs actual WorkManager wake-ups under network and battery constraints, restart and reboot, and confirmation that the foreground error clears after a worker commits a successful check. [Exact test inputs](test-coverage.md#reader-refresh-scheduling--2026-11-25)
 
 Old IDs remain for traceability; consolidated rows replace overlapping checklists. Use the current checkpoint above and retain dated passes unless relevant source changes invalidate them. Hosted authorization does not resume local build/lint/device/live work.
 

@@ -230,6 +230,34 @@ class ReaderRefreshesTest {
         assertEquals(1, attempts.get())
     }
 
+    @Test fun cachedRateLimitUpdatesDeadlineWithoutRecordingAnotherRequest(): Unit = runBlocking {
+        val lastVerified = target!!.lastSuccess
+        val limit = SnapshotReadException(SnapshotReadError.RATE_LIMITED, 45 * 60)
+        beforeAdmission = { throw limit }
+        val refresh = coordinator()
+        val start = System.currentTimeMillis()
+        assertSame(limit, rejects<SnapshotReadException> { refresh.check(automatic = true, background = true) {} })
+        assertEquals(lastVerified, plan().time("lastAttempt"))
+        assertTrue(plan().time("serverWaitUntil") >= start + 45 * minute)
+        assertTrue(deadline() > plan().time("serverWaitUntil"))
+        rejects<ReaderRefreshCooldown> { refresh.check(automatic = false, background = false) {} }
+        assertEquals(0, attempts.get())
+    }
+
+    @Test fun verifiedSuccessFromAnotherPathReplacesThePendingRetry(): Unit = runBlocking {
+        result = { throw SnapshotReadException(SnapshotReadError.NETWORK) }
+        val refresh = coordinator()
+        rejects<SnapshotReadException> { refresh.check(automatic = true, background = true) {} }
+        val retryDeadline = deadline()
+        val verified = System.currentTimeMillis()
+        target = target!!.copy(lastSuccess = verified)
+        assertNull(refresh.check(automatic = true, background = false) {})
+        assertTrue(deadline() in (verified + 12 * hour)..(verified + 14 * hour))
+        assertTrue(deadline() > retryDeadline)
+        assertFalse(plan()["retryPending"]?.jsonPrimitive?.boolean ?: false)
+        assertEquals(1, attempts.get())
+    }
+
     @Test fun revokedCredentialsPauseAutomaticWorkUntilTheConnectionChanges(): Unit = runBlocking {
         val revoked = SnapshotReadException(SnapshotReadError.INVALID_CREDENTIALS)
         result = { throw revoked }

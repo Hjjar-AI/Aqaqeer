@@ -37,6 +37,17 @@ internal data class UiFeedback(val message: String, val route: String, val medic
 
 data class RefreshUiState(val busy: Boolean = false, val error: String? = null)
 
+internal data class RefreshFailure(val pharmacyId: String, val lastSuccess: Instant?, val message: String)
+
+internal data class RefreshProgress(val busy: Boolean = false, val failure: RefreshFailure? = null) {
+    fun presentation(ready: CatalogState.Ready?): RefreshUiState = RefreshUiState(
+        busy = busy,
+        error = failure?.takeIf {
+            ready != null && ready.catalog.pharmacy?.pharmacyId == it.pharmacyId && ready.lastSuccessfulRefreshAt == it.lastSuccess
+        }?.message,
+    )
+}
+
 data class AppUiState(
     val catalog: CatalogState = CatalogState.Loading,
     val theme: ThemeChoice = ThemeChoice.SYSTEM,
@@ -268,7 +279,7 @@ class CatalogViewModel @Inject constructor(
         }
     }
     override fun onCleared() { connectivity.unregisterNetworkCallback(networkObserver); super.onCleared() }
-    private val refreshState = MutableStateFlow(RefreshUiState())
+    private val refreshState = MutableStateFlow(RefreshProgress())
     private val connectionController = ConnectionImportController(connectionImports, viewModelScope) { navigate(it) }
     val connectionImport: StateFlow<ConnectionImportUiState> = connectionController.connectionImport
     private val onlineState = MutableStateFlow(online)
@@ -320,7 +331,7 @@ class CatalogViewModel @Inject constructor(
             filters = browsing.third.copy(
                 statuses = if (readerStockOnly) emptySet() else browsing.third.statuses,
                 unpublishedOnly = browsing.third.unpublishedOnly && ready?.admin == true),
-            refresh = refresh, online = if (BuildConfig.IS_DEMO) DemoSession.initialize().online else online)
+            refresh = refresh.presentation(ready), online = if (BuildConfig.IS_DEMO) DemoSession.initialize().online else online)
     }.stateIn(viewModelScope, SharingStarted.Eagerly, DisplayPreferences.startupPresentation(context).let { (theme, accent) ->
         AppUiState(theme = theme, accent = accent)
     })
@@ -351,7 +362,8 @@ class CatalogViewModel @Inject constructor(
     }
     internal val shellState = state.map { it.copy(query = "", appliedQuery = "", filters = HomeFilters(), refresh = RefreshUiState()) }.distinctUntilChanged()
         .stateIn(viewModelScope, SharingStarted.Eagerly, state.value)
-    internal val refreshUiState = refreshState.asStateFlow()
+    internal val refreshUiState = state.map { it.refresh }.distinctUntilChanged()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), state.value.refresh)
     internal val drawerFilters = state.map { it.filters }.distinctUntilChanged()
         .stateIn(viewModelScope, SharingStarted.Eagerly, HomeFilters())
     private val searchIndex = state.map { (it.catalog as? CatalogState.Ready)?.catalog }.distinctUntilChanged()
@@ -438,10 +450,10 @@ class CatalogViewModel @Inject constructor(
         refreshJob = viewModelScope.launch {
             try {
                 val result = if (ready.admin) {
-                    refreshState.value = RefreshUiState(busy = true)
+                    refreshState.value = RefreshProgress(busy = true)
                     refreshes.refresh()
                 } else {
-                    refreshes.refreshReader(automatic) { refreshState.value = RefreshUiState(busy = true) }
+                    refreshes.refreshReader(automatic) { refreshState.value = RefreshProgress(busy = true) }
                 }
                 if (result == null) return@launch
                 if (!automatic && route.value == origin && (state.value.catalog as? CatalogState.Ready)?.catalog?.pharmacy?.pharmacyId == pharmacyId)
@@ -457,7 +469,7 @@ class CatalogViewModel @Inject constructor(
             }
             catch (error: Exception) {
                 if ((state.value.catalog as? CatalogState.Ready)?.catalog?.pharmacy?.pharmacyId == pharmacyId)
-                    refreshState.value = RefreshUiState(error = refreshMessage(error))
+                    refreshState.value = RefreshProgress(failure = RefreshFailure(pharmacyId, ready.lastSuccessfulRefreshAt, refreshMessage(error)))
             }
             finally { refreshState.update { it.copy(busy = false) } }
         }
