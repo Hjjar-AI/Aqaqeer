@@ -4,6 +4,9 @@ inputs:
   setup-gradle:
     description: Configure Gradle and restore its cache; false only for signing-only jobs that never invoke Gradle
     default: 'true'
+  instrumentation-cache:
+    description: Prefer dependency snapshots produced by Android test compilation
+    default: 'false'
   diagnostics-directory:
     description: Directory under ci-output for SDK setup diagnostics
     required: true
@@ -65,7 +68,7 @@ runs:
         key: aqaqeer-gradle-wrapper-v1-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}
 
     - name: Restore and retain downloaded Gradle dependencies
-      if: ${{ inputs.setup-gradle == 'true' && github.ref_name == github.event.repository.default_branch }}
+      if: ${{ inputs.setup-gradle == 'true' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
       uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
       env:
         TAR_OPTIONS: '--exclude=*.lock --exclude=gc.properties'
@@ -73,18 +76,25 @@ runs:
         path: |
           ~/.gradle/caches/modules-2/files-2.1
           ~/.gradle/caches/modules-2/metadata-2.*
-        key: aqaqeer-dependencies-v2-${{ runner.os }}-${{ runner.arch }}-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.job }}-${{ strategy.job-index }}
-        restore-keys: aqaqeer-dependencies-v2-${{ runner.os }}-${{ runner.arch }}-
+        key: aqaqeer-dependencies-v2-${{ runner.os }}-${{ runner.arch }}-${{ inputs.instrumentation-cache == 'true' && 'instrumentation-' || '' }}${{ github.run_id }}-${{ github.run_attempt }}-${{ github.job }}-${{ strategy.job-index }}
+        # The historical instrumentation hit seeds the new prefix while the entry is still available.
+        restore-keys: |
+          ${{ inputs.instrumentation-cache == 'true' && format('aqaqeer-dependencies-v2-{0}-{1}-instrumentation-', runner.os, runner.arch) || '' }}
+          ${{ inputs.instrumentation-cache == 'true' && format('aqaqeer-dependencies-v2-{0}-{1}-45591154331-1-verify-2', runner.os, runner.arch) || '' }}
+          aqaqeer-dependencies-v2-${{ runner.os }}-${{ runner.arch }}-
 
     - name: Restore downloaded Gradle dependencies on other branches
-      if: ${{ inputs.setup-gradle == 'true' && github.ref_name != github.event.repository.default_branch }}
+      if: ${{ inputs.setup-gradle == 'true' && github.ref != format('refs/heads/{0}', github.event.repository.default_branch) }}
       uses: actions/cache/restore@caa296126883cff596d87d8935842f9db880ef25 # v5
       with:
         path: |
           ~/.gradle/caches/modules-2/files-2.1
           ~/.gradle/caches/modules-2/metadata-2.*
-        key: aqaqeer-dependencies-v2-${{ runner.os }}-${{ runner.arch }}-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.job }}-${{ strategy.job-index }}
-        restore-keys: aqaqeer-dependencies-v2-${{ runner.os }}-${{ runner.arch }}-
+        key: aqaqeer-dependencies-v2-${{ runner.os }}-${{ runner.arch }}-${{ inputs.instrumentation-cache == 'true' && 'instrumentation-' || '' }}${{ github.run_id }}-${{ github.run_attempt }}-${{ github.job }}-${{ strategy.job-index }}
+        restore-keys: |
+          ${{ inputs.instrumentation-cache == 'true' && format('aqaqeer-dependencies-v2-{0}-{1}-instrumentation-', runner.os, runner.arch) || '' }}
+          ${{ inputs.instrumentation-cache == 'true' && format('aqaqeer-dependencies-v2-{0}-{1}-45591154331-1-verify-2', runner.os, runner.arch) || '' }}
+          aqaqeer-dependencies-v2-${{ runner.os }}-${{ runner.arch }}-
 
     - name: Install missing Android SDK packages
       shell: bash

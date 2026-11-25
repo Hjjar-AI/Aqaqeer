@@ -13,6 +13,14 @@ PUBLIC_GUARD = '${{ github.event.repository.private == false }}'
 CLEANUP_GUARD = "${{ github.event.repository.private == false && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}"
 PIN = re.compile(r'[\w.-]+/[\w.-]+(?:/[\w./-]+)?@[0-9a-f]{40}')
 DEPENDENCY_CACHE_PATHS = '~/.gradle/caches/modules-2/files-2.1\n~/.gradle/caches/modules-2/metadata-2.*\n'
+DEPENDENCY_CACHE_PREFIX = 'aqaqeer-dependencies-v2-${{ runner.os }}-${{ runner.arch }}-'
+INSTRUMENTATION_CACHE_INPUT = "${{ matrix.check == 'debug-and-instrumentation-compilation' && 'true' || 'false' }}"
+INSTRUMENTATION_CACHE_SEGMENT = "${{ inputs.instrumentation-cache == 'true' && 'instrumentation-' || '' }}"
+DEPENDENCY_RESTORE_KEYS = (
+    "${{ inputs.instrumentation-cache == 'true' && format('aqaqeer-dependencies-v2-{0}-{1}-instrumentation-', runner.os, runner.arch) || '' }}\n"
+    "${{ inputs.instrumentation-cache == 'true' && format('aqaqeer-dependencies-v2-{0}-{1}-45591154331-1-verify-2', runner.os, runner.arch) || '' }}\n"
+    + DEPENDENCY_CACHE_PREFIX + '\n'
+)
 WRAPPER_CACHE_PATH = '~/.gradle/wrapper/dists'
 WRAPPER_RESTORE_GUARD = "${{ inputs.setup-gradle == 'true' }}"
 WRAPPER_DEFAULT_BRANCH = "inputs.setup-gradle == 'true' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)"
@@ -75,6 +83,8 @@ def check(path):
                             if (local.get('inputs', {}).get('setup-gradle', {}).get('default') != 'true'
                                     or setup.get('if') != WRAPPER_RESTORE_GUARD):
                                 problem(label, 'shared setup must default Gradle caching on and guard signing opt-out')
+                            if local.get('inputs', {}).get('instrumentation-cache', {}).get('default') != 'false':
+                                problem(label, 'instrumentation dependency preference must default off')
                             cache_paths = [
                                 (item['uses'].split('@', 1)[0], item.get('with', {}).get('path'))
                                 for item in local_steps if isinstance(item, dict)
@@ -125,16 +135,16 @@ def check(path):
                     if inputs.get('key') != expected_key or 'restore-keys' in inputs:
                         problem(label, 'wrapper cache must be keyed by the exact wrapper properties')
                 elif inputs.get('path') == DEPENDENCY_CACHE_PATHS:
-                    expected_guard = ("${{ inputs.setup-gradle == 'true' && github.ref_name "
+                    expected_guard = ("${{ inputs.setup-gradle == 'true' && github.ref "
                                       + ('==' if name == 'actions/cache' else '!=')
-                                      + " github.event.repository.default_branch }}")
+                                      + " format('refs/heads/{0}', github.event.repository.default_branch) }}")
                     if step.get('if') != expected_guard:
                         problem(label, 'dependency caches must preserve default-branch-only writes and signing opt-out')
-                    expected_prefix = 'aqaqeer-dependencies-v2-${{ runner.os }}-${{ runner.arch }}-'
-                    expected_key = (expected_prefix + '${{ github.run_id }}-${{ github.run_attempt }}-'
+                    expected_key = (DEPENDENCY_CACHE_PREFIX + INSTRUMENTATION_CACHE_SEGMENT
+                                    + '${{ github.run_id }}-${{ github.run_attempt }}-'
                                     + '${{ github.job }}-${{ strategy.job-index }}')
-                    if inputs.get('key') != expected_key or inputs.get('restore-keys') != expected_prefix:
-                        problem(label, 'dependency snapshots must restore across runs and save per run/job/attempt')
+                    if inputs.get('key') != expected_key or inputs.get('restore-keys') != DEPENDENCY_RESTORE_KEYS:
+                        problem(label, 'dependency caches must prefer the instrumentation scope and verified seed when requested')
                     if name == 'actions/cache' and step.get('env') != {
                             'TAR_OPTIONS': '--exclude=*.lock --exclude=gc.properties'}:
                         problem(label, 'dependency archives must exclude lock files and cleanup markers')
@@ -405,6 +415,9 @@ def check(path):
                     expected = 'false' if signing_only else 'true'
                     if step.get('with', {}).get('setup-gradle', 'true') != expected:
                         problem(name, 'Gradle cache opt-out is restricted to signing-only jobs')
+                    expected_cache = INSTRUMENTATION_CACHE_INPUT if path.name == 'verification.yml' and name == 'verify' else 'false'
+                    if step.get('with', {}).get('instrumentation-cache', 'false') != expected_cache:
+                        problem(name, 'only workflow 03 Android test compilation may prefer the instrumentation cache')
             steps_check(job.get('steps'), name)
             if path.name in ('android.yml', 'publish-debug.yml') and name == 'build-debug':
                 steps = job.get('steps', [])

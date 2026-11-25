@@ -44,6 +44,7 @@ jobs:
         uses: ./.github/actions/setup-android
         with:
           diagnostics-directory: ci-output/verification
+          instrumentation-cache: ${{ matrix.check == 'debug-and-instrumentation-compilation' && 'true' || 'false' }}
 
       - name: Verify offline CI helper contracts without Gradle or network
         if: ${{ matrix.check == 'standard-unit-tests' }}
