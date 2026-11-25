@@ -66,6 +66,64 @@ class HomeBarPlacementUiTest {
     @Test fun searchCanBeBottomWhileSectionsStayAtTop() { layout(false, true) }
     @Test fun bothBarsCanReturnToTheirOriginalTopOrder() { layout(false, false) }
 
+    @Test fun sectionSwitchKeepsAdminAddAndSearchBoundsStableInBothPlacements() {
+        val firstId = catalog.sections.first().id
+        var state by mutableStateOf(AppUiState(sectionId = firstId, query = "Fixture", appliedQuery = "Fixture",
+            homePreferences = HomePreferences(sectionsAtBottom = false, searchAtBottom = false)))
+        var adds = 0
+        var busy by mutableStateOf(false)
+        compose.setContent {
+            AqaqeerTheme(ThemeChoice.LIGHT) {
+                Box(Modifier.width(320.dp).height(560.dp)) {
+                    HomeScreen(CatalogState.Ready(catalog, false, admin = true), state, F.time,
+                        availabilityBusy = busy, projection = homeProjection(catalog, state),
+                        actions = rememberHomeActions(HomeCallbacks(
+                            selectSection = { state = state.copy(sectionId = it) },
+                            setQuery = { state = state.copy(query = it, appliedQuery = it) },
+                            toggleStatus = {},
+                            toggleCategory = {},
+                            clearFilters = {},
+                            openMedication = {},
+                            openSettings = {},
+                            saveAvailability = { _, _, _ -> },
+                            openAddMedication = { adds++ },
+                            availabilityInProgress = { busy })))
+                }
+            }
+        }
+        val search = compose.onNodeWithTag("search")
+        val add = compose.onNodeWithContentDescription(uiText(R.string.navigation_add_medication_title))
+        for (bottom in listOf(false, true)) {
+            compose.runOnIdle {
+                state = state.copy(sectionId = firstId, homePreferences = state.homePreferences.copy(
+                    sectionsAtBottom = bottom, searchAtBottom = bottom))
+            }
+            compose.onNodeWithTag("section_$firstId").assertIsSelected()
+            add.assertIsDisplayed().assertIsEnabled()
+            val searchBounds = search.fetchSemanticsNode().boundsInRoot
+            val addBounds = add.fetchSemanticsNode().boundsInRoot
+            compose.mainClock.autoAdvance = false
+            try {
+                val target = compose.onNodeWithTag("section_${second.id}")
+                target.performClick()
+                // Inspect the first frame of the new section before waiting for reconciliation and motion.
+                compose.mainClock.advanceTimeByFrame()
+                target.assertIsSelected()
+                add.assertIsDisplayed().assertIsEnabled()
+                assertEquals(searchBounds, search.fetchSemanticsNode().boundsInRoot)
+                assertEquals(addBounds, add.fetchSemanticsNode().boundsInRoot)
+            } finally {
+                compose.mainClock.autoAdvance = true
+            }
+            search.assertTextContains("Fixture", substring = true)
+            assertEquals(searchBounds, search.fetchSemanticsNode().boundsInRoot)
+            assertEquals(addBounds, add.fetchSemanticsNode().boundsInRoot)
+            add.performClick()
+        }
+        compose.runOnIdle { busy = true; assertEquals(2, adds) }
+        add.assertIsDisplayed().assertIsNotEnabled()
+    }
+
     @Test fun changingPlacementPreservesQueryFiltersAndSelectedSection() {
         var state by mutableStateOf(AppUiState(sectionId = second.id, query = "Fixture", appliedQuery = "Fixture",
             filters = HomeFilters(statuses = setOf(AvailabilityStatus.AVAILABLE))))

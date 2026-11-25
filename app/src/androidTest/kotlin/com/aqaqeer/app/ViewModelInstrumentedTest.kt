@@ -63,6 +63,94 @@ class ViewModelInstrumentedTest {
         withTimeout(15000) { vm.state.first { it.catalog is CatalogState.Ready } }
     }
     @After fun cleanup() { if (::vm.isInitialized) main { models.clear() }; if (::p.isInitialized) p.close() }
+
+    @Test fun adminHubKeepsOneLeaveActionAndShowsOnlyToolsPermittedByState(): Unit = runBlocking {
+        val shared = p.ready().copy(admin = true, lifecycle = "SHARED")
+        var ready by mutableStateOf(shared.copy(admin = false))
+        compose.setContent {
+            AqaqeerTheme(ThemeChoice.DARK) {
+                Box(Modifier.width(320.dp)) { FormPage { AdminHubContent(ready, vm) } }
+            }
+        }
+        val leave = compose.onNodeWithText(uiText(R.string.navigation_leave_pharmacy_title))
+        val add = compose.onNodeWithText(uiText(R.string.navigation_add_medication_title))
+        val reports = compose.onNodeWithText(uiText(R.string.exchange_reports_navigation_label))
+        val export = compose.onNodeWithText(uiText(R.string.navigation_connection_export_title))
+        val backup = compose.onNodeWithText(uiText(R.string.navigation_backup_title))
+        compose.onNodeWithText(uiText(R.string.navigation_promote_admin_title)).assertIsDisplayed()
+        add.assertDoesNotExist()
+        backup.assertDoesNotExist()
+        leave.performScrollTo().assertIsDisplayed()
+
+        compose.runOnIdle { ready = shared.copy(maintenancePaused = true) }
+        compose.onNodeWithText(uiText(R.string.maintenance_review_first_action)).performScrollTo().assertIsEnabled()
+        add.assertDoesNotExist()
+        reports.assertDoesNotExist()
+        export.assertDoesNotExist()
+        backup.performScrollTo().assertIsEnabled()
+        // This scroll/assertion also requires a unique leave node.
+        leave.performScrollTo().assertIsDisplayed()
+
+        compose.runOnIdle { ready = shared.copy(requiresUpdate = true) }
+        compose.onNodeWithText(uiText(R.string.publication_review_retained_work_action)).performScrollTo().assertIsEnabled()
+        add.assertDoesNotExist()
+        export.assertDoesNotExist()
+        leave.performScrollTo().assertIsDisplayed()
+
+        compose.runOnIdle { ready = shared.copy(restorePaused = true) }
+        compose.onNodeWithText(uiText(R.string.backup_complete_restore_review_action)).performScrollTo().assertIsEnabled()
+        add.performScrollTo().assertIsEnabled()
+        export.performScrollTo().assertIsNotEnabled()
+        compose.onNodeWithText(uiText(R.string.admin_hub_connection_after_restore)).assertIsDisplayed()
+        compose.runOnIdle { ready = shared }
+        export.performScrollTo().assertIsEnabled()
+    }
+
+    @Test fun adminChecklistOpensSetupGuideAndBackReturnsToTools(): Unit = runBlocking {
+        val ready = p.ready()
+        assertTrue(ready.admin)
+        assertEquals("LOCAL_DRAFT", ready.lifecycle)
+        assertTrue(ready.catalog.medications.isEmpty())
+        assertFalse(ready.hasPublicationConnection || ready.hasBackup)
+        assertNull(ready.publishedAt)
+        main { vm.navigate(Route.Admin) }
+        val route = saved.getStateFlow("route", "home")
+        compose.setContent {
+            AqaqeerTheme(ThemeChoice.LIGHT) {
+                Box(Modifier.width(320.dp)) {
+                    val destination by route.collectAsState()
+                    key(destination) {
+                        when (RouteStorage.decode(destination)) {
+                            Route.Admin -> FormPage { AdminHubContent(ready, vm) }
+                            Route.Setup -> FormPage { TelegramSetup(vm, busy = false, empty = true) }
+                            else -> Unit
+                        }
+                    }
+                }
+            }
+        }
+        val progress = compose.onNodeWithText(uiText(R.string.admin_hub_checklist_progress,
+            uiText(R.string.review_setup_checklist), 0, 4))
+        val connect = compose.onNodeWithText(uiText(R.string.review_check_connection))
+        progress.assertIsDisplayed()
+        connect.assertDoesNotExist()
+        progress.performClick()
+        connect.performScrollTo()
+            .assert(SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, uiText(R.string.shared_step_pending)))
+            .performClick()
+        val guide = compose.onNodeWithText(uiText(R.string.admin_setup_instructions_heading))
+        val instructions = compose.onNodeWithText(uiText(R.string.connection_create_bot_step_help))
+        compose.runOnIdle { assertEquals("setup", route.value) }
+        instructions.assertDoesNotExist()
+        guide.performScrollTo().performClick()
+        instructions.performScrollTo().assertIsDisplayed()
+        val discover = compose.onNodeWithText(uiText(R.string.connection_discover_group_action))
+        discover.performScrollTo().assertIsNotEnabled()
+        main { vm.back() }
+        compose.runOnIdle { assertEquals("admin", route.value) }
+        progress.assertIsDisplayed()
+    }
+
     @Test fun backupReaderHasNoExportOrReplacementControls(): Unit = runBlocking {
         val ready = p.ready().copy(admin = false)
         compose.setContent { AqaqeerTheme(ThemeChoice.LIGHT) { BackupScreen(AppUiState(catalog = ready), vm) } }

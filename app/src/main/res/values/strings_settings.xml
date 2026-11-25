@@ -12,7 +12,7 @@
     <string name="review_demo_reset">إعادة البيانات التجريبية</string>
     <string name="review_demo_reset_help">ستُحذف التعديلات والسجل التجريبي وتعود بيانات العرض الأصلية.</string>
     <string name="review_list_display">عرض القائمة</string>
-    <string name="settings_accent_blue_label" formatted="false">"أزرق كوبالت"</string>
+    <string name="settings_accent_blue_label" formatted="false">"أزرق"</string>
     <string name="settings_accent_rose_label" formatted="false">"وردي"</string>
     <string name="settings_accent_green_label" formatted="false">"أخضر"</string>
     <string name="settings_accent_purple_label" formatted="false">"نحاسي"</string>

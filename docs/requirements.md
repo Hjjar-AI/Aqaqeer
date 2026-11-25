@@ -351,7 +351,7 @@ Light mode uses white card surfaces and near-white app backgrounds with a very l
 
 Settings includes a separate installation-local «أسود» AMOLED mode alongside system/light/dark. AMOLED always uses dark foreground/status/accent variants and pure #000000 content backgrounds and card surfaces. Interactive and elevated container roles use subtle near-black levels (#0E0E0E–#141414) so nested tips, sheets and dialogs remain distinguishable; suppress additional tonal surface tint. Retain readable foregrounds/outlines and semantic colored badges/selection controls. Existing stored modes and default system behavior remain.
 
-Use Material 3 with Copper as the default primary accent. Settings offers four Arabic color choices (نحاسي، أزرق كوبالت، أخضر، وردي).
+Use Material 3 with Copper as the default primary accent. Settings offers four Arabic color choices (نحاسي، أزرق، أخضر، وردي).
 
 Save the selected primary accent installation-locally, independently of system/light/dark/AMOLED mode; apply it immediately and restore across restart. Unset, unknown and former Gold and Violet selections resolve to Copper. Former Crimson selections resolve to Rose. Each choice supplies matching light/dark primary and secondary selection colors, foregrounds, containers, inverse-primary and tint colors.
 

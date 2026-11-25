@@ -239,6 +239,10 @@ SHARING_CASES = (
 )
 
 UI_CASES = (
+    ('ui-HomeBarPlacementUiTest-sectionSwitchKeepsAdminAddAndSearchBoundsStableInBothPlacements', 'HomeBarPlacementUiTest#sectionSwitchKeepsAdminAddAndSearchBoundsStableInBothPlacements', False),
+    ('ui-SectionThemeUiTest-retainedAccentKeysAndSectionIndicatorUseTheNewPalette', 'SectionThemeUiTest#retainedAccentKeysAndSectionIndicatorUseTheNewPalette', False),
+    ('ui-ViewModelInstrumentedTest-adminHubKeepsOneLeaveActionAndShowsOnlyToolsPermittedByState', 'ViewModelInstrumentedTest#adminHubKeepsOneLeaveActionAndShowsOnlyToolsPermittedByState', False),
+    ('ui-ViewModelInstrumentedTest-adminChecklistOpensSetupGuideAndBackReturnsToTools', 'ViewModelInstrumentedTest#adminChecklistOpensSetupGuideAndBackReturnsToTools', False),
     ('ui-backup-backupReaderHasNoExportOrReplacementControls', 'ViewModelInstrumentedTest#backupReaderHasNoExportOrReplacementControls', False),
     ('ui-backup-backupPassphraseUsesUnicodeCodePointsAndScreenDisposalClearsSecrets', 'ViewModelInstrumentedTest#backupPassphraseUsesUnicodeCodePointsAndScreenDisposalClearsSecrets', False),
     ('ui-backup-backupExportRemainsDisabledWhileAnotherAdminCommandOwnsTheBusyGate', 'ViewModelInstrumentedTest#backupExportRemainsDisabledWhileAnotherAdminCommandOwnsTheBusyGate', False),

@@ -18,6 +18,16 @@ For these new Android methods, use workflow 07 with `demo_checks=false`, `standa
 BackupReleaseRegressionInstrumentedTest#editDuringDestinationOpenDoesNotMixCapturedCatalogHistoryOrPendingWork,PharmacySharingInstrumentedTest#authorizationLostDuringUploadRetainsAttemptAndRetryWritesOnce,ViewModelInstrumentedTest#restorePickerRequiresExactPharmacyAndAcknowledgmentAtLargeRtlText,LaunchSplashUiTest#readyDestinationTakesOverDuringSplashWithCurrentAnimationSetting
 ```
 
+## Admin tools, accents and section switching — 2026-11-25
+
+Four standard Android methods cover Reader, shared, maintenance, update and restore actions in the admin hub, the checklist’s setup destination and Back, accent key compatibility and the rendered fill and underline, and Add/search bounds on the first selected frame and after idle in both bar placements. The palette assertions cover Copper and Cobalt values and Green/Rose luminance separation. Visual motion, keyboard interaction during section switching and human color-vision acceptance remain separate checks.
+
+Use workflow 07 on the default branch containing the changes with `demo_checks=false`, `standard_functional=true` and this exact `retry_methods` value.
+
+```text
+HomeBarPlacementUiTest#sectionSwitchKeepsAdminAddAndSearchBoundsStableInBothPlacements,SectionThemeUiTest#retainedAccentKeysAndSectionIndicatorUseTheNewPalette,ViewModelInstrumentedTest#adminHubKeepsOneLeaveActionAndShowsOnlyToolsPermittedByState,ViewModelInstrumentedTest#adminChecklistOpensSetupGuideAndBackReturnsToTools
+```
+
 ## Hosted completion batch — 2026-11-24
 
 The user subsequently authorized completing the listed release work and executing hosted workflows after authoring. Added 1 JVM section-count merge/conflict method, 7 Android backup destination/restore/encryption methods, 3 Android maintenance resume/completion methods and 2 Android lease/reset methods. Offline Python tests cover exact standard/recovery retries and batch safety. Existing UI fixture stock and Reader projection now establish the preconditions required by retained assertions; no assertions were relaxed.
