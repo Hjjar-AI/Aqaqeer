@@ -83,6 +83,15 @@ import kotlinx.coroutines.flow.collect
     }
     val lifecycle = LocalLifecycleOwner.current.lifecycle
     val refreshEligible = configured && !state.catalog.restorePaused && !state.catalog.maintenancePaused && state.catalog.lifecycle == "SHARED"
+    val ready = state.catalog as? CatalogState.Ready
+    val readerEligible = refreshEligible && ready?.let { !it.admin && !it.isDemo } == true
+    LaunchedEffect(readerEligible, ready?.lastSuccessfulRefreshAt.takeIf { readerEligible }, ready?.catalog?.pharmacy?.pharmacyId) {
+        if (readerEligible && lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)) {
+            viewModel.refreshCatalog(automatic = true)
+        } else if (!readerEligible && state.catalog !is CatalogState.Loading) {
+            viewModel.cancelReaderWorkIfIneligible()
+        }
+    }
     DisposableEffect(lifecycle, refreshEligible) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_START) { viewModel.onForeground(true); if (refreshEligible) viewModel.refreshCatalog(automatic = true) }

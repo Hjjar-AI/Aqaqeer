@@ -131,7 +131,13 @@ UUIDs identify publications; they do not establish causal ordering. Parent ident
 
 ### Read
 
-Refresh on eligible foreground entry and pull-to-refresh, coalescing duplicate requests. Automatic foreground refresh skips offline/admin-busy/publishing states and a successful sync less than five minutes old; missing/future sync times do not satisfy this age guard. Manual refresh bypasses the age guard and may attempt a request whenever a network is available, even without Android validation; it respects busy/server-cooldown guards and reports updated/already-current results. The validated-network indicator and automatic refresh/reconnect triggers remain unchanged; manual Publish retains its existing request behavior.
+On a configured Reader device, background work and foreground entry share one saved deadline. After each successful check, including an unchanged snapshot, pick a fresh random delay of 12–14 hours. Opening the app can run an overdue check. Earlier openings use the saved catalog. Keep one scheduled job and coalesce concurrent requests. Android and network availability may delay background execution.
+
+Reader manual refresh is available 20 minutes after the most recent actual Reader check started, even if it succeeded or failed. Offline taps and callers joining a running check leave the deadline alone. Show the remaining wait for a blocked manual check. Manual checks may use an available network even without Android validation; automatic checks require validated connectivity. Pause while leaving, restoring or in maintenance.
+
+After a temporary failure, allow one automatic retry after a randomized 5–7 minutes, even during the manual cooldown. A retry that contacts Telegram restarts the manual cooldown. Every Reader path honors Telegram's `retry_after`, with additional jitter on the automatic rate-limit retry. If the retry fails, return to the normal schedule. A missing pin is checked on the normal schedule. Pause automatic checks for revoked credentials, denied access or a required app update and keep the saved catalog available. Eligibility and the active connection are rechecked before applying results.
+
+Admin foreground refresh retains its current five-minute successful-sync age check and busy/offline/publishing guards. Admin manual refresh bypasses its age check. Demo refresh remains simulated and manual. Read refresh never publishes.
 
 Cache validated bot identity in process memory by token digest, retain both pin checks, and respect Telegram read retry_after without automatic write replay. Fetch pinned message and compare its document file identity and caption publication marker with the last validated snapshot; a stable pinned message ID alone never proves the document is unchanged. Download when the document identity or publication marker changes, and always download during publication verification or recovery. Authenticate, validate pharmacy/schema/references, then apply confirmed state atomically. Preserve device-local history and rebase pending edits.
 
@@ -539,7 +545,7 @@ Group admin tools by catalog, activity, sharing, data protection and device acti
 
 Publication-review counts filter the visible review only, not publication scope. Conflict comparisons adapt between columns and stacked labeled values. Copy actions target eligible non-secret IDs with feedback. Help/About contains a status/marker legend.
 
-Kotlin, Compose/Material 3, MVVM with immutable UiState, Repository, Room/SQLCipher, Hilt, DataStore, OkHttp, kotlinx.serialization, Android PDF/text layout. minSdk 26; choose current supported stable compile/target SDK and compatible dependencies at implementation time. Package `com.aqaqeer.app`. Permissions INTERNET, ACCESS_NETWORK_STATE. SAF only; no storage permission, camera, or notifications. Foreground refresh/retry only; no promised always-running background worker.
+Kotlin, Compose/Material 3, MVVM with immutable UiState, Repository, Room/SQLCipher, Hilt, DataStore, WorkManager, OkHttp, kotlinx.serialization, Android PDF/text layout. minSdk 26; choose current supported stable compile/target SDK and compatible dependencies at implementation time. Package `com.aqaqeer.app`. Permissions INTERNET, ACCESS_NETWORK_STATE, RECEIVE_BOOT_COMPLETED and WAKE_LOCK for network and work scheduling. SAF only. Reader background refresh uses deferrable Android jobs without a foreground service or notification.
 
 ## 14. Milestones and acceptance
 

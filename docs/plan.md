@@ -60,6 +60,8 @@ The retained live-PIN/manual-republication/reader-connection extension remains o
 
 ## Ordered delivery backlog
 
+Reader refresh needs compilation with workflow 03 (`scope=all`, `coverage=false`) and release inspection with workflow 08 for WorkManager's merged manifest and runtime notices. Android verification should exercise reopen before and after the deadline, a manual check after success and failure, concurrent foreground/worker admission, offline wake-ups, restart and reboot, a single transient retry, a longer Telegram cooldown, and credential or role changes during a check. Use controlled transport responses to verify that blocked or duplicate attempts issue no requests. See [Reader refresh evidence](validation.md#reader-background-refresh--2026-11-25).
+
 Old IDs remain for traceability; consolidated rows replace overlapping checklists. Use the current checkpoint above and retain dated passes unless relevant source changes invalidate them. Hosted authorization does not resume local build/lint/device/live work.
 
 | Order / IDs / priority | Dependency | Remaining deliverable / acceptance |

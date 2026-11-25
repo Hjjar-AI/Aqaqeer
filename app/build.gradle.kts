@@ -243,6 +243,7 @@ dependencies {
     implementation(libs.sqlcipher)
     implementation(libs.hilt.android)
     implementation(libs.datastore)
+    implementation(libs.work.runtime)
     implementation(libs.serialization)
     implementation(libs.coroutines)
     implementation(libs.splash)

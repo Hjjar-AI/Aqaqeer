@@ -408,9 +408,17 @@ class CatalogViewModel @Inject constructor(
     internal fun retryHistory() { historyRequest.update { it.copy(refresh = it.refresh + 1) } }
 
     private var refreshJob: Job? = null
+    internal suspend fun cancelReaderWorkIfIneligible() {
+        if (BuildConfig.IS_DEMO) return
+        try { refreshes.cancelReaderWorkIfIneligible() }
+        catch (error: CancellationException) { throw error }
+        catch (_: Exception) { /* The worker rechecks eligibility before contacting Telegram. */ }
+    }
+
     fun refreshCatalog(automatic: Boolean = false) {
         val ready = state.value.catalog as? CatalogState.Ready ?: return
-        if (ready.restorePaused || ready.maintenancePaused || ready.lifecycle != "SHARED" || ready.catalog.pharmacy == null || refreshState.value.busy) return
+        if (ready.restorePaused || ready.maintenancePaused || ready.lifecycle != "SHARED" ||
+            ready.catalog.pharmacy == null || refreshJob?.isActive == true) return
         if (ready.isDemo) {
             if (!automatic && !adminBusy.value) command(queueOffline = false) {
                 DemoSession.refresh()
@@ -419,22 +427,34 @@ class CatalogViewModel @Inject constructor(
             return
         }
         val offline = if (automatic) !online else connectivity.activeNetwork == null
-        if (adminBusy.value || sharing.status.value.busy || offline) {
+        if (adminBusy.value || sharing.status.value.busy || (offline && (ready.admin || !automatic))) {
             if (!automatic) feedback.value = UiFeedback(if (offline) uiText(R.string.logic_offline) else uiText(R.string.logic_busy), route.value)
             return
         }
         val age = ready.lastSuccessfulRefreshAt?.let { java.time.Duration.between(it, Instant.now()).toMillis() }
-        if (automatic && age != null && age in 0 until 5 * 60 * 1000L) return
+        if (ready.admin && automatic && age != null && age in 0 until 5 * 60 * 1000L) return
         val origin = route.value
         val pharmacyId = ready.catalog.pharmacy.pharmacyId
-        refreshState.value = RefreshUiState(busy = true)
         refreshJob = viewModelScope.launch {
             try {
-                val result = refreshes.refresh()
+                val result = if (ready.admin) {
+                    refreshState.value = RefreshUiState(busy = true)
+                    refreshes.refresh()
+                } else {
+                    refreshes.refreshReader(automatic) { refreshState.value = RefreshUiState(busy = true) }
+                }
+                if (result == null) return@launch
                 if (!automatic && route.value == origin && (state.value.catalog as? CatalogState.Ready)?.catalog?.pharmacy?.pharmacyId == pharmacyId)
                     feedback.value = UiFeedback(if (result == com.aqaqeer.app.data.RefreshOutcome.APPLIED) uiText(R.string.logic_refresh_applied) else uiText(R.string.logic_refresh_current), origin)
             }
             catch (error: CancellationException) { throw error }
+            catch (error: ReaderRefreshCooldown) {
+                if (!automatic && route.value == origin)
+                    feedback.value = UiFeedback(uiText(R.string.logic_reader_refresh_cooldown, error.minutesRemaining.toString()), origin)
+            }
+            catch (_: ReaderRefreshDeferred) {
+                if (!automatic && route.value == origin) feedback.value = UiFeedback(uiText(R.string.logic_offline), origin)
+            }
             catch (error: Exception) {
                 if ((state.value.catalog as? CatalogState.Ready)?.catalog?.pharmacy?.pharmacyId == pharmacyId)
                     refreshState.value = RefreshUiState(error = refreshMessage(error))

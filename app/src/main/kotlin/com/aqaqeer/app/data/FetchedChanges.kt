@@ -33,9 +33,15 @@ internal object FetchedChanges {
 
     @Synchronized fun beginSession(context: Context) {
         if (active) return
+        load(context, newSession = true)
+        active = true
+        persist()
+    }
+
+    private fun load(context: Context, newSession: Boolean) {
         val prefs = context.applicationContext.getSharedPreferences("fetched_changes", Context.MODE_PRIVATE)
         preferences = prefs
-        session = prefs.getLong("session", 0L) + 1
+        session = prefs.getLong("session", 0L) + if (newSession) 1 else 0
         retained.clear()
         prefs.getStringSet("markers", emptySet()).orEmpty().forEach { line ->
             val parts = line.split('|')
@@ -43,15 +49,14 @@ internal object FetchedChanges {
                 retained[parts[0] to parts[1]] = it
             }
         }
-        active = true
-        persist()
     }
     @Synchronized fun finishTask() { active = false }
 
     @Synchronized fun record(context: Context, pharmacyId: String, medications: Set<String>) {
         if (medications.isEmpty()) return
-        if (preferences == null) beginSession(context)
-        medications.forEach { retained[pharmacyId to it] = session + 1 }
+        if (preferences == null) load(context, newSession = false)
+        val expiry = session + if (active) 1 else 2
+        medications.forEach { retained[pharmacyId to it] = expiry }
         persist()
     }
     private fun persist() {

@@ -6,7 +6,7 @@ Exact component/version provenance lives in docs/evidence/runtime-notices-202611
 Compiler plugins, processors and test-only dependencies are not shipped notices.
 
 AndroidX (including Activity, Core, Compose, Lifecycle, Room, SQLite, DataStore,
-Splashscreen and their AndroidX runtime dependencies):
+Splashscreen, WorkManager and their AndroidX runtime dependencies):
 Copyright The Android Open Source Project / their respective contributors.
 Apache License, Version 2.0; see Apache-2.0.txt.
 https://android.googlesource.com/platform/frameworks/support/

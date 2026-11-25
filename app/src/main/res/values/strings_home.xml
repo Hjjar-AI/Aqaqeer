@@ -57,6 +57,7 @@
     <string name="logic_offline">لا يوجد اتصال بالإنترنت</string>
     <string name="logic_refresh_applied">تم تحديث البيانات</string>
     <string name="logic_refresh_current">البيانات محدثة بالفعل</string>
+    <string name="logic_reader_refresh_cooldown">يمكنك التحديث مجدداً بعد %s دقيقة</string>
     <string name="logic_retry_after">؛ أعد المحاولة بعد %s ثانية</string>
     <string name="review_available_only">المتوفر فقط</string>
     <string name="review_changed">محدّث</string>

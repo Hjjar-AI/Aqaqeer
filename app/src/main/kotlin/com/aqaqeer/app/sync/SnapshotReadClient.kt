@@ -45,7 +45,7 @@ class SnapshotReadClient(private val transport: SnapshotReadTransport,
     suspend fun read(candidate: ConnectionCandidate, appVersionCode: Int): VerifiedSnapshotRead = readWithCache(candidate, appVersionCode, null)
 
     internal suspend fun readWithCache(candidate: ConnectionCandidate, appVersionCode: Int,
-        cache: ValidatedSnapshotCache?): VerifiedSnapshotRead = gate.withLock {
+        cache: ValidatedSnapshotCache?, beforeRequest: (suspend () -> Unit)? = null): VerifiedSnapshotRead = gate.withLock {
         val context = currentCoroutineContext()
         context.ensureActive()
         if (appVersionCode <= 0) invalidResponse()
@@ -56,6 +56,7 @@ class SnapshotReadClient(private val transport: SnapshotReadTransport,
             key = identity
             val remaining = (cooldowns[identity] ?: 0) - elapsedMillis()
             if (remaining > 0) throw SnapshotReadException(SnapshotReadError.RATE_LIMITED, ((remaining + 999) / 1000).coerceAtMost(Int.MAX_VALUE.toLong()).toInt())
+            beforeRequest?.invoke()
             val bot = bots[identity] ?: transport.bot(secrets.botToken).also {
                 if (it.id <= 0) invalidResponse()
                 bots[identity] = it

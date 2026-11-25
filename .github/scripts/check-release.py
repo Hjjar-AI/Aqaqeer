@@ -19,7 +19,12 @@ from android_config import android_config, build_tools
 
 MACHINES = {'armeabi-v7a': 40, 'arm64-v8a': 183, 'x86': 3, 'x86_64': 62}
 ANDROID = '{http://schemas.android.com/apk/res/android}'
-PUBLIC_PERMISSIONS = {'android.permission.INTERNET', 'android.permission.ACCESS_NETWORK_STATE'}
+PUBLIC_PERMISSIONS = {
+    'android.permission.INTERNET',
+    'android.permission.ACCESS_NETWORK_STATE',
+    'android.permission.RECEIVE_BOOT_COMPLETED',
+    'android.permission.WAKE_LOCK',
+}
 RECEIVER_PERMISSION = 'com.aqaqeer.app.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION'
 
 

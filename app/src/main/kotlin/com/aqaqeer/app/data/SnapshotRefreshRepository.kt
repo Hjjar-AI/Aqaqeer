@@ -16,7 +16,7 @@ import kotlinx.coroutines.*
 import javax.inject.Inject
 import javax.inject.Singleton
 
-/** Foreground reads only. No edit acknowledgement, attempt reconciliation or publication commands. */
+/** Verified snapshot reads shared by the foreground and the Reader worker. */
 @Singleton
 class SnapshotRefreshRepository @Inject constructor(private val factory: DatabaseFactory,
     private val secureStore: SecureStore, private val reads: SnapshotReadClient,
@@ -24,14 +24,50 @@ class SnapshotRefreshRepository @Inject constructor(private val factory: Databas
     @dagger.hilt.android.qualifiers.ApplicationContext private val context: android.content.Context) {
     private val active = PendingConnectionStore(secureStore, "active-connection")
     private val flight = RefreshFlight(CoroutineScope(SupervisorJob() + Dispatchers.IO))
+    private val reader by lazy { ReaderRefreshes(context, ::readerTarget, ::performReader) }
     private data class Base(val connectionId: String, val catalog: CatalogSnapshot, val state: SnapshotState,
         val requirements: SnapshotRequirements)
 
     suspend fun refresh(): RefreshOutcome = flight.run { perform() }
 
-    private suspend fun perform(): RefreshOutcome {
+    internal suspend fun refreshReader(automatic: Boolean, background: Boolean = false,
+        onStarted: () -> Unit = {}): RefreshOutcome? =
+        reader.check(automatic, background, onStarted)
+
+    internal suspend fun cancelReaderWorkIfIneligible() = reader.cancelIfIneligible()
+
+    private suspend fun readerTarget(): ReaderRefreshTarget? {
+        if (BuildConfig.IS_DEMO) return null
+        val lease = factory.acquire()
+        try {
+            return lease.database.withTransaction {
+                val dao = lease.database.catalogDao()
+                val connection = readerConnectionId(dao) ?: return@withTransaction null
+                val pharmacy = dao.pharmacy() ?: return@withTransaction null
+                val snapshot = dao.snapshotMetadata() ?: return@withTransaction null
+                if (snapshot.publishId == null) return@withTransaction null
+                val known = requirements.read(pharmacy.pharmacyId) ?: throw StorageRecoveryRequired()
+                ReaderRefreshTarget(connection, snapshot.lastSuccessfulSyncAt?.toEpochMilli(),
+                    known.requiresUpdate(BuildConfig.VERSION_CODE))
+            }
+        } finally { lease.close() }
+    }
+
+    private suspend fun readerConnectionId(dao: CatalogDao): String? {
+        val control = dao.control() ?: return null
+        if (control.lifecycle != "SHARED" || control.leaving || control.restorePaused ||
+            control.restoreActivationId != null || dao.deviceIdentity()?.adminMode != false ||
+            MaintenanceStore(secureStore).read() != null) return null
+        val pharmacy = dao.pharmacy() ?: return null
+        return active.info()?.takeIf { it.pharmacyId == pharmacy.pharmacyId }?.id
+    }
+
+    private suspend fun performReader(connectionId: String, beforeRequest: suspend () -> Unit): RefreshOutcome =
+        perform(connectionId, beforeRequest)
+
+    private suspend fun perform(readerConnection: String? = null, beforeRequest: (suspend () -> Unit)? = null): RefreshOutcome {
         if (BuildConfig.IS_DEMO) throw RefreshException(RefreshError.DEMO)
-        val base = load()
+        val base = load(readerConnection)
         return active.withCandidate(base.connectionId) { connection ->
             val pharmacy = requireNotNull(base.catalog.pharmacy)
             if (connection.pharmacyId != pharmacy.pharmacyId || connection.keyVersion != pharmacy.keyVersion)
@@ -44,21 +80,22 @@ class SnapshotRefreshRepository @Inject constructor(private val factory: Databas
             val cache = if (base.requirements.requiresUpdate(BuildConfig.VERSION_CODE)) null
                 else ValidatedSnapshotCache.fromConfirmed(document, pharmacy.pharmacyId, connection.keyVersion,
                     BuildConfig.VERSION_CODE, wire)
-            val read = reads.readWithCache(connection, BuildConfig.VERSION_CODE, cache)
+            val read = reads.readWithCache(connection, BuildConfig.VERSION_CODE, cache, beforeRequest)
             currentCoroutineContext().ensureActive()
             // Persist a completed authenticated requirement even if the caller subsequently cancels.
             val known = withContext(NonCancellable) { requirements.observe(pharmacy.pharmacyId, read.snapshot.compatibility) }
             currentCoroutineContext().ensureActive()
-            apply(base, read, known)
+            apply(base, read, known, readerConnection)
         }
     }
 
-    private suspend fun load(): Base {
+    private suspend fun load(readerConnection: String?): Base {
         val lease = factory.acquire()
         val db = lease.database
         try {
             return db.withTransaction {
                 val dao = db.catalogDao()
+                if (readerConnection != null && readerConnection != readerConnectionId(dao)) throw ReaderRefreshSkipped()
                 check(MaintenanceStore(secureStore).read() == null)
                 check(dao.control()?.restorePaused != true && dao.control()?.restoreActivationId == null)
                 val pharmacy = dao.pharmacy() ?: throw RefreshException(RefreshError.UNCONFIGURED)
@@ -74,7 +111,8 @@ class SnapshotRefreshRepository @Inject constructor(private val factory: Databas
         } finally { lease.close() }
     }
 
-    private suspend fun apply(base: Base, read: VerifiedSnapshotRead, known: SnapshotRequirements): RefreshOutcome {
+    private suspend fun apply(base: Base, read: VerifiedSnapshotRead, known: SnapshotRequirements,
+        readerConnection: String?): RefreshOutcome {
         val incoming = read.snapshot as? SnapshotCandidate.Supported
         val supported = incoming != null && !known.requiresUpdate(BuildConfig.VERSION_CODE)
         val baseWire = kotlinx.serialization.json.Json.decodeFromString<SnapshotWire>(base.state.confirmedPayloadJson!!)
@@ -98,6 +136,7 @@ class SnapshotRefreshRepository @Inject constructor(private val factory: Databas
         try {
             val outcome = db.withTransaction {
                 val dao = db.catalogDao()
+                if (readerConnection != null && readerConnection != readerConnectionId(dao)) throw ReaderRefreshSkipped()
                 check(MaintenanceStore(secureStore).read() == null)
                 check(dao.control()?.restorePaused != true && dao.control()?.restoreActivationId == null)
                 val current = dao.snapshotState() ?: throw StorageRecoveryRequired()
