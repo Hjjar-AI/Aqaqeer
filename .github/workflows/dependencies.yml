@@ -33,9 +33,9 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          ./gradlew --no-daemon --no-configuration-cache --console=plain \
-            -I .github/dependency-inventory.init.gradle :app:ciDependencyInventory \
-            2>&1 | tee ci-output/dependencies/resolution.log
+          python3 .github/scripts/run-gradle-ci.py --log ci-output/dependencies/resolution.log -- \
+            --no-daemon --no-configuration-cache --console=plain \
+            -I .github/dependency-inventory.init.gradle :app:ciDependencyInventory
 
       - name: Check resolved versions against OSV advisories
         run: python3 .github/scripts/check-dependencies.py

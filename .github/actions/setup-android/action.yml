@@ -31,6 +31,24 @@ runs:
         cache-provider: basic
         cache-read-only: ${{ github.ref_name != github.event.repository.default_branch }}
 
+    # The basic provider's exact-key snapshot cannot grow. Restore a newer
+    # dependency-only snapshot after it, then save additions on successful jobs.
+    - name: Restore and retain downloaded Gradle dependencies
+      if: ${{ inputs.setup-gradle == 'true' && github.ref_name == github.event.repository.default_branch }}
+      uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
+      with:
+        path: ~/.gradle/caches/modules-2
+        key: aqaqeer-dependencies-v1-${{ runner.os }}-${{ runner.arch }}-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.job }}-${{ strategy.job-index }}
+        restore-keys: aqaqeer-dependencies-v1-${{ runner.os }}-${{ runner.arch }}-
+
+    - name: Restore downloaded Gradle dependencies on other branches
+      if: ${{ inputs.setup-gradle == 'true' && github.ref_name != github.event.repository.default_branch }}
+      uses: actions/cache/restore@caa296126883cff596d87d8935842f9db880ef25 # v5
+      with:
+        path: ~/.gradle/caches/modules-2
+        key: aqaqeer-dependencies-v1-${{ runner.os }}-${{ runner.arch }}-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.job }}-${{ strategy.job-index }}
+        restore-keys: aqaqeer-dependencies-v1-${{ runner.os }}-${{ runner.arch }}-
+
     - name: Install Android SDK packages
       shell: bash
       env:

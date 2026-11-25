@@ -70,10 +70,11 @@ jobs:
           diagnostics-directory: ci-output/release
       - name: Build the unsigned standard release through the wrapper
         env:
+          AQAQEER_CI_RETRY_LOG: ci-output/release/gradle-release-retry.log
           AQAQEER_MIN_BUILD_CODE: ${{ needs.reserve.outputs.code }}
         run: |
           set -euo pipefail
-          # A failed packaging retry must consume a new code on a new dispatch.
+          # A new dispatch after exhausted retries must reserve a new code.
           test "$GITHUB_RUN_ATTEMPT" = 1
           ./gradlew --no-daemon --console=plain --no-configuration-cache \
             -Paqaqeer.exportApks=false -Paqaqeer.releaseApkSet=distribution :app:assembleStandardRelease \

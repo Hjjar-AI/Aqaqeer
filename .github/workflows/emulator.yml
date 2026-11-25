@@ -77,6 +77,12 @@ jobs:
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
 
+      - name: Cache downloaded system image
+        if: ${{ steps.selection.outputs.has_checks == 'true' }}
+        uses: ./.github/actions/cache-system-image
+        with:
+          api-level: ${{ matrix.api }}
+
       - name: Run selected tests and capture visuals
         if: ${{ steps.selection.outputs.has_checks == 'true' }}
         id: emulator
@@ -85,6 +91,7 @@ jobs:
           api-level: ${{ matrix.api }}
           target: default
           arch: x86_64
+          force-avd-creation: 'true'
           profile: pixel_2
           emulator-port: 5554
           disable-animations: true
@@ -162,6 +169,12 @@ jobs:
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
 
+      - name: Cache downloaded system image
+        if: ${{ steps.selection.outputs.has_checks == 'true' }}
+        uses: ./.github/actions/cache-system-image
+        with:
+          api-level: 35
+
       - name: Run offline standard functional and review/UI regressions
         if: ${{ steps.selection.outputs.has_checks == 'true' }}
         id: emulator
@@ -170,6 +183,7 @@ jobs:
           api-level: 35
           target: default
           arch: x86_64
+          force-avd-creation: 'true'
           profile: pixel_2
           emulator-port: 5554
           disable-animations: true

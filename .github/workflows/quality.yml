@@ -75,10 +75,10 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          ./gradlew --no-daemon --console=plain --no-configuration-cache --continue \
+          python3 .github/scripts/run-gradle-ci.py --log ci-output/lint/gradle-lint.log -- \
+            --no-daemon --console=plain --no-configuration-cache --continue \
             -I .github/production-lint.init.gradle \
-            :app:lintStandardDebug :app:lintDemoDebug \
-            2>&1 | tee ci-output/lint/gradle-lint.log
+            :app:lintStandardDebug :app:lintDemoDebug
 
       - name: Write Android lint summary
         if: ${{ !cancelled() }}

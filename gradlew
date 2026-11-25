@@ -274,4 +274,11 @@ eval "set -- $(
         tr '\n' ' '
     )" '"$@"'
 
+# Hosted packaging retries reuse the arguments containing the reserved code.
+# Local builds and ordinary wrapper invocations keep their existing behavior.
+if [ "${GITHUB_ACTIONS:-}" = true ] && [ -n "${AQAQEER_CI_RETRY_LOG:-}" ]; then
+    exec python3 "$APP_HOME/.github/scripts/run-gradle-ci.py" \
+        --log "$AQAQEER_CI_RETRY_LOG" --command -- "$JAVACMD" "$@"
+fi
+
 exec "$JAVACMD" "$@"

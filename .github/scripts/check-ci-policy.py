@@ -82,6 +82,29 @@ def check(path):
             elif name == 'actions/upload-artifact':
                 if type(inputs.get('retention-days')) is not int or inputs['retention-days'] != 1:
                     problem(label, 'uploads need literal one-day retention')
+            elif name in ('actions/cache', 'actions/cache/restore') and inputs.get('path') == '~/.gradle/caches/modules-2':
+                expected_guard = ("${{ inputs.setup-gradle == 'true' && github.ref_name "
+                                  + ('==' if name == 'actions/cache' else '!=')
+                                  + " github.event.repository.default_branch }}")
+                if step.get('if') != expected_guard:
+                    problem(label, 'dependency cache must preserve default-branch-only writes and signing opt-out')
+                if inputs.get('path') != '~/.gradle/caches/modules-2':
+                    problem(label, 'supplemental cache must contain only downloaded Gradle dependencies')
+                expected_prefix = 'aqaqeer-dependencies-v1-${{ runner.os }}-${{ runner.arch }}-'
+                expected_key = (expected_prefix + '${{ github.run_id }}-${{ github.run_attempt }}-'
+                                + '${{ github.job }}-${{ strategy.job-index }}')
+                if inputs.get('key') != expected_key or inputs.get('restore-keys') != expected_prefix:
+                    problem(label, 'dependency snapshots must restore across runs and save per run/job/attempt')
+            elif name in ('actions/cache', 'actions/cache/restore'):
+                expected_guard = ("${{ github.ref_name " + ('==' if name == 'actions/cache' else '!=')
+                                  + " github.event.repository.default_branch }}")
+                expected_key = ('aqaqeer-system-image-v1-${{ runner.os }}-${{ runner.arch }}-'
+                                'api${{ inputs.api-level }}-default-x86_64')
+                if (not stack or stack[-1].name != 'cache-system-image'
+                        or inputs.get('path') != '${{ steps.image.outputs.path }}'
+                        or inputs.get('key') != expected_key or 'restore-keys' in inputs
+                        or step.get('if') != expected_guard):
+                    problem(label, 'system-image cache must use exact image keys and default-branch-only writes')
             elif name == 'gradle/actions/setup-gradle':
                 if inputs.get('cache-read-only') != CACHE_READ_ONLY:
                     problem(label, 'cache writes are allowed only on the default branch')
@@ -310,6 +333,28 @@ def check(path):
                     problem(name, 'debug builds must depend on reservation')
                 if name == 'sign-debug' and (job.get('needs') != ['reserve', 'build-debug'] or job.get('environment') != 'debug-signing'):
                     problem(name, 'debug signing must be isolated after reservation/build in debug-signing')
+            job_steps = job.get('steps', [])
+            for index, step in enumerate(job_steps):
+                if not isinstance(step, dict) or not str(step.get('uses', '')).startswith('reactivecircus/android-emulator-runner@'):
+                    continue
+                image_cache = job_steps[index - 1] if index else {}
+                image_inputs = step.get('with', {})
+                if (image_cache.get('uses') != './.github/actions/cache-system-image'
+                        or str(image_cache.get('with', {}).get('api-level')) != str(image_inputs.get('api-level'))
+                        or image_cache.get('if') != step.get('if')
+                        or image_inputs.get('target') != 'default' or image_inputs.get('arch') != 'x86_64'
+                        or image_inputs.get('force-avd-creation') != 'true'
+                        or '-no-snapshot' not in image_inputs.get('emulator-options', '').split()):
+                    problem(name, 'emulators require matching image-only caches and fresh AVDs without snapshots')
+            for step in job.get('steps', []):
+                if not isinstance(step, dict):
+                    continue
+                command = step.get('run', '')
+                if path.name in ('release.yml', 'publish-release.yml') and ':app:assembleStandardRelease' in command:
+                    if step.get('env', {}).get('AQAQEER_CI_RETRY_LOG') != 'ci-output/release/gradle-release-retry.log':
+                        problem(name, 'release packaging retries must occur after the wrapper reserves its code')
+                if path.name in ('dependencies.yml', 'quality.yml', 'security.yml') and './gradlew ' in command:
+                    problem(name, 'non-packaging Gradle checks must use the bounded dependency retry helper')
             signing_only = ((path.name in ('android.yml', 'publish-debug.yml') and name == 'sign-debug')
                             or (path.name == 'publish-release.yml' and name == 'publish'))
             for step in job.get('steps', []):
@@ -325,7 +370,7 @@ def check(path):
                             'python3 tools/build_debug.py "$CI_BUILD_FLAVOR" --no-export \\\n'
                             '  2>&1 | tee ci-output/build/gradle-build.log\n')
                 if (len(commands) != 1 or commands[0].get('run') != expected
-                        or commands[0].get('env') != {'CI_BUILD_FLAVOR': '${{ matrix.flavor }}', 'AQAQEER_MIN_BUILD_CODE': '${{ needs.reserve.outputs.code }}'}):
+                        or commands[0].get('env') != {'CI_BUILD_FLAVOR': '${{ matrix.flavor }}', 'AQAQEER_MIN_BUILD_CODE': '${{ needs.reserve.outputs.code }}', 'AQAQEER_CI_RETRY_LOG': 'ci-output/build/gradle-build-retry.log'}):
                     problem(name, 'debug packaging must use the shared single-flavor selector')
                 expected_matrix = "${{ fromJSON(inputs.flavor == 'both' && '[\"standard\",\"demo\"]' || format('[\"{0}\"]', inputs.flavor)) }}"
                 if job.get('strategy') != {'fail-fast': False, 'max-parallel': 1, 'matrix': {'flavor': expected_matrix}}:

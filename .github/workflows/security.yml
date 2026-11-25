@@ -61,9 +61,9 @@ jobs:
         run: |
           set -euo pipefail
           # Force actual compilation for extraction instead of cached outputs.
-          ./gradlew --no-daemon --no-build-cache --no-configuration-cache --rerun-tasks \
-            --console=plain :app:compileStandardDebugKotlin :app:compileDemoDebugKotlin \
-            2>&1 | tee ci-output/codeql/gradle-compile.log
+          python3 .github/scripts/run-gradle-ci.py --log ci-output/codeql/gradle-compile.log -- \
+            --no-daemon --no-build-cache --no-configuration-cache --rerun-tasks \
+            --console=plain :app:compileStandardDebugKotlin :app:compileDemoDebugKotlin
 
       - name: Analyze and upload security results
         id: analyze

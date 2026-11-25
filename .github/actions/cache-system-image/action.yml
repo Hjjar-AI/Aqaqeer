@@ -1,0 +1,33 @@
+name: Cache Android system image
+description: Reuse downloaded system images without retaining emulator or application state
+inputs:
+  api-level:
+    description: Android system-image API level (29 or 35)
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Validate image and locate SDK package
+      id: image
+      shell: bash
+      env:
+        CI_IMAGE_API: ${{ inputs.api-level }}
+      run: |
+        set -euo pipefail
+        case "$CI_IMAGE_API" in 29|35) ;; *) exit 1 ;; esac
+        test -n "$ANDROID_HOME"
+        printf 'path=%s/system-images/android-%s/default/x86_64\n' "$ANDROID_HOME" "$CI_IMAGE_API" >> "$GITHUB_OUTPUT"
+
+    - name: Restore and cache system image on default branch
+      if: ${{ github.ref_name == github.event.repository.default_branch }}
+      uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
+      with:
+        path: ${{ steps.image.outputs.path }}
+        key: aqaqeer-system-image-v1-${{ runner.os }}-${{ runner.arch }}-api${{ inputs.api-level }}-default-x86_64
+
+    - name: Restore system image on other branches
+      if: ${{ github.ref_name != github.event.repository.default_branch }}
+      uses: actions/cache/restore@caa296126883cff596d87d8935842f9db880ef25 # v5
+      with:
+        path: ${{ steps.image.outputs.path }}
+        key: aqaqeer-system-image-v1-${{ runner.os }}-${{ runner.arch }}-api${{ inputs.api-level }}-default-x86_64

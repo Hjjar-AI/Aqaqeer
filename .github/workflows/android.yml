@@ -76,6 +76,7 @@ jobs:
         shell: bash
         env:
           CI_BUILD_FLAVOR: ${{ matrix.flavor }}
+          AQAQEER_CI_RETRY_LOG: ci-output/build/gradle-build-retry.log
           AQAQEER_MIN_BUILD_CODE: ${{ needs.reserve.outputs.code }}
         run: |
           set -euo pipefail
