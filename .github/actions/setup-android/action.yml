@@ -43,16 +43,23 @@ runs:
           'kotlin.daemon.jvmargs=-Xmx3g' \
           'aqaqeer.testMaxHeap=2g' >> "$gradle_home/gradle.properties"
 
-    - name: Restore and cache the pinned Gradle distribution on default branch
-      if: ${{ inputs.setup-gradle == 'true' && github.ref_name == github.event.repository.default_branch }}
-      uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
+    - name: Restore the pinned Gradle distribution
+      id: restore-wrapper
+      if: ${{ inputs.setup-gradle == 'true' }}
+      uses: actions/cache/restore@caa296126883cff596d87d8935842f9db880ef25 # v5
       with:
         path: ~/.gradle/wrapper/dists
         key: aqaqeer-gradle-wrapper-v1-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}
 
-    - name: Restore the pinned Gradle distribution on other branches
-      if: ${{ inputs.setup-gradle == 'true' && github.ref_name != github.event.repository.default_branch }}
-      uses: actions/cache/restore@caa296126883cff596d87d8935842f9db880ef25 # v5
+    - name: Provision the Gradle distribution on a default-branch cache miss
+      id: provision-wrapper
+      if: ${{ inputs.setup-gradle == 'true' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) && steps.restore-wrapper.outputs.cache-hit != 'true' }}
+      shell: bash
+      run: ./gradlew --version
+
+    - name: Save the provisioned Gradle distribution
+      if: ${{ inputs.setup-gradle == 'true' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) && steps.provision-wrapper.outcome == 'success' }}
+      uses: actions/cache/save@caa296126883cff596d87d8935842f9db880ef25 # v5
       with:
         path: ~/.gradle/wrapper/dists
         key: aqaqeer-gradle-wrapper-v1-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}

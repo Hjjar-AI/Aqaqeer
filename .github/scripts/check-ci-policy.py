@@ -13,6 +13,11 @@ PUBLIC_GUARD = '${{ github.event.repository.private == false }}'
 CLEANUP_GUARD = "${{ github.event.repository.private == false && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}"
 PIN = re.compile(r'[\w.-]+/[\w.-]+(?:/[\w./-]+)?@[0-9a-f]{40}')
 DEPENDENCY_CACHE_PATHS = '~/.gradle/caches/modules-2/files-2.1\n~/.gradle/caches/modules-2/metadata-2.*\n'
+WRAPPER_CACHE_PATH = '~/.gradle/wrapper/dists'
+WRAPPER_RESTORE_GUARD = "${{ inputs.setup-gradle == 'true' }}"
+WRAPPER_DEFAULT_BRANCH = "inputs.setup-gradle == 'true' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)"
+WRAPPER_PROVISION_GUARD = "${{ " + WRAPPER_DEFAULT_BRANCH + " && steps.restore-wrapper.outputs.cache-hit != 'true' }}"
+WRAPPER_SAVE_GUARD = "${{ " + WRAPPER_DEFAULT_BRANCH + " && steps.provision-wrapper.outcome == 'success' }}"
 
 
 def check(path):
@@ -68,22 +73,33 @@ def check(path):
                             setup = next((item for item in local_steps
                                           if isinstance(item, dict) and str(item.get('uses', '')).startswith('gradle/actions/setup-gradle@')), {})
                             if (local.get('inputs', {}).get('setup-gradle', {}).get('default') != 'true'
-                                    or setup.get('if') != "${{ inputs.setup-gradle == 'true' }}"):
+                                    or setup.get('if') != WRAPPER_RESTORE_GUARD):
                                 problem(label, 'shared setup must default Gradle caching on and guard signing opt-out')
                             cache_paths = [
                                 (item['uses'].split('@', 1)[0], item.get('with', {}).get('path'))
                                 for item in local_steps if isinstance(item, dict)
-                                and str(item.get('uses', '')).startswith(('actions/cache@', 'actions/cache/restore@'))
+                                and str(item.get('uses', '')).startswith(('actions/cache@', 'actions/cache/restore@', 'actions/cache/save@'))
                                 and isinstance(item.get('with', {}), dict)
                             ]
                             expected_paths = {
-                                (action, cache_path)
-                                for action in ('actions/cache', 'actions/cache/restore')
-                                for cache_path in ('~/.gradle/wrapper/dists', DEPENDENCY_CACHE_PATHS)
+                                ('actions/cache/restore', WRAPPER_CACHE_PATH), ('actions/cache/save', WRAPPER_CACHE_PATH),
+                                ('actions/cache', DEPENDENCY_CACHE_PATHS), ('actions/cache/restore', DEPENDENCY_CACHE_PATHS),
                             }
                             if len(cache_paths) != len(expected_paths) or any(
                                     cache_path not in cache_paths for cache_path in expected_paths):
-                                problem(label, 'shared setup requires one branch-scoped cache pair for each Gradle path')
+                                problem(label, 'shared setup requires separate wrapper and dependency restore/save pairs')
+                            wrapper_stages = [
+                                item for item in local_steps if isinstance(item, dict) and (
+                                    item.get('id') in ('restore-wrapper', 'provision-wrapper') or
+                                    str(item.get('uses', '')).startswith('actions/cache/save@'))
+                            ]
+                            if (len(wrapper_stages) != 3
+                                    or wrapper_stages[0].get('id') != 'restore-wrapper'
+                                    or wrapper_stages[1].get('id') != 'provision-wrapper'
+                                    or wrapper_stages[1].get('run') != './gradlew --version'
+                                    or wrapper_stages[1].get('if') != WRAPPER_PROVISION_GUARD
+                                    or not str(wrapper_stages[2].get('uses', '')).startswith('actions/cache/save@')):
+                                problem(label, 'restore, provision and save the verified wrapper in order before build tasks')
                         steps_check(runs.get('steps'), str(candidates[0].relative_to(root)),
                                     (*stack, directory), checkout=True)
                 except (OSError, ValueError, yaml.YAMLError) as error:
@@ -99,18 +115,21 @@ def check(path):
             elif name == 'actions/upload-artifact':
                 if type(inputs.get('retention-days')) is not int or inputs['retention-days'] != 1:
                     problem(label, 'uploads need literal one-day retention')
-            elif name in ('actions/cache', 'actions/cache/restore') and stack and stack[-1].name == 'setup-android':
-                expected_guard = ("${{ inputs.setup-gradle == 'true' && github.ref_name "
-                                  + ('==' if name == 'actions/cache' else '!=')
-                                  + " github.event.repository.default_branch }}")
-                if step.get('if') != expected_guard:
-                    problem(label, 'Gradle caches must preserve default-branch-only writes and signing opt-out')
-                if inputs.get('path') == '~/.gradle/wrapper/dists':
+            elif name in ('actions/cache', 'actions/cache/restore', 'actions/cache/save') and stack and stack[-1].name == 'setup-android':
+                if inputs.get('path') == WRAPPER_CACHE_PATH:
+                    expected_guard = WRAPPER_SAVE_GUARD if name == 'actions/cache/save' else WRAPPER_RESTORE_GUARD
+                    if step.get('if') != expected_guard or (name == 'actions/cache/restore' and step.get('id') != 'restore-wrapper'):
+                        problem(label, 'wrapper caching must save only after successful default-branch provisioning')
                     expected_key = ("aqaqeer-gradle-wrapper-v1-${{ runner.os }}-${{ runner.arch }}-"
                                     "${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}")
                     if inputs.get('key') != expected_key or 'restore-keys' in inputs:
                         problem(label, 'wrapper cache must be keyed by the exact wrapper properties')
                 elif inputs.get('path') == DEPENDENCY_CACHE_PATHS:
+                    expected_guard = ("${{ inputs.setup-gradle == 'true' && github.ref_name "
+                                      + ('==' if name == 'actions/cache' else '!=')
+                                      + " github.event.repository.default_branch }}")
+                    if step.get('if') != expected_guard:
+                        problem(label, 'dependency caches must preserve default-branch-only writes and signing opt-out')
                     expected_prefix = 'aqaqeer-dependencies-v2-${{ runner.os }}-${{ runner.arch }}-'
                     expected_key = (expected_prefix + '${{ github.run_id }}-${{ github.run_attempt }}-'
                                     + '${{ github.job }}-${{ strategy.job-index }}')
@@ -121,12 +140,12 @@ def check(path):
                         problem(label, 'dependency archives must exclude lock files and cleanup markers')
                 else:
                     problem(label, 'Gradle cache paths must be limited to wrapper distributions or downloaded dependencies')
-            elif name in ('actions/cache', 'actions/cache/restore'):
+            elif name in ('actions/cache', 'actions/cache/restore', 'actions/cache/save'):
                 expected_guard = ("${{ github.ref_name " + ('==' if name == 'actions/cache' else '!=')
                                   + " github.event.repository.default_branch }}")
                 expected_key = ('aqaqeer-system-image-v1-${{ runner.os }}-${{ runner.arch }}-'
                                 'api${{ inputs.api-level }}-default-x86_64')
-                if (not stack or stack[-1].name != 'cache-system-image'
+                if (name == 'actions/cache/save' or not stack or stack[-1].name != 'cache-system-image'
                         or inputs.get('path') != '${{ steps.image.outputs.path }}'
                         or inputs.get('key') != expected_key or 'restore-keys' in inputs
                         or step.get('if') != expected_guard):

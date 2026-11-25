@@ -63,10 +63,10 @@ private class TableReport(
     private val bottom = pageHeight - 38f
     private val width = (right - margin).toInt()
     private val padding = if (options.compact) 2f else 4f
-    private val reportColumns = snapshot.columns()
-    private val columns = reportColumns.filter { it.core }
-    private val details = reportColumns.filterNot { it.core }
-    private val weights = columns.map { if (it.field == ReportField.SCIENTIFIC) 3.2f else 1.2f }
+    private val reportColumns: List<ReportColumn> = snapshot.columns()
+    private val coreColumns: List<ReportColumn> = reportColumns.filter { it.core }
+    private val details: List<ReportColumn> = reportColumns.filterNot { it.core }
+    private val weights = coreColumns.map { if (it.field == ReportField.SCIENTIFIC) 3.2f else 1.2f }
     private val widths = weights.map { width * it / weights.sum() }
     private val lefts = widths.runningFold(right) { x, w -> x - w }.drop(1)
     private val fill = Paint(Paint.ANTI_ALIAS_FLAG)
@@ -224,7 +224,7 @@ private class TableReport(
             canvas.drawRect(margin, y, right, y + heading.height + padding * 2, fill)
             draw(heading, margin + padding, y + padding); y += heading.height + padding * 2
         }
-        val headings = columns.mapIndexed { i, col ->
+        val headings = coreColumns.mapIndexed { i, col ->
             layout(bidi.unicodeWrap(short(col.title, 24)), (widths[i] - padding * 2).toInt(), true, 8.2f, centered = true)
         }
         val height = headings.maxOf { it.height }.toFloat() + padding * 2
@@ -237,14 +237,14 @@ private class TableReport(
         if (cells) lefts.dropLast(1).forEach { x -> canvas.drawLine(x, top, x, top + height, border) }
     }
     private fun medication(med: Medication, number: Int) {
-        val flows = columns.mapIndexed { i, col -> TextFlow(listOf(PdfPart(col.value(snapshot, med),
+        val flows = coreColumns.mapIndexed { i, col -> TextFlow(listOf(PdfPart(col.value(snapshot, med),
             strong = col.field == ReportField.SCIENTIFIC, size = if (col.field == ReportField.SCIENTIFIC) 9.4f else 8.2f,
             prefix = if (col.field == ReportField.SCIENTIFIC) "$number · " else "", isolate = true)),
             (widths[i] - padding * 2).toInt()) }
-        val stockHeight = columns.mapIndexed { i, col -> if (col.field == ReportField.AVAILABILITY)
+        val stockHeight = coreColumns.mapIndexed { i, col -> if (col.field == ReportField.AVAILABILITY)
             layout(col.value(snapshot, med), (widths[i] - padding * 2).toInt()).height.toFloat() else 0f }.maxOrNull() ?: 0f
         val continuationText = uiText(R.string.report_medication_continuation, number.toString()) +
-            columns.filter { it.field == ReportField.AVAILABILITY }.joinToString("", prefix = "") { col ->
+            coreColumns.filter { it.field == ReportField.AVAILABILITY }.joinToString("", prefix = "") { col ->
                 " · ${bidi.unicodeWrap(short(col.title, 16))}: ${col.value(snapshot, med)}"
             }
         var continued = false
@@ -257,7 +257,7 @@ private class TableReport(
             val portions = flows.map { it.take(bottom - y - padding * 2) }
             if (portions.all { it.slices.isEmpty() }) { newPage(); continue }
             val height = max(stockHeight, portions.maxOf { it.height }) + padding * 2
-            columns.forEachIndexed { i, col ->
+            coreColumns.forEachIndexed { i, col ->
                 fill.color = when (col.status(snapshot, med)) {
                     AvailabilityStatus.AVAILABLE -> Color.rgb(237, 246, 239)
                     AvailabilityStatus.LOW -> Color.rgb(255, 247, 225)
@@ -312,7 +312,7 @@ private class TableReport(
                     tableActive = true
                     // Reserve the actual category/column headings and a readable first line.
                     val categoryHeight = category?.let { layout(bidi.unicodeWrap(short(it.nameAr, 80)), width - 8, true, 9.4f).height + padding * 2 } ?: 0f
-                    val columnHeight = columns.mapIndexed { n, col -> layout(bidi.unicodeWrap(short(col.title, 24)), (widths[n] - padding * 2).toInt(), true, 8.2f, true).height }.maxOf { it }
+                    val columnHeight = coreColumns.mapIndexed { n, col -> layout(bidi.unicodeWrap(short(col.title, 24)), (widths[n] - padding * 2).toInt(), true, 8.2f, true).height }.maxOf { it }
                     if (bottom - y < categoryHeight + columnHeight + padding * 2 + 32f) newPage() else tableHeader()
                     previous = med.categoryId
                 }
