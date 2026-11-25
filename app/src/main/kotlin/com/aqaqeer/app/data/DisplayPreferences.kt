@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.map
 import java.io.IOException
 import com.aqaqeer.app.reports.ReportOptions
 import com.aqaqeer.app.reports.ReportField
+import com.aqaqeer.app.reports.ReportPaper
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
@@ -75,11 +76,11 @@ class DisplayPreferences(private val context: Context) {
     suspend fun setGrouping(value: HomeGrouping) { context.displayDataStore.edit { it[GROUPING] = value.name } }
     internal val reportOptions: Flow<ReportOptions> = data.map { prefs ->
         prefs[REPORT_OPTIONS]?.let { raw -> runCatching { Json.decodeFromString<ReportOptions>(raw) }
-            .getOrNull()?.takeIf { ReportField.SCIENTIFIC in it.fields } } ?: ReportOptions()
+            .getOrNull()?.takeIf { ReportField.SCIENTIFIC in it.fields }?.copy(paper = ReportPaper.A5) } ?: ReportOptions()
     }
     internal suspend fun setReportOptions(value: ReportOptions) {
         require(ReportField.SCIENTIFIC in value.fields)
-        context.displayDataStore.edit { it[REPORT_OPTIONS] = Json.encodeToString(value) }
+        context.displayDataStore.edit { it[REPORT_OPTIONS] = Json.encodeToString(value.copy(paper = ReportPaper.A5)) }
     }
     suspend fun setOtherSectionAvailability(value: Boolean) {
         context.displayDataStore.edit { it[OTHER_SECTION_AVAILABILITY] = value }

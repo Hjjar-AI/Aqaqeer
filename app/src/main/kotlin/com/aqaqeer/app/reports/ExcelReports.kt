@@ -179,7 +179,7 @@ internal object ExcelReports {
                 val options = snapshot.request.options
                 val sideMargin = options.sideMargins.excelInches
                 empty("pageMargins", "left" to sideMargin, "right" to sideMargin, "top" to 0.4, "bottom" to 0.4, "header" to 0.2, "footer" to 0.2)
-                empty("pageSetup", "paperSize" to options.paper.excelCode,
+                empty("pageSetup", "paperSize" to ReportA5.excelCode,
                     "orientation" to if (options.landscape) "landscape" else "portrait", "fitToWidth" to 1, "fitToHeight" to 0)
                 if (table) { start("tableParts"); attr("count", 1); empty("tablePart", "r:id" to "rId1"); end("tableParts") }
                 end("worksheet")

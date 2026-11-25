@@ -56,9 +56,8 @@ private class TableReport(
     private var category: Category? = null
     private var tableActive = false
     private val options = snapshot.request.options
-    private val paper = options.paper
-    private val pageWidth = if (options.landscape) paper.heightPoints else paper.widthPoints
-    private val pageHeight = if (options.landscape) paper.widthPoints else paper.heightPoints
+    private val pageWidth = if (options.landscape) ReportA5.heightPoints else ReportA5.widthPoints
+    private val pageHeight = if (options.landscape) ReportA5.widthPoints else ReportA5.heightPoints
     private val margin = options.sideMargins.pdfPoints
     private val right = pageWidth - margin
     private val bottom = pageHeight - 38f
@@ -90,7 +89,7 @@ private class TableReport(
                        centered: Boolean = false): StaticLayout {
         val paint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
             typeface = if (strong) bold else normal
-            textSize = size
+            textSize = size + 1f
             color = Color.BLACK
         }
         return StaticLayout.Builder.obtain(text, 0, text.length, paint, cellWidth)
@@ -164,17 +163,29 @@ private class TableReport(
         if (++pageNumber > 1000) throw CsvProblem(uiText(R.string.report_pdf_too_large))
         page = document.startPage(PdfDocument.PageInfo.Builder(pageWidth, pageHeight, pageNumber).create())
         canvas.drawBitmap(emblem, null, RectF(margin, 16f, margin + 30f, 46f), null)
-        val title = layout(bidi.unicodeWrap(short(snapshot.pharmacyName, 80)), width - 42, true, 10f)
+        val heading = if (pageNumber == 1) uiText(R.string.report_summary_title) else short(snapshot.pharmacyName, 80)
+        val title = layout(bidi.unicodeWrap(heading), width - 42, true, 10f)
         draw(title, margin + 42f, 16f)
         y = max(48f, 16f + title.height)
-        val metadata = listOf(
-            uiText(if (snapshot.request.includeUnpublished) R.string.report_source_local else R.string.report_source_published),
-            MedicationPresentation.timestamp(snapshot.generatedAt, snapshot.timezone) + " · " + snapshot.timezone,
-        )
-        metadata.forEach { text -> val block = layout(bidi.unicodeWrap(text), width, size = 7.2f); draw(block, margin, y); y += block.height }
+        if (pageNumber > 1) {
+            val source = uiText(if (snapshot.request.includeUnpublished)
+                R.string.report_source_local else R.string.report_source_published)
+            val generated = bidi.unicodeWrap(MedicationPresentation.timestamp(snapshot.generatedAt, snapshot.timezone))
+            val metadata = listOf(
+                uiText(R.string.report_summary_source) + ": " + source,
+                uiText(R.string.report_summary_generated) + ": " + generated + " · " + bidi.unicodeWrap(snapshot.timezone),
+            )
+            metadata.forEach { text ->
+                val block = layout(text, width, size = 7.2f)
+                draw(block, margin, y)
+                y += block.height
+            }
+        }
         canvas.drawLine(margin, y + 2f, right, y + 2f, rule); y += 6f
-        canvas.drawLine(margin, pageHeight - 27f, right, pageHeight - 27f, border)
-        draw(layout(uiText(R.string.report_pdf_page, pageNumber.toString()), width, size = 7.5f, centered = true), margin, pageHeight - 25f)
+        val footer = layout(uiText(R.string.report_pdf_page, pageNumber.toString()), width, size = 7.5f, centered = true)
+        val footerTop = pageHeight - 8f - footer.height
+        canvas.drawLine(margin, footerTop - 2f, right, footerTop - 2f, border)
+        draw(footer, margin, footerTop)
         if (tableActive) tableHeader()
         require(y + 45f < bottom) { "Repeated PDF headings leave no usable row space" }
     }
@@ -185,6 +196,25 @@ private class TableReport(
             if (portion.slices.isEmpty()) { newPage(); continue }
             drawPortion(portion, margin, y, width); y += portion.height + padding
             if (!flow.done) newPage()
+        }
+    }
+
+    private fun introduction() {
+        val rowsBySection = snapshot.summaryRows().groupBy { it.section }
+        ReportSummarySection.entries.forEach { section ->
+            val rows = rowsBySection[section].orEmpty()
+            if (rows.isEmpty()) return@forEach
+            val title = layout(uiText(section.label), width - 12, true, 9.4f)
+            val headingHeight = title.height + 8f
+            if (bottom - y < headingHeight + 24f) newPage()
+            fill.color = Color.rgb(235, 241, 247)
+            canvas.drawRect(margin, y, right, y + headingHeight, fill)
+            draw(title, margin + 6f, y + 4f)
+            y += headingHeight + 4f
+            rows.forEach { row ->
+                plain(listOf(PdfPart(row.value, prefix = "${row.label}: ", isolate = true)))
+            }
+            y += 6f
         }
     }
     private fun tableHeader() {
@@ -268,7 +298,7 @@ private class TableReport(
         try {
             require(ReportField.SCIENTIFIC in options.fields)
             newPage()
-            snapshot.summary().forEach { (label, value) -> plain(listOf(PdfPart(value, prefix = "$label: ", isolate = true))) }
+            introduction()
             if (snapshot.medications.isEmpty()) plain(listOf(PdfPart(uiText(R.string.report_empty))))
             var previous: String? = null
             snapshot.medications.forEachIndexed { i, med ->

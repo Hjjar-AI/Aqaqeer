@@ -70,8 +70,7 @@ internal data class ReportChoice(val id: String, val label: String)
         ChoicePicker(text(R.string.report_sort_direction), ReportSortDirection.entries, options.sortDirection,
             { text(it.label) }, enabled = !busy, itemKey = { it.name }) { change(options.copy(sortDirection = it)) }
         CheckChoiceRow(options.groupByCategory, text(R.string.report_group_category), enabled = !busy) { change(options.copy(groupByCategory = it)) }
-        ChoicePicker(text(R.string.report_paper), ReportPaper.entries, options.paper, { text(it.label) },
-            enabled = !busy, itemKey = { it.name }) { change(options.copy(paper = it)) }
+        LabeledValue(text(R.string.report_paper), text(R.string.report_paper_a5))
         ChoicePicker(text(R.string.report_side_margins), ReportSideMargins.entries, options.sideMargins,
             { text(it.label) }, enabled = !busy, itemKey = { it.name }) { change(options.copy(sideMargins = it)) }
         CheckChoiceRow(options.landscape, text(R.string.report_landscape), enabled = !busy) { change(options.copy(landscape = it)) }

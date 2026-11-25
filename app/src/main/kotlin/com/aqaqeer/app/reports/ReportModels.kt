@@ -25,12 +25,13 @@ internal enum class ReportFormat { PDF, XLSX }
     PER_SECTION(R.string.report_availability_sections),
     BOTH(R.string.report_availability_both)
 }
-@Serializable internal enum class ReportPaper(val widthPoints: Int, val heightPoints: Int, val excelCode: Int, val label: Int) {
-    A5(420, 595, 11, R.string.report_paper_a5),
-    A4(595, 842, 9, R.string.report_paper_a4),
-    A3(842, 1191, 8, R.string.report_paper_a3),
-    LETTER(612, 792, 1, R.string.report_paper_letter),
-    LEGAL(612, 1008, 5, R.string.report_paper_legal)
+// Retain the names so older report preferences load without losing their other choices.
+@Serializable internal enum class ReportPaper { A5, A4, A3, LETTER, LEGAL }
+
+internal object ReportA5 {
+    const val widthPoints = 420
+    const val heightPoints = 595
+    const val excelCode = 11
 }
 @Serializable internal enum class ReportSideMargins(val pdfPoints: Float, val excelInches: Double, val label: Int) {
     NARROW(12f, 0.15, R.string.report_margin_narrow),
@@ -125,38 +126,68 @@ internal fun ReportSnapshot.columns(): List<ReportColumn> = request.options.sele
     }
 }
 
-/** The summary describes actual criteria, not just the shortcut used to populate them. */
-internal fun ReportSnapshot.summary(): List<Pair<String, String>> = buildList {
-    add(uiText(R.string.report_summary_pharmacy) to pharmacyName)
-    add(uiText(R.string.report_summary_source) to uiText(if (request.includeUnpublished) R.string.report_source_local else R.string.report_source_published))
-    add(uiText(R.string.home_pharmacy_timezone_label) to timezone)
-    add(uiText(R.string.report_summary_generated) to MedicationPresentation.timestamp(generatedAt, timezone))
-    add(uiText(R.string.home_publication_time_label) to (publishedAt?.let { MedicationPresentation.timestamp(it, timezone) } ?: uiText(R.string.exchange_report_unpublished_label)))
-    add(uiText(R.string.report_summary_count) to medications.size.toString())
-    add(uiText(R.string.report_sections) to sections.joinToString("، ") { it.nameAr + if (!it.isActive) uiText(R.string.catalog_closed_section_suffix) else "" })
-    add(uiText(R.string.report_fields) to columns().joinToString("، ") { it.title })
-    add(uiText(R.string.report_name_language) to uiText(when (request.options.names) {
+internal enum class ReportSummarySection(val label: Int) {
+    OVERVIEW(R.string.report_intro_overview),
+    SCOPE(R.string.report_intro_scope),
+    PRESENTATION(R.string.report_intro_presentation)
+}
+
+internal data class ReportSummaryRow(val section: ReportSummarySection, val label: String, val value: String)
+
+internal fun ReportSnapshot.summary(): List<Pair<String, String>> =
+    summaryRows().map { it.label to it.value }
+
+/** Retains the existing summary row order for Excel and preview. PDF uses the section labels. */
+internal fun ReportSnapshot.summaryRows(): List<ReportSummaryRow> = buildList {
+    fun row(section: ReportSummarySection, label: Int, value: String) {
+        add(ReportSummaryRow(section, uiText(label), value))
+    }
+
+    val overview = ReportSummarySection.OVERVIEW
+    val scope = ReportSummarySection.SCOPE
+    val presentation = ReportSummarySection.PRESENTATION
+    row(overview, R.string.report_summary_pharmacy, pharmacyName)
+    row(overview, R.string.report_summary_source,
+        uiText(if (request.includeUnpublished) R.string.report_source_local else R.string.report_source_published))
+    row(overview, R.string.home_pharmacy_timezone_label, timezone)
+    row(overview, R.string.report_summary_generated, MedicationPresentation.timestamp(generatedAt, timezone))
+    row(overview, R.string.home_publication_time_label, publishedAt?.let { MedicationPresentation.timestamp(it, timezone) }
+        ?: uiText(R.string.exchange_report_unpublished_label))
+    row(overview, R.string.report_summary_count, medications.size.toString())
+    row(scope, R.string.report_sections, sections.joinToString("، ") {
+        it.nameAr + if (!it.isActive) uiText(R.string.catalog_closed_section_suffix) else ""
+    })
+    row(presentation, R.string.report_fields, columns().joinToString("، ") { it.title })
+    row(presentation, R.string.report_name_language, uiText(when (request.options.names) {
         ReportNames.ARABIC -> R.string.report_names_arabic
         ReportNames.ENGLISH -> R.string.report_names_english
         ReportNames.BOTH -> R.string.report_names_both
     }))
-    if (ReportField.AVAILABILITY in request.options.fields && request.options.availability != ReportAvailability.PER_SECTION)
-        add(uiText(R.string.report_overall_heading) to uiText(R.string.report_combined_rule))
-    if (request.query.isNotBlank()) add(uiText(R.string.shared_search_label) to request.query)
-    if (request.categoryIds.isNotEmpty()) add(uiText(R.string.report_categories) to categories.filter { it.id in request.categoryIds }.joinToString("، ") { it.nameAr })
-    if (request.formIds.isNotEmpty()) add(uiText(R.string.report_forms) to forms.filter { it.id in request.formIds }.joinToString("، ") { it.nameAr })
-    add(uiText(R.string.report_medication_selection) to (request.medicationIds?.size?.toString() ?: uiText(R.string.report_all_medications)))
-    if (request.effectiveStatuses.isNotEmpty()) add(uiText(statusMatchLabel(request.effectiveMatch)) to request.effectiveStatuses.joinToString("، ") { MedicationPresentation.statusLabel(it) })
-    add(uiText(R.string.report_expiry_filter) to uiText(expiryLabel(request.effectiveExpiry)))
-    if (request.fromDate.isNotEmpty() || request.throughDate.isNotEmpty()) add(uiText(R.string.report_expiry_range) to "${request.fromDate} — ${request.throughDate}")
-    add(uiText(R.string.report_sort) to uiText(sortLabel(request.options.sort)))
-    if (request.options.sortDirection == ReportSortDirection.DESCENDING)
-        add(uiText(R.string.report_sort_direction) to uiText(request.options.sortDirection.label))
-    add(uiText(R.string.report_grouping) to uiText(if (request.options.groupByCategory) R.string.report_group_category else R.string.report_group_none))
-    if (request.options.paper != ReportPaper.A5)
-        add(uiText(R.string.report_paper) to uiText(request.options.paper.label))
-    if (request.options.sideMargins != ReportSideMargins.STANDARD)
-        add(uiText(R.string.report_side_margins) to uiText(request.options.sideMargins.label))
+    if (ReportField.AVAILABILITY in request.options.fields && request.options.availability != ReportAvailability.PER_SECTION) {
+        row(presentation, R.string.report_overall_heading, uiText(R.string.report_combined_rule))
+    }
+    if (request.query.isNotBlank()) row(scope, R.string.shared_search_label, request.query)
+    if (request.categoryIds.isNotEmpty()) row(scope, R.string.report_categories,
+        categories.filter { it.id in request.categoryIds }.joinToString("، ") { it.nameAr })
+    if (request.formIds.isNotEmpty()) row(scope, R.string.report_forms,
+        forms.filter { it.id in request.formIds }.joinToString("، ") { it.nameAr })
+    row(scope, R.string.report_medication_selection,
+        request.medicationIds?.size?.toString() ?: uiText(R.string.report_all_medications))
+    if (request.effectiveStatuses.isNotEmpty()) row(scope, statusMatchLabel(request.effectiveMatch),
+        request.effectiveStatuses.joinToString("، ") { MedicationPresentation.statusLabel(it) })
+    row(scope, R.string.report_expiry_filter, uiText(expiryLabel(request.effectiveExpiry)))
+    if (request.fromDate.isNotEmpty() || request.throughDate.isNotEmpty()) {
+        row(scope, R.string.report_expiry_range, "${request.fromDate} — ${request.throughDate}")
+    }
+    row(presentation, R.string.report_sort, uiText(sortLabel(request.options.sort)))
+    if (request.options.sortDirection == ReportSortDirection.DESCENDING) {
+        row(presentation, R.string.report_sort_direction, uiText(request.options.sortDirection.label))
+    }
+    row(presentation, R.string.report_grouping,
+        uiText(if (request.options.groupByCategory) R.string.report_group_category else R.string.report_group_none))
+    if (request.options.sideMargins != ReportSideMargins.STANDARD) {
+        row(presentation, R.string.report_side_margins, uiText(request.options.sideMargins.label))
+    }
 }
 
 internal fun statusMatchLabel(value: ReportStatusMatch) = when (value) {

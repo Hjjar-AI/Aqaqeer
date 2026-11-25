@@ -9,11 +9,10 @@
     <string name="report_sort_direction">اتجاه الترتيب</string>
     <string name="report_direction_ascending">تصاعدي</string>
     <string name="report_direction_descending">تنازلي</string>
-    <string name="report_paper_a5">A5</string>
-    <string name="report_paper_a4">A4</string>
-    <string name="report_paper_a3">A3</string>
-    <string name="report_paper_letter">Letter</string>
-    <string name="report_paper_legal">Legal</string>
+    <string name="report_paper_a5" translatable="false">A5</string>
+    <string name="report_intro_overview">بيانات التقرير</string>
+    <string name="report_intro_scope">نطاق الأدوية والفلاتر</string>
+    <string name="report_intro_presentation">الحقول وطريقة العرض</string>
     <string name="report_side_margins">الهوامش الجانبية للطباعة</string>
     <string name="report_margin_narrow">ضيقة</string>
     <string name="report_margin_standard">عادية</string>
