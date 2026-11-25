@@ -276,9 +276,10 @@ tasks.named { it in roomSchemaWriters }.configureEach {
     mustRunAfter(tasks.named { it in roomSchemaWriters && it < currentName })
 }
 
+val unitTestMaxHeap = providers.gradleProperty("aqaqeer.testMaxHeap").orElse("1536m")
 // Large boundary fixtures run sequentially; they must not compete for heap.
 tasks.withType<Test>().configureEach {
-    maxHeapSize = "1536m"
+    maxHeapSize = unitTestMaxHeap.get()
     maxParallelForks = 1
     // Mocking instrumentation extends the bootstrap classpath; CDS is unnecessary in test JVMs.
     jvmArgs("-Xshare:off")

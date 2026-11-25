@@ -12,6 +12,7 @@ from ci_yaml import load_yaml
 PUBLIC_GUARD = '${{ github.event.repository.private == false }}'
 CLEANUP_GUARD = "${{ github.event.repository.private == false && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}"
 PIN = re.compile(r'[\w.-]+/[\w.-]+(?:/[\w./-]+)?@[0-9a-f]{40}')
+DEPENDENCY_CACHE_PATHS = '~/.gradle/caches/modules-2/files-2.1\n~/.gradle/caches/modules-2/metadata-2.*\n'
 
 
 def check(path):
@@ -78,7 +79,7 @@ def check(path):
                             expected_paths = {
                                 (action, cache_path)
                                 for action in ('actions/cache', 'actions/cache/restore')
-                                for cache_path in ('~/.gradle/wrapper/dists', '~/.gradle/caches/modules-2')
+                                for cache_path in ('~/.gradle/wrapper/dists', DEPENDENCY_CACHE_PATHS)
                             }
                             if len(cache_paths) != len(expected_paths) or any(
                                     cache_path not in cache_paths for cache_path in expected_paths):
@@ -109,12 +110,15 @@ def check(path):
                                     "${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}")
                     if inputs.get('key') != expected_key or 'restore-keys' in inputs:
                         problem(label, 'wrapper cache must be keyed by the exact wrapper properties')
-                elif inputs.get('path') == '~/.gradle/caches/modules-2':
-                    expected_prefix = 'aqaqeer-dependencies-v1-${{ runner.os }}-${{ runner.arch }}-'
+                elif inputs.get('path') == DEPENDENCY_CACHE_PATHS:
+                    expected_prefix = 'aqaqeer-dependencies-v2-${{ runner.os }}-${{ runner.arch }}-'
                     expected_key = (expected_prefix + '${{ github.run_id }}-${{ github.run_attempt }}-'
                                     + '${{ github.job }}-${{ strategy.job-index }}')
                     if inputs.get('key') != expected_key or inputs.get('restore-keys') != expected_prefix:
                         problem(label, 'dependency snapshots must restore across runs and save per run/job/attempt')
+                    if name == 'actions/cache' and step.get('env') != {
+                            'TAR_OPTIONS': '--exclude=*.lock --exclude=gc.properties'}:
+                        problem(label, 'dependency archives must exclude lock files and cleanup markers')
                 else:
                     problem(label, 'Gradle cache paths must be limited to wrapper distributions or downloaded dependencies')
             elif name in ('actions/cache', 'actions/cache/restore'):

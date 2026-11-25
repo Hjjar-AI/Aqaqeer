@@ -6,6 +6,8 @@ The follow-up workflow 03 run `45575857804` at `aeb8c9d` passed demo JVM, debug 
 
 Workflow 06 at `aeb8c9d` built and signed Standard and Demo debug APKs, version 0.0.4. Demo restored 347,045,176 bytes from the old basic cache and 330,192,901 bytes from the rolling dependency snapshot. Shared setup now uses non-overlapping wrapper-distribution and dependency cache paths. It skips the SDK manager when the pinned SDK packages are already installed. Parsed CI policy passed for all 16 workflows. The SDK shell syntax and pinned package markers were checked without invoking the SDK manager. Hosted cache transfer size and SDK behavior for the new setup remain pending. [Workflow 06 logs](https://github.com/Hjjar-AI/Aqaqeer/actions/runs/45575838670)
 
+The hosted memory and cache follow-up at `7349d57` sets 4/3/2-GiB heap caps for Gradle, Kotlin and JVM tests through the shared CI setup, with the existing worker and fork caps. Dependency v2 archives include artifact and resolution metadata directories and exclude per-runner lock and cleanup files. The 16-workflow policy check, heap-setting source and shell syntax checks, archive path inspection and whitespace check passed. Hosted memory, cache savings and cold/warm transfer behavior remain pending.
+
 [Requirements](requirements.md) define acceptance; [plan](plan.md) owns remaining work. The evidence manifest (local-only: `../local/verification/manifest.json`) retains original results, public hashes and provenance. Ignored evidence may be absent in fresh checkouts. Source checks, compilation, runtime results and human acceptance remain distinct.
 
 ## Admin tools organization — 2026-11-25
