@@ -50,6 +50,8 @@ STANDARD_CASES = (
     ('Reports-ReportExportsInstrumented-publishedAndLocalSourcesNeverFallbackAndRejectForeignSelections', 'ReportExportsInstrumentedTest#publishedAndLocalSourcesNeverFallbackAndRejectForeignSelections', False),
     ('Reports-ReportExportsInstrumented-filteredSnapshotDrivesBothFormatsWithoutChangingCatalogOrPendingWork', 'ReportExportsInstrumentedTest#filteredSnapshotDrivesBothFormatsWithoutChangingCatalogOrPendingWork', False),
     ('Reports-ReportExportsInstrumented-workbookHasSummaryFilterableRowsRtlFrozenHeadersAndPrintSettings', 'ReportExportsInstrumentedTest#workbookHasSummaryFilterableRowsRtlFrozenHeadersAndPrintSettings', False),
+    ('Reports-ReportExportsInstrumented-workbookPreservesCustomOrderWithOverallAndSectionStatusesTogether', 'ReportExportsInstrumentedTest#workbookPreservesCustomOrderWithOverallAndSectionStatusesTogether', False),
+    ('Reports-ReportExportsInstrumented-expirySortChangesDirectionAndKeepsUndatedLastAndScientificTiesStable', 'ReportExportsInstrumentedTest#expirySortChangesDirectionAndKeepsUndatedLastAndScientificTiesStable', False),
     ('Reports-ReportExportsInstrumented-workbookContainsOnlySelectedFieldsAndPreservesFormulaLikeText', 'ReportExportsInstrumentedTest#workbookContainsOnlySelectedFieldsAndPreservesFormulaLikeText', False),
     ('Reports-ReportExportsInstrumented-longNotesPreserveEveryCharacterAcrossIdentifiedContinuationRows', 'ReportExportsInstrumentedTest#longNotesPreserveEveryCharacterAcrossIdentifiedContinuationRows', False),
     ('Reports-ReportExportsInstrumented-longScientificIdentityUsesExplicitMedicationReferencesWithoutTruncation', 'ReportExportsInstrumentedTest#longScientificIdentityUsesExplicitMedicationReferencesWithoutTruncation', False),
@@ -65,6 +67,7 @@ STANDARD_CASES = (
     ('Reports-ReportPreferencesInstrumented-invalidScientificFieldSelectionRejectsWithoutOverwritingSavedDefaults', 'ReportPreferencesInstrumentedTest#invalidScientificFieldSelectionRejectsWithoutOverwritingSavedDefaults', False),
     ('Reports-ReportControlsUi-requiredScientificIdentityAndOptionalNotesRemainUsableAtLargeArabicText', 'ReportControlsUiTest#requiredScientificIdentityAndOptionalNotesRemainUsableAtLargeArabicText', False),
     ('Reports-ReportControlsUi-layoutChoicesChangeOnlyPresentationAndBusyStateDisablesEdits', 'ReportControlsUiTest#layoutChoicesChangeOnlyPresentationAndBusyStateDisablesEdits', False),
+    ('Reports-ReportControlsUi-combinedAvailabilityAndFieldReorderingRespectRequiredFieldsAndBusyState', 'ReportControlsUiTest#combinedAvailabilityAndFieldReorderingRespectRequiredFieldsAndBusyState', False),
     ('Reports-ReportControlsUi-medicationPickerSearchSelectAllAndClearRetainExplicitSelectionMeaning', 'ReportControlsUiTest#medicationPickerSearchSelectAllAndClearRetainExplicitSelectionMeaning', False),
     ('Reports-HomeFixtureUi-narrowRtlRowsAllowLongCategoriesAndSectionChangeRemovesOutTip', 'HomeFixtureUiTest#narrowRtlRowsAllowLongCategoriesAndSectionChangeRemovesOutTip', False),
     ('Reports-HomeFixtureUi-hintsDefaultOffAndToggleAsPlainTextInBothCardLayouts', 'HomeFixtureUiTest#hintsDefaultOffAndToggleAsPlainTextInBothCardLayouts', False),
@@ -239,6 +242,8 @@ SHARING_CASES = (
 )
 
 UI_CASES = (
+    ('ui-ReportControlsUiTest-sharedStepHeaderDisclosesProgressWithoutChangingTheCurrentStep', 'ReportControlsUiTest#sharedStepHeaderDisclosesProgressWithoutChangingTheCurrentStep', False),
+    ('ui-ViewModelInstrumentedTest-reportAccordionRevealsOnlyTheCurrentStepActions', 'ViewModelInstrumentedTest#reportAccordionRevealsOnlyTheCurrentStepActions', False),
     ('ui-HomeBarPlacementUiTest-sectionSwitchKeepsAdminAddAndSearchBoundsStableInBothPlacements', 'HomeBarPlacementUiTest#sectionSwitchKeepsAdminAddAndSearchBoundsStableInBothPlacements', False),
     ('ui-SectionThemeUiTest-retainedAccentKeysAndSectionIndicatorUseTheNewPalette', 'SectionThemeUiTest#retainedAccentKeysAndSectionIndicatorUseTheNewPalette', False),
     ('ui-ViewModelInstrumentedTest-adminHubKeepsOneLeaveActionAndShowsOnlyToolsPermittedByState', 'ViewModelInstrumentedTest#adminHubKeepsOneLeaveActionAndShowsOnlyToolsPermittedByState', False),

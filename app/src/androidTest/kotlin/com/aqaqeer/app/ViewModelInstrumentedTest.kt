@@ -14,7 +14,9 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.v2.createComposeRule
@@ -63,6 +65,76 @@ class ViewModelInstrumentedTest {
         withTimeout(15000) { vm.state.first { it.catalog is CatalogState.Ready } }
     }
     @After fun cleanup() { if (::vm.isInitialized) main { models.clear() }; if (::p.isInitialized) p.close() }
+
+    @Test fun reportAccordionRevealsOnlyTheCurrentStepActions(): Unit = runBlocking {
+        val medication = p.medication("Report accordion fixture")
+        p.publish(remote)
+        val ready = withTimeout(15_000) {
+            vm.state.first { state -> (state.catalog as? CatalogState.Ready)?.let { it.admin && it.publishedAt != null } == true }
+                .catalog as CatalogState.Ready
+        }
+        main { vm.navigate(Route.Reports) }
+        val exports = mutableListOf<ReportFormat>()
+        compose.setContent {
+            AqaqeerTheme(ThemeChoice.LIGHT) {
+                CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
+                    Box(Modifier.width(320.dp)) { ReportsScreen(ready, vm) { exports.add(it) } }
+                }
+            }
+        }
+        val list = compose.onNode(hasScrollToIndexAction())
+        fun button(id: Int): SemanticsNodeInteraction {
+            val matcher = hasText(uiText(id)) and hasClickAction()
+            list.performScrollToNode(matcher)
+            return compose.onNode(matcher).assertIsDisplayed()
+        }
+        fun step(title: Int, status: Int) {
+            val text = hasText(uiText(title))
+            list.performScrollToNode(text)
+            compose.onNode(text).assertIsDisplayed()
+                .assert(SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, uiText(status)))
+        }
+        val next = R.string.report_next_step_action
+        val previous = R.string.report_previous_step_action
+        val prepare = R.string.exchange_report_prepare_preview_action
+        val pdf = R.string.exchange_report_save_pdf_action
+        val excel = R.string.report_save_excel
+
+        compose.waitUntil(15_000) {
+            vm.reportSource.value != null && vm.reportOptions.value != null && !vm.adminBusy.value
+        }
+        step(R.string.report_source_step, R.string.shared_step_current)
+        step(R.string.report_scope_step, R.string.shared_step_pending)
+        compose.onNodeWithText(uiText(previous)).assertDoesNotExist()
+        button(next).assertIsEnabled().performClick()
+
+        step(R.string.report_source_step, R.string.shared_step_completed)
+        compose.onNodeWithText(uiText(R.string.report_summary_source)).assertDoesNotExist()
+        step(R.string.report_scope_step, R.string.shared_step_current)
+        button(next).assertIsEnabled().performClick()
+        step(R.string.report_scope_step, R.string.shared_step_completed)
+        compose.onNodeWithText(uiText(R.string.report_sections)).assertDoesNotExist()
+        step(R.string.report_options_step, R.string.shared_step_current)
+        compose.onNodeWithText(uiText(excel)).assertDoesNotExist()
+        compose.onNodeWithText(uiText(pdf)).assertDoesNotExist()
+
+        button(previous).performClick()
+        step(R.string.report_scope_step, R.string.shared_step_current)
+        button(next).performClick()
+        button(prepare).assertIsEnabled().performClick()
+        compose.waitUntil(15_000) { vm.reportStep.value == ReportStep.PREVIEW && !vm.adminBusy.value }
+        assertEquals(listOf(medication.id), vm.reportSnapshot.value?.medications?.map { it.id })
+        step(R.string.exchange_report_preview_title, R.string.shared_step_current)
+        button(excel).assertIsEnabled().performClick()
+        button(pdf).assertIsEnabled().performClick()
+        compose.runOnIdle { assertEquals(listOf(ReportFormat.XLSX, ReportFormat.PDF), exports) }
+
+        button(previous).performClick()
+        step(R.string.report_options_step, R.string.shared_step_current)
+        step(R.string.exchange_report_preview_title, R.string.shared_step_pending)
+        compose.onNodeWithText(uiText(pdf)).assertDoesNotExist()
+        compose.onNodeWithText(uiText(excel)).assertDoesNotExist()
+    }
 
     @Test fun adminHubKeepsOneLeaveActionAndShowsOnlyToolsPermittedByState(): Unit = runBlocking {
         val shared = p.ready().copy(admin = true, lifecycle = "SHARED")
@@ -144,7 +216,12 @@ class ViewModelInstrumentedTest {
         instructions.assertDoesNotExist()
         guide.performScrollTo().performClick()
         instructions.performScrollTo().assertIsDisplayed()
-        val discover = compose.onNodeWithText(uiText(R.string.connection_discover_group_action))
+        val discoverLabel = hasText(uiText(R.string.connection_discover_group_action))
+        val stepDescription = listOf(uiText(R.string.shared_step_current), uiText(R.string.shared_step_position, 1, 3),
+            uiText(R.string.shared_collapsed_state_label)).joinToString(" · ")
+        compose.onNode(discoverLabel and SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, stepDescription))
+            .performScrollTo().assertIsDisplayed()
+        val discover = compose.onNode(discoverLabel and SemanticsMatcher.keyIsDefined(SemanticsProperties.Disabled))
         discover.performScrollTo().assertIsNotEnabled()
         main { vm.back() }
         compose.runOnIdle { assertEquals("admin", route.value) }

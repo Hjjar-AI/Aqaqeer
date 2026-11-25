@@ -8,6 +8,18 @@ Use the [current hosted checkpoint](validation.md#hosted-completion-batch--2026-
 
 [Build](build.md#hosted-emulator-screenshots-and-recordings) owns the current workflow-07 selection and invocation counts. A selector is not a new pass count. Retain passes by revision and environment; the [backup/restore audit](validation.md#backuprestore-requirement-to-evidence-audit--2026-11-22) maps retained per-case results to current obligations and explicit limits.
 
+## Report accordion, advanced export and fixed A5 — 2026-11-25
+
+Two new JVM methods cover custom field ordering with both availability levels and the three opening summary groups. Existing JVM cases now cover serialization of the new choices and stale capture when the user changes a current presentation option. Five new Android methods cover forward and backward accordion navigation through Preview, shared step header disclosure, reorder and reset with busy controls, ordered workbook headers and status values, and ascending and descending expiry order with undated items last. Updated Android assertions cover A5 PDF dimensions and opening margins, A5 XLSX print settings, preservation of advanced preferences, the blue theme name, and the distinction between the Telegram progress heading and its disabled action.
+
+Use workflow 03 with `scope=all` and `coverage=false` to run the JVM suites and compile both Android test flavors. On the default branch containing the changes, use workflow 07 with `demo_checks=false`, `standard_functional=true` and this exact `retry_methods` value for the new and updated Android cases and the existing Arabic PDF continuation case.
+
+```text
+ReportExportsInstrumentedTest#workbookHasSummaryFilterableRowsRtlFrozenHeadersAndPrintSettings,ReportExportsInstrumentedTest#workbookPreservesCustomOrderWithOverallAndSectionStatusesTogether,ReportExportsInstrumentedTest#expirySortChangesDirectionAndKeepsUndatedLastAndScientificTiesStable,ReportExportsInstrumentedTest#pdfPaperOrientationAndDensityOptionsRemainRenderable,ReportPreferencesInstrumentedTest#everyPresentationOptionAndHintTogglePersistForANewReader,ReportPreferencesInstrumentedTest#invalidScientificFieldSelectionRejectsWithoutOverwritingSavedDefaults,ReportControlsUiTest#layoutChoicesChangeOnlyPresentationAndBusyStateDisablesEdits,ReportControlsUiTest#combinedAvailabilityAndFieldReorderingRespectRequiredFieldsAndBusyState,ReportControlsUiTest#sharedStepHeaderDisclosesProgressWithoutChangingTheCurrentStep,ViewModelInstrumentedTest#reportAccordionRevealsOnlyTheCurrentStepActions,ViewModelInstrumentedTest#adminChecklistOpensSetupGuideAndBackReturnsToTools,SectionThemeUiTest#retainedAccentKeysAndSectionIndicatorUseTheNewPalette,CsvReportsInstrumentedTest#arabicPdfRendersMultiplePagesAndHasNoBlankContinuationPages
+```
+
+The PDF checks cover page dimensions, visible opening content and margin placement. Exact font-size appearance, Arabic shaping and printed pagination still need visual review.
+
 ## Focused risk regressions — 2026-11-25
 
 One JVM method covers authorization lost after the picker result queues a report writer. Four standard Android methods cover a concurrent edit after backup capture, authorization revoked during upload followed by explicit retry, restore-picker result and cancellation at large RTL text, and splash handoff. The picker test controls the system contract result through the activity result registry. The splash method exercises the static handoff with hosted animations disabled and checks the pulse with animations enabled at normal speed. Native launch appearance remains a separate check.

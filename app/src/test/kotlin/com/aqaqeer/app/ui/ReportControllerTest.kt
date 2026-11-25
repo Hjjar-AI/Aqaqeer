@@ -156,7 +156,7 @@ class ReportControllerTest {
         val work = launch(start = CoroutineStart.UNDISPATCHED) { next() }
         assertTrue("Capture reached the suspended repository call", entered.isCompleted)
         assertEquals(request, entered.await())
-        options = requireNotNull(options).copy(paper = ReportPaper.A4)
+        options = requireNotNull(options).copy(sideMargins = ReportSideMargins.WIDE)
         gate.complete(snapshot.copy(request = request))
         work.join()
         assertNull(controller.reportSnapshot.value)

@@ -1,7 +1,9 @@
 package com.aqaqeer.app.reports
 
+import com.aqaqeer.app.R
 import com.aqaqeer.app.data.*
 import com.aqaqeer.app.fixtures.M3Fixtures as F
+import com.aqaqeer.app.uiText
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.junit.*
@@ -65,6 +67,54 @@ class ReportModelsTest {
         assertEquals("باراسيتامول", scientific.value(with(ReportNames.ENGLISH), med.copy(genericEn = null)))
         assertEquals("Paracetamol", scientific.value(with(ReportNames.BOTH), med.copy(genericAr = "Paracetamol")))
     }
+    @Test fun customOrderExpandsBothAvailabilityLevelsAndOmitsUnselectedFields() {
+        val options = ReportOptions(
+            fields = setOf(ReportField.SCIENTIFIC, ReportField.AVAILABILITY, ReportField.NOTE),
+            availability = ReportAvailability.BOTH,
+            fieldOrder = listOf(ReportField.AVAILABILITY, ReportField.STRENGTH, ReportField.AVAILABILITY, ReportField.NOTE),
+        )
+        val base = snapshot(options)
+        val first = base.sections.single()
+        val second = Section(F.otherPharmacyId, "فرع")
+        val report = base.copy(sections = listOf(second, first))
+        val medication = report.medications.single()
+        val columns = report.columns()
+        assertEquals(listOf(
+            ReportColumn(ReportField.AVAILABILITY),
+            ReportColumn(ReportField.AVAILABILITY, second),
+            ReportColumn(ReportField.AVAILABILITY, first),
+            ReportColumn(ReportField.NOTE),
+            ReportColumn(ReportField.SCIENTIFIC),
+        ), columns)
+        assertEquals(listOf(AvailabilityStatus.AVAILABLE, AvailabilityStatus.OUT, AvailabilityStatus.AVAILABLE),
+            columns.take(3).map { it.status(report, medication) })
+        assertEquals(3, columns.take(3).map { it.title }.distinct().size)
+    }
+    @Test fun introductoryRowsSeparateReportDetailsScopeAndPresentation() {
+        val base = snapshot(ReportOptions(
+            availability = ReportAvailability.BOTH,
+            sortDirection = ReportSortDirection.DESCENDING,
+            sideMargins = ReportSideMargins.WIDE,
+            fieldOrder = listOf(ReportField.AVAILABILITY),
+        ))
+        val report = base.copy(request = base.request.copy(query = "مرشح English", fromDate = "2027-01-01",
+            throughDate = "2027-12-31"))
+        val rows = report.summaryRows()
+        val bySection = rows.groupBy { it.section }.mapValues { (_, group) -> group.associate { it.label to it.value } }
+        val overview = bySection.getValue(ReportSummarySection.OVERVIEW)
+        val scope = bySection.getValue(ReportSummarySection.SCOPE)
+        val presentation = bySection.getValue(ReportSummarySection.PRESENTATION)
+        assertEquals(report.pharmacyName, overview[uiText(R.string.report_summary_pharmacy)])
+        assertEquals("1", overview[uiText(R.string.report_summary_count)])
+        assertEquals("مرشح English", scope[uiText(R.string.shared_search_label)])
+        assertEquals("2027-01-01 — 2027-12-31", scope[uiText(R.string.report_expiry_range)])
+        assertEquals(report.columns().joinToString("، ") { it.title }, presentation[uiText(R.string.report_fields)])
+        assertEquals(uiText(R.string.report_combined_rule), presentation[uiText(R.string.report_overall_heading)])
+        assertEquals(uiText(R.string.report_direction_descending), presentation[uiText(R.string.report_sort_direction)])
+        assertEquals(uiText(R.string.report_margin_wide), presentation[uiText(R.string.report_side_margins)])
+        assertFalse(rows.any { it.label == uiText(R.string.report_paper) })
+        assertEquals(rows.map { it.label to it.value }, report.summary())
+    }
     @Test fun everyBusinessFieldRetainsItsCompleteValue() {
         val base = snapshot(); val med = base.medications.single().copy(note = "ملاحظة\nEnglish & <detail>", brand = "Brand", expiryDate = java.time.LocalDate.of(2028,2,29), expirySoonThresholdDays = 17)
         val expected = mapOf(ReportField.STRENGTH to "10 mg", ReportField.FORM to base.forms.single { it.id == med.formId }.nameAr,
@@ -76,11 +126,15 @@ class ReportModelsTest {
     }
     @Test fun presentationSerializationContainsNoSourceConsentOrPharmacyFilters() {
         val options = ReportOptions(fields = ReportField.entries.toSet(), names = ReportNames.ENGLISH, sort = ReportSort.EXPIRY,
-            groupByCategory = false, availability = ReportAvailability.PER_SECTION, paper = ReportPaper.A4, landscape = true, compact = false)
+            groupByCategory = false, availability = ReportAvailability.BOTH, paper = ReportPaper.A4, landscape = true, compact = false,
+            sortDirection = ReportSortDirection.DESCENDING, sideMargins = ReportSideMargins.NARROW,
+            fieldOrder = listOf(ReportField.NOTE, ReportField.SCIENTIFIC))
         val json = Json.encodeToString(options)
         assertEquals(options, Json.decodeFromString<ReportOptions>(json))
         for (privateField in listOf("pharmacyId", "sectionIds", "medicationIds", "includeUnpublished", "query", "botToken", "snapshotKey")) assertFalse(privateField, json.contains(privateField))
         assertEquals(ReportOptions(), Json.decodeFromString<ReportOptions>("{}"))
+        assertEquals(ReportOptions(paper = ReportPaper.LEGAL, landscape = true, compact = false),
+            Json.decodeFromString<ReportOptions>("""{"paper":"LEGAL","landscape":true,"compact":false}"""))
     }
     @Test fun legacyShortcutsRetainTheirExplicitMeaning() {
         val out = ReportRequest(ReportPreset.OUT, "section")

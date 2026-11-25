@@ -31,9 +31,20 @@ class ReportPreferencesInstrumentedTest {
     @Test fun everyPresentationOptionAndHintTogglePersistForANewReader(): Unit = runBlocking {
         withTimeout(10000) {
             val original = preferences.home.first(); val sections = preferences.sections.first()
-            val options = ReportOptions(ReportField.entries.toSet(), ReportNames.ENGLISH, ReportSort.TRADE, false,
-                ReportAvailability.PER_SECTION, ReportPaper.A4, true, false)
-            preferences.setReportOptions(options); preferences.setOtherSectionAvailability(true)
+            val options = ReportOptions(
+                fields = ReportField.entries.toSet(),
+                names = ReportNames.ENGLISH,
+                sort = ReportSort.TRADE,
+                groupByCategory = false,
+                availability = ReportAvailability.BOTH,
+                landscape = true,
+                compact = false,
+                sortDirection = ReportSortDirection.DESCENDING,
+                sideMargins = ReportSideMargins.WIDE,
+                fieldOrder = listOf(ReportField.NOTE, ReportField.SCIENTIFIC),
+            )
+            preferences.setReportOptions(options.copy(paper = ReportPaper.A4))
+            preferences.setOtherSectionAvailability(true)
             val next = DisplayPreferences(profile.context)
             assertEquals(options, next.reportOptions.first())
             assertEquals(original.copy(showOtherSectionAvailability = true), next.home.first())
@@ -44,7 +55,7 @@ class ReportPreferencesInstrumentedTest {
         }
     }
     @Test fun invalidScientificFieldSelectionRejectsWithoutOverwritingSavedDefaults(): Unit = runBlocking {
-        val saved = ReportOptions(paper = ReportPaper.A4)
+        val saved = ReportOptions(landscape = true, sideMargins = ReportSideMargins.NARROW)
         preferences.setReportOptions(saved)
         assertThrows(IllegalArgumentException::class.java) { runBlocking {
             preferences.setReportOptions(ReportOptions(fields = setOf(ReportField.NOTE)))

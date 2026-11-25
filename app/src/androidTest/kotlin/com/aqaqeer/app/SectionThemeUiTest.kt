@@ -42,6 +42,7 @@ class SectionThemeUiTest {
             assertEquals(copper, ThemeAccent.fromStoredName(stored))
         }
         assertEquals(ThemeAccent.ROSE, ThemeAccent.fromStoredName("CRIMSON"))
+        assertEquals("أزرق", resources.getString(R.string.settings_accent_blue_label))
         assertEquals(Color(0xFF8B4C23), appColorScheme(ThemeChoice.LIGHT, copper, false, resources).primary)
         assertEquals(Color(0xFF405F98), appColorScheme(ThemeChoice.LIGHT, ThemeAccent.BLUE, false, resources).primary)
         for (mode in listOf(ThemeChoice.LIGHT, ThemeChoice.DARK, ThemeChoice.AMOLED)) {

@@ -1,5 +1,7 @@
 package com.aqaqeer.app
 
+import android.graphics.Bitmap
+import android.graphics.Color
 import android.graphics.pdf.PdfRenderer
 import android.os.ParcelFileDescriptor
 import com.aqaqeer.app.data.*
@@ -16,6 +18,7 @@ import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.IOException
 import java.io.OutputStream
+import java.time.LocalDate
 import kotlin.coroutines.EmptyCoroutineContext
 
 /** Uses Android's real XML serializer and PDF/font stack. Execution belongs to workflow 07. */
@@ -75,7 +78,8 @@ class ReportExportsInstrumentedTest {
     }
 
     @Test fun workbookHasSummaryFilterableRowsRtlFrozenHeadersAndPrintSettings() {
-        val snapshot = snapshot(ReportOptions(fields = ReportField.entries.toSet(), paper = ReportPaper.A4, landscape = true))
+        val snapshot = snapshot(ReportOptions(fields = ReportField.entries.toSet(), paper = ReportPaper.A4,
+            landscape = true, sideMargins = ReportSideMargins.WIDE))
         val book = workbook(snapshot)
         val summary = book.rows("Summary").drop(1).associate { it[0] to it[1] }
         assertEquals(snapshot.pharmacyName, summary[uiText(R.string.report_summary_pharmacy)])
@@ -90,11 +94,54 @@ class ReportExportsInstrumentedTest {
             val pane = book.elements(path, "pane").single()
             assertEquals("frozen", pane.getAttribute("state")); assertEquals("A2", pane.getAttribute("topLeftCell"))
             val print = book.elements(path, "pageSetup").single()
-            assertEquals("9", print.getAttribute("paperSize")); assertEquals("landscape", print.getAttribute("orientation"))
+            assertEquals("11", print.getAttribute("paperSize")); assertEquals("landscape", print.getAttribute("orientation"))
             assertEquals("1", print.getAttribute("fitToWidth")); assertEquals("0", print.getAttribute("fitToHeight"))
+            val margins = book.elements(path, "pageMargins").single()
+            assertEquals("0.45", margins.getAttribute("left"))
+            assertEquals("0.45", margins.getAttribute("right"))
+            assertEquals("0.4", margins.getAttribute("top"))
+            assertEquals("0.4", margins.getAttribute("bottom"))
             assertTrue(book.elements(path, "col").all { it.getAttribute("width").toDouble() >= 10 })
         }
         assertEquals("'Medications'!\$1:\$1", book.elements("xl/workbook.xml", "definedName").single().textContent)
+    }
+    @Test fun workbookPreservesCustomOrderWithOverallAndSectionStatusesTogether() {
+        val base = snapshot(ReportOptions(
+            fields = setOf(ReportField.SCIENTIFIC, ReportField.STRENGTH, ReportField.AVAILABILITY),
+            names = ReportNames.ENGLISH,
+            availability = ReportAvailability.BOTH,
+            fieldOrder = listOf(ReportField.STRENGTH, ReportField.AVAILABILITY, ReportField.SCIENTIFIC),
+        ))
+        val inStock = base.sections.single()
+        val shortage = Section(newId(), "فرع النقص")
+        val medication = base.medications.single()
+        val book = workbook(base.copy(sections = listOf(shortage, inStock)))
+        val rows = book.rows("Medications")
+        val labels = listOf(uiText(R.string.report_field_strength), uiText(R.string.report_overall_heading),
+            shortage.nameAr, inStock.nameAr, uiText(R.string.report_field_scientific))
+        assertEquals(labels.mapIndexed { index, label -> "${index + 1} · $label" }, rows.first().drop(1))
+        assertEquals(listOf(medication.strength, "متوفر", "غير متوفر", "متوفر", medication.genericEn),
+            rows.single { it.first() == "1" }.drop(1))
+    }
+    @Test fun expirySortChangesDirectionAndKeepsUndatedLastAndScientificTiesStable(): Unit = runBlocking {
+        profile.create()
+        suspend fun save(name: String, date: LocalDate?): String {
+            val medication = profile.medication(name)
+            profile.admin.saveMedication(medication.copy(expiryDate = date))
+            return medication.id
+        }
+        val early = LocalDate.of(2027, 1, 1)
+        val late = LocalDate.of(2028, 1, 1)
+        val beta = save("Beta", late)
+        val undated = save("Aardvark", null)
+        val alpha = save("Alpha", late)
+        val soon = save("Zeta", early)
+        val repo = ReportRepository(profile.admin, DocumentOutput(profile.context), PdfReports(profile.context))
+        val request = ReportRequest(includeUnpublished = true, options = ReportOptions(sort = ReportSort.EXPIRY))
+
+        assertEquals(listOf(soon, alpha, beta, undated), repo.capture(request).medications.map { it.id })
+        val descending = request.copy(options = request.options.copy(sortDirection = ReportSortDirection.DESCENDING))
+        assertEquals(listOf(alpha, beta, soon, undated), repo.capture(descending).medications.map { it.id })
     }
     @Test fun workbookContainsOnlySelectedFieldsAndPreservesFormulaLikeText() {
         val base = snapshot(ReportOptions(fields = setOf(ReportField.SCIENTIFIC, ReportField.NOTE)))
@@ -212,16 +259,39 @@ class ReportExportsInstrumentedTest {
     @Test fun pdfPaperOrientationAndDensityOptionsRemainRenderable(): Unit = runBlocking {
         val pdf = PdfReports(profile.context)
         for (paper in ReportPaper.entries) for (landscape in listOf(false, true)) for (compact in listOf(false, true)) {
-            val captured = snapshot(ReportOptions(paper = paper, landscape = landscape, compact = compact))
+            val margins = if (landscape) ReportSideMargins.WIDE else ReportSideMargins.NARROW
+            val captured = snapshot(ReportOptions(paper = paper, landscape = landscape, compact = compact, sideMargins = margins))
             val file = File(profile.root, "${paper.name}-$landscape-$compact.pdf")
             val document = pdf.render(captured)
             try { file.outputStream().use { document.writeTo(it) } } finally { document.close() }
             PdfRenderer(ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY)).use { renderer ->
                 assertTrue(renderer.pageCount >= 1)
-                val portrait = if (paper == ReportPaper.A5) 420 to 595 else 595 to 842
                 for (i in 0 until renderer.pageCount) renderer.openPage(i).use { page ->
-                    assertEquals(if (landscape) portrait.second else portrait.first, page.width)
-                    assertEquals(if (landscape) portrait.first else portrait.second, page.height)
+                    assertEquals(if (landscape) 595 else 420, page.width)
+                    assertEquals(if (landscape) 420 else 595, page.height)
+                    if (paper == ReportPaper.A5 && i == 0) {
+                        val bitmap = Bitmap.createBitmap(page.width, page.height, Bitmap.Config.ARGB_8888)
+                        try {
+                            bitmap.eraseColor(Color.WHITE)
+                            page.render(bitmap, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
+                            val opening = IntArray(page.width * (page.height / 2))
+                            bitmap.getPixels(opening, 0, page.width, 0, 0, page.width, page.height / 2)
+                            assertTrue("A5 opening should contain printed content",
+                                opening.count { Color.red(it) < 160 && Color.green(it) < 160 && Color.blue(it) < 160 } > 100)
+                            val inset = if (landscape) 32 else 12
+                            assertTrue("The opening section band should respect both A5 side margins",
+                                (46 until page.height / 2).any { y ->
+                                    val row = y * page.width
+                                    val band = opening[row + inset + 2]
+                                    band != Color.WHITE &&
+                                        opening[row + page.width - inset - 3] == band &&
+                                        opening[row + inset - 2] == Color.WHITE &&
+                                        opening[row + page.width - inset + 1] == Color.WHITE
+                                })
+                        } finally {
+                            bitmap.recycle()
+                        }
+                    }
                 }
             }
         }
