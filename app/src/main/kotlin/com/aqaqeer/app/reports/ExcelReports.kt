@@ -176,9 +176,11 @@ internal object ExcelReports {
             }
             fun sheetEnd(x: XmlSerializer, table: Boolean) = with(x) {
                 end("sheetData")
-                empty("pageMargins", "left" to 0.25, "right" to 0.25, "top" to 0.4, "bottom" to 0.4, "header" to 0.2, "footer" to 0.2)
-                empty("pageSetup", "paperSize" to if (snapshot.request.options.paper == ReportPaper.A5) 11 else 9,
-                    "orientation" to if (snapshot.request.options.landscape) "landscape" else "portrait", "fitToWidth" to 1, "fitToHeight" to 0)
+                val options = snapshot.request.options
+                val sideMargin = options.sideMargins.excelInches
+                empty("pageMargins", "left" to sideMargin, "right" to sideMargin, "top" to 0.4, "bottom" to 0.4, "header" to 0.2, "footer" to 0.2)
+                empty("pageSetup", "paperSize" to options.paper.excelCode,
+                    "orientation" to if (options.landscape) "landscape" else "portrait", "fitToWidth" to 1, "fitToHeight" to 0)
                 if (table) { start("tableParts"); attr("count", 1); empty("tablePart", "r:id" to "rId1"); end("tableParts") }
                 end("worksheet")
             }

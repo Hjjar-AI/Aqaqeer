@@ -17,8 +17,26 @@ internal enum class ReportFormat { PDF, XLSX }
 }
 @Serializable internal enum class ReportNames { ARABIC, ENGLISH, BOTH }
 @Serializable internal enum class ReportSort { SCIENTIFIC, TRADE, EXPIRY, AVAILABILITY }
-@Serializable internal enum class ReportAvailability { OVERALL, PER_SECTION }
-@Serializable internal enum class ReportPaper { A5, A4 }
+@Serializable internal enum class ReportSortDirection(val label: Int) {
+    ASCENDING(R.string.report_direction_ascending), DESCENDING(R.string.report_direction_descending)
+}
+@Serializable internal enum class ReportAvailability(val label: Int) {
+    OVERALL(R.string.report_availability_overall),
+    PER_SECTION(R.string.report_availability_sections),
+    BOTH(R.string.report_availability_both)
+}
+@Serializable internal enum class ReportPaper(val widthPoints: Int, val heightPoints: Int, val excelCode: Int, val label: Int) {
+    A5(420, 595, 11, R.string.report_paper_a5),
+    A4(595, 842, 9, R.string.report_paper_a4),
+    A3(842, 1191, 8, R.string.report_paper_a3),
+    LETTER(612, 792, 1, R.string.report_paper_letter),
+    LEGAL(612, 1008, 5, R.string.report_paper_legal)
+}
+@Serializable internal enum class ReportSideMargins(val pdfPoints: Float, val excelInches: Double, val label: Int) {
+    NARROW(12f, 0.15, R.string.report_margin_narrow),
+    STANDARD(20f, 0.25, R.string.report_margin_standard),
+    WIDE(32f, 0.45, R.string.report_margin_wide)
+}
 internal enum class ReportStatusMatch { OVERALL, ANY_SECTION, ALL_SECTIONS }
 internal enum class ReportExpiry { ALL, UNDATED, EXPIRED, SOON, VALID }
 
@@ -28,7 +46,13 @@ internal enum class ReportExpiry { ALL, UNDATED, EXPIRED, SOON, VALID }
     val names: ReportNames = ReportNames.BOTH, val sort: ReportSort = ReportSort.SCIENTIFIC,
     val groupByCategory: Boolean = true, val availability: ReportAvailability = ReportAvailability.OVERALL,
     val paper: ReportPaper = ReportPaper.A5, val landscape: Boolean = false, val compact: Boolean = true,
-)
+    val sortDirection: ReportSortDirection = ReportSortDirection.ASCENDING,
+    val sideMargins: ReportSideMargins = ReportSideMargins.STANDARD,
+    val fieldOrder: List<ReportField> = emptyList(),
+) {
+    val allFieldsInOrder get() = (fieldOrder + ReportField.entries).distinct()
+    val selectedFieldsInOrder get() = allFieldsInOrder.filter { it in fields }
+}
 
 internal data class ReportRequest(val preset: ReportPreset = ReportPreset.FULL, val sectionId: String? = null,
     val includeUnpublished: Boolean = false, val allSections: Boolean = false,
@@ -92,9 +116,13 @@ internal data class ReportColumn(val field: ReportField, val section: Section? =
     }
 }
 
-internal fun ReportSnapshot.columns(): List<ReportColumn> = ReportField.entries.filter { it in request.options.fields }.flatMap { field ->
-    if (field == ReportField.AVAILABILITY && request.options.availability == ReportAvailability.PER_SECTION)
-        sections.map { ReportColumn(field, it) } else listOf(ReportColumn(field))
+internal fun ReportSnapshot.columns(): List<ReportColumn> = request.options.selectedFieldsInOrder.flatMap { field ->
+    if (field != ReportField.AVAILABILITY) return@flatMap listOf(ReportColumn(field))
+    when (request.options.availability) {
+        ReportAvailability.OVERALL -> listOf(ReportColumn(field))
+        ReportAvailability.PER_SECTION -> sections.map { ReportColumn(field, it) }
+        ReportAvailability.BOTH -> listOf(ReportColumn(field)) + sections.map { ReportColumn(field, it) }
+    }
 }
 
 /** The summary describes actual criteria, not just the shortcut used to populate them. */
@@ -112,7 +140,7 @@ internal fun ReportSnapshot.summary(): List<Pair<String, String>> = buildList {
         ReportNames.ENGLISH -> R.string.report_names_english
         ReportNames.BOTH -> R.string.report_names_both
     }))
-    if (ReportField.AVAILABILITY in request.options.fields && request.options.availability == ReportAvailability.OVERALL)
+    if (ReportField.AVAILABILITY in request.options.fields && request.options.availability != ReportAvailability.PER_SECTION)
         add(uiText(R.string.report_overall_heading) to uiText(R.string.report_combined_rule))
     if (request.query.isNotBlank()) add(uiText(R.string.shared_search_label) to request.query)
     if (request.categoryIds.isNotEmpty()) add(uiText(R.string.report_categories) to categories.filter { it.id in request.categoryIds }.joinToString("، ") { it.nameAr })
@@ -122,7 +150,13 @@ internal fun ReportSnapshot.summary(): List<Pair<String, String>> = buildList {
     add(uiText(R.string.report_expiry_filter) to uiText(expiryLabel(request.effectiveExpiry)))
     if (request.fromDate.isNotEmpty() || request.throughDate.isNotEmpty()) add(uiText(R.string.report_expiry_range) to "${request.fromDate} — ${request.throughDate}")
     add(uiText(R.string.report_sort) to uiText(sortLabel(request.options.sort)))
+    if (request.options.sortDirection == ReportSortDirection.DESCENDING)
+        add(uiText(R.string.report_sort_direction) to uiText(request.options.sortDirection.label))
     add(uiText(R.string.report_grouping) to uiText(if (request.options.groupByCategory) R.string.report_group_category else R.string.report_group_none))
+    if (request.options.paper != ReportPaper.A5)
+        add(uiText(R.string.report_paper) to uiText(request.options.paper.label))
+    if (request.options.sideMargins != ReportSideMargins.STANDARD)
+        add(uiText(R.string.report_side_margins) to uiText(request.options.sideMargins.label))
 }
 
 internal fun statusMatchLabel(value: ReportStatusMatch) = when (value) {

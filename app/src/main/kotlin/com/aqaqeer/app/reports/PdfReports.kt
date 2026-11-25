@@ -56,16 +56,17 @@ private class TableReport(
     private var category: Category? = null
     private var tableActive = false
     private val options = snapshot.request.options
-    private val paper = if (options.paper == ReportPaper.A5) 420 to 595 else 595 to 842
-    private val pageWidth = if (options.landscape) paper.second else paper.first
-    private val pageHeight = if (options.landscape) paper.first else paper.second
-    private val margin = 20f
+    private val paper = options.paper
+    private val pageWidth = if (options.landscape) paper.heightPoints else paper.widthPoints
+    private val pageHeight = if (options.landscape) paper.widthPoints else paper.heightPoints
+    private val margin = options.sideMargins.pdfPoints
     private val right = pageWidth - margin
     private val bottom = pageHeight - 38f
     private val width = (right - margin).toInt()
     private val padding = if (options.compact) 2f else 4f
-    private val columns = snapshot.columns().filter { it.core }
-    private val details = snapshot.columns().filterNot { it.core }
+    private val reportColumns = snapshot.columns()
+    private val columns = reportColumns.filter { it.core }
+    private val details = reportColumns.filterNot { it.core }
     private val weights = columns.map { if (it.field == ReportField.SCIENTIFIC) 3.2f else 1.2f }
     private val widths = weights.map { width * it / weights.sum() }
     private val lefts = widths.runningFold(right) { x, w -> x - w }.drop(1)

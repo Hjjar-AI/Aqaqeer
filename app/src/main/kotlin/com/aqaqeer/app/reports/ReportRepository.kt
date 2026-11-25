@@ -90,15 +90,21 @@ class ReportRepository @Inject constructor(private val admin: AdminRepository, p
                         }
                 }
             val scientificOrder = selected.withIndex().associate { it.value.id to it.index }
-            val order = when (request.options.sort) {
+            val descending = request.options.sortDirection == ReportSortDirection.DESCENDING
+            val primaryOrder = when (request.options.sort) {
                 ReportSort.SCIENTIFIC -> compareBy<Medication> { scientificOrder.getValue(it.id) }
                 ReportSort.TRADE -> compareBy { med: Medication -> normalizedName(when (request.options.names) {
                     ReportNames.ENGLISH -> med.nameEn ?: med.nameAr ?: MedicationPresentation.scientificName(med)
                     else -> med.nameAr ?: med.nameEn ?: MedicationPresentation.scientificName(med)
                 }) }
-                ReportSort.EXPIRY -> compareBy<Medication, LocalDate?>(nullsLast()) { it.expiryDate }
+                ReportSort.EXPIRY -> {
+                    val dates = if (descending) reverseOrder<LocalDate>() else naturalOrder<LocalDate>()
+                    compareBy<Medication, LocalDate?>(nullsLast(dates)) { it.expiryDate }
+                }
                 ReportSort.AVAILABILITY -> compareBy { med: Medication -> combinedStatus(values(med)).ordinal }
-            }.thenBy { scientificOrder.getValue(it.id) }
+            }
+            val order = (if (descending && request.options.sort != ReportSort.EXPIRY) primaryOrder.reversed()
+                else primaryOrder).thenBy { scientificOrder.getValue(it.id) }
             val categories = catalog.categories.sortedWith(compareBy<Category> { it.orderIndex }.thenBy { it.id })
             val categoryOrder = categories.withIndex().associate { it.value.id to it.index }
             val medications = selected.sortedWith(if (request.options.groupByCategory)

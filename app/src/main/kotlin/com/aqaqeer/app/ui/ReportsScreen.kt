@@ -116,7 +116,7 @@ import com.aqaqeer.app.reports.*
                         }
                         ReportStep.OPTIONS -> {
                             ReportPresentationControls(options, busy || writingOptions || storedOptions == null, vm::setReportOptions)
-                            SupportingText(text(R.string.report_default_fields, options.fields.joinToString("، ") { text(it.label) }))
+                            SupportingText(text(R.string.report_default_fields, options.selectedFieldsInOrder.joinToString("، ") { text(it.label) }))
                         }
                         ReportStep.PREVIEW -> if (current != null) {
                             ContentSection(title = text(R.string.report_summary_title)) {

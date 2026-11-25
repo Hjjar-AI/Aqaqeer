@@ -5,6 +5,25 @@
     <string name="report_preview_medications_heading">الأدوية في المعاينة</string>
     <string name="report_next_step_action">التالي</string>
     <string name="report_previous_step_action">السابق</string>
+    <string name="report_availability_both">الحالة الموحدة وحالة كل قسم</string>
+    <string name="report_sort_direction">اتجاه الترتيب</string>
+    <string name="report_direction_ascending">تصاعدي</string>
+    <string name="report_direction_descending">تنازلي</string>
+    <string name="report_paper_a5">A5</string>
+    <string name="report_paper_a4">A4</string>
+    <string name="report_paper_a3">A3</string>
+    <string name="report_paper_letter">Letter</string>
+    <string name="report_paper_legal">Legal</string>
+    <string name="report_side_margins">الهوامش الجانبية للطباعة</string>
+    <string name="report_margin_narrow">ضيقة</string>
+    <string name="report_margin_standard">عادية</string>
+    <string name="report_margin_wide">واسعة</string>
+    <string name="report_field_order">ترتيب الحقول</string>
+    <string name="report_field_order_help">في Excel تُعرض الحقول بهذا الترتيب. في PDF يظهر الترتيب داخل الجدول وداخل التفاصيل، وتبقى التفاصيل أسفل الدواء.</string>
+    <string name="report_field_position">%1$d. %2$s</string>
+    <string name="report_move_field_earlier">تقديم %1$s</string>
+    <string name="report_move_field_later">تأخير %1$s</string>
+    <string name="report_reset_field_order">إعادة ترتيب الحقول الافتراضي</string>
     <string name="report_overall_heading" formatted="false">"التوافر الموحد"</string>
     <string name="report_combined_rule" formatted="false">"متوفر في أي قسم مختار؛ وإلا محدود في أي قسم؛ وإلا غير متوفر. الأزواج دون سجل غير متوفرة."</string>
     <string name="report_all" formatted="false">"الكل"</string>
