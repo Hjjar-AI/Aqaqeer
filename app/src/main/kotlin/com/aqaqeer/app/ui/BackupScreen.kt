@@ -37,14 +37,16 @@ import java.time.format.DateTimeFormatter
         else vm.secretCommand(null, p, c) { if (ready.isDemo) vm.demoFiles.exportBackup(uri, p, c) else vm.backups.export(uri, p, c); exportSucceeded = true }
     }
     val pick = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { selected = it }
+    val restoreSteps = listOf(uiText(R.string.review_select_file), uiText(R.string.backup_restore_verify_step),
+        uiText(R.string.backup_restore_paused_title))
     FormPage(Modifier.testTag("backup_screen"), showFieldConvention = true) {
         OperationStatus(busy || sharing.busy, message,
             if (exportSucceeded) uiText(R.string.backup_export_success_message) else if (restoreSession) sharing.message else null,
             vm::cancelAdminOperation)
         if (ready.isDemo) NoticeStrip(Notice(uiText(R.string.demo_backup_help)))
         if (ready.restorePaused) {
-            StepHeader(listOf(uiText(R.string.review_select_file), uiText(R.string.backup_restore_passphrase_label), uiText(R.string.backup_restore_paused_title)), 2)
-            InformationCard(uiText(R.string.backup_restore_paused_title), uiText(R.string.backup_restore_admin_reconciliation_help))
+            StepHeader(restoreSteps, 2)
+            NoticeStrip(Notice(uiText(R.string.backup_restore_admin_reconciliation_help), NoticeSeverity.WARNING))
             if (!ready.admin) {
                 NavigationCard(uiText(R.string.backup_authorize_admin_action), { vm.navigate(Route.Promote) })
                 return@FormPage
@@ -71,25 +73,27 @@ import java.time.format.DateTimeFormatter
             return@FormPage
         }
         if (ready.catalog.pharmacy == null || ready.admin) {
-            GroupedCard(title = uiText(R.string.backup_restore_welcome_action)) {
-                StepHeader(listOf(uiText(R.string.review_select_file), uiText(R.string.backup_restore_passphrase_label), uiText(R.string.backup_restore_paused_title)), if (selected != null) 1 else 0)
-                Text(uiText(R.string.backup_restore_validation_help))
-                AppButton(variant = AppButtonVariant.QUIET, enabled = !busy, onClick = { pick.launch(arrayOf("*/*")) }) { Text(if (selected == null) uiText(R.string.backup_choose_restore_file_action) else uiText(R.string.backup_change_restore_file_action)) }
-                if (selected != null) {
-                    if (ready.catalog.pharmacy != null) {
-                        NoticeStrip(Notice(uiText(R.string.backup_replace_local_data_warning_format,
-                            MedicationPresentation.displayDigits(ready.pendingCount.toString())), NoticeSeverity.WARNING))
+            ContentSection(title = uiText(R.string.backup_restore_welcome_action)) {
+                StepHeader(restoreSteps, if (selected != null) 1 else 0)
+                GroupedCard {
+                    Text(uiText(R.string.backup_restore_validation_help))
+                    AppButton(variant = AppButtonVariant.QUIET, enabled = !busy, onClick = { pick.launch(arrayOf("*/*")) }) { Text(if (selected == null) uiText(R.string.backup_choose_restore_file_action) else uiText(R.string.backup_change_restore_file_action)) }
+                    if (selected != null) {
+                        if (ready.catalog.pharmacy != null) {
+                            NoticeStrip(Notice(uiText(R.string.backup_replace_local_data_warning_format,
+                                MedicationPresentation.displayDigits(ready.pendingCount.toString())), NoticeSeverity.WARNING))
+                        }
+                        SecretField(uiText(R.string.backup_restore_passphrase_label), restorePassword, { restorePassword = it }, required = true)
+                        if (ready.catalog.pharmacy != null) {
+                            FormField(uiText(R.string.backup_current_pharmacy_confirmation_label), typedName, { typedName = it }, required = true)
+                            CheckChoiceRow(confirmed, uiText(R.string.backup_replace_local_data_acknowledgement_label)) { confirmed = it }
+                        }
+                        DestructiveConfirmButton(enabled = !busy && restorePassword.isNotEmpty() &&
+                            (ready.catalog.pharmacy == null || confirmed && typedName == ready.catalog.pharmacy.name), onClick = {
+                            val uri = selected ?: return@DestructiveConfirmButton; val p = restorePassword.toCharArray(); restorePassword = ""
+                            vm.secretCommand(Route.Home, p) { if (ready.isDemo) vm.demoFiles.restoreBackup(uri, p, typedName, confirmed) else vm.backups.restore(uri, p, typedName, confirmed); selected = null }
+                        }, label = uiText(R.string.backup_validate_restore_action))
                     }
-                    SecretField(uiText(R.string.backup_restore_passphrase_label), restorePassword, { restorePassword = it }, required = true)
-                    if (ready.catalog.pharmacy != null) {
-                        FormField(uiText(R.string.backup_current_pharmacy_confirmation_label), typedName, { typedName = it }, required = true)
-                        CheckChoiceRow(confirmed, uiText(R.string.backup_replace_local_data_acknowledgement_label)) { confirmed = it }
-                    }
-                    DestructiveConfirmButton(enabled = !busy && restorePassword.isNotEmpty() &&
-                        (ready.catalog.pharmacy == null || confirmed && typedName == ready.catalog.pharmacy.name), onClick = {
-                        val uri = selected ?: return@DestructiveConfirmButton; val p = restorePassword.toCharArray(); restorePassword = ""
-                        vm.secretCommand(Route.Home, p) { if (ready.isDemo) vm.demoFiles.restoreBackup(uri, p, typedName, confirmed) else vm.backups.restore(uri, p, typedName, confirmed); selected = null }
-                    }, label = uiText(R.string.backup_validate_restore_action))
                 }
             }
         } else NoticeStrip(Notice(uiText(R.string.backup_restore_admin_only_message)))

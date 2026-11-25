@@ -35,7 +35,7 @@ import com.aqaqeer.app.reports.*
         catch (_: Exception) { vm.saveCsv(null); vm.adminMessage.value = uiText(R.string.exchange_report_save_picker_failed_message) }
     }
     LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(UiSpacing.page), verticalArrangement = Arrangement.spacedBy(UiSpacing.section)) {
-        item { StepHeader(listOf(uiText(R.string.exchange_csv_choose_preview_action), uiText(R.string.exchange_csv_session_title), uiText(R.string.exchange_csv_session_finished_help)),
+        item { StepHeader(listOf(uiText(R.string.review_select_file), uiText(R.string.exchange_csv_session_title), uiText(R.string.exchange_csv_results_step)),
             if (state.finished) 2 else if (session != null) 1 else 0) }
         item {
             GroupedCard {

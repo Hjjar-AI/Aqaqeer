@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="backup_restore_verify_step">التحقق من النسخة الاحتياطية</string>
     <string name="backup_authorize_admin_action" formatted="false">"تفعيل الإدارة برمز الصيدلية"</string>
     <string name="backup_change_restore_file_action" formatted="false">"تغيير الملف المحدد"</string>
     <string name="backup_choose_export_destination_action" formatted="false">"اختيار مكان الحفظ"</string>

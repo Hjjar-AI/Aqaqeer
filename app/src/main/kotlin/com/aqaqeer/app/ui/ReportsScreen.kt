@@ -79,30 +79,31 @@ import com.aqaqeer.app.reports.*
         focus.clearFocus()
         vm.moveReportStep(forward)
     }
-    Column(Modifier.fillMaxSize()) {
-        key(pharmacy, step) {
-            val listState = rememberLazyListState()
-            LaunchedEffect(message) {
-                if (message != null) listState.scrollToItem(1)
+    key(pharmacy) {
+        val listState = rememberLazyListState()
+        var lastOpenedStep by rememberSaveable(pharmacy) { mutableStateOf<String?>(null) }
+        LaunchedEffect(step) {
+            if (lastOpenedStep != step.name) {
+                listState.scrollToItem(step.ordinal)
+                lastOpenedStep = step.name
             }
-            LazyColumn(Modifier.weight(1f), state = listState, contentPadding = PaddingValues(UiSpacing.page),
-                verticalArrangement = Arrangement.spacedBy(UiSpacing.section)) {
-                item {
-                    StepHeader(listOf(
-                        text(R.string.report_summary_source),
-                        text(R.string.report_scope_step),
-                        text(R.string.report_options_step),
-                        text(R.string.exchange_report_preview_title),
-                    ), step.ordinal)
-                }
-                if (busy || message != null) item { OperationStatus(busy, message) }
-
-                when (step) {
-                    ReportStep.SOURCE -> item {
-                        GroupedCard {
-                            ChoicePicker(text(R.string.report_summary_source), listOf(false, true), request.includeUnpublished, {
-                                text(if (it) R.string.report_source_local else R.string.report_source_published)
-                            }, enabled = !busy, itemKey = { it.toString() }) { include ->
+        }
+        LazyColumn(Modifier.fillMaxSize(), state = listState, contentPadding = PaddingValues(UiSpacing.page),
+            verticalArrangement = Arrangement.spacedBy(UiSpacing.section)) {
+            items(ReportStep.entries, key = { "report_step_${it.name}" }) { panel ->
+                val title = text(when (panel) {
+                    ReportStep.SOURCE -> R.string.report_source_step
+                    ReportStep.SCOPE -> R.string.report_scope_step
+                    ReportStep.OPTIONS -> R.string.report_options_step
+                    ReportStep.PREVIEW -> R.string.exchange_report_preview_title
+                })
+                WorkflowStepCard(title, panel.ordinal, step.ordinal) {
+                    when (panel) {
+                        ReportStep.SOURCE -> {
+                            ChoicePicker(text(R.string.report_summary_source), listOf(false, true),
+                                request.includeUnpublished, {
+                                    text(if (it) R.string.report_source_local else R.string.report_source_published)
+                                }, enabled = !busy, itemKey = { it.toString() }) { include ->
                                 change(ReportRequest(includeUnpublished = include, pharmacyId = pharmacy))
                             }
                             SupportingText(text(R.string.report_source_help))
@@ -110,73 +111,68 @@ import com.aqaqeer.app.reports.*
                                 Text(text(R.string.report_reload_source))
                             }
                         }
-                    }
-                    ReportStep.SCOPE -> if (source != null) item {
-                        ReportScopeControls(source.catalog, request, busy, filtersOpen, { filtersOpen = !filtersOpen }, ::change)
-                    }
-                    ReportStep.OPTIONS -> item {
-                        GroupedCard {
+                        ReportStep.SCOPE -> if (source != null) {
+                            ReportScopeControls(source.catalog, request, busy, filtersOpen, { filtersOpen = !filtersOpen }, ::change)
+                        }
+                        ReportStep.OPTIONS -> {
                             ReportPresentationControls(options, busy || writingOptions || storedOptions == null, vm::setReportOptions)
                             SupportingText(text(R.string.report_default_fields, options.fields.joinToString("، ") { text(it.label) }))
                         }
-                    }
-                    ReportStep.PREVIEW -> if (current != null) {
-                        item {
-                            GroupedCard(title = text(R.string.report_summary_title)) {
+                        ReportStep.PREVIEW -> if (current != null) {
+                            ContentSection(title = text(R.string.report_summary_title)) {
                                 current.summary().forEach { (label, value) -> LabeledValue(label, value) }
                             }
+                            SupportingText(text(R.string.exchange_report_save_full_count_format, current.medications.size.toString()))
                         }
-                        items(if (showAll) current.medications else current.medications.take(5), key = { it.id }) { med ->
-                            GroupedCard {
-                                columns.forEach { column ->
-                                    val value = column.value(current, med)
-                                    if (value.isNotEmpty()) LabeledValue(column.title, value)
-                                }
+                    }
+
+                    AppDivider()
+                    InlineOperationStatus(busy, message, cancel = vm::cancelAdminOperation)
+                    if (!busy) ActionGroup {
+                        if (panel != ReportStep.SOURCE) {
+                            AppButton(variant = AppButtonVariant.QUIET, onClick = { move(forward = false) }) {
+                                Text(text(R.string.report_previous_step_action))
                             }
                         }
-                        if (current.medications.size > 5) item {
-                            AppButton(variant = AppButtonVariant.QUIET, onClick = { showAll = !showAll }) {
-                                Text(text(if (showAll) R.string.exchange_report_show_first_five_action else R.string.exchange_report_show_all_action))
+                        when (panel) {
+                            ReportStep.SOURCE, ReportStep.SCOPE -> {
+                                AppButton(enabled = source != null, onClick = { move(forward = true) }) {
+                                    Text(text(R.string.report_next_step_action))
+                                }
+                            }
+                            ReportStep.OPTIONS -> {
+                                AppButton(enabled = !writingOptions && storedOptions != null && source != null, onClick = {
+                                    focus.clearFocus()
+                                    vm.prepareReport(request)
+                                }) { Text(text(R.string.exchange_report_prepare_preview_action)) }
+                            }
+                            ReportStep.PREVIEW -> {
+                                AppButton(enabled = current != null, onClick = { export(ReportFormat.XLSX) }) {
+                                    Text(text(R.string.report_save_excel))
+                                }
+                                AppButton(enabled = current != null, onClick = { export(ReportFormat.PDF) }) {
+                                    Text(text(R.string.exchange_report_save_pdf_action))
+                                }
                             }
                         }
                     }
                 }
             }
-        }
-        Surface(shadowElevation = UiSpacing.hair) {
-            Column(Modifier.fillMaxWidth().padding(UiSpacing.related), verticalArrangement = Arrangement.spacedBy(UiSpacing.hair)) {
-                if (current != null) Text(text(R.string.exchange_report_save_full_count_format, current.medications.size.toString()),
-                    style = MaterialTheme.typography.labelLarge)
-                if (busy) {
-                    AppButton(variant = AppButtonVariant.QUIET, onClick = vm::cancelAdminOperation) {
-                        Text(text(R.string.shared_cancel_operation_action))
-                    }
-                } else ActionGroup {
-                    if (step != ReportStep.SOURCE) {
-                        AppButton(variant = AppButtonVariant.QUIET, onClick = { move(forward = false) }) {
-                            Text(text(R.string.report_previous_step_action))
+            if (current != null) {
+                if (current.medications.isNotEmpty()) item(key = "report_preview_rows_heading") {
+                    SectionHeading(text(R.string.report_preview_medications_heading))
+                }
+                items(if (showAll) current.medications else current.medications.take(5), key = { it.id }) { med ->
+                    GroupedCard {
+                        columns.forEach { column ->
+                            val value = column.value(current, med)
+                            if (value.isNotEmpty()) LabeledValue(column.title, value)
                         }
                     }
-                    when (step) {
-                        ReportStep.SOURCE, ReportStep.SCOPE -> {
-                            AppButton(enabled = source != null, onClick = { move(forward = true) }) {
-                                Text(text(R.string.report_next_step_action))
-                            }
-                        }
-                        ReportStep.OPTIONS -> {
-                            AppButton(enabled = !writingOptions && storedOptions != null && source != null,
-                                onClick = { vm.prepareReport(request) }) {
-                                Text(text(R.string.exchange_report_prepare_preview_action))
-                            }
-                        }
-                        ReportStep.PREVIEW -> {
-                            AppButton(enabled = current != null, onClick = { export(ReportFormat.XLSX) }) {
-                                Text(text(R.string.report_save_excel))
-                            }
-                            AppButton(enabled = current != null, onClick = { export(ReportFormat.PDF) }) {
-                                Text(text(R.string.exchange_report_save_pdf_action))
-                            }
-                        }
+                }
+                if (current.medications.size > 5) item(key = "report_preview_toggle") {
+                    AppButton(variant = AppButtonVariant.QUIET, onClick = { showAll = !showAll }) {
+                        Text(text(if (showAll) R.string.exchange_report_show_first_five_action else R.string.exchange_report_show_all_action))
                     }
                 }
             }
@@ -196,59 +192,57 @@ private fun ReportScopeControls(catalog: CatalogSnapshot, request: ReportRequest
     }
     val sections = request.sectionIds ?: catalog.sections.filter { it.isActive }.map { it.id }.toSet()
 
-    GroupedCard {
-        ActionGroup {
-            AppButton(variant = AppButtonVariant.QUIET, enabled = !busy, onClick = { change(defaults) }) {
-                Text(text(R.string.report_all_medications))
-            }
-            AppButton(variant = AppButtonVariant.QUIET, enabled = !busy, onClick = {
-                change(defaults.copy(statuses = setOf(AvailabilityStatus.OUT), statusMatch = ReportStatusMatch.ANY_SECTION))
-            }) { Text(text(R.string.report_shortages_any)) }
-            AppButton(variant = AppButtonVariant.QUIET, enabled = !busy, onClick = { change(defaults.copy(expiry = ReportExpiry.SOON)) }) {
-                Text(text(R.string.report_expiry_soon))
+    ActionGroup {
+        AppButton(variant = AppButtonVariant.QUIET, enabled = !busy, onClick = { change(defaults) }) {
+            Text(text(R.string.report_all_medications))
+        }
+        AppButton(variant = AppButtonVariant.QUIET, enabled = !busy, onClick = {
+            change(defaults.copy(statuses = setOf(AvailabilityStatus.OUT), statusMatch = ReportStatusMatch.ANY_SECTION))
+        }) { Text(text(R.string.report_shortages_any)) }
+        AppButton(variant = AppButtonVariant.QUIET, enabled = !busy, onClick = { change(defaults.copy(expiry = ReportExpiry.SOON)) }) {
+            Text(text(R.string.report_expiry_soon))
+        }
+    }
+    ReportMultiPicker(text(R.string.report_sections), sectionChoices, sections, !busy) { change(request.copy(sectionIds = it)) }
+    if (sections.isEmpty() && (ReportField.AVAILABILITY in request.options.fields ||
+            request.effectiveStatuses.isNotEmpty() || request.options.sort == ReportSort.AVAILABILITY)) {
+        Text(text(R.string.report_sections_required), color = MaterialTheme.colorScheme.error)
+    }
+    CollapsibleGroup(text(R.string.report_filters), filtersOpen, toggleFilters) {
+        FormField(text(R.string.shared_search_label), request.query, { change(request.copy(query = it)) },
+            keyboardOptions = KeyboardOptions(autoCorrectEnabled = false, capitalization = KeyboardCapitalization.None))
+        val categories = remember(catalog.categories) { catalog.categories.map { ReportChoice(it.id, it.nameAr) } }
+        val forms = remember(catalog.forms) { catalog.forms.map { ReportChoice(it.id, it.nameAr) } }
+        ReportMultiPicker(text(R.string.report_categories), categories, request.categoryIds, !busy, true) { change(request.copy(categoryIds = it)) }
+        ReportMultiPicker(text(R.string.report_forms), forms, request.formIds, !busy, true) { change(request.copy(formIds = it)) }
+        Text(text(R.string.report_availability_filter), style = MaterialTheme.typography.titleSmall)
+        WrappingContent {
+            AvailabilityStatus.entries.forEach { status ->
+                AppChip(status in request.statuses, enabled = !busy, onClick = {
+                    val statuses = if (status in request.statuses) request.statuses - status else request.statuses + status
+                    change(request.copy(statuses = statuses))
+                }, label = { Text(statusLabel(status, text = text)) })
             }
         }
-        ReportMultiPicker(text(R.string.report_sections), sectionChoices, sections, !busy) { change(request.copy(sectionIds = it)) }
-        if (sections.isEmpty() && (ReportField.AVAILABILITY in request.options.fields ||
-                request.effectiveStatuses.isNotEmpty() || request.options.sort == ReportSort.AVAILABILITY)) {
-            Text(text(R.string.report_sections_required), color = MaterialTheme.colorScheme.error)
+        SupportingText(text(R.string.report_empty_filter_all))
+        ChoicePicker(text(R.string.report_status_match), ReportStatusMatch.entries, request.statusMatch,
+            { text(statusMatchLabel(it)) }, enabled = !busy, itemKey = { it.name }) { change(request.copy(statusMatch = it)) }
+        ChoicePicker(text(R.string.report_expiry_filter), ReportExpiry.entries, request.expiry, { text(expiryLabel(it)) },
+            enabled = !busy, itemKey = { it.name }) { change(request.copy(expiry = it)) }
+        GregorianDateField(text(R.string.report_date_from), request.fromDate, { change(request.copy(fromDate = it)) })
+        GregorianDateField(text(R.string.report_date_through), request.throughDate, { change(request.copy(throughDate = it)) })
+        CheckChoiceRow(request.medicationIds == null, text(R.string.report_all_medications), enabled = !busy) {
+            change(request.copy(medicationIds = if (it) null else emptySet()))
         }
-        CollapsibleGroup(text(R.string.report_filters), filtersOpen, toggleFilters) {
-            FormField(text(R.string.shared_search_label), request.query, { change(request.copy(query = it)) },
-                keyboardOptions = KeyboardOptions(autoCorrectEnabled = false, capitalization = KeyboardCapitalization.None))
-            val categories = remember(catalog.categories) { catalog.categories.map { ReportChoice(it.id, it.nameAr) } }
-            val forms = remember(catalog.forms) { catalog.forms.map { ReportChoice(it.id, it.nameAr) } }
-            ReportMultiPicker(text(R.string.report_categories), categories, request.categoryIds, !busy, true) { change(request.copy(categoryIds = it)) }
-            ReportMultiPicker(text(R.string.report_forms), forms, request.formIds, !busy, true) { change(request.copy(formIds = it)) }
-            Text(text(R.string.report_availability_filter), style = MaterialTheme.typography.titleSmall)
-            WrappingContent {
-                AvailabilityStatus.entries.forEach { status ->
-                    AppChip(status in request.statuses, enabled = !busy, onClick = {
-                        val statuses = if (status in request.statuses) request.statuses - status else request.statuses + status
-                        change(request.copy(statuses = statuses))
-                    }, label = { Text(statusLabel(status, text = text)) })
-                }
+        val selectedMedications = request.medicationIds
+        if (selectedMedications != null) {
+            val medications = remember(catalog.medications) { catalog.medications.map { ReportChoice(it.id, MedicationPresentation.identity(it)) } }
+            ReportMultiPicker(text(R.string.report_medication_selection), medications, selectedMedications, !busy) {
+                change(request.copy(medicationIds = it))
             }
-            SupportingText(text(R.string.report_empty_filter_all))
-            ChoicePicker(text(R.string.report_status_match), ReportStatusMatch.entries, request.statusMatch,
-                { text(statusMatchLabel(it)) }, enabled = !busy, itemKey = { it.name }) { change(request.copy(statusMatch = it)) }
-            ChoicePicker(text(R.string.report_expiry_filter), ReportExpiry.entries, request.expiry, { text(expiryLabel(it)) },
-                enabled = !busy, itemKey = { it.name }) { change(request.copy(expiry = it)) }
-            GregorianDateField(text(R.string.report_date_from), request.fromDate, { change(request.copy(fromDate = it)) })
-            GregorianDateField(text(R.string.report_date_through), request.throughDate, { change(request.copy(throughDate = it)) })
-            CheckChoiceRow(request.medicationIds == null, text(R.string.report_all_medications), enabled = !busy) {
-                change(request.copy(medicationIds = if (it) null else emptySet()))
-            }
-            val selectedMedications = request.medicationIds
-            if (selectedMedications != null) {
-                val medications = remember(catalog.medications) { catalog.medications.map { ReportChoice(it.id, MedicationPresentation.identity(it)) } }
-                ReportMultiPicker(text(R.string.report_medication_selection), medications, selectedMedications, !busy) {
-                    change(request.copy(medicationIds = it))
-                }
-            }
-            AppButton(variant = AppButtonVariant.QUIET, enabled = !busy, onClick = { change(defaults) }) {
-                Text(text(R.string.report_reset_filters))
-            }
+        }
+        AppButton(variant = AppButtonVariant.QUIET, enabled = !busy, onClick = { change(defaults) }) {
+            Text(text(R.string.report_reset_filters))
         }
     }
 }

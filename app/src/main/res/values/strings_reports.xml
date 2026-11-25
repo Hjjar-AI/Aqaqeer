@@ -1,6 +1,8 @@
 <resources>
     <string name="report_scope_step">نطاق الأدوية</string>
+    <string name="report_source_step">مصدر التقرير</string>
     <string name="report_options_step">خيارات التقرير</string>
+    <string name="report_preview_medications_heading">الأدوية في المعاينة</string>
     <string name="report_next_step_action">التالي</string>
     <string name="report_previous_step_action">السابق</string>
     <string name="report_overall_heading" formatted="false">"التوافر الموحد"</string>

@@ -33,6 +33,7 @@
     <string name="exchange_csv_select_row_description" formatted="false">"تحديد هذا الصف للحفظ"</string>
     <string name="exchange_csv_select_valid_rows_action" formatted="false">"تحديد الصفوف الصالحة والموافق عليها"</string>
     <string name="exchange_csv_session_finished_help" formatted="false">"اكتملت الجلسة أو أُوقفت. المحفوظ يبقى محلياً؛ راجع التعديلات للنشر. لا تعاد الصفوف تلقائياً."</string>
+    <string name="exchange_csv_results_step">نتائج الاستيراد</string>
     <string name="exchange_csv_session_title" formatted="false">"جلسة الاستيراد"</string>
     <string name="exchange_csv_skip_action_label" formatted="false">"تخطي"</string>
     <string name="exchange_csv_skipped_outcome_label" formatted="false">"تُخطي"</string>

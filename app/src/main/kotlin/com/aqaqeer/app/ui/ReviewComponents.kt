@@ -51,35 +51,6 @@ internal data class Notice(val text: String, val severity: NoticeSeverity = Noti
     }
 }
 
-@Composable internal fun StepHeader(steps: List<String>, current: Int) {
-    require(steps.isNotEmpty() && current in steps.indices)
-    val uiText = rememberUiText()
-    fun stepState(index: Int) = uiText(when {
-        index < current -> R.string.shared_step_completed
-        index == current -> R.string.shared_step_current
-        else -> R.string.shared_step_pending
-    })
-    Column(verticalArrangement = Arrangement.spacedBy(UiSpacing.hair)) {
-        Text("${current + 1} / ${steps.size} · ${steps[current]}", style = MaterialTheme.typography.titleMedium)
-        val compactHeight = compactHeight()
-        if (compactHeight) {
-            Row(Modifier.semantics {
-                contentDescription = steps.mapIndexed { index, label -> "${index + 1}. $label · ${stepState(index)}" }.joinToString("; ")
-            }, horizontalArrangement = Arrangement.spacedBy(UiSpacing.related)) {
-                steps.forEachIndexed { index, _ ->
-                    Box(Modifier.size(Size.dotS).background(
-                        if (index <= current) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant,
-                        CircleShape))
-                }
-            }
-        } else steps.forEachIndexed { index, label ->
-            Box(Modifier.clearAndSetSemantics { contentDescription = label; stateDescription = stepState(index) }) {
-                SupportingText("${if (index < current) "✓" else if (index == current) "●" else "○"} $label")
-            }
-        }
-    }
-}
-
 @Composable internal fun AdaptivePickers(first: @Composable () -> Unit, second: @Composable () -> Unit) {
     BoxWithConstraints {
         if (maxWidth < LayoutTokens.pickerStackWidth * LocalLayoutMetrics.current.fontScale) Column(verticalArrangement = Arrangement.spacedBy(UiSpacing.related)) {
