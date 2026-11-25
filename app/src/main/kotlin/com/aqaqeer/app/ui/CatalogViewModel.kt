@@ -363,7 +363,7 @@ class CatalogViewModel @Inject constructor(
     internal val shellState = state.map { it.copy(query = "", appliedQuery = "", filters = HomeFilters(), refresh = RefreshUiState()) }.distinctUntilChanged()
         .stateIn(viewModelScope, SharingStarted.Eagerly, state.value)
     internal val refreshUiState = state.map { it.refresh }.distinctUntilChanged()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), state.value.refresh)
+        .stateIn(viewModelScope, SharingStarted.Eagerly, state.value.refresh)
     internal val drawerFilters = state.map { it.filters }.distinctUntilChanged()
         .stateIn(viewModelScope, SharingStarted.Eagerly, HomeFilters())
     private val searchIndex = state.map { (it.catalog as? CatalogState.Ready)?.catalog }.distinctUntilChanged()
