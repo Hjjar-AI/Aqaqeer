@@ -343,4 +343,28 @@ class SnapshotRefreshInstrumentedTest {
         assertEquals(setOf(medication), FetchedChanges.ids.value[F.pharmacyId])
     }
 
+    @Test fun fetchBetweenBrowseSessionsKeepsMarkersForTheNextTwoSessions(): Unit = runBlocking {
+        assumeFalse(BuildConfig.IS_DEMO)
+        activate()
+        val preferences = context.getSharedPreferences("fetched_changes", Context.MODE_PRIVATE)
+        val previousSession = preferences.getLong("session", 0L)
+        val medication = F.catalog().medications.single().id
+        val payload = next(F.catalog().copy(availability = emptyList()))
+        FetchedChanges.finishTask()
+        assertEquals(RefreshOutcome.APPLIED, refresh(remote(payload)).refresh())
+        assertEquals(2L, state().revision)
+        assertEquals(previousSession, preferences.getLong("session", 0L))
+
+        repeat(2) { index ->
+            FetchedChanges.beginSession(context)
+            assertEquals(previousSession + index + 1, preferences.getLong("session", 0L))
+            assertEquals(setOf(medication), FetchedChanges.ids.value[F.pharmacyId])
+            FetchedChanges.finishTask()
+        }
+        FetchedChanges.beginSession(context)
+        assertEquals(previousSession + 3, preferences.getLong("session", 0L))
+        assertNull(FetchedChanges.ids.value[F.pharmacyId])
+        assertTrue(ready().catalog.availability.isEmpty())
+    }
+
 }

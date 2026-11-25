@@ -133,6 +133,7 @@ STANDARD_CASES = (
     ('Review-ViewModel-sectionTypedNameClearsOnSelectionAndSuccessfulDeleteResetsForm', 'ViewModelInstrumentedTest#sectionTypedNameClearsOnSelectionAndSuccessfulDeleteResetsForm', False),
     ('Initial-Home-largeText', 'HomeBarPlacementUiTest#largeTextKeepsAllFourBarPlacementsPinnedAndSearchVisible', False),
     ('Initial-Fetch-commit-failure-nochange', 'SnapshotRefreshInstrumentedTest#committedFetchMarksRemovedAvailabilityAndFailureOrNoChangeRetainsMarkers', False),
+    ('Initial-Fetch-markers-between-browse-sessions', 'SnapshotRefreshInstrumentedTest#fetchBetweenBrowseSessionsKeepsMarkersForTheNextTwoSessions', False),
     ('Initial-Markers-accumulatedMarkersSurviveNextSessionAndRetireBeforeThird', 'FetchedChangesInstrumentedTest#accumulatedMarkersSurviveNextSessionAndRetireBeforeThird', False),
     ('Initial-Markers-changingAgainRenewsOnlyThatMedicationLifetime', 'FetchedChangesInstrumentedTest#changingAgainRenewsOnlyThatMedicationLifetime', False),
     ('Initial-Markers-repeatedActivityStartAndNoChangeDoNotAdvanceOrClearSession', 'FetchedChangesInstrumentedTest#repeatedActivityStartAndNoChangeDoNotAdvanceOrClearSession', False),

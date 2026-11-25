@@ -137,4 +137,62 @@ class SnapshotReadClientTest {
         catch (error: PayloadException) { assertEquals(PayloadError.WRONG_PHARMACY,error.error) }
     }
 
+    @Test fun requestAdmissionRunsOnceBeforeTransportEvenWhenUsingTheValidatedCache(): Unit = runBlocking {
+        val events = mutableListOf<String>()
+        val transport = object : SnapshotReadTransport {
+            override suspend fun bot(token: String): BotIdentity {
+                events += "bot"
+                return BotIdentity(1)
+            }
+            override suspend fun pinned(token: String, groupId: Long, bot: BotIdentity): SnapshotDocument {
+                events += "pin"
+                return document
+            }
+            override suspend fun document(token: String, document: SnapshotDocument) =
+                throw AssertionError("Unchanged document downloaded")
+        }
+        val reader = client(transport)
+        F.candidate().use { candidate ->
+            repeat(2) { reader.readWithCache(candidate, 3, cache()) { events += "admission" } }
+        }
+        assertEquals(listOf("admission", "bot", "pin", "pin", "admission", "pin", "pin"), events)
+    }
+
+    @Test fun transportAdmissionRejectionDoesNotReadOrPoisonTheNextAttempt(): Unit = runBlocking {
+        val denied = IllegalStateException("Reader is no longer eligible")
+        var requests = 0
+        val reader = client(FakeSnapshotReadTransport(BotIdentity(1), { requests++; document }, {
+            throw AssertionError("Unchanged document downloaded")
+        }))
+        F.candidate().use { candidate ->
+            try {
+                reader.readWithCache(candidate, 3, cache()) { throw denied }
+                fail("Rejected admission should fail before transport")
+            } catch (error: IllegalStateException) {
+                assertSame(denied, error)
+            }
+            assertEquals(0, requests)
+            assertNotNull(reader.readWithCache(candidate, 3, cache()))
+            assertEquals(2, requests)
+        }
+    }
+
+    @Test fun cachedTelegramCooldownSkipsAdmissionAndKeepsTheTransportUntouched(): Unit = runBlocking {
+        var pins = 0
+        var admitted = 0
+        val reader = client(FakeSnapshotReadTransport(BotIdentity(1), {
+            pins++
+            throw SnapshotReadException(SnapshotReadError.RATE_LIMITED, 600)
+        }, { throw AssertionError("Rate-limited check did not reach the document") }))
+        F.candidate().use { candidate ->
+            val cached = cache()
+            repeat(3) {
+                rejects(SnapshotReadError.RATE_LIMITED) {
+                    reader.readWithCache(candidate, 3, cached) { admitted++ }
+                }
+            }
+        }
+        assertEquals(1, admitted)
+        assertEquals(1, pins)
+    }
 }
