@@ -60,7 +60,7 @@ The retained live-PIN/manual-republication/reader-connection extension remains o
 
 ## Ordered delivery backlog
 
-Workflow 03 #22 at `54181b3` passed the JVM suites and release compilation. Verify instrumentation-first dependency restore on the commit containing the cache repair with workflow 03 `scope=all` and `coverage=false`. Check the exact restored dependency key and whether both instrumentation flavors compile. On success, confirm setup saved a snapshot under the new prefix. Preserve the earlier instrumentation compilation at `932f2a9` as evidence for that revision. Workflow 06 already built and signed both debug flavors with code 6. Keep reservations 5 and 6. [Hosted results](validation.md#hosted-workflows-03-and-06--2026-11-25)
+Workflow 03 #23 at `d12b23f` passed both JVM suites, release compilation, and both instrumentation compilations. It restored the verified seed and saved the first snapshot under the instrumentation prefix. Check direct restore from that prefix on the next ordinary full run. Workflow 06 previously built and signed both debug flavors with code 6. Keep reservations 5 and 6. [Hosted results](validation.md#hosted-workflows-03-and-06--2026-11-25)
 
 Reader refresh still needs workflow 08 for WorkManager's merged manifest and runtime notices. Workflow 07 has a focused fetched-marker case. Android verification still needs actual WorkManager wake-ups under network and battery constraints, restart and reboot, and confirmation that the foreground error clears after a worker commits a successful check. [Exact test inputs](test-coverage.md#reader-refresh-scheduling--2026-11-25)
 
