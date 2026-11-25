@@ -65,7 +65,7 @@ class GradleCiTest(unittest.TestCase):
         self.assertEqual(2, len(calls))
         self.assertEqual(calls[0].args, calls[1].args)
         self.assertEqual(['--no-daemon', ':app:testDemoDebugUnitTest'], calls[0].args[0][1:])
-        self.assertEqual([20], delays)
+        self.assertEqual([120], delays)
         self.assertIn(RATE_LIMIT, logs['gradle.log'])
         self.assertIn('BUILD SUCCESSFUL', logs['gradle.log'])
         self.assertEqual(RATE_LIMIT, logs['gradle.attempt-1.log'])
@@ -74,14 +74,14 @@ class GradleCiTest(unittest.TestCase):
         status, calls, delays, logs = self.invoke([(RATE_LIMIT, 1)] * 3)
         self.assertEqual(1, status)
         self.assertEqual(3, len(calls))
-        self.assertEqual([20, 40], delays)
+        self.assertEqual([120, 240], delays)
         self.assertIn('gradle.attempt-3.log', logs)
 
     def test_compiler_failure_after_download_retry_stops_immediately(self):
         status, calls, delays, _ = self.invoke([(RATE_LIMIT, 1), (COMPILER, 2)])
         self.assertEqual(2, status)
         self.assertEqual(2, len(calls))
-        self.assertEqual([20], delays)
+        self.assertEqual([120], delays)
 
     def test_assertion_failure_is_not_retried_even_with_429_in_test_output(self):
         output = RATE_LIMIT + "Execution failed for task ':app:testDemoDebugUnitTest'.\n> There were failing tests\n2 tests completed, 1 failed\n"

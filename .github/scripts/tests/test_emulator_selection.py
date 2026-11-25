@@ -22,7 +22,7 @@ class EmulatorSelectionTest(unittest.TestCase):
             self.assertEqual(cases, runner.select_cases(name))
             self.assertTrue(cases)
             combined.extend(case[1] for case in cases)
-        self.assertEqual(227, len(combined))
+        self.assertEqual(231, len(combined))
         self.assertEqual(len(combined), len(set(combined)))
 
     def test_exact_retry_keeps_only_requested_methods_in_their_original_batch(self):

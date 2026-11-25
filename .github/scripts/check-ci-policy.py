@@ -9,7 +9,6 @@ import yaml
 from ci_yaml import load_yaml
 
 
-CACHE_READ_ONLY = '${{ github.ref_name != github.event.repository.default_branch }}'
 PUBLIC_GUARD = '${{ github.event.repository.private == false }}'
 CLEANUP_GUARD = "${{ github.event.repository.private == false && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}"
 PIN = re.compile(r'[\w.-]+/[\w.-]+(?:/[\w./-]+)?@[0-9a-f]{40}')
@@ -62,11 +61,28 @@ def check(path):
                         problem(label, 'only local composite actions are allowed')
                     else:
                         if directory.name == 'setup-android':
-                            setup = next((item for item in runs.get('steps', [])
+                            local_steps = runs.get('steps')
+                            if not isinstance(local_steps, list):
+                                local_steps = []
+                            setup = next((item for item in local_steps
                                           if isinstance(item, dict) and str(item.get('uses', '')).startswith('gradle/actions/setup-gradle@')), {})
                             if (local.get('inputs', {}).get('setup-gradle', {}).get('default') != 'true'
                                     or setup.get('if') != "${{ inputs.setup-gradle == 'true' }}"):
                                 problem(label, 'shared setup must default Gradle caching on and guard signing opt-out')
+                            cache_paths = [
+                                (item['uses'].split('@', 1)[0], item.get('with', {}).get('path'))
+                                for item in local_steps if isinstance(item, dict)
+                                and str(item.get('uses', '')).startswith(('actions/cache@', 'actions/cache/restore@'))
+                                and isinstance(item.get('with', {}), dict)
+                            ]
+                            expected_paths = {
+                                (action, cache_path)
+                                for action in ('actions/cache', 'actions/cache/restore')
+                                for cache_path in ('~/.gradle/wrapper/dists', '~/.gradle/caches/modules-2')
+                            }
+                            if len(cache_paths) != len(expected_paths) or any(
+                                    cache_path not in cache_paths for cache_path in expected_paths):
+                                problem(label, 'shared setup requires one branch-scoped cache pair for each Gradle path')
                         steps_check(runs.get('steps'), str(candidates[0].relative_to(root)),
                                     (*stack, directory), checkout=True)
                 except (OSError, ValueError, yaml.YAMLError) as error:
@@ -82,19 +98,25 @@ def check(path):
             elif name == 'actions/upload-artifact':
                 if type(inputs.get('retention-days')) is not int or inputs['retention-days'] != 1:
                     problem(label, 'uploads need literal one-day retention')
-            elif name in ('actions/cache', 'actions/cache/restore') and inputs.get('path') == '~/.gradle/caches/modules-2':
+            elif name in ('actions/cache', 'actions/cache/restore') and stack and stack[-1].name == 'setup-android':
                 expected_guard = ("${{ inputs.setup-gradle == 'true' && github.ref_name "
                                   + ('==' if name == 'actions/cache' else '!=')
                                   + " github.event.repository.default_branch }}")
                 if step.get('if') != expected_guard:
-                    problem(label, 'dependency cache must preserve default-branch-only writes and signing opt-out')
-                if inputs.get('path') != '~/.gradle/caches/modules-2':
-                    problem(label, 'supplemental cache must contain only downloaded Gradle dependencies')
-                expected_prefix = 'aqaqeer-dependencies-v1-${{ runner.os }}-${{ runner.arch }}-'
-                expected_key = (expected_prefix + '${{ github.run_id }}-${{ github.run_attempt }}-'
-                                + '${{ github.job }}-${{ strategy.job-index }}')
-                if inputs.get('key') != expected_key or inputs.get('restore-keys') != expected_prefix:
-                    problem(label, 'dependency snapshots must restore across runs and save per run/job/attempt')
+                    problem(label, 'Gradle caches must preserve default-branch-only writes and signing opt-out')
+                if inputs.get('path') == '~/.gradle/wrapper/dists':
+                    expected_key = ("aqaqeer-gradle-wrapper-v1-${{ runner.os }}-${{ runner.arch }}-"
+                                    "${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}")
+                    if inputs.get('key') != expected_key or 'restore-keys' in inputs:
+                        problem(label, 'wrapper cache must be keyed by the exact wrapper properties')
+                elif inputs.get('path') == '~/.gradle/caches/modules-2':
+                    expected_prefix = 'aqaqeer-dependencies-v1-${{ runner.os }}-${{ runner.arch }}-'
+                    expected_key = (expected_prefix + '${{ github.run_id }}-${{ github.run_attempt }}-'
+                                    + '${{ github.job }}-${{ strategy.job-index }}')
+                    if inputs.get('key') != expected_key or inputs.get('restore-keys') != expected_prefix:
+                        problem(label, 'dependency snapshots must restore across runs and save per run/job/attempt')
+                else:
+                    problem(label, 'Gradle cache paths must be limited to wrapper distributions or downloaded dependencies')
             elif name in ('actions/cache', 'actions/cache/restore'):
                 expected_guard = ("${{ github.ref_name " + ('==' if name == 'actions/cache' else '!=')
                                   + " github.event.repository.default_branch }}")
@@ -106,10 +128,8 @@ def check(path):
                         or step.get('if') != expected_guard):
                     problem(label, 'system-image cache must use exact image keys and default-branch-only writes')
             elif name == 'gradle/actions/setup-gradle':
-                if inputs.get('cache-read-only') != CACHE_READ_ONLY:
-                    problem(label, 'cache writes are allowed only on the default branch')
-                if inputs.get('cache-provider') != 'basic':
-                    problem(label, 'Gradle must use the basic GitHub cache provider')
+                if inputs.get('cache-provider') != 'external':
+                    problem(label, 'Gradle tooling must leave caching to the explicit wrapper and dependency actions')
                 if inputs.get('validate-wrappers', True) is not True:
                     problem(label, 'built-in wrapper-JAR validation must stay enabled')
                 for key in ('cache-write-only', 'cache-disabled'):
