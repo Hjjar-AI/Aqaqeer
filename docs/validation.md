@@ -4,6 +4,10 @@ Workflow 03 rate-limit diagnosis — **2026-11-25**: run `45491829849` at `5376d
 
 [Requirements](requirements.md) define acceptance; [plan](plan.md) owns remaining work. The evidence manifest (local-only: `../local/verification/manifest.json`) retains original results, public hashes and provenance. Ignored evidence may be absent in fresh checkouts. Source checks, compilation, runtime results and human acceptance remain distinct.
 
+## Admin tools organization — 2026-11-25
+
+Source changes from `65c08bd` group the hub by task with shared icon rows and cards, show the applicable blocked-state action and put the local leave entry last. The setup checklist shows progress when collapsed. Linked screens group instructions, inputs, review and confirmation with their existing actions. The Telegram and CSV guides expand on demand. Production paths, role gates and busy conditions were reviewed alongside resource, delimiter, link and whitespace checks. Compilation, Android interaction and visual acceptance remain pending. [UI1 backlog](plan.md#ordered-delivery-backlog)
+
 ## Compose styling and report export — 2026-11-25
 
 Source changes started at `939c881`. The four accent palettes now share launch and Compose background resources. History filters, medication section headings, destructive actions and ordinary Material controls use shared styling. Swipe dismissal is scoped to the current snackbar. Reports separates source, scope, options and preview on the existing route. Step state survives activity recreation within the same pharmacy session. Saving rechecks the prepared request, pharmacy and preview generation when the document picker returns.

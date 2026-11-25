@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="admin_hub_access_heading">صلاحيات الإدارة والاتصال</string>
+    <string name="admin_hub_authorize_help">استخدم رمز الإدارة لفتح أدوات التعديل والنشر.</string>
+    <string name="admin_hub_activity_heading">متابعة النشاط</string>
+    <string name="admin_hub_protection_heading">حماية البيانات والاتصال</string>
+    <string name="admin_hub_device_heading">الصيدلية على هذا الجهاز</string>
+    <string name="admin_hub_leave_help">حذف بيانات الصيدلية المحفوظة على هذا الجهاز.</string>
+    <string name="admin_hub_connection_after_restore">متاح بعد إكمال مراجعة الاستعادة.</string>
+    <string name="admin_hub_connection_after_publication">متاح بعد التحقق من أول نشر.</string>
+    <string name="admin_hub_checklist_progress">%1$s · %2$d من %3$d</string>
+    <string name="admin_setup_instructions_heading">خطوات تجهيز البوت والمجموعة</string>
+    <string name="admin_setup_group_confirmation_heading">تأكيد المجموعة</string>
+    <string name="admin_review_filters_heading">عرض التعديلات حسب النوع</string>
+    <string name="admin_review_filter_count">%1$s (%2$d)</string>
+    <string name="admin_review_empty_message">لا توجد تعديلات محلية لعرضها.</string>
+    <string name="admin_review_publish_heading">النشر</string>
+    <string name="admin_maintenance_tasks_heading">مهام الصيانة</string>
+    <string name="admin_taxonomy_new_heading">عنصر جديد</string>
+    <string name="admin_csv_template_heading">دليل قالب CSV</string>
+</resources>

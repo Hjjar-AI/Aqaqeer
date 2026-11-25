@@ -72,12 +72,9 @@ import kotlinx.serialization.json.*
     if (old != null) MedicationAvailabilityControls(c, old, busy, isSaving = { vm.adminBusy.value }) { selection, status ->
         vm.saveAvailability(selection, BulkMedicationChanges(status = status)) { }
     }
-    if (old == null) SupportingText(uiText(R.string.availability_initial_status_help))
     if (duplicates.isNotEmpty()) CheckChoiceRow(duplicateConfirmed,
         uiText(R.string.logic_duplicate_confirm), enabled = !busy) { duplicateConfirmed = it }
     val expiryDay = runCatching { LocalDate.parse(expiry) }.getOrNull()
-    if (expiryDay != null && expiryDay < MedicationPresentation.today(Instant.now(), c.pharmacy?.timezone ?: DEFAULT_PRESENTATION_TIMEZONE))
-        SupportingText(uiText(R.string.logic_past_expiry))
     GroupedCard(title = uiText(R.string.catalog_medication_identity_heading)) {
         FormField(uiText(R.string.catalog_scientific_name_arabic_label), genericAr, { genericAr = it }, submitted = submitted, supportingText = uiText(R.string.catalog_scientific_name_required_help), validate = { scientificError })
         FormField(uiText(R.string.catalog_scientific_name_english_label), genericEn, { genericEn = it }, ltr = true, submitted = submitted, keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(capitalization = androidx.compose.ui.text.input.KeyboardCapitalization.Words), supportingText = uiText(R.string.catalog_scientific_name_required_help), validate = { scientificError })
@@ -88,7 +85,9 @@ import kotlinx.serialization.json.*
             ChoicePicker(uiText(R.string.catalog_category_label), c.categories, c.categories.find { it.id == category }, { it.nameAr }, itemKey = { it.id }) { category = it.id }
         })
         GregorianDateField(uiText(R.string.catalog_expiry_date_label), expiry, { expiry = it }, submitted = submitted)
-
+        if (expiryDay != null && expiryDay < MedicationPresentation.today(Instant.now(), c.pharmacy?.timezone ?: DEFAULT_PRESENTATION_TIMEZONE)) {
+            SupportingText(uiText(R.string.logic_past_expiry))
+        }
     }
     if (old == null) NewMedicationAvailabilityControls(c, initialAvailability, busy,
         reset = { initialAvailability = emptyMap() }) { section, status ->
@@ -96,16 +95,17 @@ import kotlinx.serialization.json.*
             else initialAvailability + (section to status)
     }
     CollapsibleGroup(uiText(R.string.catalog_medication_optional_information_heading), optionalOpen, { optionalOpen = !optionalOpen }) {
-    GroupedCard {
-        FormField(uiText(R.string.catalog_expiry_warning_days_label), threshold, { threshold = MedicationPresentation.westernDigits(it) }, submitted = submitted, required = true, validate = FormGuidance::threshold, ltr = true, imeAction = ImeAction.Done, onDone = { if (!busy) save() })
-    }
-    GroupedCard(title = uiText(R.string.catalog_trade_name_label_with_guidance)) {
-        FormField(uiText(R.string.catalog_medication_trade_name_arabic_label), ar, { ar = it }, submitted = submitted, required = false)
-        FormField(uiText(R.string.catalog_medication_trade_name_english_label), en, { en = it }, ltr = true, submitted = submitted, required = false)
-    }
-    GroupedCard(title = uiText(R.string.catalog_additional_information_heading)) {
-        FormField(uiText(R.string.catalog_brand_label), brand, { brand = it }, submitted = submitted, required = false); MultilineField(uiText(R.string.catalog_note_label), note, { note = it }, submitted = submitted, required = false)
-    }
+        FormField(uiText(R.string.catalog_expiry_warning_days_label), threshold,
+            { threshold = MedicationPresentation.westernDigits(it) }, submitted = submitted, required = true,
+            validate = FormGuidance::threshold, ltr = true, imeAction = ImeAction.Done, onDone = { if (!busy) save() })
+        GroupedCard(title = uiText(R.string.catalog_trade_name_label_with_guidance)) {
+            FormField(uiText(R.string.catalog_medication_trade_name_arabic_label), ar, { ar = it }, submitted = submitted, required = false)
+            FormField(uiText(R.string.catalog_medication_trade_name_english_label), en, { en = it }, ltr = true, submitted = submitted, required = false)
+        }
+        GroupedCard(title = uiText(R.string.catalog_additional_information_heading)) {
+            FormField(uiText(R.string.catalog_brand_label), brand, { brand = it }, submitted = submitted, required = false)
+            MultilineField(uiText(R.string.catalog_note_label), note, { note = it }, submitted = submitted, required = false)
+        }
     }
     if (c.medications.any { other -> other.id != id &&
         listOfNotNull(other.genericAr, other.genericEn).map(::normalizedName).any { candidate ->

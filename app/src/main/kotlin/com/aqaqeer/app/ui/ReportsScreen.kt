@@ -121,7 +121,11 @@ import com.aqaqeer.app.reports.*
                         }
                     }
                     ReportStep.PREVIEW -> if (current != null) {
-                        item { GroupedCard { current.summary().forEach { (label, value) -> LabeledValue(label, value) } } }
+                        item {
+                            GroupedCard(title = text(R.string.report_summary_title)) {
+                                current.summary().forEach { (label, value) -> LabeledValue(label, value) }
+                            }
+                        }
                         items(if (showAll) current.medications else current.medications.take(5), key = { it.id }) { med ->
                             GroupedCard {
                                 columns.forEach { column ->

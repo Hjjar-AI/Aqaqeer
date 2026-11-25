@@ -208,15 +208,34 @@ internal data class Notice(val text: String, val severity: NoticeSeverity = Noti
         Triple(R.string.review_check_connection, ready.hasPublicationConnection, Route.Setup),
         Triple(R.string.review_check_publish, ready.publishedAt != null, Route.Review),
         Triple(R.string.review_check_backup, ready.hasBackup, Route.Backup))
-    if (!hidden && !ready.requiresUpdate && !ready.maintenancePaused && !ready.restorePaused) GroupedCard(title = uiText(R.string.review_setup_checklist)) {
-        tasks.forEach { (label, complete, route) ->
-            AppButton(variant = AppButtonVariant.QUIET, onClick = { navigate(route) }, enabled = !complete,
-                modifier = Modifier.semantics { stateDescription = uiText(if (complete) R.string.shared_step_completed else R.string.shared_step_pending) }) {
-                Text("${if (complete) "✓" else "○"} ${uiText(label)}", Modifier.clearAndSetSemantics { contentDescription = uiText(label) })
+    if (hidden || ready.requiresUpdate || ready.maintenancePaused || ready.restorePaused) return
+
+    var expanded by rememberSaveable(pharmacy) { mutableStateOf(false) }
+    val completed = tasks.count { it.second }
+    GroupedCard {
+        CollapsibleGroup(uiText(R.string.admin_hub_checklist_progress, uiText(R.string.review_setup_checklist), completed, tasks.size), expanded,
+            { expanded = !expanded }) {
+            tasks.forEach { (label, complete, route) ->
+                if (complete) {
+                    Row(Modifier.fillMaxWidth().padding(vertical = UiSpacing.hair).semantics(mergeDescendants = true) {
+                        stateDescription = uiText(R.string.shared_step_completed)
+                    }, verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(UiSpacing.related)) {
+                        AppIcon(UiIcon.CHECK)
+                        SupportingText(uiText(label))
+                    }
+                } else {
+                    NavigationRow(uiText(label), { navigate(route) }, modifier = Modifier.semantics {
+                        stateDescription = uiText(R.string.shared_step_pending)
+                    })
+                }
             }
-        }
-        if (tasks.all { it.second }) AppButton(variant = AppButtonVariant.QUIET, onClick = { prefs.edit().putBoolean(pharmacy, true).apply(); hidden = true }) {
-            Text(uiText(R.string.review_hide_checklist))
+            if (completed == tasks.size) {
+                AppButton(variant = AppButtonVariant.QUIET, onClick = {
+                    prefs.edit().putBoolean(pharmacy, true).apply()
+                    hidden = true
+                }) { Text(uiText(R.string.review_hide_checklist)) }
+            }
         }
     }
 }

@@ -42,17 +42,22 @@ import java.time.LocalDate
     }
     LazyColumn(Modifier.fillMaxSize(), state = listState, contentPadding = PaddingValues(UiSpacing.page), verticalArrangement = Arrangement.spacedBy(UiSpacing.section)) {
         item {
-            ActionGroup {
-                val activeFilter = state.request.filter.let { it.from != null || it.through != null || it.entityType != null || (medicationId == null && it.medicationId != null) }
-                AppButton(variant = AppButtonVariant.QUIET, onClick = { filtersOpen = true }, colors = ButtonDefaults.textButtonColors(
-                    containerColor = if (activeFilter) MaterialTheme.colorScheme.primaryContainer else androidx.compose.ui.graphics.Color.Transparent)) {
-                    AppIcon(UiIcon.FILTER); Text(uiText(R.string.history_filter_title) + if (activeFilter) " ●" else "")
+            GroupedCard {
+                val activeFilter = state.request.filter.let {
+                    it.from != null || it.through != null || it.entityType != null ||
+                        (medicationId == null && it.medicationId != null)
                 }
-                Text(uiText(R.string.history_page_format, MedicationPresentation.displayDigits((state.request.page + 1).toString())))
+                AppChip(activeFilter, onClick = { filtersOpen = true },
+                    label = { Text(uiText(R.string.history_filter_title)) },
+                    leadingIcon = { AppIcon(UiIcon.FILTER, size = Size.iconS) })
+                ExpandableInformation(uiText(R.string.history_local_history_title), uiText(R.string.history_local_history_help))
+                InlineOperationStatus(state.loading, state.error)
+                if (state.error != null) {
+                    AppButton(variant = AppButtonVariant.QUIET, onClick = vm::retryHistory) {
+                        Text(uiText(R.string.history_retry_action))
+                    }
+                }
             }
-            ExpandableInformation(uiText(R.string.history_local_history_title), uiText(R.string.history_local_history_help))
-            InlineOperationStatus(state.loading, state.error)
-            if (state.error != null) AppButton(variant = AppButtonVariant.QUIET, onClick = vm::retryHistory) { Text(uiText(R.string.history_retry_action)) }
         }
         if (!state.loading && state.error == null && page?.entries?.isEmpty() == true) item {
             EmptyState(uiText(R.string.history_empty_title), uiText(R.string.history_empty_help))

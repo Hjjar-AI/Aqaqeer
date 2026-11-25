@@ -26,9 +26,9 @@ import kotlinx.serialization.json.*
         val pass = outgoing; outgoing = null
         if (uri == null) pass?.fill('\u0000') else if (pass != null) vm.secretCommand(null, pass) { vm.sharing.export(uri, pass) }
     }
-    if (com.aqaqeer.app.BuildConfig.IS_DEMO) SupportingText(uiText(R.string.demo_connection_help))
-    Text(uiText(R.string.connection_export_security_help))
     GroupedCard(title = uiText(R.string.connection_export_protection_title)) {
+        NoticeStrip(Notice(uiText(R.string.connection_export_security_help), NoticeSeverity.WARNING))
+        if (com.aqaqeer.app.BuildConfig.IS_DEMO) SupportingText(uiText(R.string.demo_connection_help))
         SecretField(uiText(R.string.connection_file_password_label), password, { if (it.length <= 1024) { password = it; generated = false } }, required = true, validate = FormGuidance::pin, imeAction = ImeAction.Done, rule = uiText(R.string.connection_file_password_rule), tag = uiText(R.string.connection_file_password_label_with_guidance))
         SupportingText(uiText(R.string.logic_password_guidance))
         if (FormGuidance.simpleNumericPattern(password)) SupportingText(uiText(R.string.logic_password_pattern))

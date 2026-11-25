@@ -34,15 +34,24 @@ import com.aqaqeer.app.data.CatalogState
             SwitchChoiceRow(current.online, text(R.string.demo_online), text(R.string.demo_online_help), change = {
                 vm.command(queueOffline = false) { DemoSession.setOnline(it) }
             })
-            AppButton(enabled = !busy, onClick = { vm.command(queueOffline = false) { DemoSession.refresh() } }) {
-                Text(text(R.string.review_refresh_now))
-            }
-            if (ready.admin) {
-                AppButton(enabled = !busy, onClick = { vm.navigate(Route.Setup) }) { Text(text(R.string.navigation_telegram_setup_title)) }
-                AppButton(enabled = !busy, onClick = { vm.command(queueOffline = false) { DemoSession.setConnection(!current.connected) } }) {
-                    Text(text(if (current.connected) R.string.demo_disconnect else R.string.demo_connect))
+            ActionGroup {
+                AppButton(enabled = !busy, onClick = { vm.command(queueOffline = false) { DemoSession.refresh() } }) {
+                    Text(text(R.string.review_refresh_now))
                 }
-                AppButton(enabled = !busy && current.connected, onClick = { vm.navigate(Route.ExportConnection) }) { Text(text(R.string.navigation_connection_export_title)) }
+                if (ready.admin) {
+                    AppButton(variant = AppButtonVariant.QUIET, enabled = !busy, onClick = {
+                        vm.command(queueOffline = false) { DemoSession.setConnection(!current.connected) }
+                    }) { Text(text(if (current.connected) R.string.demo_disconnect else R.string.demo_connect)) }
+                }
+            }
+        }
+        if (ready.admin) {
+            GroupedCard(title = text(R.string.connection_sharing_heading)) {
+                NavigationRow(text(R.string.navigation_telegram_setup_title), { vm.navigate(Route.Setup) },
+                    enabled = !busy, icon = UiIcon.SETUP)
+                AppDivider()
+                NavigationRow(text(R.string.navigation_connection_export_title), { vm.navigate(Route.ExportConnection) },
+                    enabled = !busy && current.connected, icon = UiIcon.CONNECTION)
             }
         }
         GroupedCard(title = text(R.string.demo_replace_connection)) {
@@ -68,7 +77,10 @@ import com.aqaqeer.app.data.CatalogState
                     vm.secretCommand(null, old, next, confirm, queueOffline = false) { DemoSession.changePin(old, next, confirm) }
                 }) { Text(text(R.string.demo_change_pin)) }
             }
-            AppButton(enabled = !busy, onClick = { confirmRotation = true }) { Text(text(R.string.demo_rotate_connection)) }
+            GroupedCard {
+                NavigationRow(text(R.string.demo_rotate_connection), { confirmRotation = true },
+                    enabled = !busy, icon = UiIcon.TOOLS)
+            }
         }
     }
     if (confirmRotation) AppDialog(onDismissRequest = { confirmRotation = false },

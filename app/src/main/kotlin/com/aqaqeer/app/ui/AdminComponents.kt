@@ -88,29 +88,41 @@ import com.aqaqeer.app.data.CatalogSnapshot
     }
 }
 
-@Composable internal fun NavigationGroup(title: String, content: @Composable ColumnScope.() -> Unit) {
-    GroupedCard(title = title, spacing = Space.none, content = content)
-}
-
 @Composable internal fun SupportingText(text: String) {
     Text(text, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
 }
 
 /** Use inside a grouped surface; navigation never commits an operation. */
 @Composable internal fun NavigationRow(label: String, onClick: () -> Unit, modifier: Modifier = Modifier,
-    enabled: Boolean = true, supporting: String? = null, destructive: Boolean = false) {
+    enabled: Boolean = true, supporting: String? = null, destructive: Boolean = false,
+    icon: UiIcon? = null, contentPadding: Dp = Space.none) {
+    val colors = MaterialTheme.colorScheme
+    val titleColor = when {
+        !enabled -> colors.onSurfaceVariant
+        destructive -> colors.error
+        else -> colors.onSurface
+    }
     Row(modifier.fillMaxWidth().clickable(enabled = enabled, role = Role.Button, onClick = onClick)
-        .heightIn(min = UiSpacing.touch).padding(vertical = UiSpacing.related),
+        .heightIn(min = UiSpacing.touch).padding(horizontal = contentPadding, vertical = UiSpacing.related),
         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(UiSpacing.section)) {
+        icon?.let {
+            Surface(shape = MaterialTheme.shapes.small, color = when {
+                !enabled -> colors.surfaceVariant
+                destructive -> colors.errorContainer
+                else -> colors.primaryContainer
+            }, contentColor = when {
+                !enabled -> colors.onSurfaceVariant
+                destructive -> colors.onErrorContainer
+                else -> colors.onPrimaryContainer
+            }) {
+                Box(Modifier.size(Size.touchMin - UiSpacing.related), contentAlignment = Alignment.Center) { AppIcon(it) }
+            }
+        }
         Column(Modifier.weight(1f)) {
-            Text(label, style = MaterialTheme.typography.bodyLarge, color = when {
-                !enabled -> MaterialTheme.colorScheme.onSurfaceVariant
-                destructive -> MaterialTheme.colorScheme.error
-                else -> MaterialTheme.colorScheme.onSurface
-            })
+            Text(label, style = MaterialTheme.typography.bodyLarge, color = titleColor)
             supporting?.let { SupportingText(it) }
         }
-        RowChevron()
+        if (enabled) RowChevron()
     }
 }
 

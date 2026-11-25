@@ -19,7 +19,7 @@ import com.aqaqeer.app.maintenance.*
     val uiText = rememberUiText()
     if (ready?.isDemo == true) { DemoConnectionScreen(ready, vm); return }
     if (ready == null || ready.catalog.pharmacy == null) {
-        InformationCard(uiText(R.string.maintenance_title), uiText(R.string.maintenance_real_pharmacy_required_message))
+        FormPage { InformationCard(uiText(R.string.maintenance_title), uiText(R.string.maintenance_real_pharmacy_required_message)) }
         return
     }
     val status by vm.maintenance.status.collectAsStateWithLifecycle(initialValue = MaintenanceStatus(loading = true))
@@ -28,17 +28,20 @@ import com.aqaqeer.app.maintenance.*
     val message by vm.adminMessage.collectAsStateWithLifecycle()
     val j = status.journal
     if (ready.maintenanceRecoveryRequired || status.unreadable || (j != null && j.pharmacyId != ready.catalog.pharmacy.pharmacyId)) {
-        InformationCard(uiText(R.string.maintenance_protected_state_unreadable_title), uiText(R.string.maintenance_protected_state_retained_help))
+        FormPage { InformationCard(uiText(R.string.maintenance_protected_state_unreadable_title), uiText(R.string.maintenance_protected_state_retained_help)) }
         return
     }
     if (status.loading) { Box(Modifier.fillMaxSize(), contentAlignment = androidx.compose.ui.Alignment.Center) { AppSpinner() }; return }
     var choices by remember(j?.id) { mutableStateOf<Map<String, Boolean>>(emptyMap()) }
     fun run(action: suspend () -> Unit) { vm.command(queueOffline = false, action = action) }
     FormPage(showFieldConvention = true) {
-        Text(ready.catalog.pharmacy.name, style = MaterialTheme.typography.titleLarge)
         OperationStatus(busy, message, cancel = vm::cancelAdminOperation)
-        if (ready.admin && (j == null || j.kind != MaintenanceKind.REPLACEMENT))
-            InformationCard(uiText(R.string.maintenance_sharing_heading), uiText(R.string.maintenance_coordination))
+        GroupedCard {
+            LabeledValue(uiText(R.string.catalog_pharmacy_name_label), ready.catalog.pharmacy.name)
+            if (ready.admin && (j == null || j.kind != MaintenanceKind.REPLACEMENT)) {
+                NoticeStrip(Notice(uiText(R.string.maintenance_coordination), NoticeSeverity.WARNING))
+            }
+        }
         if (ready.restorePaused) {
             InformationCard(uiText(R.string.maintenance_restore_review_required_title), uiText(R.string.maintenance_restore_review_required_help))
             NavigationCard(uiText(R.string.backup_review_restore_action), { vm.navigate(Route.Backup) })
@@ -47,24 +50,27 @@ import com.aqaqeer.app.maintenance.*
         if (j == null) {
             var openTask by rememberSaveable(ready.catalog.pharmacy.pharmacyId) { mutableStateOf<String?>(null) }
             fun toggle(task: String) { openTask = if (openTask == task) null else task }
-            if (ready.lifecycle == "SHARED") CollapsibleGroup(uiText(R.string.maintenance_replace_local_connection_title), openTask == "replacement", { toggle("replacement") }) {
-                ReplacementFileFields(vm, busy)
-            }
-            if (ready.admin && !ready.requiresUpdate) {
-                CollapsibleGroup(uiText(R.string.maintenance_change_admin_pin_title), openTask == "pin", { toggle("pin") }) { PinChangeFields(vm, busy) }
-                if (ready.lifecycle == "SHARED") listOf(MaintenanceKind.ROTATION, MaintenanceKind.MIGRATION).forEach { kind ->
-                    val key = kind.name
-                    CollapsibleGroup(uiText(if (kind == MaintenanceKind.ROTATION) R.string.maintenance_start_token_key_rotation_action else R.string.maintenance_start_relocation_action),
-                        openTask == key, { toggle(key) }) {
-                        NoticeStrip(Notice(uiText(R.string.review_sensitive), NoticeSeverity.WARNING))
-                        SupportingText(uiText(R.string.maintenance_fresh_backup_required_help))
-                        if (ready.pendingCount > 0 || ready.uncertain) {
-                            SupportingText(uiText(R.string.maintenance_reconcile_pending_first_message))
-                            AppButton(variant = AppButtonVariant.QUIET, enabled = !busy, onClick = vm::review) { Text(uiText(R.string.navigation_publication_review_title)) }
-                        }
-                        AppButton(enabled = !busy && ready.pendingCount == 0 && !ready.uncertain,
-                            onClick = { run { vm.maintenance.begin(kind) } }) {
-                            Text(uiText(if (kind == MaintenanceKind.ROTATION) R.string.maintenance_start_token_key_rotation_action else R.string.maintenance_start_relocation_action))
+            val canChangePin = ready.admin && !ready.requiresUpdate
+            if (ready.lifecycle == "SHARED" || canChangePin) GroupedCard(title = uiText(R.string.admin_maintenance_tasks_heading)) {
+                if (ready.lifecycle == "SHARED") CollapsibleGroup(uiText(R.string.maintenance_replace_local_connection_title), openTask == "replacement", { toggle("replacement") }) {
+                    ReplacementFileFields(vm, busy)
+                }
+                if (canChangePin) {
+                    CollapsibleGroup(uiText(R.string.maintenance_change_admin_pin_title), openTask == "pin", { toggle("pin") }) { PinChangeFields(vm, busy) }
+                    if (ready.lifecycle == "SHARED") listOf(MaintenanceKind.ROTATION, MaintenanceKind.MIGRATION).forEach { kind ->
+                        val key = kind.name
+                        CollapsibleGroup(uiText(if (kind == MaintenanceKind.ROTATION) R.string.maintenance_start_token_key_rotation_action else R.string.maintenance_start_relocation_action),
+                            openTask == key, { toggle(key) }) {
+                            NoticeStrip(Notice(uiText(R.string.review_sensitive), NoticeSeverity.WARNING))
+                            SupportingText(uiText(R.string.maintenance_fresh_backup_required_help))
+                            if (ready.pendingCount > 0 || ready.uncertain) {
+                                SupportingText(uiText(R.string.maintenance_reconcile_pending_first_message))
+                                AppButton(variant = AppButtonVariant.QUIET, enabled = !busy, onClick = vm::review) { Text(uiText(R.string.navigation_publication_review_title)) }
+                            }
+                            AppButton(enabled = !busy && ready.pendingCount == 0 && !ready.uncertain,
+                                onClick = { run { vm.maintenance.begin(kind) } }) {
+                                Text(uiText(if (kind == MaintenanceKind.ROTATION) R.string.maintenance_start_token_key_rotation_action else R.string.maintenance_start_relocation_action))
+                            }
                         }
                     }
                 }
@@ -80,7 +86,7 @@ import com.aqaqeer.app.maintenance.*
         if (j.phase in phases) StepHeader(phases.map(::maintenancePhaseLabel), phases.indexOf(j.phase))
         else NoticeStrip(Notice(maintenancePhaseLabel(j.phase, text = uiText), NoticeSeverity.WARNING))
         MaintenanceIdentity(uiText(R.string.maintenance_source_heading), j.sourceTitle, j.sourceBotId, j.sourceGroupId, j.sourceId, j.sourceTime)
-        if (j.sourceUnavailable) Text(uiText(R.string.maintenance_source_unverified_warning), color = MaterialTheme.colorScheme.error)
+        if (j.sourceUnavailable) NoticeStrip(Notice(uiText(R.string.maintenance_source_unverified_warning), NoticeSeverity.WARNING))
         if (j.destinationGroupId != null) MaintenanceIdentity(uiText(R.string.maintenance_destination_heading), j.destinationTitle, j.destinationBotId,
             j.destinationGroupId, j.candidateId, j.candidateTime)
         if (ready.admin && !ready.requiresUpdate) ConflictChoices(conflicts, choices, ready.catalog) { choices = it }
@@ -147,7 +153,7 @@ import com.aqaqeer.app.maintenance.*
         }
         if (j.phase !in setOf(MaintenancePhase.WRITE_STARTED, MaintenancePhase.ACTIVATING, MaintenancePhase.REVIEW, MaintenancePhase.COMPLETE))
             AppButton(variant = AppButtonVariant.QUIET, enabled = !busy, onClick = { run { vm.maintenance.cancel() } }) { Text(uiText(R.string.maintenance_cancel_safely_action)) }
-        else Text(uiText(R.string.maintenance_possible_remote_changes_warning))
+        else NoticeStrip(Notice(uiText(R.string.maintenance_possible_remote_changes_warning), NoticeSeverity.WARNING))
     }
 }
 
@@ -156,32 +162,28 @@ import com.aqaqeer.app.maintenance.*
     var selected by remember { mutableStateOf<android.net.Uri?>(null) }
     var password by remember { mutableStateOf("") }
     val picker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { selected = it }
-    GroupedCard(title = uiText(R.string.maintenance_replace_local_connection_title)) {
-        AppButton(variant = AppButtonVariant.QUIET, enabled = !busy, onClick = {
-            try { picker.launch(arrayOf("*/*")) } catch (_: Exception) { vm.adminMessage.value = uiText(R.string.maintenance_file_picker_failed_message) }
-        }) { Text(uiText(R.string.maintenance_choose_replacement_file_action)) }
-        SecretField(uiText(R.string.maintenance_replacement_file_password_label), password, { password = it }, required = true)
-        AppButton(enabled = !busy && selected != null && password.isNotEmpty(), onClick = {
-            val uri = selected ?: return@AppButton; val secret = password.toCharArray(); password = ""
-            vm.secretCommand(null, secret, queueOffline = false) { vm.maintenance.stageReplacement(uri, secret) }
-        }) { Text(uiText(R.string.maintenance_stage_replacement_file_action)) }
-    }
+    AppButton(variant = AppButtonVariant.QUIET, enabled = !busy, onClick = {
+        try { picker.launch(arrayOf("*/*")) } catch (_: Exception) { vm.adminMessage.value = uiText(R.string.maintenance_file_picker_failed_message) }
+    }) { Text(uiText(R.string.maintenance_choose_replacement_file_action)) }
+    SecretField(uiText(R.string.maintenance_replacement_file_password_label), password, { password = it }, required = true)
+    AppButton(enabled = !busy && selected != null && password.isNotEmpty(), onClick = {
+        val uri = selected ?: return@AppButton; val secret = password.toCharArray(); password = ""
+        vm.secretCommand(null, secret, queueOffline = false) { vm.maintenance.stageReplacement(uri, secret) }
+    }) { Text(uiText(R.string.maintenance_stage_replacement_file_action)) }
 }
 
 @Composable private fun PinChangeFields(vm: CatalogViewModel, busy: Boolean) {
     val uiText = rememberUiText()
     var current by remember { mutableStateOf("") }; var next by remember { mutableStateOf("") }; var confirmation by remember { mutableStateOf("") }
-    GroupedCard(title = uiText(R.string.maintenance_change_admin_pin_title)) {
-        SecretField(uiText(R.string.maintenance_current_admin_pin_label), current, { current = it }, required = true, numericSecret = true, validate = FormGuidance::pin)
-        SecretField(uiText(R.string.maintenance_new_admin_pin_label), next, { next = it }, required = true, numericSecret = true, validate = FormGuidance::pin, rule = uiText(R.string.maintenance_new_admin_pin_rule), tag = uiText(R.string.maintenance_new_admin_pin_label_with_guidance))
-        SecretField(uiText(R.string.maintenance_confirm_new_admin_pin_label), confirmation, { confirmation = it }, required = true, numericSecret = true, validate = { if (it.map { c -> Character.digit(c, 10) } == next.map { c -> Character.digit(c, 10) }) null else uiText(R.string.catalog_admin_pin_mismatch_error) })
-        SupportingText(uiText(R.string.maintenance_admin_pin_propagation_help))
-        AppButton(enabled = !busy && current.isNotEmpty() && next.isNotEmpty() && confirmation.isNotEmpty(), onClick = {
-            val a = current.toCharArray(); val b = next.toCharArray(); val c = confirmation.toCharArray()
-            current = ""; next = ""; confirmation = ""
-            vm.secretCommand(null, a, b, c) { vm.pinChanges.change(a, b, c) }
-        }) { Text(uiText(R.string.maintenance_save_admin_pin_change_action)) }
-    }
+    SecretField(uiText(R.string.maintenance_current_admin_pin_label), current, { current = it }, required = true, numericSecret = true, validate = FormGuidance::pin)
+    SecretField(uiText(R.string.maintenance_new_admin_pin_label), next, { next = it }, required = true, numericSecret = true, validate = FormGuidance::pin, rule = uiText(R.string.maintenance_new_admin_pin_rule), tag = uiText(R.string.maintenance_new_admin_pin_label_with_guidance))
+    SecretField(uiText(R.string.maintenance_confirm_new_admin_pin_label), confirmation, { confirmation = it }, required = true, numericSecret = true, validate = { if (it.map { c -> Character.digit(c, 10) } == next.map { c -> Character.digit(c, 10) }) null else uiText(R.string.catalog_admin_pin_mismatch_error) })
+    SupportingText(uiText(R.string.maintenance_admin_pin_propagation_help))
+    AppButton(enabled = !busy && current.isNotEmpty() && next.isNotEmpty() && confirmation.isNotEmpty(), onClick = {
+        val a = current.toCharArray(); val b = next.toCharArray(); val c = confirmation.toCharArray()
+        current = ""; next = ""; confirmation = ""
+        vm.secretCommand(null, a, b, c) { vm.pinChanges.change(a, b, c) }
+    }) { Text(uiText(R.string.maintenance_save_admin_pin_change_action)) }
 }
 
 @Composable private fun AuthorizationNeeded(vm: CatalogViewModel, busy: Boolean) {

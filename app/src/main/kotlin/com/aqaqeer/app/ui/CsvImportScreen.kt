@@ -10,6 +10,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.aqaqeer.app.data.*
@@ -18,7 +19,7 @@ import com.aqaqeer.app.reports.*
 @Composable internal fun CsvImportScreen(ready: CatalogState.Ready?, vm: CatalogViewModel) {
     val uiText = rememberUiText()
     if (ready == null || !ready.admin || ready.requiresUpdate) {
-        InformationCard(uiText(R.string.navigation_csv_import_title), uiText(R.string.exchange_report_access_required_message))
+        FormPage { InformationCard(uiText(R.string.navigation_csv_import_title), uiText(R.string.exchange_report_access_required_message)) }
         return
     }
     val state by vm.csvImport.collectAsStateWithLifecycle()
@@ -37,8 +38,8 @@ import com.aqaqeer.app.reports.*
         item { StepHeader(listOf(uiText(R.string.exchange_csv_choose_preview_action), uiText(R.string.exchange_csv_session_title), uiText(R.string.exchange_csv_session_finished_help)),
             if (state.finished) 2 else if (session != null) 1 else 0) }
         item {
-            GroupedCard(title = uiText(R.string.exchange_csv_import_navigation_label)) {
-                Text(uiText(R.string.exchange_csv_import_limits_help))
+            GroupedCard {
+                SupportingText(uiText(R.string.exchange_csv_import_limits_help))
                 InlineOperationStatus(busy, message, cancel = vm::cancelAdminOperation)
                 ActionGroup {
                     AppButton(enabled = !busy, onClick = {
@@ -46,10 +47,17 @@ import com.aqaqeer.app.reports.*
                     }) { Text(uiText(R.string.exchange_csv_choose_preview_action)) }
                     AppButton(variant = AppButtonVariant.QUIET, enabled = !busy, onClick = { export(CsvSaveKind.TEMPLATE) }) { Text(uiText(R.string.exchange_csv_save_template_action)) }
                 }
-                Text(uiText(R.string.exchange_csv_template_section_ids_help))
-                ready.catalog.sections.forEach { Text("${it.nameAr}: ${bidi("section:${it.id}")}") }
-                Text(uiText(R.string.exchange_csv_save_completion_help))
-                Text(uiText(R.string.exchange_csv_optional_clear_help))
+            }
+        }
+        item(key = "csv_template_help") {
+            var expanded by rememberSaveable { mutableStateOf(false) }
+            GroupedCard {
+                CollapsibleGroup(uiText(R.string.admin_csv_template_heading), expanded, { expanded = !expanded }) {
+                    SupportingText(uiText(R.string.exchange_csv_template_section_ids_help))
+                    ready.catalog.sections.forEach { LabeledValue(it.nameAr, bidi("section:${it.id}")) }
+                    SupportingText(uiText(R.string.exchange_csv_save_completion_help))
+                    SupportingText(uiText(R.string.exchange_csv_optional_clear_help))
+                }
             }
         }
         if (session != null) {

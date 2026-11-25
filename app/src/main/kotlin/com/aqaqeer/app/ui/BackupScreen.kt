@@ -8,7 +8,6 @@ import com.aqaqeer.app.R
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -42,7 +41,7 @@ import java.time.format.DateTimeFormatter
         OperationStatus(busy || sharing.busy, message,
             if (exportSucceeded) uiText(R.string.backup_export_success_message) else if (restoreSession) sharing.message else null,
             vm::cancelAdminOperation)
-        if (ready.isDemo) SupportingText(uiText(R.string.demo_backup_help))
+        if (ready.isDemo) NoticeStrip(Notice(uiText(R.string.demo_backup_help)))
         if (ready.restorePaused) {
             StepHeader(listOf(uiText(R.string.review_select_file), uiText(R.string.backup_restore_passphrase_label), uiText(R.string.backup_restore_paused_title)), 2)
             InformationCard(uiText(R.string.backup_restore_paused_title), uiText(R.string.backup_restore_admin_reconciliation_help))
@@ -51,11 +50,11 @@ import java.time.format.DateTimeFormatter
                 return@FormPage
             }
             RestoreReview(ready, vm, busy || sharing.busy)
-            Spacer(Modifier.height(UiSpacing.group))
         }
         if (ready.admin) {
             GroupedCard(title = uiText(R.string.backup_export_heading)) {
-                Text(uiText(R.string.backup_export_contents_help))
+                SupportingText(uiText(R.string.backup_export_contents_help))
+                SupportingText(uiText(R.string.backup_file_size_limit_help))
                 BackupPassphraseFields(password, confirmation, { password = it }, { confirmation = it })
                 AppButton(enabled = !busy && password.codePointCount(0, password.length) >= 8 && password == confirmation, onClick = {
                     exportSucceeded = false
@@ -64,9 +63,7 @@ import java.time.format.DateTimeFormatter
                     try { export.launch("aqaqeer-${if (ready.isDemo) "demo-" else ""}backup-${time.format(DateTimeFormatter.ofPattern("yyyy-MM-dd-HHmm"))}.aqbak") }
                     catch (_: Exception) { secrets.clear(); vm.adminMessage.value = uiText(R.string.backup_file_picker_failed_message) }
                 }) { Text(uiText(R.string.backup_choose_export_destination_action)) }
-                SupportingText(uiText(R.string.backup_file_size_limit_help))
             }
-            Spacer(Modifier.height(UiSpacing.group))
         }
         if (ready.maintenancePaused) {
             InformationCard(uiText(R.string.backup_restore_maintenance_blocked_title), uiText(R.string.backup_restore_maintenance_blocked_help))
@@ -79,9 +76,12 @@ import java.time.format.DateTimeFormatter
                 Text(uiText(R.string.backup_restore_validation_help))
                 AppButton(variant = AppButtonVariant.QUIET, enabled = !busy, onClick = { pick.launch(arrayOf("*/*")) }) { Text(if (selected == null) uiText(R.string.backup_choose_restore_file_action) else uiText(R.string.backup_change_restore_file_action)) }
                 if (selected != null) {
+                    if (ready.catalog.pharmacy != null) {
+                        NoticeStrip(Notice(uiText(R.string.backup_replace_local_data_warning_format,
+                            MedicationPresentation.displayDigits(ready.pendingCount.toString())), NoticeSeverity.WARNING))
+                    }
                     SecretField(uiText(R.string.backup_restore_passphrase_label), restorePassword, { restorePassword = it }, required = true)
                     if (ready.catalog.pharmacy != null) {
-                        Text(uiText(R.string.backup_replace_local_data_warning_format, MedicationPresentation.displayDigits(ready.pendingCount.toString())))
                         FormField(uiText(R.string.backup_current_pharmacy_confirmation_label), typedName, { typedName = it }, required = true)
                         CheckChoiceRow(confirmed, uiText(R.string.backup_replace_local_data_acknowledgement_label)) { confirmed = it }
                     }
@@ -92,7 +92,7 @@ import java.time.format.DateTimeFormatter
                     }, label = uiText(R.string.backup_validate_restore_action))
                 }
             }
-        } else Text(uiText(R.string.backup_restore_admin_only_message))
+        } else NoticeStrip(Notice(uiText(R.string.backup_restore_admin_only_message)))
     }
 }
 

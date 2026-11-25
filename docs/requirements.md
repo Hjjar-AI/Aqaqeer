@@ -533,7 +533,9 @@ The admin hub consolidates refresh/recovery, same-pharmacy replacement connectio
 
 ### Admin hub and review affordances
 
-Admin hub includes an existing-state setup checklist, hideable when complete. Publication-review counts filter the visible review only, not publication scope. Conflict comparisons adapt between columns and stacked labeled values. Copy actions target eligible non-secret IDs with feedback. Help/About contains a status/marker legend.
+Group admin tools by catalog, activity, sharing, data protection and device actions. Readers see authorization and connection tools. Show the applicable maintenance, update or restore notice with its next action, and explain why connection export is unavailable when it is shown disabled. Keep the local leave action visually distinct and show it once. The existing-state setup checklist shows progress when collapsed and can be hidden when complete.
+
+Publication-review counts filter the visible review only, not publication scope. Conflict comparisons adapt between columns and stacked labeled values. Copy actions target eligible non-secret IDs with feedback. Help/About contains a status/marker legend.
 
 Kotlin, Compose/Material 3, MVVM with immutable UiState, Repository, Room/SQLCipher, Hilt, DataStore, OkHttp, kotlinx.serialization, Android PDF/text layout. minSdk 26; choose current supported stable compile/target SDK and compatible dependencies at implementation time. Package `com.aqaqeer.app`. Permissions INTERNET, ACCESS_NETWORK_STATE. SAF only; no storage permission, camera, or notifications. Foreground refresh/retry only; no promised always-running background worker.
 
