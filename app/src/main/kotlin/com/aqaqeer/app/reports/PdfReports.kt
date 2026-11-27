@@ -70,7 +70,7 @@ private class TableReport(
     private val widths = weights.map { width * it / weights.sum() }
     private val lefts = widths.runningFold(right) { x, w -> x - w }.drop(1)
     private val fill = Paint(Paint.ANTI_ALIAS_FLAG)
-    private val rule = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Color.rgb(122, 90, 18); strokeWidth = 0.8f }
+    private val rule = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = 0xFF14213C.toInt(); strokeWidth = 0.8f }
     private val border = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Color.rgb(215, 218, 221); strokeWidth = 0.4f }
     private val outline = Paint(border).apply { style = Paint.Style.STROKE }
     private val bidi = BidiFormatter.getInstance(true)
@@ -258,12 +258,8 @@ private class TableReport(
             if (portions.all { it.slices.isEmpty() }) { newPage(); continue }
             val height = max(stockHeight, portions.maxOf { it.height }) + padding * 2
             coreColumns.forEachIndexed { i, col ->
-                fill.color = when (col.status(snapshot, med)) {
-                    AvailabilityStatus.AVAILABLE -> Color.rgb(237, 246, 239)
-                    AvailabilityStatus.LOW -> Color.rgb(255, 247, 225)
-                    AvailabilityStatus.OUT -> Color.rgb(255, 237, 235)
-                    null -> if (number % 2 == 0) Color.rgb(249, 250, 251) else Color.WHITE
-                }
+                fill.color = col.status(snapshot, med)?.let(::reportStockFill)
+                    ?: if (number % 2 == 0) Color.rgb(249, 250, 251) else Color.WHITE
                 canvas.drawRect(lefts[i], y, lefts[i] + widths[i], y + height, fill)
                 drawPortion(portions[i], lefts[i] + padding, y + padding, (widths[i] - padding * 2).toInt())
                 // Repeat the short stock label when other core cells continue onto another page.

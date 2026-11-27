@@ -1,6 +1,7 @@
 <resources>
-    <!-- The violet resource names still serve the original default accent slot, now Copper. -->
+    <!-- The violet resource names belong to the saved Copper accent. -->
     <color name="accent_violet_light">#8B4C23</color>
+    <color name="accent_blue_light">#48549A</color>
     <color name="launch_violet">#FCF6F0</color>
     <color name="launch_blue">#F2F6FF</color>
     <color name="launch_green">#EFFAF5</color>

@@ -40,6 +40,32 @@ class HomeProjectionRegressionTest {
         assertEquals(setOf(here.id, other.id), result.availableSearchSections)
     }
 
+    @Test fun stockOnlySnapshotUpdatesReaderResultsAndAvailabilityOrder(): Unit = runBlocking {
+        val index = CatalogSearchIndex(catalog)
+        suspend fun reader(current: CatalogSearchIndex) = current.project(here.id, "Needle", HomeFilters(),
+            HomePreferences(), emptySet(), today = day, readerStockOnly = true)
+        fun stockOrder(current: CatalogSearchIndex) = current.browse(here.id, "", HomeFilters(), HomeSort.AVAILABILITY)
+            .map { it.id }
+
+        val before = reader(index)
+        assertEquals(listOf(a.id), before.visible.map { it.id })
+        assertEquals(listOf(a.id, b.id), before.otherSectionResults.single().rows.map { it.medication.id })
+        assertEquals(listOf(b.id, a.id), stockOrder(index))
+
+        val updated = catalog.copy(availability = listOf(
+            Availability(a.id, other.id, AvailabilityStatus.OUT, F.time),
+            Availability(b.id, here.id, AvailabilityStatus.AVAILABLE, F.time)))
+        val updatedIndex = index.withCatalog(updated)
+        val after = reader(updatedIndex)
+        assertSame(updated, after.catalog)
+        assertEquals(listOf(b.id), after.visible.map { it.id })
+        assertEquals(AvailabilityStatus.AVAILABLE, after.rows.getValue(b.id).status)
+        assertEquals(setOf(here.id), after.availableSearchSections)
+        assertTrue(after.otherSectionResults.isEmpty())
+        assertEquals(listOf(a.id, b.id), stockOrder(updatedIndex))
+        assertEquals(before, reader(index))
+    }
+
     @Test fun statusIntersectionExcludesLowAndOutFromOtherSectionSearch(): Unit = runBlocking {
         val result = project(filters = HomeFilters(statuses = setOf(AvailabilityStatus.AVAILABLE)))
         assertTrue(result.visible.isEmpty())

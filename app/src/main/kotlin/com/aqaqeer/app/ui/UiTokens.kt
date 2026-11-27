@@ -62,7 +62,7 @@ internal object AppStroke {
     val accent = 4.dp
 }
 internal object Alpha {
-    const val stripe = 0.06f
+    const val stripe = 0.04f
     const val ghost = 0.30f
     const val disabled = 0.38f
 }

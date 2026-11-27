@@ -1,34 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<vector xmlns:aapt="http://schemas.android.com/aapt" xmlns:android="http://schemas.android.com/apk/res/android" android:width="24dp" android:height="24dp" android:viewportWidth="24" android:viewportHeight="24">
-    <path android:pathData="M9.4,5.5H14.6V7.1C14.6,8 18.2,8.4 18.2,11V19.9Q18.2,21.5 16.6,21.5H7.4Q5.8,21.5 5.8,19.9V11C5.8,8.4 9.4,8 9.4,7.1Z" android:strokeColor="@color/form_icon_outline" android:strokeWidth="1.05" android:strokeLineCap="round" android:strokeLineJoin="round">
-        <aapt:attr name="android:fillColor">
-            <gradient android:type="linear" android:startX="6" android:startY="11" android:endX="19" android:endY="14">
-                <item android:offset="0" android:color="@color/form_icon_light" />
-                <item android:offset="0.52" android:color="@color/form_icon_body" />
-                <item android:offset="1" android:color="@color/form_icon_shade" />
-            </gradient>
-        </aapt:attr>
-    </path>
-    <path android:pathData="M6.8,12.8Q12,13.7 17.2,12.8V19.7Q17.2,20.5 16.3,20.5H7.7Q6.8,20.5 6.8,19.7Z">
-        <aapt:attr name="android:fillColor">
-            <gradient android:type="linear" android:startX="7" android:startY="12" android:endX="18" android:endY="22">
-                <item android:offset="0" android:color="@color/form_icon_accent_light" />
-                <item android:offset="0.52" android:color="@color/form_icon_accent" />
-                <item android:offset="1" android:color="@color/form_icon_accent_shade" />
-            </gradient>
-        </aapt:attr>
-    </path>
-    <path android:pathData="M8.85,2.6H15.15Q15.9,2.6 15.9,3.35V5.35Q15.9,6.1 15.15,6.1H8.85Q8.1,6.1 8.1,5.35V3.35Q8.1,2.6 8.85,2.6Z" android:strokeColor="@color/form_icon_outline" android:strokeWidth="1.05" android:strokeLineCap="round" android:strokeLineJoin="round">
-        <aapt:attr name="android:fillColor">
-            <gradient android:type="linear" android:startX="8" android:startY="2.5" android:endX="16" android:endY="6.5">
-                <item android:offset="0" android:color="@color/form_icon_accent_light" />
-                <item android:offset="0.52" android:color="@color/form_icon_accent" />
-                <item android:offset="1" android:color="@color/form_icon_accent_shade" />
-            </gradient>
-        </aapt:attr>
-    </path>
-    <path android:pathData="M9.8,3.4V5.1M12,3.4V5.1M14.2,3.4V5.1" android:fillColor="@android:color/transparent" android:strokeColor="@color/form_icon_accent_shade" android:strokeWidth="0.65" android:strokeLineCap="round" android:strokeLineJoin="round" />
-    <path android:pathData="M7.5,10.6V17.7" android:fillColor="@android:color/transparent" android:strokeColor="@color/form_icon_highlight" android:strokeWidth="1.0" android:strokeLineCap="round" android:strokeLineJoin="round" />
+<vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="24dp" android:height="24dp" android:viewportWidth="24" android:viewportHeight="24">
+    <path android:pathData="M9.4,5.5H14.6V7.1C14.6,8 18.2,8.4 18.2,11V19.9Q18.2,21.5 16.6,21.5H7.4Q5.8,21.5 5.8,19.9V11C5.8,8.4 9.4,8 9.4,7.1Z" android:strokeColor="@color/form_icon_outline" android:strokeWidth="1.05" android:strokeLineCap="round" android:strokeLineJoin="round" android:fillColor="@color/form_icon_body" />
+    <path android:pathData="M6.8,12.8Q12,13.7 17.2,12.8V19.7Q17.2,20.5 16.3,20.5H7.7Q6.8,20.5 6.8,19.7Z" android:fillColor="@color/form_icon_accent" />
+    <path android:pathData="M8.85,2.6H15.15Q15.9,2.6 15.9,3.35V5.35Q15.9,6.1 15.15,6.1H8.85Q8.1,6.1 8.1,5.35V3.35Q8.1,2.6 8.85,2.6Z" android:strokeColor="@color/form_icon_outline" android:strokeWidth="1.05" android:strokeLineCap="round" android:strokeLineJoin="round" android:fillColor="@color/form_icon_accent" />
+    <path android:pathData="M9.8,3.4V5.1M12,3.4V5.1M14.2,3.4V5.1" android:fillColor="@android:color/transparent" android:strokeColor="@color/form_icon_outline" android:strokeWidth="0.65" android:strokeLineCap="round" android:strokeLineJoin="round" />
     <path android:pathData="M9.2,13.7H14.8Q15.4,13.7 15.4,14.3V17.5Q15.4,18.1 14.8,18.1H9.2Q8.6,18.1 8.6,17.5V14.3Q8.6,13.7 9.2,13.7Z" android:fillColor="@color/form_icon_body" />
-    <path android:pathData="M10,15.1H14M10,16.5H12.6" android:fillColor="@android:color/transparent" android:strokeColor="@color/form_icon_accent_shade" android:strokeWidth="0.7" android:strokeLineCap="round" android:strokeLineJoin="round" />
+    <path android:pathData="M10,15.1H14M10,16.5H12.6" android:fillColor="@android:color/transparent" android:strokeColor="@color/form_icon_outline" android:strokeWidth="0.7" android:strokeLineCap="round" android:strokeLineJoin="round" />
 </vector>

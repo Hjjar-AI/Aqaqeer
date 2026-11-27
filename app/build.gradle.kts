@@ -39,6 +39,23 @@ abstract class RuntimeNoticeInventory : DefaultTask() {
     }
 }
 
+abstract class GenerateBrandingResources : DefaultTask() {
+    @get:org.gradle.api.tasks.InputFile
+    @get:org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.NONE)
+    abstract val master: org.gradle.api.file.RegularFileProperty
+
+    @get:org.gradle.api.tasks.OutputDirectory
+    abstract val outputDirectory: org.gradle.api.file.DirectoryProperty
+
+    @org.gradle.api.tasks.TaskAction
+    fun copyArtwork() {
+        val source = master.get().asFile
+        val drawables = outputDirectory.dir("drawable-nodpi").get().asFile
+        source.copyTo(drawables.resolve("aqaqeer_launcher.png"), overwrite = true)
+        source.copyTo(drawables.resolve("aqaqeer_logo.png"), overwrite = true)
+    }
+}
+
 // Wrappers reserve before Gradle starts. Reading this tracked property is safe
 // when configuration is reused; never mutate the counter during configuration.
 val requestedPackaging = gradle.startParameter.taskNames.any { path ->
@@ -179,6 +196,11 @@ val runtimeNoticeInventory = tasks.register<RuntimeNoticeInventory>("generateRun
     outputDirectory.set(layout.buildDirectory.dir("generated/runtime-notices"))
 }
 
+val brandingResources = tasks.register<GenerateBrandingResources>("generateBrandingResources") {
+    master.set(rootProject.layout.projectDirectory.file("assets/branding/aqaqeer-logo-matte.png"))
+    outputDirectory.set(layout.buildDirectory.dir("generated/branding/res"))
+}
+
 androidComponents {
     beforeVariants(selector().withBuildType("release")) { variant ->
         if (variant.productFlavors.any { it.second == "demo" }) {
@@ -189,6 +211,7 @@ androidComponents {
         }
     }
     onVariants(selector().all()) { variant ->
+        variant.sources.res?.addGeneratedSourceDirectory(brandingResources, GenerateBrandingResources::outputDirectory)
         variant.hostTests[HostTestBuilder.UNIT_TEST_TYPE]?.let { hostTest ->
             val agentFiles = hostTest.runtimeConfiguration.incoming.artifactView {
                 componentFilter { component ->

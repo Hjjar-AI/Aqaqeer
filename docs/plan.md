@@ -18,7 +18,7 @@
 
 Workflow 03 rate-limit follow-up: source now waits 120/240 seconds between its three dependency-HTTP-429 attempts. Shared setup separates wrapper and dependency cache paths and calls the SDK manager only for missing pinned packages. The next authorized hosted runs should confirm filtered dependency v2 cache save and restore, the SDK preinstalled path and resulting transfer sizes in 03/06. Verify hosted 4/3/2-GiB Gradle, Kotlin and JVM test limits in 03, and check peak runner memory in an emulator workflow before drawing performance conclusions. Retry coverage is also source-implemented for workflows 02/04/05/06/08/10/11/12, with packaging retries after the wrapper reserves its code. Workflows 07/08/16 also cache API 29/35 system-image packages while recreating fresh AVDs. Hosted confirmation of retry and image-cache restore/save paths remains pending. Local builds/tests/lint and workflow dispatch are not resumed.
 
-Current branding follow-up: Cobalt/silver is selected and the approved PNG is copied unchanged into both logo resources. Home launcher padding alone is reduced by equal −3% insets; the taller redraw is rejected and the original proportions retained. Splash framing retains the approved bitmap inset. Source/raster/reference/link checks are complete; packaged Android/PDF rendering and human acceptance remain unverified. No build or device campaign is resumed by this artwork change.
+Current Home and branding follow-up: Home isolates raw search edits, reuses ranked and normalized search work, and derives keyboard visibility for bottom-bar placement. New installs default to Cobalt. Flat dosage and empty-state artwork follows the app’s selected mode. PDF and Excel share stock fills. A separate build task generates both logo resources from the original master. Android behavior, packaged artwork, export rendering and human acceptance remain pending. [Current source evidence](validation.md#repository-home-and-branding-follow-up--2026-11-27)
 
 Current version workflow follow-up: the user requested an initial local/remote reset and confirmed no installed copies. The local counter is0, the remote reservation registry is empty and the next build is0.0.1; existing Releases/APKs/history are retained. Workflow10/11 visibility and blank-by-default automatic production numbering are source-implemented with static checks. Hosted execution of this change remains unverified; the user is pushing commits, and no new build is dispatched here. See [version reset evidence](validation.md#initial-version-sequence-and-automatic-selection--2026-11-24).
 
@@ -90,12 +90,14 @@ For F1, verify the report accordion with narrow RTL layouts, large text and the 
 
 ## Optional startup optimization — PERF / P3
 
-Keep Baseline Profile work active, after the backup audit; independent design may proceed alongside delivery work. **No speed measurements, Macrobenchmark comparison or measurement-based adoption gate is requested.** No speed improvement is established.
+Baseline Profile generation is the next performance project after the Home source change. Backup verification keeps its delivery priority. **No speed measurements, Macrobenchmark comparison or measurement-based adoption gate is requested.**
 
-1. Design an isolated generator/consumer setup using the pinned toolchain and explicit standard/demo selectors. Keep production signing, APK numbering and shared caches unchanged.
+1. Design an isolated opt-in generator and app consumer using the pinned toolchain and explicit Standard and Demo selectors. Use Standard journeys for the artifact shipped to pharmacies. Keep generation outside normal CI, production signing and version reservation.
 2. With separate source/test-authoring authorization, define deterministic startup, Home browsing/search, section switching and detail-opening journeys using public local/demo data. Ensure any profile consumed by standard covers its production paths.
 3. With separate build and owned-hosted-emulator authorization, generate the profile through guided app runs and verify its packaging in the intended artifact. Generation is execution even though no speed is timed; keep it out of ordinary builds and automatic CI.
 4. Retain profile sources, artifact/source provenance, an opt-in regeneration recipe and regeneration triggers. Report generation/packaging evidence without promising a measured benefit.
+
+Typography is a separate UI1 review. Compare the current Arabic medication headings and UI text with the Latin version and email in About. Include long mixed-script medication names, Western digits and 2× font scale. Record the comparison before selecting a font or changing the shipped type styles.
 
 <a id="baseline-and-current-stop"></a>
 

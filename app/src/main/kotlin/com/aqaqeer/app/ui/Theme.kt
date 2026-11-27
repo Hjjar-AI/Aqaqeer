@@ -21,6 +21,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.sp
 import android.content.res.Resources
+import android.content.Context
 import android.content.res.Configuration
 import android.graphics.drawable.ColorDrawable
 import androidx.compose.ui.platform.LocalConfiguration
@@ -105,12 +106,12 @@ private fun accentColors(accent: ThemeAccent, dark: Boolean, resources: Resource
     val palette = when (accent) {
         ThemeAccent.PURPLE -> AccentPalette(launchColor(resources, R.color.accent_violet_light),
             Color(0xFFFFDBC4), Color(0xFF351500), Color(0xFFFFB786), Color(0xFF663510))
-        ThemeAccent.BLUE -> AccentPalette(Color(0xFF405F98),
-            Color(0xFFD9E4FF), Color(0xFF142A51), Color(0xFFB1C6FF), Color(0xFF304A7C))
+        ThemeAccent.BLUE -> AccentPalette(launchColor(resources, R.color.accent_blue_light),
+            Color(0xFFDFE3FF), Color(0xFF191D54), Color(0xFFBBC2FF), Color(0xFF343D7A))
         ThemeAccent.GREEN -> AccentPalette(Color(0xFF007F5D),
             Color(0xFFC9F5E0), Color(0xFF003828), Color(0xFF83E3BA), Color(0xFF064C37))
-        ThemeAccent.ROSE -> AccentPalette(Color(0xFF8F225A),
-            Color(0xFFFFD8EB), Color(0xFF460D2B), Color(0xFFF18CBF), Color(0xFF6E214A))
+        ThemeAccent.ROSE -> AccentPalette(Color(0xFF96323F),
+            Color(0xFFFFDADE), Color(0xFF4D111E), Color(0xFFFFA8AE), Color(0xFF712B38))
     }
     val base = if (dark) DarkColors else LightColors
     val primary = if (dark) palette.darkPrimary else palette.primary
@@ -155,6 +156,7 @@ private fun statusColors(resources: Resources, colors: ColorScheme): StatusColor
         tone(R.color.status_warning_container, R.color.status_warning_content, R.color.status_warning_edge))
 }
 internal val LocalStatusColors = staticCompositionLocalOf<StatusColors> { error("AqaqeerTheme is required") }
+internal val LocalIllustrationContext = staticCompositionLocalOf<Context?> { null }
 
 internal fun themeIsDark(choice: ThemeChoice, systemDark: Boolean): Boolean =
     choice == ThemeChoice.DARK || choice == ThemeChoice.AMOLED || (choice == ThemeChoice.SYSTEM && systemDark)
@@ -201,20 +203,21 @@ internal fun appColorScheme(choice: ThemeChoice, accent: ThemeAccent, systemDark
     }
 }
 
-@Composable fun AqaqeerTheme(choice: ThemeChoice, accent: ThemeAccent = ThemeAccent.PURPLE, content: @Composable () -> Unit) {
+@Composable fun AqaqeerTheme(choice: ThemeChoice, accent: ThemeAccent = ThemeAccent.default, content: @Composable () -> Unit) {
     val systemDark = isSystemInDarkTheme()
     val dark = themeIsDark(choice, systemDark)
     val context = LocalContext.current
     val configuration = LocalConfiguration.current
     val colors = remember(choice, accent, systemDark, context, configuration) { appColorScheme(choice, accent, systemDark, context.resources) }
     // Resource night qualifiers follow the selected app theme, including manual light/dark choices.
-    val statuses = remember(context, configuration, dark, colors) {
+    val themedContext = remember(context, configuration, dark) {
         val selected = Configuration(configuration).apply {
             uiMode = (uiMode and Configuration.UI_MODE_NIGHT_MASK.inv()) or
                 if (dark) Configuration.UI_MODE_NIGHT_YES else Configuration.UI_MODE_NIGHT_NO
         }
-        statusColors(context.createConfigurationContext(selected).resources, colors)
+        context.createConfigurationContext(selected)
     }
+    val statuses = remember(themedContext, colors) { statusColors(themedContext.resources, colors) }
     val view = LocalView.current
     if (!view.isInEditMode) SideEffect {
         (view.context as? android.app.Activity)?.let { activity ->
@@ -229,7 +232,7 @@ internal fun appColorScheme(choice: ThemeChoice, accent: ThemeAccent, systemDark
         }
     }
     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl,
-        LocalStatusColors provides statuses) {
+        LocalStatusColors provides statuses, LocalIllustrationContext provides themedContext) {
         MaterialTheme(colorScheme = colors,
             typography = ArabicTypography, shapes = AppShapes) { ProvideLayoutMetrics(content) }
     }

@@ -90,6 +90,12 @@ internal fun combinedStatus(values: List<AvailabilityStatus>): AvailabilityStatu
     else -> AvailabilityStatus.OUT
 }
 
+internal fun reportStockFill(status: AvailabilityStatus): Int = when (status) {
+    AvailabilityStatus.AVAILABLE -> 0xFFD8F0FF.toInt()
+    AvailabilityStatus.LOW -> 0xFFF0D589.toInt()
+    AvailabilityStatus.OUT -> 0xFFEFB594.toInt()
+}
+
 internal data class ReportColumn(val field: ReportField, val section: Section? = null) {
     val title get() = section?.let { it.nameAr + if (!it.isActive) uiText(R.string.catalog_closed_section_suffix) else "" }
         ?: uiText(if (field == ReportField.AVAILABILITY) R.string.report_overall_heading else field.label)

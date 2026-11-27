@@ -5,6 +5,7 @@ import com.aqaqeer.app.uiText
 import android.content.res.Resources
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.runtime.*
@@ -14,6 +15,8 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalResources
+import androidx.compose.ui.res.painterResource
 import com.aqaqeer.app.R
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -54,6 +57,12 @@ internal object LauncherArtwork {
 
 /** A dedicated decorative illustration keeps empty states independent of logo crop geometry. */
 @Composable internal fun EmptyCapsule(modifier: Modifier = Modifier) {
-    Image(androidx.compose.ui.res.painterResource(R.drawable.empty_state_capsule),
-        contentDescription = null, modifier = modifier, alpha = Alpha.ghost)
+    ThemedIllustration(R.drawable.empty_state_capsule, null, modifier, alpha = Alpha.ghost)
+}
+
+@Composable internal fun ThemedIllustration(@DrawableRes resource: Int, description: String?, modifier: Modifier, alpha: Float = 1f) {
+    val context = LocalIllustrationContext.current ?: LocalContext.current
+    CompositionLocalProvider(LocalContext provides context, LocalResources provides context.resources) {
+        Image(painterResource(resource), contentDescription = description, modifier = modifier, alpha = alpha)
+    }
 }

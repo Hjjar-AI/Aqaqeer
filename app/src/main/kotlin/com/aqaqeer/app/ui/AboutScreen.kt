@@ -9,6 +9,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import com.aqaqeer.app.BuildConfig
@@ -19,7 +20,13 @@ import com.aqaqeer.app.data.*
     val uiText = rememberUiText()
     LazyColumn(Modifier.fillMaxSize().testTag("about"), contentPadding = PaddingValues(UiSpacing.page),
         verticalArrangement = Arrangement.spacedBy(UiSpacing.section), horizontalAlignment = Alignment.CenterHorizontally) {
-        item { BrandEmblem(Modifier.size(Size.emblemLarge)) }
+        item {
+            Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(UiSpacing.related)) {
+                BrandEmblem(Modifier.size(Size.emblemLarge))
+                Icon(painterResource(R.drawable.ic_brand_hexagon), contentDescription = null,
+                    modifier = Modifier.size(Size.iconM), tint = MaterialTheme.colorScheme.outline)
+            }
+        }
         item { ExpandableInformation(uiText(R.string.review_legend), uiText(R.string.review_legend_body) + "\n" + uiText(R.string.review_changed) + ": " + uiText(R.string.review_changed_help)) }
         item {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {

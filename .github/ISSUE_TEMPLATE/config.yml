@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: "الإبلاغ الخاص عن ثغرة / Report a vulnerability privately"
+    url: https://github.com/Hjjar-AI/Aqaqeer/security/advisories/new
+    about: "أرسل تفاصيل الثغرة بشكل خاص / Share vulnerability details privately."

@@ -66,8 +66,11 @@ object MedicationPresentation {
     private val combiningMarks = setOf(Character.NON_SPACING_MARK.toInt(), Character.COMBINING_SPACING_MARK.toInt(), Character.ENCLOSING_MARK.toInt())
 
     /** Map normalized search offsets back to original UTF-16 ranges, including combining marks. */
-    fun matchRanges(text: String, query: String): List<IntRange> {
-        val tokens = normalizedSearch(query).split(' ').filter(String::isNotEmpty)
+    fun matchRanges(text: String, query: String): List<IntRange> = matchRanges(text, searchTokens(normalizedSearch(query)))
+
+    internal fun searchTokens(normalized: String): List<String> = normalized.split(' ').filter(String::isNotEmpty)
+
+    internal fun matchRanges(text: String, tokens: List<String>): List<IntRange> {
         if (tokens.isEmpty()) return emptyList()
         val normalized = StringBuilder()
         val starts = mutableListOf<Int>()

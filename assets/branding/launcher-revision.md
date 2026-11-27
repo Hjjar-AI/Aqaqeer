@@ -2,11 +2,11 @@
 
 ## Current matte wordmark — 2026-11-24
 
-The user adopted the [Gemini reference](aqaqeer-logo-reference.jpeg), requested matte colors, discarded older logo variants and then selected **Cobalt / silver** from the [palette previews](previews/README.md). The complete wordmark retains the two horizontal capsule-shaped upper dots, lower split circular tablet, empty hexagonal counters and navy outlines.
+The user adopted a Gemini reference, requested matte colors, discarded older logo variants and selected **Cobalt / silver** from the palette previews. The [approved master](aqaqeer-logo-matte.png) retains the two horizontal capsule-shaped upper dots, lower split circular tablet, empty hexagonal counters and navy outlines.
 
 Built-in imagegen extracted transparency, produced the matte base and generated color-only palette examples. The [exact prompt set](logo-edit-prompts.txt) records the three accepted stages. The selected palette targets cobalt #3D5E98, matte silver-grey #A9B2BE and the source navy outline. Generated tones/contours can vary from targets; the user-approved cobalt preview itself is copied byte-for-byte as the final master, with no further raster editing.
 
-The [selected master](aqaqeer-logo-matte.png) is **1254 × 1254 RGBA** with alpha 0–255 and transparent background/counters. It is byte-identical to both the [launcher/splash bitmap](../../app/src/main/res/drawable-nodpi/aqaqeer_launcher.png) and [in-app/PDF bitmap](../../app/src/main/res/drawable-nodpi/aqaqeer_logo.png).
+The [selected master](aqaqeer-logo-matte.png) is **1254 × 1254 RGBA** with alpha 0–255 and transparent background and counters. The Android build copies it byte-for-byte under the `aqaqeer_launcher` and `aqaqeer_logo` drawable names for launcher/splash and in-app/PDF use.
 
 - Reference JPEG SHA-256: `9a53bc0a302406caa88ac703205ce372669acadb5492208b9ea0dcbb7b218ef3`
 - Approved cobalt preview, selected master and both resource PNGs SHA-256: `21f5202985278c0c83c78564887a526878bf26ed594435f63f867e95961a4169`

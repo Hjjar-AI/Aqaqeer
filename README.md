@@ -1,7 +1,7 @@
 # Aqaqeer · عقاقير
 
 <p align="center">
-  <img src="app/src/main/res/drawable-nodpi/aqaqeer_logo.png" width="144" alt="Aqaqeer matte cobalt and silver logo">
+  <img src="assets/branding/aqaqeer-logo-matte.png" width="144" alt="Aqaqeer matte cobalt and silver logo">
 </p>
 
 **Medication availability by pharmacy section, with offline viewing and encrypted Telegram sharing.**

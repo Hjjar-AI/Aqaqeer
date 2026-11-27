@@ -44,6 +44,7 @@ import com.aqaqeer.app.data.*
         val browseContent: @Composable () -> Unit = {
             HomeStateContent(viewModel) { state, browse, highlighted -> HomeScreen(ready = catalogState,
                 state = state,
+                savedQuery = viewModel.query,
                 now = now,
                 availabilityBusy = adminBusy,
                 availabilityMessage = adminMessage,

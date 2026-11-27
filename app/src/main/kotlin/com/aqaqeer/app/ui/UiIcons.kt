@@ -2,7 +2,6 @@ package com.aqaqeer.app.ui
 
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.LocalContentColor
-import androidx.compose.ui.graphics.Color
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -36,8 +35,9 @@ internal enum class UiIcon(val resource: Int, val intrinsicColors: Boolean = fal
 }
 
 @Composable internal fun AppIcon(icon: UiIcon, modifier: Modifier = Modifier, description: String? = null, size: androidx.compose.ui.unit.Dp? = null) {
-    Icon(painterResource(icon.resource), contentDescription = description, modifier = if (size == null) modifier else modifier.size(size),
-        tint = if (icon.intrinsicColors) Color.Unspecified else LocalContentColor.current)
+    val sized = if (size == null) modifier else modifier.size(size)
+    if (icon.intrinsicColors) ThemedIllustration(icon.resource, description, sized)
+    else Icon(painterResource(icon.resource), contentDescription = description, modifier = sized, tint = LocalContentColor.current)
 }
 
 /** Only seeded IDs imply a dosage shape; custom forms use a neutral shape with an accessible form label. */

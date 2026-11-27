@@ -8,6 +8,24 @@ Use the [current hosted checkpoint](validation.md#hosted-completion-batch--2026-
 
 [Build](build.md#hosted-emulator-screenshots-and-recordings) owns the current workflow-07 selection and invocation counts. A selector is not a new pass count. Retain passes by revision and environment; the [backup/restore audit](validation.md#backuprestore-requirement-to-evidence-audit--2026-11-22) maps retained per-case results to current obligations and explicit limits.
 
+## Repository, Home and branding regressions — 2026-11-27
+
+One JVM method checks that rebinding the search index after a stock-only edit updates Reader results, section markers, and stock sort order. Three offline Python methods cover Git ignoring backups, redacted rejection after force-add, and the full versus source-only public fixture contract. Four existing Android methods now check query and cursor restoration through activity recreation, the default and saved accent mappings with rendered tabs and artwork, the PDF and Excel stock palettes, and both generated logo drawables. The existing Android selectors and counts are unchanged.
+
+For compilation, the JVM suites, and the offline helpers, run **03 - Checks - Tests and compilation** with `scope=all` and `coverage=false`. For the targeted Android batch, use **07 - Verify - Emulator with visual evidence** on the default branch containing the changes. Set `demo_checks=true` and `standard_functional=true`. The two Demo methods run on both API 29 and 35, and the three Standard methods run on API 35.
+
+`demo_retry_methods`
+
+```text
+HomeUiTest#searchIsReachableDoesNotAutofocusAndClearRestoresBrowsing,LaunchSplashUiTest#readyDestinationTakesOverDuringSplashWithCurrentAnimationSetting
+```
+
+`retry_methods`
+
+```text
+SectionThemeUiTest#retainedAccentKeysAndSectionIndicatorUseTheNewPalette,ReportExportsInstrumentedTest#sectionColumnsRetainDistinctStatusesColorsAndUniqueHeaders,LaunchSplashUiTest#readyDestinationTakesOverDuringSplashWithCurrentAnimationSetting
+```
+
 ## Focused Android follow-up — 2026-11-27
 
 Workflow 07 selects 11 new Standard methods and retains the expanded backup reminder and splash assertions. The provider fixture delivers part of a real CSV stream before failing. The Home cases exercise an active IME at 2× RTL text and a deliberately retained stale projection. Backup coverage follows the live PIN across restore review and a separate publication, and challenges reuse of a maintenance receipt from another operation. Report picker results pass through the actual activity-result contract; the test inspects the new A5 PDF and workbook for the selected rows.

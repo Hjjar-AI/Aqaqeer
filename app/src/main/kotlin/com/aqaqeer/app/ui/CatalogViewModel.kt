@@ -59,7 +59,7 @@ data class AppUiState(
     val filters: HomeFilters = HomeFilters(),
     val refresh: RefreshUiState = RefreshUiState(),
     val fetchedIds: Set<String> = emptySet(),
-    val accent: ThemeAccent = ThemeAccent.PURPLE,
+    val accent: ThemeAccent = ThemeAccent.default,
     val online: Boolean = true,
 ) {
     val destination: Route = RouteStorage.decode(route)
@@ -288,7 +288,7 @@ class CatalogViewModel @Inject constructor(
         beforeRoute = ::beforeRoute, beforeBack = ::beforeBack)
     private val route = navigation.route
     private val section = savedState.getStateFlow<String?>("section", null)
-    private val query = savedState.getStateFlow("query", "")
+    internal val query = savedState.getStateFlow("query", "")
     private val appliedQuery = query.debounce { if (MedicationPresentation.normalizedSearch(it).isEmpty()) 0L else 250L }
     private val statuses = savedState.getStateFlow("statuses", arrayListOf<String>())
     private val categories = savedState.getStateFlow("categories", arrayListOf<String>())
@@ -360,22 +360,29 @@ class CatalogViewModel @Inject constructor(
             }
         }
     }
+    internal val homeState = state.map { it.copy(query = "") }.distinctUntilChanged()
+        .stateIn(viewModelScope, SharingStarted.Eagerly, state.value.copy(query = ""))
     internal val shellState = state.map { it.copy(query = "", appliedQuery = "", filters = HomeFilters(), refresh = RefreshUiState()) }.distinctUntilChanged()
         .stateIn(viewModelScope, SharingStarted.Eagerly, state.value)
     internal val refreshUiState = state.map { it.refresh }.distinctUntilChanged()
         .stateIn(viewModelScope, SharingStarted.Eagerly, state.value.refresh)
     internal val drawerFilters = state.map { it.filters }.distinctUntilChanged()
         .stateIn(viewModelScope, SharingStarted.Eagerly, HomeFilters())
-    private val searchIndex = state.map { (it.catalog as? CatalogState.Ready)?.catalog }.distinctUntilChanged()
-        .mapLatest { catalog -> withContext(kotlinx.coroutines.Dispatchers.Default) { catalog?.let(::CatalogSearchIndex) } }
-        .stateIn(viewModelScope, SharingStarted.Eagerly, null)
+    private val searchIndex = flow {
+        var previous: CatalogSearchIndex? = null
+        emitAll(homeState.map { (it.catalog as? CatalogState.Ready)?.catalog }.distinctUntilChanged().mapLatest { catalog ->
+            withContext(kotlinx.coroutines.Dispatchers.Default) {
+                catalog?.let { previous?.withCatalog(it) ?: CatalogSearchIndex(it) }
+            }.also { previous = it }
+        })
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, null)
     private val browseDay = flow {
         while (true) {
             emit(Instant.now())
             delay(30_000)
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(0), Instant.now())
-    internal val homeBrowse = combine(searchIndex, combine(state, browseDay) { current, now -> current to now }.map { (current, now) ->
+    internal val homeBrowse = combine(searchIndex, combine(homeState, browseDay) { current, now -> current to now }.map { (current, now) ->
         BrowseRequest(current.sectionId, current.appliedQuery, current.filters, current.homePreferences,
             (current.catalog as? CatalogState.Ready)?.unpublishedMedicationIds.orEmpty(), current.fetchedIds,
             MedicationPresentation.today(now, (current.catalog as? CatalogState.Ready)?.catalog?.pharmacy?.timezone ?: DEFAULT_PRESENTATION_TIMEZONE),

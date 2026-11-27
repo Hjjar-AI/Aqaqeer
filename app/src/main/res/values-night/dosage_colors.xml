@@ -1,11 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="form_icon_outline">#A0C3C9</color>
-    <color name="form_icon_body">#3B5660</color>
-    <color name="form_icon_light">#78939B</color>
-    <color name="form_icon_shade">#253B45</color>
-    <color name="form_icon_accent">#55ABA5</color>
-    <color name="form_icon_accent_light">#A3D8CF</color>
-    <color name="form_icon_accent_shade">#2C716F</color>
-    <color name="form_icon_highlight">#E8FAF8</color>
+    <color name="form_icon_outline">#B8C7D9</color>
+    <color name="form_icon_body">#34455D</color>
+    <color name="form_icon_accent">#7B9AC4</color>
 </resources>

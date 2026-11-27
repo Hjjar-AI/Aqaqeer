@@ -22,6 +22,8 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalDensity
 import com.aqaqeer.app.data.*
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.isActive
 import java.time.Instant
 
@@ -39,7 +41,8 @@ internal enum class HomeLeadingItem { BULK_HELP, OPERATION, NO_SECTION, SEARCH_S
     publicationBlockReason: String? = null,
     projection: HomeBrowseResult = HomeBrowseResult(),
     highlightedMedication: String? = null,
-    actions: HomeActions) {
+    actions: HomeActions,
+    savedQuery: StateFlow<String>? = null) {
     val uiText = rememberUiText()
     val selectSection = actions.selectSection
     val setQuery = actions.setQuery
@@ -124,14 +127,27 @@ internal enum class HomeLeadingItem { BULK_HELP, OPERATION, NO_SECTION, SEARCH_S
     val otherSectionPreferences = remember(state.homePreferences) { state.homePreferences.copy(groupingEnabled = false) }
     val displayQuery = displayed?.query.orEmpty()
     val normalizedDisplayQuery = remember(displayQuery) { MedicationPresentation.normalizedSearch(displayQuery) }
-    val searching = normalizedDisplayQuery.isNotEmpty()
+    val highlightTokens = remember(normalizedDisplayQuery) { MedicationPresentation.searchTokens(normalizedDisplayQuery) }
+    val searching = highlightTokens.isNotEmpty()
     val editorSelectionValid = editor?.let { captured -> captured.expected.all { (id, before) ->
         id in medicationIds && catalog.status(id, captured.section.id) == before
     } } == true
-    var searchText by rememberSaveable(catalog.pharmacy.pharmacyId, stateSaver = TextFieldValue.Saver) { mutableStateOf(TextFieldValue(state.query)) }
-    fun changeSearch(value: TextFieldValue) { searchText = value; setQuery(value.text) }
+    val searchText = rememberSaveable(catalog.pharmacy.pharmacyId, stateSaver = TextFieldValue.Saver) {
+        mutableStateOf(TextFieldValue(savedQuery?.value ?: state.query))
+    }
+    LaunchedEffect(savedQuery, searchText) {
+        val queryFlow = savedQuery ?: return@LaunchedEffect
+        queryFlow.collect {
+            val current = queryFlow.value
+            if (searchText.value.text != current) searchText.value = TextFieldValue(current)
+        }
+    }
+    fun changeSearch(value: TextFieldValue) {
+        searchText.value = value
+        setQuery(value.text)
+    }
     val browseHeading: @Composable () -> Unit = {
-        HomeSectionsBar(active, selected?.id, catalog.outCounts, selectSection,
+        HomeSectionsBar(active, selected?.id, selectSection,
             availableSearchSections = if (projectionReady) projection.availableSearchSections else emptySet())
     }
     fun openCard(id: String) {
@@ -159,7 +175,9 @@ internal enum class HomeLeadingItem { BULK_HELP, OPERATION, NO_SECTION, SEARCH_S
     }
     BoxWithConstraints(Modifier.fillMaxSize()) {
         val compactHeight = LocalLayoutMetrics.current.compact(maxHeight)
-        val keyboardOpen = WindowInsets.ime.getBottom(LocalDensity.current) > 0
+        val ime = WindowInsets.ime
+        val density = LocalDensity.current
+        val keyboardOpen by remember(ime, density) { derivedStateOf { ime.getBottom(density) > 0 } }
         val showBottomBars = state.homePreferences.searchAtBottom || state.homePreferences.sectionsAtBottom && !keyboardOpen
         val reportBottomHeight by rememberUpdatedState(onBottomBarsHeightChanged)
         SideEffect { if (!showBottomBars) reportBottomHeight(0) }
@@ -229,7 +247,7 @@ internal enum class HomeLeadingItem { BULK_HELP, OPERATION, NO_SECTION, SEARCH_S
                     selectedIds - medication.id else selectedIds + medication.id) },
                 onClick = { openCard(medication.id) }, selectionEnabled = !availabilityBusy && medication.id in medicationIds && (!bulkMode || projectionReady) &&
                     (editor == null || editor?.bulk == true || editorSelectionValid),
-                modifier = Modifier.animateItem(), query = displayQuery, highlighted = medication.id == highlightedMedication,
+                modifier = Modifier.animateItem(), highlightTokens = highlightTokens, highlighted = medication.id == highlightedMedication,
                 unpublished = ready.admin && medication.id in ready.unpublishedMedicationIds,
                 onLongClick = if (canEdit && saveBulk != null && selected != null && !bulkMode && !availabilityBusy && medication.id in medicationIds) ({
                     if (contextValid && editor == null && !filtersOpen && !availabilityInProgress() && canOpenHomeModal()) {
@@ -259,7 +277,8 @@ internal enum class HomeLeadingItem { BULK_HELP, OPERATION, NO_SECTION, SEARCH_S
                         toggleGroup = { group -> collapsedGroups = if (group in collapsedGroups) collapsedGroups - group else collapsedGroups + group },
                         leadingContent = {
                             leadingItems.forEach { leading ->
-                                item(key = if (leading == HomeLeadingItem.SEARCH_SECTION) "current_search_section_${selected?.id}" else "home_leading_${leading.name}", span = { GridItemSpan(maxLineSpan) }) {
+                                item(key = if (leading == HomeLeadingItem.SEARCH_SECTION) "current_search_section_${selected?.id}" else "home_leading_${leading.name}",
+                                    span = { GridItemSpan(maxLineSpan) }, contentType = leading) {
                                     when (leading) {
                                         HomeLeadingItem.BULK_HELP -> SupportingText(uiText(R.string.home_bulk_selection_retention_help))
                                         HomeLeadingItem.OPERATION -> InlineOperationStatus(availabilityBusy, availabilityMessage)
@@ -276,7 +295,7 @@ internal enum class HomeLeadingItem { BULK_HELP, OPERATION, NO_SECTION, SEARCH_S
                                                 if (canEdit && openAddMedication != null) AppButton(onClick = openAddMedication) { Text(uiText(R.string.navigation_add_medication_title)) }
                                             } else {
                                                 SupportingText(uiText(R.string.home_no_matches_help))
-                                                if (canEdit) AppButton(variant = AppButtonVariant.QUIET, onClick = { prefillMedication(searchText.text) }) { Text(uiText(R.string.home_add_search_name_action)) }
+                                                if (canEdit) AppButton(variant = AppButtonVariant.QUIET, onClick = { prefillMedication(searchText.value.text) }) { Text(uiText(R.string.home_add_search_name_action)) }
                                                 AppButton(variant = AppButtonVariant.QUIET, onClick = { focus.clearFocus(); changeSearch(TextFieldValue("")); clearFilters() }) { Text(uiText(R.string.home_clear_search_filters_action)) }
                                             }
                                         }
@@ -287,7 +306,7 @@ internal enum class HomeLeadingItem { BULK_HELP, OPERATION, NO_SECTION, SEARCH_S
                             MedicationCard(row, result.section.id, otherSectionPreferences, today,
                                     onQuickEdit = null, bulkSelected = null, toggleSelection = {},
                                     onClick = { openCard(row.medication.id) },
-                                    modifier = Modifier.animateItem(), query = displayQuery,
+                                    modifier = Modifier.animateItem(), highlightTokens = highlightTokens,
                                     highlighted = row.medication.id == highlightedMedication,
                                     unpublished = ready.admin && row.unpublished)
                         })

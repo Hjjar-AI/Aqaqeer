@@ -26,6 +26,21 @@ updates:
     open-pull-requests-limit: 5
     cooldown:
       default-days: 7
+    ignore:
+      - dependency-name: 'com.android.application:*'
+        update-types: [version-update:semver-major]
+      - dependency-name: 'com.android.tools.build:gradle'
+        update-types: [version-update:semver-major]
+      - dependency-name: 'org.jetbrains.kotlin.plugin.*:*'
+        update-types: [version-update:semver-major]
+      - dependency-name: 'org.jetbrains.kotlin:kotlin-gradle-plugin'
+        update-types: [version-update:semver-major]
+      - dependency-name: 'com.google.devtools.ksp:*'
+        update-types: [version-update:semver-major]
+      - dependency-name: 'com.google.dagger.hilt.android:*'
+        update-types: [version-update:semver-major]
+      - dependency-name: 'com.google.dagger:hilt-*'
+        update-types: [version-update:semver-major]
     groups:
       android-toolchain:
         patterns:

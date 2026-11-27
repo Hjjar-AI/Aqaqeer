@@ -122,10 +122,13 @@ internal object ExcelReports {
                 start("fonts"); attr("count", 2)
                 for (strong in listOf(false, true)) {
                     start("font"); empty("sz", "val" to 11); empty("name", "val" to "Arial")
+                    empty("color", "rgb" to "FF000000")
                     if (strong) empty("b")
                     end("font")
                 }; end("fonts")
-                val fills = listOf(null, null, "FFE9E2F3", "FFF8F6FA", "FFE5F3E8", "FFFFF1CE", "FFFFE2DF")
+                val stockFills = listOf(AvailabilityStatus.AVAILABLE, AvailabilityStatus.LOW, AvailabilityStatus.OUT)
+                    .map { "%08X".format(java.util.Locale.ROOT, reportStockFill(it)) }
+                val fills = listOf(null, null, "FFE9E2F3", "FFF8F6FA") + stockFills
                 start("fills"); attr("count", fills.size)
                 fills.forEachIndexed { i, color ->
                     start("fill"); start("patternFill"); attr("patternType", if (i == 0) "none" else if (i == 1) "gray125" else "solid")

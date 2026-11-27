@@ -2,6 +2,7 @@ package com.aqaqeer.app
 
 import android.animation.ValueAnimator
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.background
@@ -19,6 +20,7 @@ import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
+import androidx.test.platform.app.InstrumentationRegistry
 import com.aqaqeer.app.data.ThemeChoice
 import com.aqaqeer.app.ui.AqaqeerTheme
 import com.aqaqeer.app.ui.LaunchSplash
@@ -31,6 +33,22 @@ class LaunchSplashUiTest {
     @get:Rule val compose = createComposeRule()
 
     @Test fun readyDestinationTakesOverDuringSplashWithCurrentAnimationSetting() {
+        val resources = InstrumentationRegistry.getInstrumentation().targetContext.resources
+        val options = BitmapFactory.Options().apply { inScaled = false }
+        val launcher = requireNotNull(BitmapFactory.decodeResource(resources, R.drawable.aqaqeer_launcher, options))
+        try {
+            val emblem = requireNotNull(BitmapFactory.decodeResource(resources, R.drawable.aqaqeer_logo, options))
+            try {
+                assertEquals(1254, launcher.width)
+                assertEquals(1254, launcher.height)
+                assertEquals(0, android.graphics.Color.alpha(launcher.getPixel(0, 0)))
+                assertTrue("Packaged launcher and app/PDF emblem should contain the same artwork", launcher.sameAs(emblem))
+            } finally {
+                emblem.recycle()
+            }
+        } finally {
+            launcher.recycle()
+        }
         assertHandoff(ValueAnimator.areAnimatorsEnabled())
     }
 

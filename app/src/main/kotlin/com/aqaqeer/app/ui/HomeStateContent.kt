@@ -8,7 +8,7 @@ import com.aqaqeer.app.data.*
 
 @Composable internal fun HomeStateContent(vm: CatalogViewModel,
     content: @Composable (AppUiState, HomeBrowseResult, String?) -> Unit) {
-    val state by vm.state.collectAsStateWithLifecycle()
+    val state by vm.homeState.collectAsStateWithLifecycle()
     val browse by vm.homeBrowse.collectAsStateWithLifecycle()
     val highlighted by vm.highlightedMedication.collectAsStateWithLifecycle()
     LaunchedEffect(highlighted) { if (highlighted != null) { kotlinx.coroutines.delay(2500); vm.highlightedMedication.compareAndSet(highlighted, null) } }

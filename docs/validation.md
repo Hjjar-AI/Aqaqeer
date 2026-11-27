@@ -14,6 +14,16 @@ The repair declares the PDF column list types explicitly and names the filtered 
 
 [Requirements](requirements.md) define acceptance; [plan](plan.md) owns remaining work. The evidence manifest (local-only: `../local/verification/manifest.json`) retains original results, public hashes and provenance. Ignored evidence may be absent in fresh checkouts. Source checks, compilation, runtime results and human acceptance remain distinct.
 
+## Repository, Home and branding follow-up — 2026-11-27
+
+Source changes start at `af59c23`. The integrity checker protects pharmacy backups and checks that the allowlisted public fixture is tracked and present in full mode. In an isolated Git repository with synthetic files, the backup and fixture were ignored, the full check detected both untracked and missing fixtures, and the source-only check rejected a force-added backup with a redacted diagnostic.
+
+Reviewed Home’s restored query, applied-query freshness, search and stock ordering, Reader filtering and section-hint contracts against the affected production callers. Source-only integrity, parsed policy for 16 workflows, local links, whitespace, 71 Android XML files and 391 changed-source resource references passed. Cobalt and Rose label pairs reach at least 6.98:1, their checked indicators 5.45:1, and black print status labels 11.71:1. Print fill luminance decreases from Available through Low to Out. The sole PNG master retains the approved SHA-256. Both removed source copies matched it before removal.
+
+The test-authoring follow-up updates four Android methods, adds one JVM and three offline Python methods, and retains the existing workflow selections. The new or revised assertions cover query and cursor restoration, fresh stock after index reuse, backup and fixture handling, saved accent compatibility, native fallback resources, dosage artwork under opposite app and system themes, the PDF and Excel status palette, and the generated logo drawables. [Exact hosted inputs](test-coverage.md#repository-home-and-branding-regressions--2026-11-27)
+
+Compilation, generated resources inside APKs, keyboard and browse behavior, visual and print acceptance, and timing remain unverified. The separate typography review and opt-in Baseline Profile work are recorded in the [plan](plan.md#performance-tooling--planned).
+
 ## Hosted workflows 03 and 06 — 2026-11-25
 
 Both user-run workflows used `932f2a9` on Final, attempt 1. Workflow 03 used `scope=all` and `coverage=true`. Standard JVM recorded 643 passes and 48 flavor skips. Demo JVM recorded 676 passes and 15 flavor skips. Each inventory had 691 cases across 52 XML suites, with zero failures or errors and no case skipped in both flavors. Reader scheduler, progress and transport suites passed on both flavors. The 30 offline helpers and public JDK vectors passed. Both debug and instrumentation flavors compiled. Release stopped in Gradle plugin resolution before compilation because the runner could not resolve the Kotlin Compose `2.4.21` plugin marker. The log supplies no HTTP status, and the other jobs resolved the same pin. JVM coverage was 17.68% line / 17.26% branch for Standard and 19.47% / 18.39% for Demo. No device tests ran. [Workflow 03 #21](https://github.com/Hjjar-AI/Aqaqeer/actions/runs/45591154331)

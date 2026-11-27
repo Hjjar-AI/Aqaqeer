@@ -540,7 +540,7 @@ When lint is authorized while tests remain stopped:
   --console=plain --warning-mode fail :app:lintStandardDebug :app:lintDemoDebug
 ```
 
-The [helper](../.github/production-lint.init.gradle) disables both test-source analysis flags and enables HTML/XML. Retain fresh reports/logs and reconcile selected tasks; lint does not reserve a code. Version notices remain informational. The sole launcher shape exception is scoped to `src/main/res/drawable-nodpi/aqaqeer_launcher.png`. Arabic language splitting is disabled; release enables minification/resource shrinking.
+The [helper](../.github/production-lint.init.gradle) disables both test-source analysis flags and enables HTML/XML. Retain fresh reports/logs and reconcile selected tasks; lint does not reserve a code. Version notices remain informational. The launcher shape exception targets `generated/branding/res/drawable-nodpi/aqaqeer_launcher.png` within the app build directory. Arabic language splitting is disabled; release enables minification/resource shrinking.
 
 ## Fresh initial Room export
 

@@ -2,6 +2,7 @@ package com.aqaqeer.app
 
 import android.graphics.Bitmap
 import android.graphics.Color
+import android.graphics.Matrix
 import android.graphics.pdf.PdfRenderer
 import android.os.ParcelFileDescriptor
 import com.aqaqeer.app.data.*
@@ -14,12 +15,14 @@ import com.aqaqeer.app.reports.*
 import kotlinx.coroutines.*
 import org.junit.*
 import org.junit.Assert.*
+import org.w3c.dom.Element
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.IOException
 import java.io.OutputStream
 import java.time.LocalDate
 import kotlin.coroutines.EmptyCoroutineContext
+import kotlin.math.abs
 
 /** Uses Android's real XML serializer and PDF/font stack. Execution belongs to workflow 07. */
 class ReportExportsInstrumentedTest {
@@ -179,18 +182,85 @@ class ReportExportsInstrumentedTest {
         assertEquals(scientific + "\nEnglish identity", rows.filterNot { it[1] == reference }.joinToString("") { it[1] })
         assertEquals(note, rows.joinToString("") { it[2] })
     }
-    @Test fun sectionColumnsRetainDistinctStatusesColorsAndUniqueHeaders() {
+    @Test fun sectionColumnsRetainDistinctStatusesColorsAndUniqueHeaders(): Unit = runBlocking {
         val base = snapshot(ReportOptions(fields = setOf(ReportField.SCIENTIFIC, ReportField.AVAILABILITY), availability = ReportAvailability.PER_SECTION))
         val sections = listOf(base.sections.single().copy(nameAr = "اسم مكرر"), Section(newId(), "اسم مكرر"), Section(newId(), "اسم مكرر", isActive = false))
         val med = base.medications.single()
-        val book = workbook(base.copy(sections = sections, availability = listOf(
+        val captured = base.copy(sections = sections, availability = listOf(
             Availability(med.id, sections[0].id, AvailabilityStatus.AVAILABLE, F.time),
-            Availability(med.id, sections[1].id, AvailabilityStatus.LOW, F.time))))
+            Availability(med.id, sections[1].id, AvailabilityStatus.LOW, F.time)))
+        val book = workbook(captured)
         assertEquals(listOf("متوفر", "توفر محدود", "غير متوفر"), book.rows("Medications")[1].drop(2))
         val cells = book.elements("xl/worksheets/sheet2.xml", "c").filter { it.getAttribute("r") in setOf("C2", "D2", "E2") }
         assertEquals(listOf("3", "4", "5"), cells.map { it.getAttribute("s") })
-        val fills = book.elements("xl/styles.xml", "fgColor").map { it.getAttribute("rgb") }
-        assertTrue(fills.containsAll(listOf("FFE5F3E8", "FFFFF1CE", "FFFFE2DF")))
+        val expectedFills = listOf("FFD8F0FF", "FFF0D589", "FFEFB594")
+        val stylesPath = "xl/styles.xml"
+        val fills = book.elements(stylesPath, "fill")
+        val fonts = book.elements(stylesPath, "font")
+        val styles = book.elements(stylesPath, "cellXfs").single().getElementsByTagNameNS("*", "xf")
+        assertEquals(expectedFills, cells.map { cell ->
+            val style = styles.item(cell.getAttribute("s").toInt()) as Element
+            val font = fonts[style.getAttribute("fontId").toInt()]
+            val textColor = font.getElementsByTagNameNS("*", "color").item(0) as Element
+            assertEquals("FF000000", textColor.getAttribute("rgb"))
+            val fill = fills[style.getAttribute("fillId").toInt()]
+            (fill.getElementsByTagNameNS("*", "fgColor").item(0) as Element).getAttribute("rgb")
+        })
+
+        val file = File(profile.root, "section-stock-palette.pdf")
+        val document = PdfReports(profile.context).render(captured)
+        try { file.outputStream().use { document.writeTo(it) } } finally { document.close() }
+        assertPdfStockPalette(file, expectedFills.map { it.toLong(16).toInt() })
+    }
+
+    private fun assertPdfStockPalette(file: File, colors: List<Int>) {
+        fun matches(pixel: Int, expected: Int) = abs(Color.red(pixel) - Color.red(expected)) <= 2 &&
+            abs(Color.green(pixel) - Color.green(expected)) <= 2 && abs(Color.blue(pixel) - Color.blue(expected)) <= 2
+
+        val navy = Color.rgb(0x14, 0x21, 0x3C)
+        val scale = 3
+        val transform = Matrix().apply { setScale(scale.toFloat(), scale.toFloat()) }
+        var stockRow = false
+        var navyRule = false
+        PdfRenderer(ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY)).use { renderer ->
+            for (index in 0 until renderer.pageCount) {
+                renderer.openPage(index).use { page ->
+                    val bitmap = Bitmap.createBitmap(page.width * scale, page.height * scale, Bitmap.Config.ARGB_8888)
+                    try {
+                        bitmap.eraseColor(Color.WHITE)
+                        page.render(bitmap, null, transform, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
+                        val row = IntArray(bitmap.width)
+                        val counts = IntArray(colors.size)
+                        val first = IntArray(colors.size)
+                        for (y in 0 until bitmap.height) {
+                            bitmap.getPixels(row, 0, row.size, 0, y, row.size, 1)
+                            if (!navyRule && index == 0 && y < 100 * scale) {
+                                navyRule = row.count { matches(it, navy) } > row.size / 2
+                            }
+                            if (!stockRow) {
+                                counts.fill(0)
+                                first.fill(-1)
+                                row.forEachIndexed { x, pixel ->
+                                    val color = colors.indexOfFirst { matches(pixel, it) }
+                                    if (color >= 0) {
+                                        if (counts[color] == 0) first[color] = x
+                                        counts[color]++
+                                    }
+                                }
+                                stockRow = counts.all { it > 8 * scale } &&
+                                    (1 until first.size).all { first[it - 1] > first[it] }
+                            }
+                            if (stockRow && navyRule) break
+                        }
+                    } finally {
+                        bitmap.recycle()
+                    }
+                }
+                if (stockRow && navyRule) break
+            }
+        }
+        assertTrue("PDF stock cells show Available, Low and Out in right-to-left column order", stockRow)
+        assertTrue("PDF first-page header has a logo-navy rule", navyRule)
     }
     @Test fun categoryGroupingPreservesOrdinaryRowsAndAlternatingStyles() {
         val base = snapshot(ReportOptions(fields = setOf(ReportField.SCIENTIFIC, ReportField.CATEGORY)))

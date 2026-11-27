@@ -24,8 +24,13 @@ enum class ThemeAccent {
     PURPLE, BLUE, GREEN, ROSE;
 
     companion object {
-        internal fun fromStoredName(name: String?): ThemeAccent =
-            if (name == "CRIMSON") ROSE else entries.firstOrNull { it.name == name } ?: PURPLE
+        internal val default = BLUE
+
+        internal fun fromStoredName(name: String?): ThemeAccent = when (name) {
+            null -> default
+            "CRIMSON" -> ROSE
+            else -> entries.firstOrNull { it.name == name } ?: PURPLE
+        }
     }
 }
 

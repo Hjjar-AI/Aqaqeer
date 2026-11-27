@@ -3,8 +3,6 @@ package com.aqaqeer.app.ui
 import com.aqaqeer.app.uiText
 import com.aqaqeer.app.R
 
-import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.selection.toggleable
@@ -12,7 +10,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.draw.clip
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
@@ -31,17 +28,19 @@ import java.time.LocalDate
 
 @Composable internal fun MedicationNameLines(ar: String?, en: String?, mode: NameDisplay, prominent: Boolean = false,
     query: String = "", primaryStyle: TextStyle = MaterialTheme.typography.titleLarge, maxLines: Int = Int.MAX_VALUE,
-    secondary: Boolean = false, strength: String? = null, titleTrailing: (@Composable () -> Unit)? = null) {
+    secondary: Boolean = false, strength: String? = null, highlightTokens: List<String>? = null,
+    titleTrailing: (@Composable () -> Unit)? = null) {
     val uiText = rememberUiText()
     val separateStrength = strength != null && maxLines != Int.MAX_VALUE
     val names = remember(ar, en, mode) { MedicationPresentation.names(ar, en, mode) }
+    val tokens = highlightTokens ?: remember(query) { MedicationPresentation.searchTokens(MedicationPresentation.normalizedSearch(query)) }
     names.forEachIndexed { index, name ->
         val highlight = MaterialTheme.colorScheme.primary
-        val text = remember(name, query, highlight, strength, index, separateStrength) { buildAnnotatedString {
+        val text = remember(name, tokens, highlight, strength, index, separateStrength) { buildAnnotatedString {
             if (name.english) append('\u2066')
             val start = length
             append(name.text)
-            MedicationPresentation.matchRanges(name.text, query).forEach { range ->
+            MedicationPresentation.matchRanges(name.text, tokens).forEach { range ->
                 addStyle(SpanStyle(color = highlight, fontWeight = FontWeight.Bold), start + range.first, start + range.last + 1)
             }
             if (strength != null && index == 0 && !separateStrength) append(" - " + if (name.english) MedicationPresentation.westernDigits(strength) else bidi(MedicationPresentation.westernDigits(strength)))
@@ -69,10 +68,11 @@ import java.time.LocalDate
 
 @Composable internal fun MedicationSummary(medication: Medication, names: NameDisplay = NameDisplay.BOTH,
     prominent: Boolean = false, form: String? = null, query: String = "",
-    primaryStyle: TextStyle = MaterialTheme.typography.titleLarge, titleTrailing: (@Composable () -> Unit)? = null) {
+    primaryStyle: TextStyle = MaterialTheme.typography.titleLarge, highlightTokens: List<String>? = null,
+    titleTrailing: (@Composable () -> Unit)? = null) {
     val uiText = rememberUiText()
     MedicationNameLines(medication.genericAr, medication.genericEn, names, prominent, query, primaryStyle,
-        strength = medication.strength, titleTrailing = titleTrailing)
+        strength = medication.strength, titleTrailing = titleTrailing, highlightTokens = highlightTokens)
     if (medication.nameAr != null || medication.nameEn != null) {
         val commercial = MedicationPresentation.names(medication.nameAr, medication.nameEn, names).joinToString(" · ") { it.text }
         Text(uiText(R.string.catalog_trade_name_heading) + ": " + bidi(commercial),
@@ -103,7 +103,8 @@ import java.time.LocalDate
     bulkSelected: Boolean?, toggleSelection: () -> Unit, onClick: () -> Unit, modifier: Modifier = Modifier,
     selectionEnabled: Boolean = true, query: String = "", unpublished: Boolean = false,
     onLongClick: (() -> Unit)? = null, highlighted: Boolean = false,
-    reserveSelectionSpace: Boolean = false, quickMenuOpen: Boolean = false, dismissQuickMenu: () -> Unit = {}, chooseStatus: (AvailabilityStatus) -> Unit = {}, editableStatus: Boolean = onQuickEdit != null, savingStatus: Boolean = false) {
+    reserveSelectionSpace: Boolean = false, quickMenuOpen: Boolean = false, dismissQuickMenu: () -> Unit = {}, chooseStatus: (AvailabilityStatus) -> Unit = {}, editableStatus: Boolean = onQuickEdit != null, savingStatus: Boolean = false,
+    highlightTokens: List<String>? = null) {
     val uiText = rememberUiText()
     val medication = row.medication
     val compact = preferences.layout == CardLayout.COMPACT
@@ -111,7 +112,7 @@ import java.time.LocalDate
     val formName = form?.nameAr ?: uiText(R.string.catalog_unknown_dosage_form_label)
     val name = remember(medication, formName) { MedicationPresentation.identity(medication, formName) }
     val status = row.status
-    val edge by animateColorAsState(statusTone(status).edge, tween(Motion.standard), label = "status edge")
+    val edge = statusTone(status).edge
     val unavailableStripe = MaterialTheme.colorScheme.onSurface.copy(alpha = Alpha.stripe)
     val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
     val pendingMarker: (@Composable () -> Unit)? = if (unpublished || row.fetched) ({
@@ -152,9 +153,10 @@ import java.time.LocalDate
                     if (compact) {
                         MedicationNameLines(medication.genericAr, medication.genericEn, preferences.names,
                             prominent = true, query = query, primaryStyle = MaterialTheme.typography.titleMedium, maxLines = 2,
-                            strength = medication.strength, titleTrailing = pendingMarker)
+                            strength = medication.strength, titleTrailing = pendingMarker, highlightTokens = highlightTokens)
                     } else {
-                        MedicationSummary(medication, preferences.names, prominent = true, query = query, titleTrailing = pendingMarker)
+                        MedicationSummary(medication, preferences.names, prominent = true, query = query,
+                            titleTrailing = pendingMarker, highlightTokens = highlightTokens)
                     }
                 }
             }

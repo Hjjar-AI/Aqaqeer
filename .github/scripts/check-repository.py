@@ -24,7 +24,7 @@ SECRET_PATTERNS = {
 
 # Add only exact paths of explicitly reviewed public fixtures, never directories/globs.
 PUBLIC_FIXTURE_PATHS = frozenset({'app/src/androidTest/assets/m3-import.aqz'})
-SENSITIVE_SUFFIXES = frozenset(('.jks', '.keystore', '.p12', '.pfx', '.pem', '.key', '.p8', '.aqz'))
+SENSITIVE_SUFFIXES = frozenset(('.jks', '.keystore', '.p12', '.pfx', '.pem', '.key', '.p8', '.aqz', '.aqbak'))
 
 
 def markdown_body(text):
@@ -109,11 +109,18 @@ def main():
     parser.add_argument('--source-only', action='store_true', help='Exclude tests/inventories when test inspection is not authorized')
     args = parser.parse_args()
     root = Path.cwd()
-    tracked = subprocess.run(['git', 'ls-files', '--cached', '--others', '--exclude-standard', '-z'], capture_output=True, check=True).stdout.decode().split('\0')
     problems = []
+    tracked = set(subprocess.run(['git', 'ls-files', '--cached', '-z'], capture_output=True, check=True).stdout.decode().split('\0'))
+    if not args.source_only:
+        for name in sorted(PUBLIC_FIXTURE_PATHS):
+            if name not in tracked:
+                problems.append(f'{name}: allowlisted public fixture is not tracked')
+            elif not (root / name).is_file():
+                problems.append(f'{name}: tracked public fixture is missing')
+    untracked = subprocess.run(['git', 'ls-files', '--others', '--exclude-standard', '-z'], capture_output=True, check=True).stdout.decode().split('\0')
     links = 0
     files = 0
-    for name in sorted(set(filter(None, tracked))):
+    for name in sorted(filter(None, tracked.union(untracked))):
         if args.source_only and (re.search(r"(^|/)(test|tests|androidTest|sharedTest)(/|$)", name) or name == "docs/test-api-inventory.json"):
             continue
         path = root / name

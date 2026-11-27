@@ -1,9 +1,11 @@
 package com.aqaqeer.app
 
 import androidx.lifecycle.ViewModelProvider
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.*
+import androidx.compose.ui.text.TextRange
 import com.aqaqeer.app.ui.CatalogViewModel
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import com.aqaqeer.app.data.*
@@ -97,6 +99,17 @@ class HomeUiTest {
         compose.onNodeWithTag("search").assertIsDisplayed().assertIsNotFocused().performTextInput("SERTRALINE")
         awaitRows(section, "SERTRALINE", target)
         show(target); compose.onNodeWithTag(card(other)).assertDoesNotExist()
+
+        val search = compose.onNodeWithTag("search")
+        search.performSemanticsAction(SemanticsActions.SetSelection) { it(3, 3, false) }
+        val cursor = SemanticsMatcher.expectValue(SemanticsProperties.TextSelectionRange, TextRange(3))
+        search.assert(cursor)
+        compose.activityRule.scenario.recreate()
+        compose.runOnUiThread { viewModel = ViewModelProvider(compose.activity)[CatalogViewModel::class.java] }
+        awaitRows(section, "SERTRALINE", target)
+        search.assertTextContains("SERTRALINE", substring = true).assert(cursor)
+        show(target); compose.onNodeWithTag(card(other)).assertDoesNotExist()
+
         compose.onNodeWithTag("clear_search").performClick()
         awaitRows(section, "", target, other)
         show(other); compose.onNodeWithTag("search").assertIsDisplayed()
