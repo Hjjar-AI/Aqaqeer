@@ -86,9 +86,9 @@ class SectionThemeUiTest {
             }
         }
         val host = compose.onNodeWithTag("section-bar")
-        for (mode in listOf(ThemeChoice.LIGHT, ThemeChoice.DARK, ThemeChoice.AMOLED)) {
+        for (mode in listOf(ThemeChoice.LIGHT, ThemeChoice.DARK, ThemeChoice.AMOLED, ThemeChoice.LIGHT)) {
             compose.runOnIdle { theme = mode }
-            val next = if (mode == ThemeChoice.DARK) sections.first() else sections.last()
+            val next = sections.single { it.id != selected }
             val tab = compose.onNodeWithTag("section_${next.id}")
             tab.assertIsDisplayed().performClick().assertIsSelected()
 
@@ -109,10 +109,16 @@ class SectionThemeUiTest {
                 })
             val dosage = compose.onNodeWithTag("dosage-sample").captureToImage().toPixelMap()
             val body = if (mode == ThemeChoice.LIGHT) Color(0xFFD9E1EC) else Color(0xFF34455D)
-            assertTrue("Dosage artwork uses the app's $mode palette with the opposite system mode",
-                (0 until dosage.height).any { y ->
-                    (0 until dosage.width).any { x -> dosage[x, y].toArgb() == body.toArgb() }
-                })
+            val colorsByFrequency = mutableMapOf<Int, Int>()
+            for (y in 0 until dosage.height) for (x in 0 until dosage.width) {
+                val pixel = dosage[x, y].toArgb()
+                colorsByFrequency[pixel] = colorsByFrequency.getOrDefault(pixel, 0) + 1
+            }
+            val commonColors = colorsByFrequency.entries.sortedByDescending { it.value }.take(4)
+                .joinToString { "%08X (%d pixels)".format(it.key, it.value) }
+            assertTrue("Dosage artwork uses the app's $mode palette with the opposite system mode. " +
+                "Expected %08X. Most common colors: %s".format(body.toArgb(), commonColors),
+                body.toArgb() in colorsByFrequency)
         }
     }
 

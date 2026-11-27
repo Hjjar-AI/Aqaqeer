@@ -209,7 +209,7 @@ internal fun appColorScheme(choice: ThemeChoice, accent: ThemeAccent, systemDark
     val context = LocalContext.current
     val configuration = LocalConfiguration.current
     val colors = remember(choice, accent, systemDark, context, configuration) { appColorScheme(choice, accent, systemDark, context.resources) }
-    // Resource night qualifiers follow the selected app theme, including manual light/dark choices.
+    // Status resource night qualifiers follow the selected app theme.
     val themedContext = remember(context, configuration, dark) {
         val selected = Configuration(configuration).apply {
             uiMode = (uiMode and Configuration.UI_MODE_NIGHT_MASK.inv()) or
@@ -218,6 +218,7 @@ internal fun appColorScheme(choice: ThemeChoice, accent: ThemeAccent, systemDark
         context.createConfigurationContext(selected)
     }
     val statuses = remember(themedContext, colors) { statusColors(themedContext.resources, colors) }
+    val illustration = remember(context, dark) { illustrationContext(context, dark) }
     val view = LocalView.current
     if (!view.isInEditMode) SideEffect {
         (view.context as? android.app.Activity)?.let { activity ->
@@ -232,7 +233,7 @@ internal fun appColorScheme(choice: ThemeChoice, accent: ThemeAccent, systemDark
         }
     }
     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl,
-        LocalStatusColors provides statuses, LocalIllustrationContext provides themedContext) {
+        LocalStatusColors provides statuses, LocalIllustrationContext provides illustration) {
         MaterialTheme(colorScheme = colors,
             typography = ArabicTypography, shapes = AppShapes) { ProvideLayoutMetrics(content) }
     }

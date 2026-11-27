@@ -38,6 +38,8 @@ HomeUiTest#searchIsReachableDoesNotAutofocusAndClearRestoresBrowsing,LaunchSplas
 SectionThemeUiTest#retainedAccentKeysAndSectionIndicatorUseTheNewPalette,ReportExportsInstrumentedTest#sectionColumnsRetainDistinctStatusesColorsAndUniqueHeaders,LaunchSplashUiTest#readyDestinationTakesOverDuringSplashWithCurrentAnimationSetting
 ```
 
+The illustration palette fix has one outstanding retry. Select workflow **07 - Verify - Emulator with visual evidence** with `demo_checks=false`, `standard_functional=true`, blank `demo_retry_methods`, and `retry_methods=SectionThemeUiTest#retainedAccentKeysAndSectionIndicatorUseTheNewPalette`. Prior invocations retain their scoped results. [Hosted evidence](validation.md#repository-home-and-branding-follow-up--2026-11-27)
+
 ## Focused Android follow-up — 2026-11-27
 
 Workflow 07 selects 11 new Standard methods and retains the expanded backup reminder and splash assertions. The provider fixture delivers part of a real CSV stream before failing. The Home cases exercise an active IME at 2× RTL text and a deliberately retained stale projection. Backup coverage follows the live PIN across restore review and a separate publication, and challenges reuse of a maintenance receipt from another operation. Report picker results pass through the actual activity-result contract; the test inspects the new A5 PDF and workbook for the selected rows.

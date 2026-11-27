@@ -4,15 +4,15 @@
     android:width="96dp" android:height="96dp"
     android:viewportWidth="128" android:viewportHeight="128">
     <group android:rotation="-32" android:pivotX="64" android:pivotY="64">
-        <path android:fillColor="@color/form_icon_body" android:strokeColor="@color/form_icon_outline" android:strokeWidth="3"
+        <path android:fillColor="?attr/form_icon_body" android:strokeColor="?attr/form_icon_outline" android:strokeWidth="3"
             android:pathData="M31,45H51V50A4.5,14 0,0 0,51 78V83H31A19,19 0,0 1,31 45Z" />
-        <path android:fillColor="@color/form_icon_accent" android:fillType="evenOdd"
-            android:strokeColor="@color/form_icon_outline" android:strokeWidth="2.5"
+        <path android:fillColor="?attr/form_icon_accent" android:fillType="evenOdd"
+            android:strokeColor="?attr/form_icon_outline" android:strokeWidth="2.5"
             android:pathData="M51,45A8,19 0,1 1,51 83A8,19 0,1 1,51 45Z M51,50A4.5,14 0,1 1,51 78A4.5,14 0,1 1,51 50Z" />
-        <path android:fillColor="@color/form_icon_accent" android:strokeColor="@color/form_icon_outline" android:strokeWidth="3"
+        <path android:fillColor="?attr/form_icon_accent" android:strokeColor="?attr/form_icon_outline" android:strokeWidth="3"
             android:pathData="M78,45H96A19,19 0,0 1,96 83H78V78A4.5,14 0,0 0,78 50V45Z" />
-        <path android:fillColor="@color/form_icon_body" android:fillType="evenOdd"
-            android:strokeColor="@color/form_icon_outline" android:strokeWidth="2.5"
+        <path android:fillColor="?attr/form_icon_body" android:fillType="evenOdd"
+            android:strokeColor="?attr/form_icon_outline" android:strokeWidth="2.5"
             android:pathData="M78,45A8,19 0,1 1,78 83A8,19 0,1 1,78 45Z M78,50A4.5,14 0,1 1,78 78A4.5,14 0,1 1,78 50Z" />
     </group>
 </vector>

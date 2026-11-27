@@ -2,11 +2,14 @@ package com.aqaqeer.app.ui
 
 import com.aqaqeer.app.uiText
 
+import android.content.Context
 import android.content.res.Resources
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.view.ContextThemeWrapper
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -15,7 +18,6 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.painterResource
 import com.aqaqeer.app.R
 import kotlinx.coroutines.Dispatchers
@@ -60,9 +62,18 @@ internal object LauncherArtwork {
     ThemedIllustration(R.drawable.empty_state_capsule, null, modifier, alpha = Alpha.ghost)
 }
 
+/** Each palette has its own resource theme, which Compose uses as part of its vector cache key. */
+internal fun illustrationContext(context: Context, dark: Boolean): Context = ContextThemeWrapper(
+    context, if (dark) R.style.IllustrationDark else R.style.IllustrationLight,
+)
+
 @Composable internal fun ThemedIllustration(@DrawableRes resource: Int, description: String?, modifier: Modifier, alpha: Float = 1f) {
-    val context = LocalIllustrationContext.current ?: LocalContext.current
-    CompositionLocalProvider(LocalContext provides context, LocalResources provides context.resources) {
+    val context = LocalIllustrationContext.current ?: run {
+        val base = LocalContext.current
+        val dark = isSystemInDarkTheme()
+        remember(base, dark) { illustrationContext(base, dark) }
+    }
+    CompositionLocalProvider(LocalContext provides context) {
         Image(painterResource(resource), contentDescription = description, modifier = modifier, alpha = alpha)
     }
 }

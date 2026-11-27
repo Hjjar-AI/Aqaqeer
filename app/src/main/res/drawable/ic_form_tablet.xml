@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="24dp" android:height="24dp" android:viewportWidth="24" android:viewportHeight="24">
-    <path android:pathData="M3.5,10.8V13.1C3.5,16.5 7.3,19.2 12,19.2S20.5,16.5 20.5,13.1V10.8Z" android:strokeColor="@color/form_icon_outline" android:strokeWidth="1.05" android:strokeLineCap="round" android:strokeLineJoin="round" android:fillColor="@color/form_icon_body" />
-    <path android:pathData="M3.5,10.8a8.5,6.1 0,1 0,17 0a8.5,6.1 0,1 0,-17 0Z" android:strokeColor="@color/form_icon_outline" android:strokeWidth="1.05" android:strokeLineCap="round" android:strokeLineJoin="round" android:fillColor="@color/form_icon_body" />
-    <path android:pathData="M7.6,7L16.2,13.8" android:fillColor="@android:color/transparent" android:strokeColor="@color/form_icon_outline" android:strokeWidth="0.85" android:strokeLineCap="round" android:strokeLineJoin="round" />
+    <path android:pathData="M3.5,10.8V13.1C3.5,16.5 7.3,19.2 12,19.2S20.5,16.5 20.5,13.1V10.8Z" android:strokeColor="?attr/form_icon_outline" android:strokeWidth="1.05" android:strokeLineCap="round" android:strokeLineJoin="round" android:fillColor="?attr/form_icon_body" />
+    <path android:pathData="M3.5,10.8a8.5,6.1 0,1 0,17 0a8.5,6.1 0,1 0,-17 0Z" android:strokeColor="?attr/form_icon_outline" android:strokeWidth="1.05" android:strokeLineCap="round" android:strokeLineJoin="round" android:fillColor="?attr/form_icon_body" />
+    <path android:pathData="M7.6,7L16.2,13.8" android:fillColor="@android:color/transparent" android:strokeColor="?attr/form_icon_outline" android:strokeWidth="0.85" android:strokeLineCap="round" android:strokeLineJoin="round" />
 </vector>
