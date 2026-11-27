@@ -14,13 +14,7 @@ Workflow 07 selects 11 new Standard methods and retains the expanded backup remi
 
 The Reader cases use the real WorkManager scheduler with an offline snapshot transport. The emulator runner records a disconnected network, Battery Saver, the admitted attempt and killed PID, and the boot IDs around reboot. The retry test allows the normal five-to-seven-minute delay. Splash assertions check Compose frames and retain separate cold and warm native launch recordings with animations off and at normal scale. The recorded handoffs reached Demo Home and Standard setup. The verification record describes the native frame review.
 
-The remaining retry is workflow 07 on the default branch with `demo_checks=false`, `standard_functional=true` and the two API 35 selectors below. The other requested methods have scoped passes.
-
-`retry_methods`
-
-```text
-HomeBarPlacementUiTest#switchingTopSectionsWithKeyboardOpenPreservesQueryAndCursorAtLargeRtlText,HomeBarPlacementUiTest#groupedCrossSectionSearchReturnsToCurrentResultsAndCannotSelectStaleRows
-```
+The focused batch has scoped passes for 32 Standard API 35 invocations and four Demo splash invocations across APIs 29 and 35. The final retry passed the Home keyboard section-switching and grouped stale-selection cases.
 
 Workflow 08 with `expected_certificate_sha256` blank passed the merged WorkManager manifest, runtime notice inspection and release startup on the published production revision. [Verification status](validation.md#focused-android-follow-up--2026-11-27)
 
@@ -28,13 +22,13 @@ Workflow 08 with `expected_certificate_sha256` blank passed the merged WorkManag
 
 Twelve JVM cases exercise the Reader coordinator with in-memory preferences, a mocked WorkManager boundary and controlled transport. They cover foreground reopens before the deadline, rescheduling after unchanged data, the manual cooldown after coordinator recreation, offline and unvalidated networks, the single short retry, persisted Telegram 429 delays, shared foreground/worker requests, missing pins, revoked credentials, loss of Reader eligibility and required updates. They also verify that a cached 429 leaves the last request time alone and a verified check from another path replaces a pending retry. Three JVM transport cases check admission ordering and confirm that rejected admission and a cached Telegram cooldown send zero requests. Two JVM presentation cases verify that a newer verified check clears a foreground refresh error, unrelated state retains it and a different pharmacy never displays it. Three Python cases cover packaged permission policy with synthetic manifests. One Android case commits a verified snapshot between browse sessions and checks marker retention in the two subsequent sessions.
 
-Use workflow 03 with `scope=all` and `coverage=false` for JVM and offline Python checks and Android test compilation. Use workflow 07 on the default branch containing the changes with `demo_checks=false`, `standard_functional=true` and `retry_methods=SnapshotRefreshInstrumentedTest#fetchBetweenBrowseSessionsKeepsMarkersForTheNextTwoSessions` for the new Android case. WorkManager execution across process death, reboot and Android power-saving modes remains a runtime verification item. [Validation](validation.md#reader-background-refresh--2026-11-25)
+Workflow 03 passed both JVM suites for this batch. Workflow 07 passed the fetched-marker case and the focused Android follow-up established real WorkManager execution under the tested emulator conditions. [Hosted results](validation.md#focused-android-follow-up--2026-11-27)
 
 ## Report accordion, advanced export and fixed A5 — 2026-11-25
 
 Two new JVM methods cover custom field ordering with both availability levels and the three opening summary groups. Existing JVM cases now cover serialization of the new choices and stale capture when the user changes a current presentation option. Five new Android methods cover forward and backward accordion navigation through Preview, shared step header disclosure, reorder and reset with busy controls, ordered workbook headers and status values, and ascending and descending expiry order with undated items last. Updated Android assertions cover A5 PDF dimensions and opening margins, A5 XLSX print settings, preservation of advanced preferences, the blue theme name, and the distinction between the Telegram progress heading and its disabled action.
 
-Use workflow 03 with `scope=all` and `coverage=false` to run the JVM suites and compile both Android test flavors. On the default branch containing the changes, use workflow 07 with `demo_checks=false`, `standard_functional=true` and this exact `retry_methods` value for the new and updated Android cases and the existing Arabic PDF continuation case.
+The scoped workflow 07 runs used these selectors for the report batch and the Arabic PDF continuation case.
 
 ```text
 ReportExportsInstrumentedTest#workbookHasSummaryFilterableRowsRtlFrozenHeadersAndPrintSettings,ReportExportsInstrumentedTest#workbookPreservesCustomOrderWithOverallAndSectionStatusesTogether,ReportExportsInstrumentedTest#expirySortChangesDirectionAndKeepsUndatedLastAndScientificTiesStable,ReportExportsInstrumentedTest#pdfPaperOrientationAndDensityOptionsRemainRenderable,ReportPreferencesInstrumentedTest#everyPresentationOptionAndHintTogglePersistForANewReader,ReportPreferencesInstrumentedTest#invalidScientificFieldSelectionRejectsWithoutOverwritingSavedDefaults,ReportControlsUiTest#layoutChoicesChangeOnlyPresentationAndBusyStateDisablesEdits,ReportControlsUiTest#combinedAvailabilityAndFieldReorderingRespectRequiredFieldsAndBusyState,ReportControlsUiTest#sharedStepHeaderDisclosesProgressWithoutChangingTheCurrentStep,ViewModelInstrumentedTest#reportAccordionRevealsOnlyTheCurrentStepActions,ViewModelInstrumentedTest#adminChecklistOpensSetupGuideAndBackReturnsToTools,SectionThemeUiTest#retainedAccentKeysAndSectionIndicatorUseTheNewPalette,CsvReportsInstrumentedTest#arabicPdfRendersMultiplePagesAndHasNoBlankContinuationPages
