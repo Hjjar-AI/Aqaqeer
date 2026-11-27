@@ -5,6 +5,8 @@ import android.content.Context
 import android.os.Bundle
 import android.os.ParcelFileDescriptor
 import androidx.test.runner.AndroidJUnitRunner
+import androidx.work.Configuration
+import androidx.work.WorkManager
 import dagger.hilt.android.testing.HiltTestApplication
 import java.io.File
 
@@ -19,6 +21,10 @@ class SuiteRunner : AndroidJUnitRunner() {
 
     override fun onCreate(arguments: Bundle) {
         secretPath = arguments.getString("suiteSecretPath")
+        // A rescheduled SystemJobService can start before JUnit's per-case setup.
+        if (arguments.getString("readerLifecyclePhase") == "verify") {
+            WorkManager.initialize(targetContext.applicationContext, Configuration.Builder().build())
+        }
         super.onCreate(arguments)
     }
 

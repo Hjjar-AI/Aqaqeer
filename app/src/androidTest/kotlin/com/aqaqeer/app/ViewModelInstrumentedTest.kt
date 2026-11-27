@@ -2,9 +2,11 @@ package com.aqaqeer.app
 
 import android.app.Activity
 import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.Color
 import android.graphics.pdf.PdfRenderer
 import android.net.Uri
-import android.os.Build
+import android.os.ParcelFileDescriptor
 import androidx.activity.compose.LocalActivityResultRegistryOwner
 import androidx.activity.result.ActivityResultRegistry
 import androidx.activity.result.ActivityResultRegistryOwner
@@ -38,6 +40,7 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.first
 import org.junit.*
 import org.junit.Assert.*
+import java.io.File
 import java.util.UUID
 import java.util.zip.ZipInputStream
 
@@ -183,7 +186,6 @@ class ViewModelInstrumentedTest {
     }
 
     @Test fun reportPickerRejectsLateResultAndBothFormatsExportTheCurrentSelection(): Unit = runBlocking {
-        Assume.assumeTrue(Build.VERSION.SDK_INT >= 35)
         val labels = listOf("ALPHAMED", "BETAMED", "GAMMAMED")
         suspend fun medicine(name: String): Medication {
             val medication = p.medication(name).copy(genericAr = null)
@@ -247,6 +249,33 @@ class ViewModelInstrumentedTest {
                 vm.adminBusy.first { !it }
             }
         }
+        fun raster(descriptor: ParcelFileDescriptor): List<IntArray> = PdfRenderer(descriptor).use { renderer ->
+            assertTrue(renderer.pageCount > 0)
+            (0 until renderer.pageCount).map { index ->
+                renderer.openPage(index).use { page ->
+                    val bitmap = Bitmap.createBitmap(page.width, page.height, Bitmap.Config.ARGB_8888)
+                    try {
+                        bitmap.eraseColor(Color.WHITE)
+                        page.render(bitmap, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
+                        IntArray(page.width * page.height).also {
+                            bitmap.getPixels(it, 0, page.width, 0, 0, page.width, page.height)
+                        }
+                    } finally {
+                        bitmap.recycle()
+                    }
+                }
+            }
+        }
+        suspend fun renderSnapshot(snapshot: ReportSnapshot): List<IntArray> {
+            val file = File.createTempFile("picker-reference-", ".pdf", p.root)
+            try {
+                val document = PdfReports(p.context).render(snapshot)
+                try { file.outputStream().use { document.writeTo(it) } } finally { document.close() }
+                return raster(ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY))
+            } finally {
+                file.delete()
+            }
+        }
         try {
             prepare(setOf(published.first().id))
             val stale = destination()
@@ -271,10 +300,18 @@ class ViewModelInstrumentedTest {
             }
             dispatch(pdf)
             withTimeout(15_000) { vm.adminBusy.first { !it } }
-            val pdfText = PdfRenderer(requireNotNull(resolver.openFileDescriptor(pdf, "r"))).use { renderer ->
-                (0 until renderer.pageCount).joinToString("\n") { index ->
-                    renderer.openPage(index).use { page -> page.textContents.joinToString("\n") { it.text } }
-                }
+            val exported = raster(requireNotNull(resolver.openFileDescriptor(pdf, "r")))
+            val preview = requireNotNull(vm.reportSnapshot.value)
+            val expected = renderSnapshot(preview)
+            assertEquals(expected.size, exported.size)
+            expected.indices.forEach { index -> assertArrayEquals(expected[index], exported[index]) }
+            // A PDF that omitted either scientific label could otherwise match a reference using the same renderer.
+            preview.medications.forEach { medication ->
+                val changed = renderSnapshot(preview.copy(medications = preview.medications.map {
+                    if (it.id == medication.id) it.copy(genericEn = "ZZZZZZZ") else it
+                }))
+                assertTrue("The PDF must visibly include the label for ${medication.genericEn}",
+                    changed.size != exported.size || changed.indices.any { !changed[it].contentEquals(exported[it]) })
             }
             val workbook = destination()
             compose.runOnIdle {
@@ -287,10 +324,8 @@ class ViewModelInstrumentedTest {
                 generateSequence { zip.nextEntry }.first { it.name == "xl/worksheets/sheet2.xml" }
                 zip.readBytes().decodeToString()
             }
-            assertFalse("The old selection leaked into PDF", labels.first() in pdfText)
             assertFalse("The old selection leaked into XLSX", labels.first() in sheet)
             labels.drop(1).forEach { label ->
-                assertTrue("The PDF is missing $label", label in pdfText)
                 assertTrue("The XLSX is missing $label", label in sheet)
             }
             assertEquals(-1, resolver.openInputStream(stale)!!.use { it.read() })

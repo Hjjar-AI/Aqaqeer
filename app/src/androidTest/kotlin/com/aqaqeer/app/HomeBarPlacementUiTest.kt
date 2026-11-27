@@ -163,6 +163,7 @@ class HomeBarPlacementUiTest {
         var state by mutableStateOf(AppUiState(sectionId = first.id,
             filters = HomeFilters(statuses = setOf(AvailabilityStatus.AVAILABLE)),
             homePreferences = HomePreferences(sectionsAtBottom = false, searchAtBottom = false)))
+        var adds = 0
         val keyboardVisible = java.util.concurrent.atomic.AtomicBoolean()
         compose.setContent {
             val density = LocalDensity.current
@@ -182,22 +183,27 @@ class HomeBarPlacementUiTest {
                                 clearFilters = {},
                                 openMedication = {},
                                 openSettings = {},
-                                openAddMedication = {})))
+                                openAddMedication = { adds++ })))
                     }
                 }
             }
         }
         val search = compose.onNodeWithTag("search")
+        val addLabel = hasContentDescription(uiText(R.string.navigation_add_medication_title))
+        val add = compose.onNode(hasClickAction() and (addLabel or hasAnyDescendant(addLabel)), useUnmergedTree = true)
+        add.assertIsDisplayed().assertIsEnabled()
         search.performClick().performTextInput("Fixture")
         compose.waitUntil(10_000) { keyboardVisible.get() }
         search.performSemanticsAction(SemanticsActions.SetSelection) { it(2, 2, false) }
         val cursor = SemanticsMatcher.expectValue(SemanticsProperties.TextSelectionRange, TextRange(2))
         search.assert(cursor)
+        val addBounds = add.assertIsDisplayed().fetchSemanticsNode().boundsInRoot
         compose.onNodeWithTag("section_${second.id}").assertIsDisplayed().performClick().assertIsSelected()
         search.assertIsDisplayed().assertIsFocused().assertTextContains("Fixture", substring = true).assert(cursor)
         assertTrue(keyboardVisible.get())
-        compose.onNodeWithContentDescription(uiText(R.string.navigation_add_medication_title))
-            .assertIsDisplayed().assertIsEnabled()
+        assertEquals(addBounds, add.assertIsDisplayed().assertIsEnabled().fetchSemanticsNode().boundsInRoot)
+        add.performClick()
+        compose.runOnIdle { assertEquals(1, adds) }
         androidx.test.espresso.Espresso.closeSoftKeyboard()
         compose.waitUntil(10_000) { !keyboardVisible.get() }
         compose.onNodeWithTag("home").performScrollToNode(hasTestTag("med_Fixture medication"))
@@ -218,7 +224,7 @@ class HomeBarPlacementUiTest {
                 crossSectionMatches.map { Availability(it.id, second.id, AvailabilityStatus.AVAILABLE, F.time) })
         var state by mutableStateOf(AppUiState(sectionId = first.id, query = "Fixture", appliedQuery = "Fixture",
             filters = HomeFilters(statuses = setOf(AvailabilityStatus.AVAILABLE)),
-            homePreferences = HomePreferences(groupingEnabled = true)))
+            homePreferences = HomePreferences(groupingEnabled = true, sectionsAtBottom = false, searchAtBottom = false)))
         var projectedQuery by mutableStateOf(state.appliedQuery)
         compose.setContent {
             AqaqeerTheme(ThemeChoice.LIGHT) {
@@ -238,13 +244,16 @@ class HomeBarPlacementUiTest {
         val grid = compose.onNodeWithTag("home")
         val crossSection = compose.onNodeWithTag("med_Fixture medication")
         val heading = hasText(first.nameAr) and hasAnyAncestor(hasTestTag("home"))
+        compose.onNode(heading).assertIsDisplayed()
         grid.performScrollToNode(hasTestTag("med_Fixture medication"))
         crossSection.assertIsDisplayed().assert(SemanticsMatcher.keyNotDefined(SemanticsActions.OnLongClick))
         grid.performScrollToNode(hasTestTag("med_Fixture extra 18"))
         compose.onNode(heading).assertIsNotDisplayed()
-        compose.onNodeWithTag("search").performTextReplacement("Fixture medication")
+        compose.onNodeWithTag("search").performTextReplacement("Fixture extra")
+            .assertTextContains("Fixture extra", substring = true)
+        compose.runOnIdle { assertEquals("Fixture extra", state.appliedQuery) }
         compose.onNode(heading).assertIsDisplayed()
-        compose.onNodeWithTag("search").performTextClearance()
+        compose.onNodeWithTag("clear_search").performClick()
         compose.onNode(heading).assertDoesNotExist()
         val category = requireNotNull(groupedCatalog.categoriesById[local.categoryId]).nameAr
         compose.onNode(hasText(category) and hasClickAction() and hasAnyAncestor(hasTestTag("home")))

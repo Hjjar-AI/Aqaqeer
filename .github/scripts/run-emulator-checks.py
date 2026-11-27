@@ -262,8 +262,8 @@ SHARING_CASES = (
     ('sharing-SnapshotRefreshInstrumentedTest-localStateChangedDuringNetworkCannotBeSilentlyOverwritten', 'SnapshotRefreshInstrumentedTest#localStateChangedDuringNetworkCannotBeSilentlyOverwritten', False),
     ('sharing-SnapshotRefreshInstrumentedTest-changedPinVerifierRevokesAuthorizationButPreservesDeviceIdentity', 'SnapshotRefreshInstrumentedTest#changedPinVerifierRevokesAuthorizationButPreservesDeviceIdentity', False),
     ('sharing-SnapshotRefreshInstrumentedTest-remoteDeletionReplacesAvailabilityAndTombstonesWhileKeepingPriorLocalHistory', 'SnapshotRefreshInstrumentedTest#remoteDeletionReplacesAvailabilityAndTombstonesWhileKeepingPriorLocalHistory', False),
-    ('sharing-ReaderWorkManager-process-death', 'ReaderWorkManagerInstrumentedTest#interruptedReaderAttemptSurvivesProcessDeathWithoutImmediateDuplicate', False),
     ('sharing-ReaderWorkManager-reboot', 'ReaderWorkManagerInstrumentedTest#pendingReaderWorkResumesAfterEmulatorReboot', False),
+    ('sharing-ReaderWorkManager-process-death', 'ReaderWorkManagerInstrumentedTest#interruptedReaderAttemptSurvivesProcessDeathWithoutImmediateDuplicate', False),
 )
 
 UI_CASES = (
@@ -426,10 +426,7 @@ def reader_lifecycle(command, name, method, owned):
     return adb(*phase_command('verify'), timeout=215 if phase == 'reboot' else 75, check=False)
 
 
-def capture_native_startups(name, owned):
-    current, _ = installation_identity(PACKAGE, observation=f'{name}-launch')
-    if current != owned:
-        raise RuntimeError('Native startup fixture no longer owns the application installation.')
+def capture_native_startups(name):
     adb('shell', 'am', 'force-stop', PACKAGE)
     if adb('shell', 'pidof', PACKAGE, check=False).stdout.strip():
         raise RuntimeError('The cold launch requires an absent app process.')
@@ -447,10 +444,12 @@ def capture_native_startups(name, owned):
                     if recorder.poll() is not None or time.monotonic() >= cutoff:
                         raise RuntimeError('Native startup recorder did not start.')
                     time.sleep(0.2)
-                result = adb('shell', 'am', 'start', '-W', '--activity-new-task', '--activity-clear-task',
-                             '-a', 'android.intent.action.MAIN', '-c', 'android.intent.category.LAUNCHER', '-n', component)
+                # FLAG_ACTIVITY_NEW_TASK | FLAG_ACTIVITY_CLEAR_TASK works across the selected SDKs.
+                result = adb('shell', 'am', 'start', '-W', '-f', '0x10008000',
+                             '-a', 'android.intent.action.MAIN', '-c', 'android.intent.category.LAUNCHER',
+                             '-n', component, check=False)
                 (OUTPUT / f'{name}-{mode}-launch.txt').write_bytes(result.stdout + result.stderr)
-                if b'Status: ok' not in result.stdout:
+                if result.returncode != 0 or b'Status: ok' not in result.stdout:
                     raise RuntimeError(f'Native {mode} launch did not report success.')
                 pids = adb('shell', 'pidof', PACKAGE).stdout.decode().split()
                 if len(pids) != 1 or not pids[0].isdigit():
@@ -614,7 +613,13 @@ def main():
                         if adb('shell', 'settings', 'get', 'global', setting).stdout.strip() != b'1.0':
                             raise RuntimeError(f'Could not set normal scale for {setting}.')
                 if method in SPLASH_CASES:
-                    capture_native_startups(name, installations[PACKAGE])
+                    current, _ = installation_identity(PACKAGE, observation=f'{name}-launch')
+                    if current != installations[PACKAGE]:
+                        raise RuntimeError('Native startup fixture no longer owns the application installation.')
+                    try:
+                        capture_native_startups(name)
+                    except (OSError, RuntimeError, subprocess.SubprocessError) as error:
+                        capture_errors.append(f'{name}: native startup capture incomplete: {error}')
                 if record:
                     recorder_log = (OUTPUT / f'{name}-recorder.log').open('wb')
                     recorder = subprocess.Popen(
@@ -734,7 +739,7 @@ def main():
                  *[f'- {r["case"]}: {r["status"]}' for r in results],
                  *[f'- Capture limitation: {message}' for message in capture_errors], '',
                  f'Download {"emulator-standard-functional" if flavor == "standard" else "emulator-evidence"} artifacts within one day; GitHub storage quota can block uploads.',
-                 ('Standard cases retain individual instrumentation logs and post-instrumentation failure PNG/logcat fallbacks; no recordings or human visual acceptance.' if flavor == 'standard' else 'Clips cover at most the first 45 seconds of each UI case. ui-screenshots holds live-activity captures; host failure PNGs are post-instrumentation fallbacks.')]
+                 ('Standard cases retain instrumentation logs and failure PNG/logcat fallbacks. Splash cases also retain cold and warm launch clips.' if flavor == 'standard' else 'Clips cover at most the first 45 seconds of each UI case. ui-screenshots holds live-activity captures; host failure PNGs are post-instrumentation fallbacks.')]
         (OUTPUT / 'results.md').write_text('\n'.join(lines) + '\n')
     if len(results) != len(cases) or any(r['status'] != 'passed' for r in results) or capture_errors:
         raise SystemExit(1)

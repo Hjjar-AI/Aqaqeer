@@ -142,12 +142,21 @@ class MaintenanceInstrumentedTest {
         val writes = remote.writes
         val uploads = remote.uploads
         try {
-            assertThrows(IllegalStateException::class.java) { runBlocking { next.revocationGuide() } }
-            assertEquals(MaintenancePhase.BACKED_UP, next.journal().phase)
+            assertThrows(StorageRecoveryRequired::class.java) { runBlocking { next.revocationGuide() } }
             assertEquals(writes, remote.writes)
             assertEquals(uploads, remote.uploads)
         } finally {
             store.write(journal)
+        }
+        try {
+            assertEquals(MaintenancePhase.SOURCE_READY, next.journal().phase)
+            val fresh = File(p.root, "second-operation.aqbak")
+            next.backup(Uri.fromFile(fresh), "exact passphrase".toCharArray(), "exact passphrase".toCharArray(), journal.id)
+            next.revocationGuide()
+            assertEquals(MaintenancePhase.TOKEN_CHANGE, next.journal().phase)
+            assertEquals(writes, remote.writes)
+            assertEquals(uploads, remote.uploads)
+        } finally {
             next.cancel()
         }
     }
