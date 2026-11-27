@@ -4,7 +4,12 @@ import android.graphics.Bitmap
 import android.graphics.Color
 import android.graphics.Matrix
 import android.graphics.pdf.PdfRenderer
+import android.net.Uri
 import android.os.ParcelFileDescriptor
+import android.text.StaticLayout
+import android.text.TextPaint
+import androidx.core.content.res.ResourcesCompat
+import androidx.test.platform.app.InstrumentationRegistry
 import com.aqaqeer.app.data.*
 import com.aqaqeer.app.fixtures.M3Fixtures as F
 import com.aqaqeer.app.fixtures.SuiteProfile
@@ -21,6 +26,7 @@ import java.io.File
 import java.io.IOException
 import java.io.OutputStream
 import java.time.LocalDate
+import java.util.UUID
 import kotlin.coroutines.EmptyCoroutineContext
 import kotlin.math.abs
 
@@ -380,6 +386,43 @@ class ReportExportsInstrumentedTest {
         assertTrue(compact > 1); assertTrue(comfortable > 1)
         assertTrue("Compact=$compact, comfortable=$comfortable", compact <= comfortable)
     }
+
+    @Test fun pdfOverPageCapLeavesTheUserSelectedDestinationUntouched(): Unit = runBlocking {
+        profile.create()
+        val medicine = profile.medication("PDF page limit fixture")
+        val note = "x\n".repeat(70_000) + "x"
+        profile.admin.saveMedication(medicine.copy(note = note))
+        val repository = ReportRepository(profile.admin, DocumentOutput(profile.context), PdfReports(profile.context))
+        val snapshot = repository.capture(ReportRequest(includeUnpublished = true, options = ReportOptions(
+            fields = setOf(ReportField.SCIENTIFIC, ReportField.NOTE), landscape = true)))
+        assertTrue("Capture retained all forced line breaks", note == snapshot.medications.single().note)
+
+        // Even a page with no margins, header or footer cannot hold enough forced lines.
+        val paint = TextPaint().apply {
+            typeface = requireNotNull(ResourcesCompat.getFont(profile.context, R.font.noto_naskh_arabic_regular))
+            textSize = 9.2f
+        }
+        val sample = StaticLayout.Builder.obtain("x\nx", 0, 3, paint, ReportA5.heightPoints)
+            .setIncludePad(true).setLineSpacing(1f, 1f).build()
+        val lineAdvance = sample.getLineBaseline(1) - sample.getLineBaseline(0)
+        assertTrue(lineAdvance > 0)
+        val maxLinesPerPage = ReportA5.widthPoints / lineAdvance + 1
+        assertTrue("Fixture must require more than 1,000 A5 landscape pages", note.count { it == '\n' } > 1000 * maxLinesPerPage)
+
+        val authority = InstrumentationRegistry.getInstrumentation().context.packageName + ".suite-documents"
+        val destination = Uri.parse("content://$authority/suite-${UUID.randomUUID()}")
+        val resolver = profile.context.contentResolver
+        val original = "Existing destination bytes".toByteArray()
+        try {
+            requireNotNull(resolver.openOutputStream(destination, "wt")).use { it.write(original) }
+            val rejected = assertThrows(CsvProblem::class.java) { runBlocking { repository.pdf(destination, snapshot) } }
+            assertEquals(uiText(R.string.report_pdf_too_large), rejected.reason)
+            assertArrayEquals(original, requireNotNull(resolver.openInputStream(destination)).use { it.readBytes() })
+        } finally {
+            resolver.delete(destination, null, null)
+        }
+    }
+
     @Test fun cancelledPdfRenderingPropagatesBeforeAnyDestinationIsOpened(): Unit = runBlocking {
         var completed = false
         val work = launch(start = CoroutineStart.LAZY) {

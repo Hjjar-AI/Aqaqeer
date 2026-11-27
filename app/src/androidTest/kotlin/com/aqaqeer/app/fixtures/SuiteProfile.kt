@@ -73,6 +73,7 @@ internal class SuiteRemote : TelegramSetupTransport, SnapshotWriteTransport, Sna
     var writes = 0
     var loseWriteResponse = false
     var beforeUpload: suspend () -> Unit = {}
+    var beforeReplace: suspend () -> Unit = {}
     override suspend fun validate(token: String, groupId: Long) = inspect(token, groupId)
     override suspend fun discover(token: String, challenge: String) = listOf(inspect(token, M3Fixtures.groupId))
     override suspend fun inspect(token: String, group: Long) = SetupGroup(group, title,
@@ -83,6 +84,7 @@ internal class SuiteRemote : TelegramSetupTransport, SnapshotWriteTransport, Sna
         return UploadedDocument(id, file)
     }
     override suspend fun replace(token: String, group: Long, message: Long, file: String, caption: String) {
+        beforeReplace()
         writes++; current = SnapshotDocument(group, message, file, "unique-$file", SnapshotCaption.decode(caption))
         if (loseWriteResponse) { loseWriteResponse = false; throw TelegramFailure() }
     }

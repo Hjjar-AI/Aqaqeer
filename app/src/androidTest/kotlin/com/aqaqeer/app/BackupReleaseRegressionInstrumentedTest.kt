@@ -1,11 +1,13 @@
 package com.aqaqeer.app
 
+import com.aqaqeer.app.admin.AdminProblem
 import com.aqaqeer.app.admin.catalog
 
 import android.net.Uri
 import com.aqaqeer.app.backup.BackupRepository
 import com.aqaqeer.app.data.*
 import com.aqaqeer.app.fixtures.SuiteProfile
+import com.aqaqeer.app.fixtures.SuiteRemote
 import com.aqaqeer.app.security.files.*
 import kotlinx.coroutines.*
 import org.junit.*
@@ -158,6 +160,60 @@ class BackupReleaseRegressionInstrumentedTest {
         assertEquals(2, known.schemaVersion); assertEquals(Int.MAX_VALUE, known.minVersionCode)
         assertTrue(target.ready().requiresUpdate)
         assertTrue(target.admin.transaction { it.control()!!.restorePaused })
+    }
+
+    @Test fun higherRequiredAppVersionBlocksEditsAndPublicationButKeepsBackupExport(): Unit = runBlocking {
+        assertBackupWhileUpdateRequired(SnapshotCompatibility(1, Int.MAX_VALUE, 1))
+    }
+
+    @Test fun unsupportedRequiredSchemaBlocksEditsAndPublicationButKeepsBackupExport(): Unit = runBlocking {
+        assertBackupWhileUpdateRequired(SnapshotCompatibility(2, 1, 1))
+    }
+
+    private suspend fun assertBackupWhileUpdateRequired(compatibility: SnapshotCompatibility) {
+        val owner = profile()
+        val medication = owner.medication()
+        val remote = SuiteRemote()
+        val sharing = owner.publish(remote)
+        owner.admin.saveMedication(medication.copy(note = "Pending work before the update requirement"))
+        val pharmacy = requireNotNull(owner.ready().catalog.pharmacy)
+        owner.requirements.observe(pharmacy.pharmacyId, compatibility)
+        assertTrue(owner.ready().requiresUpdate)
+        assertTrue(owner.ready().admin)
+        val capture = owner.admin.transaction { Triple(it.catalog(), it.pending(), it.history()) }
+        assertTrue(capture.second.isNotEmpty())
+        val checkpoint = owner.admin.transaction { it.snapshotState() }
+        val remoteBefore = requireNotNull(remote.current)
+        val mutationCounts = remote.uploads to remote.writes
+
+        val blocked = assertThrows(AdminProblem::class.java) {
+            runBlocking { owner.admin.saveMedication(medication.copy(note = "Forbidden edit")) }
+        }
+        assertEquals("يلزم تحديث التطبيق", blocked.reason)
+        sharing.publish()
+        assertFalse(sharing.status.value.verified)
+        assertEquals("يلزم تحديث التطبيق", sharing.status.value.message)
+        assertEquals(mutationCounts, remote.uploads to remote.writes)
+        assertEquals(remoteBefore, remote.current)
+        assertEquals(capture, owner.admin.transaction { Triple(it.catalog(), it.pending(), it.history()) })
+
+        val file = export(owner)
+        assertTrue(file.length() > 0)
+        assertEquals(owner.clock.millis(), owner.admin.transaction { it.control()?.lastBackupAt })
+        assertEquals(capture, owner.admin.transaction { Triple(it.catalog(), it.pending(), it.history()) })
+        assertEquals(checkpoint, owner.admin.transaction { it.snapshotState() })
+        assertTrue(owner.ready().requiresUpdate)
+        assertEquals(mutationCounts, remote.uploads to remote.writes)
+
+        val restored = profile(false)
+        restored.backups.restore(Uri.fromFile(file), password, "", false)
+        assertEquals(capture, restored.admin.transaction { Triple(it.catalog(), it.pending(), it.history()) })
+        val known = requireNotNull(restored.requirements.read(pharmacy.pharmacyId))
+        assertEquals(compatibility.schemaVersion, known.schemaVersion)
+        assertEquals(compatibility.minVersionCode, known.minVersionCode)
+        assertTrue(restored.ready().requiresUpdate)
+        assertTrue(restored.ready().restorePaused)
+        assertFalse(restored.ready().admin)
     }
 
     @Test fun repeatedExportsUseFreshEncryptionAndBothAuthenticateWithExactUnicodePassphrase(): Unit = runBlocking {

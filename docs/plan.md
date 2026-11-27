@@ -51,6 +51,8 @@ Initial hosted lint04 `45444132827` found7 errors per flavor. Repair `a9336be` q
 
 The retained live-PIN/manual-republication/reader-connection extension remains optional while physical/live campaigns are stopped. Broader devices/providers, human print/spoken/visual acceptance, OS low-memory termination and power-loss results stay explicitly unverified; they are not silently converted to passes or required new campaigns.
 
+The five [pre-production risk regressions](test-coverage.md#pre-production-risk-regressions--2026-11-27) cover accepted and unaccepted restored attempts, pending PIN preservation or removal at the authenticated live boundary, both compatibility-blocked backup paths and PDF overflow. Confirm them on the current source. The [signed installed-update rehearsal](build.md#installed-update-rehearsal) needs an eligible same-signer artifact pair and separate emulator authorization.
+
 <a id="ordered-packages"></a>
 <a id="pdf-redesign--a5-source-implemented"></a>
 <a id="remaining-verification"></a>

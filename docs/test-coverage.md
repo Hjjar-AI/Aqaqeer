@@ -8,6 +8,18 @@ Use the [current hosted checkpoint](validation.md#hosted-completion-batch--2026-
 
 [Build](build.md#hosted-emulator-screenshots-and-recordings) owns the current workflow-07 selection and invocation counts. A selector is not a new pass count. Retain passes by revision and environment; the [backup/restore audit](validation.md#backuprestore-requirement-to-evidence-audit--2026-11-22) maps retained per-case results to current obligations and explicit limits.
 
+## Pre-production risk regressions — 2026-11-27
+
+Five added Standard Android methods cover both outcomes of an uncertain publication in a restored archive, separately exercise a higher minimum app version and unsupported schema with successful backup export and restore, and verify an over-limit PDF fails before touching an existing document. The restore fixtures exercise encrypted backups and offline authenticated read-back, compare exact pending and history changes, and assert upload and write counts before review and after separate publication. The PDF fixture measures forced-line spacing to establish the 1,000-page precondition and checks the real document provider's previous bytes.
+
+After an authorized workflow **03 - Checks - Tests and compilation** run with `scope=all` and `coverage=false`, select **07 - Verify - Emulator with visual evidence** on the default branch containing the tests. Set `demo_checks=false`, `standard_functional=true` and this exact `retry_methods` value. This selects four storage methods and one Standard report method on API 35. The earlier Home and branding retry remains separately selectable below.
+
+```text
+BackupRestoreInstrumentedTest#restoreAcknowledgesAnAcceptedUncertainPinPublicationWithoutReplayingIt,BackupRestoreInstrumentedTest#restoreArchivesAnUnacceptedAttemptAndDropsItsPendingPinBeforeSeparatePublication,BackupReleaseRegressionInstrumentedTest#higherRequiredAppVersionBlocksEditsAndPublicationButKeepsBackupExport,BackupReleaseRegressionInstrumentedTest#unsupportedRequiredSchemaBlocksEditsAndPublicationButKeepsBackupExport,ReportExportsInstrumentedTest#pdfOverPageCapLeavesTheUserSelectedDestinationUntouched
+```
+
+An eligible release artifact pair and an owned emulator are required for the separate [installed-update rehearsal](build.md#installed-update-rehearsal).
+
 ## Repository, Home and branding regressions — 2026-11-27
 
 One JVM method checks that rebinding the search index after a stock-only edit updates Reader results, section markers, and stock sort order. Three offline Python methods cover Git ignoring backups, redacted rejection after force-add, and the full versus source-only public fixture contract. Four existing Android methods now check query and cursor restoration through activity recreation, the default and saved accent mappings with rendered tabs and artwork, the PDF and Excel stock palettes, and both generated logo drawables. The existing Android selectors and counts are unchanged.

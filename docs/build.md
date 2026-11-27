@@ -417,6 +417,15 @@ Recipients can receive the signed APK through file sharing or GitHub Release ass
 
 Publishing is distinct from installation. A successful signed APK inspection checks artifact properties; a successful GitHub job adds hosting; neither proves a phone installation, storage preservation, update compatibility, app behavior or human acceptance. Do not describe those checks as passed until they have actually been performed with the appropriate authorization and retained evidence. A newly documented release route does not resume stopped local tests/lint, device work or live Telegram campaigns.
 
+#### Installed-update rehearsal
+
+Use two approved, signed Standard release APKs and an explicitly authorized, owned, fresh emulator. Verify both APK hashes against their receipts. Verify the exact package `com.aqaqeer.app`, original production certificate, and a higher candidate version code. Use `publication=artifacts` for an authorized workflow 11 signing run when a candidate needs producing. If there is no eligible previous APK, keep installed-update acceptance pending.
+
+1. Record the selected serial, emulator identity, Android API and package absence. Keep the emulator offline. Install the approved previous APK and create a synthetic local pharmacy, make a distinctive stock edit, and record the visible catalog, history, pending work, publication status and an installation-local preference. Record the installed APK path and hash, package UID and first-install time.
+2. Recheck the same emulator and owned installation. With the selected serial bound explicitly, apply the candidate using `adb -s "$serial" install -r "$candidate_apk"`. Keep the existing package and storage in place. A failed install is a failed or blocked rehearsal with its observed state retained.
+3. Verify the installed candidate version, hash, original signer, unchanged UID and first-install time. Cold-start it and compare the catalog, history, pending changes and preference to the baseline. Verify the draft stays unpublished without a user action and that the app can still access the stored data. This offline rehearsal establishes Android install continuity and retained local behavior. In-app UUID continuity and live remote effects need their own observable evidence.
+4. Retain both source revisions and APK receipts, the emulator and install identities, and before/after results. End the owned emulator session only after rechecking ownership. Record a cleanup failure if the owned session cannot be retired.
+
 #### Release troubleshooting
 
 Locate the first failed step and retain its public diagnostics. For signing, the helper deliberately suppresses raw subprocess output that could include private paths/aliases. Failures are reported generically; `ci-output/release/` contains public artifact-inspection evidence when inspection was reached. It may be absent or incomplete when failure happened earlier. Never add password/key printing to diagnose a failure.
@@ -474,7 +483,7 @@ The matrix uses `fail-fast: false` and exact `:app:` tasks. The JDK job uses the
 
 ### Hosted emulator screenshots and recordings
 
-Run **07 - Verify - Emulator with visual evidence** on the default branch. `demo_checks=true` (default) runs 18 invocations / 16 unique methods per fresh API 29/35 emulator, one at a time. `standard_functional=true` (default false) then runs four serialized API-35 matrix jobs: standard 104, storage 40, sharing 61 and UI 43 methods. Full selection is 284 case invocations across 262 distinct methods. Each Reader process-death and reboot case runs a setup and verification phase. Runtime results are recorded separately. Each job retains its 45-minute bound and uses standard Ubuntu runners with one-day artifacts. Download `emulator-evidence-api29-*`, `emulator-evidence-api35-*` and `emulator-<batch>-functional-api35-*` within one day.
+Run **07 - Verify - Emulator with visual evidence** on the default branch. `demo_checks=true` (default) runs 18 invocations / 16 unique methods per fresh API 29/35 emulator, one at a time. `standard_functional=true` (default false) then runs four serialized API-35 matrix jobs: standard 105, storage 44, sharing 61 and UI 43 methods. Full selection is 289 case invocations across 267 distinct methods. Each Reader process-death and reboot case runs a setup and verification phase. Runtime results are recorded separately. Each job retains its 45-minute bound and uses standard Ubuntu runners with one-day artifacts. Download `emulator-evidence-api29-*`, `emulator-evidence-api35-*` and `emulator-<batch>-functional-api35-*` within one day.
 
 For a targeted demo retry, set `demo_checks=true`, `standard_functional=false` and `demo_retry_methods` to exact comma-separated demo `Class#method` selectors. Both API 29/35 run only matching invocations; repeated theme variants remain selected together. Blank selects all demo checks. Flavor allowlists are separate.
 

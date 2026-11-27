@@ -24,6 +24,10 @@ The test-authoring follow-up updates four Android methods, adds one JVM and thre
 
 Compilation, generated resources inside APKs, keyboard and browse behavior, visual and print acceptance, and timing remain unverified. The separate typography review and opt-in Baseline Profile work are recorded in the [plan](plan.md#performance-tooling--planned).
 
+## Pre-production risk regressions — 2026-11-27
+
+Authored five Standard Android methods starting at `af59c23`, then rechecked the production contracts after the preceding Home and branding work was committed as `8087de5`. The cases distinguish accepted and unaccepted uncertain publication during restore, preserve live PIN authorization and retained work, cover backup export under each compatibility block, and require over-cap PDF rejection before opening the selected destination. Source inspection checked the fixture phases, operation assertions, output contract and exact selectors. Compilation and Android results remain pending. The signed installed-update rehearsal also awaits an eligible artifact pair and execution. [Exact hosted inputs](test-coverage.md#pre-production-risk-regressions--2026-11-27)
+
 ## Hosted workflows 03 and 06 — 2026-11-25
 
 Both user-run workflows used `932f2a9` on Final, attempt 1. Workflow 03 used `scope=all` and `coverage=true`. Standard JVM recorded 643 passes and 48 flavor skips. Demo JVM recorded 676 passes and 15 flavor skips. Each inventory had 691 cases across 52 XML suites, with zero failures or errors and no case skipped in both flavors. Reader scheduler, progress and transport suites passed on both flavors. The 30 offline helpers and public JDK vectors passed. Both debug and instrumentation flavors compiled. Release stopped in Gradle plugin resolution before compilation because the runner could not resolve the Kotlin Compose `2.4.21` plugin marker. The log supplies no HTTP status, and the other jobs resolved the same pin. JVM coverage was 17.68% line / 17.26% branch for Standard and 19.47% / 18.39% for Demo. No device tests ran. [Workflow 03 #21](https://github.com/Hjjar-AI/Aqaqeer/actions/runs/45591154331)
