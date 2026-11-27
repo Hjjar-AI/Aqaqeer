@@ -1,11 +1,5 @@
 #!/bin/sh
 
-# Shared workstation setup; other machines keep ordinary wrapper behavior.
-if [ "${GITHUB_ACTIONS:-}" != true ] && [ "${ANDROID_SHARED_DISABLE:-}" != 1 ] &&
-    [ -r /opt/android-shared/environment.sh ]; then
-    . /opt/android-shared/environment.sh
-fi
-
 #
 # Copyright © 2015 the original authors.
 #
@@ -93,20 +87,6 @@ done
 APP_BASE_NAME=${0##*/}
 # Discard cd standard output in case $CDPATH is set (https://github.com/gradle/gradle/issues/25036)
 APP_HOME=$( cd -P "${APP_HOME:-./}" > /dev/null && printf '%s\n' "$PWD" ) || exit
-# Select the registered project cache before Gradle starts; explicit CLI selection wins.
-if [ "${GITHUB_ACTIONS:-}" != true ] && [ "${ANDROID_SHARED_DISABLE:-}" != 1 ] &&
-    [ -r /opt/android-shared/tools/paths.py ]; then
-    shared_cache_explicit=false
-    for shared_arg in "$@"; do
-        case "$shared_arg" in --project-cache-dir|--project-cache-dir=*) shared_cache_explicit=true ;; esac
-    done
-    if [ "$shared_cache_explicit" = false ]; then
-        shared_project_cache=$(python3 /opt/android-shared/tools/paths.py "$APP_HOME" project-cache "$@") || exit 1
-        if [ -n "$shared_project_cache" ]; then set -- --project-cache-dir "$shared_project_cache" "$@"; fi
-    fi
-    unset shared_cache_explicit shared_arg shared_project_cache
-fi
-
 
 # Use the maximum available, or set MAX_FD != -1 to use that value.
 MAX_FD=maximum
@@ -219,15 +199,6 @@ if "$cygwin" || "$msys" ; then
 fi
 
 
-# Aqaqeer integration: preserve when regenerating the Gradle wrapper.
-if [ "${AQAQEER_SHARED_DEPENDENCIES:-1}" != 0 ] && [ -z "${GRADLE_RO_DEP_CACHE:-}" ] &&
-    [ -r /opt/android-shared/gradle/dependency-seeds/mukhtabir-v1/modules-2 ]; then
-    GRADLE_RO_DEP_CACHE=/opt/android-shared/gradle/dependency-seeds/mukhtabir-v1
-    export GRADLE_RO_DEP_CACHE
-fi
-AQAQEER_BUILD_CODE=$(python3 "$APP_HOME/gradle/build_version.py" "$@") || exit $?
-set -- "-Paqaqeer.buildCode=$AQAQEER_BUILD_CODE" "$@"
-
 # Add default JVM options here. You can also use JAVA_OPTS and GRADLE_OPTS to pass JVM options to this script.
 DEFAULT_JVM_OPTS='"-Xmx64m" "-Xms64m"'
 
@@ -273,12 +244,5 @@ eval "set -- $(
         sed ' s~[^-[:alnum:]+,./:=@_]~\\&~g; ' |
         tr '\n' ' '
     )" '"$@"'
-
-# Hosted packaging retries reuse the arguments containing the reserved code.
-# Local builds and ordinary wrapper invocations keep their existing behavior.
-if [ "${GITHUB_ACTIONS:-}" = true ] && [ -n "${AQAQEER_CI_RETRY_LOG:-}" ]; then
-    exec python3 "$APP_HOME/.github/scripts/run-gradle-ci.py" \
-        --log "$AQAQEER_CI_RETRY_LOG" --command -- "$JAVACMD" "$@"
-fi
 
 exec "$JAVACMD" "$@"
