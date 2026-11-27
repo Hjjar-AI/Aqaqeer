@@ -47,6 +47,7 @@ import com.aqaqeer.app.sync.SnapshotReadClient
 import com.aqaqeer.app.sync.SnapshotReadError
 import com.aqaqeer.app.sync.SnapshotReadException
 import com.aqaqeer.app.sync.SnapshotReadTransport
+import com.aqaqeer.app.ui.CatalogViewModel
 import dagger.hilt.android.testing.BindValue
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
