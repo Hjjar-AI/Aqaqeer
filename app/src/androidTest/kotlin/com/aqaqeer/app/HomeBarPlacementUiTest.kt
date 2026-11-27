@@ -183,6 +183,7 @@ class HomeBarPlacementUiTest {
                                 clearFilters = {},
                                 openMedication = {},
                                 openSettings = {},
+                                saveAvailability = { _, _, _ -> fail("Section switching must not save availability") },
                                 openAddMedication = { adds++ })))
                     }
                 }
@@ -238,6 +239,7 @@ class HomeBarPlacementUiTest {
                         clearFilters = {},
                         openMedication = {},
                         openSettings = {},
+                        saveAvailability = { _, _, _ -> fail("Searching and selecting must not save availability") },
                         saveBulk = { _, _, _ -> fail("This selection must never write a bulk change") })))
             }
         }

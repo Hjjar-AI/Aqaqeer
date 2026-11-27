@@ -12,20 +12,14 @@ Use the [current hosted checkpoint](validation.md#hosted-completion-batch--2026-
 
 Workflow 07 selects 11 new Standard methods and retains the expanded backup reminder and splash assertions. The provider fixture delivers part of a real CSV stream before failing. The Home cases exercise an active IME at 2× RTL text and a deliberately retained stale projection. Backup coverage follows the live PIN across restore review and a separate publication, and challenges reuse of a maintenance receipt from another operation. Report picker results pass through the actual activity-result contract; the test inspects the new A5 PDF and workbook for the selected rows.
 
-The Reader cases use the real WorkManager scheduler with an offline snapshot transport. The emulator runner records a disconnected network, Battery Saver, the admitted attempt and killed PID, and the boot IDs around reboot. The retry test allows the normal five-to-seven-minute delay. Splash assertions check Compose frames and retain separate cold and warm native launch recordings with animations off and at normal scale. Inspect the recordings for a blank native handoff and confirm the routed screen.
+The Reader cases use the real WorkManager scheduler with an offline snapshot transport. The emulator runner records a disconnected network, Battery Saver, the admitted attempt and killed PID, and the boot IDs around reboot. The retry test allows the normal five-to-seven-minute delay. Splash assertions check Compose frames and retain separate cold and warm native launch recordings with animations off and at normal scale. The recorded handoffs reached Demo Home and Standard setup. The verification record describes the native frame review.
 
-For the remaining cases, run workflow 07 on the default branch with `demo_checks=true`, `standard_functional=true` and the exact selectors below. The Demo selection runs the two splash methods on APIs 29 and 35. Standard retries eight methods on API 35. The 19 unchanged methods passed in run 45901702010 and five follow-up methods passed in run 45964335844.
-
-`demo_retry_methods`
-
-```text
-LaunchSplashUiTest#readyDestinationTakesOverDuringSplashWithNormalAnimationScale,LaunchSplashUiTest#readyDestinationTakesOverDuringSplashWithCurrentAnimationSetting
-```
+The remaining retry is workflow 07 on the default branch with `demo_checks=false`, `standard_functional=true` and the two API 35 selectors below. The other requested methods have scoped passes.
 
 `retry_methods`
 
 ```text
-ReaderWorkManagerInstrumentedTest#interruptedReaderAttemptSurvivesProcessDeathWithoutImmediateDuplicate,ReaderWorkManagerInstrumentedTest#pendingReaderWorkResumesAfterEmulatorReboot,MaintenanceInstrumentedTest#completedBackupReceiptCannotAuthorizeAnotherMaintenanceOperation,ViewModelInstrumentedTest#reportPickerRejectsLateResultAndBothFormatsExportTheCurrentSelection,HomeBarPlacementUiTest#switchingTopSectionsWithKeyboardOpenPreservesQueryAndCursorAtLargeRtlText,HomeBarPlacementUiTest#groupedCrossSectionSearchReturnsToCurrentResultsAndCannotSelectStaleRows,LaunchSplashUiTest#readyDestinationTakesOverDuringSplashWithNormalAnimationScale,LaunchSplashUiTest#readyDestinationTakesOverDuringSplashWithCurrentAnimationSetting
+HomeBarPlacementUiTest#switchingTopSectionsWithKeyboardOpenPreservesQueryAndCursorAtLargeRtlText,HomeBarPlacementUiTest#groupedCrossSectionSearchReturnsToCurrentResultsAndCannotSelectStaleRows
 ```
 
 Workflow 08 with `expected_certificate_sha256` blank passed the merged WorkManager manifest, runtime notice inspection and release startup on the published production revision. [Verification status](validation.md#focused-android-follow-up--2026-11-27)
