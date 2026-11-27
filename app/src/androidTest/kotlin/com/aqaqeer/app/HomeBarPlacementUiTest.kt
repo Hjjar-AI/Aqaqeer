@@ -249,8 +249,9 @@ class HomeBarPlacementUiTest {
         crossSection.assertIsDisplayed().assert(SemanticsMatcher.keyNotDefined(SemanticsActions.OnLongClick))
         grid.performScrollToNode(hasTestTag("med_Fixture extra 18"))
         compose.onNode(heading).assertIsNotDisplayed()
-        compose.onNodeWithTag("search").performTextReplacement("Fixture extra")
-            .assertTextContains("Fixture extra", substring = true)
+        val search = compose.onNodeWithTag("search")
+        search.performTextReplacement("Fixture extra")
+        search.assertTextContains("Fixture extra", substring = true)
         compose.runOnIdle { assertEquals("Fixture extra", state.appliedQuery) }
         compose.onNode(heading).assertIsDisplayed()
         compose.onNodeWithTag("clear_search").performClick()
