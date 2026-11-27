@@ -22,7 +22,7 @@ class EmulatorSelectionTest(unittest.TestCase):
             self.assertEqual(cases, runner.select_cases(name))
             self.assertTrue(cases)
             combined.extend(case[1] for case in cases)
-        self.assertEqual(237, len(combined))
+        self.assertEqual(248, len(combined))
         self.assertEqual(len(combined), len(set(combined)))
 
     def test_exact_retry_keeps_only_requested_methods_in_their_original_batch(self):
@@ -40,15 +40,23 @@ class EmulatorSelectionTest(unittest.TestCase):
             with self.subTest(methods=methods), self.assertRaises(ValueError):
                 runner.select_cases('storage', methods)
 
-    def test_live_and_host_controlled_campaigns_are_absent_from_ordinary_batches(self):
+    def test_live_and_dedicated_recovery_campaigns_are_absent_from_ordinary_batches(self):
         selected = [case[1] for cases in runner.STANDARD_BATCHES.values() for case in cases]
         self.assertFalse(any('realTelegram' in method or '#phase' in method or
                              method.startswith('AcceptanceResource') for method in selected))
 
+    def test_reader_lifecycle_scenarios_select_only_the_standard_sharing_batch(self):
+        for method in runner.READER_LIFECYCLE_CASES:
+            with self.subTest(method=method):
+                self.assertEqual([method], [case[1] for case in runner.select_cases('sharing', method)])
+                self.assertFalse(runner.select_cases('ui', method))
+                with self.assertRaises(ValueError):
+                    runner.select_cases('demo', method)
+
     def test_demo_selection_retains_repeated_theme_invocations(self):
         cases = runner.select_cases('demo')
-        self.assertEqual(16, len(cases))
-        self.assertEqual(14, len({case[1] for case in cases}))
+        self.assertEqual(18, len(cases))
+        self.assertEqual(16, len({case[1] for case in cases}))
         self.assertEqual(3, sum(case[1].startswith('CiPresentationUiTest#') for case in cases))
 
     def test_demo_retry_selects_exact_methods_and_preserves_theme_variants(self):

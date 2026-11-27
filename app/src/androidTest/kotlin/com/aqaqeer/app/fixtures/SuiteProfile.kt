@@ -20,9 +20,9 @@ import java.time.ZoneOffset
 import java.util.UUID
 
 /** Owns every database, wrapper and temporary file it removes. */
-internal class SuiteProfile : AutoCloseable {
+internal class SuiteProfile(val namespace: String = "suite_${UUID.randomUUID().toString().replace("-", "")}") : AutoCloseable {
+    init { require(namespace.matches(Regex("suite_[a-f0-9]{32}"))) }
     private val base = ApplicationProvider.getApplicationContext<Context>()
-    val namespace = "suite_${UUID.randomUUID().toString().replace("-", "")}"
     val root = File(base.noBackupFilesDir, namespace).apply { mkdirs() }
     val context = object : ContextWrapper(base) {
         override fun getApplicationContext(): Context = this

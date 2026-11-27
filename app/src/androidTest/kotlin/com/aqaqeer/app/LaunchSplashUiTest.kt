@@ -4,6 +4,7 @@ import android.animation.ValueAnimator
 import android.graphics.Bitmap
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.background
 import androidx.compose.material3.Text
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -30,7 +31,15 @@ class LaunchSplashUiTest {
     @get:Rule val compose = createComposeRule()
 
     @Test fun readyDestinationTakesOverDuringSplashWithCurrentAnimationSetting() {
-        val animated = ValueAnimator.areAnimatorsEnabled()
+        assertHandoff(ValueAnimator.areAnimatorsEnabled())
+    }
+
+    @Test fun readyDestinationTakesOverDuringSplashWithNormalAnimationScale() {
+        assertTrue("The owned emulator must enable animations for this invocation", ValueAnimator.areAnimatorsEnabled())
+        assertHandoff(animated = true)
+    }
+
+    private fun assertHandoff(animated: Boolean) {
         var waiting by mutableStateOf(true)
         var dismissed by mutableStateOf(false)
         val marker = Bitmap.createBitmap(8, 8, Bitmap.Config.ARGB_8888).apply {
@@ -41,7 +50,7 @@ class LaunchSplashUiTest {
         compose.setContent {
             AqaqeerTheme(ThemeChoice.LIGHT) {
                 Box(Modifier.fillMaxSize().testTag(host)) {
-                    if (!waiting) Text("Ready destination")
+                    if (!waiting) Box(Modifier.fillMaxSize().background(Color.Green)) { Text("Ready destination") }
                     if (!dismissed) LaunchSplash(waiting, marker) { dismissed = true }
                 }
             }
@@ -56,6 +65,8 @@ class LaunchSplashUiTest {
         compose.mainClock.advanceTimeByFrame()
         val resting = markerHeight()
         assertTrue(resting > 0)
+        val launch = compose.onNodeWithTag(host).captureToImage().toPixelMap()
+        val blank = launch[0, 0]
 
         if (animated) {
             compose.mainClock.advanceTimeBy(360)
@@ -76,7 +87,12 @@ class LaunchSplashUiTest {
 
         compose.mainClock.advanceTimeBy(208)
         compose.runOnIdle { waiting = false }
-        compose.mainClock.advanceTimeBy(if (animated) 160 else 32)
+        repeat(if (animated) 10 else 2) {
+            compose.mainClock.advanceTimeByFrame()
+            val pixels = compose.onNodeWithTag(host).captureToImage().toPixelMap()
+            val center = pixels[pixels.width / 2, pixels.height / 2]
+            assertTrue("Handoff frame shows only the launch background: $center", center != blank)
+        }
         compose.runOnIdle { assertTrue(dismissed) }
         compose.onNodeWithText("Ready destination").assertIsDisplayed()
         assertEquals(0, markerHeight())

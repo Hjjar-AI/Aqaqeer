@@ -4,10 +4,16 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.v2.createComposeRule
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import com.aqaqeer.app.admin.newId
 import com.aqaqeer.app.data.*
 import com.aqaqeer.app.fixtures.M3Fixtures as F
 import com.aqaqeer.app.fixtures.homeProjection
@@ -150,6 +156,111 @@ class HomeBarPlacementUiTest {
                 assertEquals(setOf(AvailabilityStatus.AVAILABLE), state.filters.statuses)
             }
         }
+    }
+
+    @Test fun switchingTopSectionsWithKeyboardOpenPreservesQueryAndCursorAtLargeRtlText() {
+        val first = catalog.sections.first()
+        var state by mutableStateOf(AppUiState(sectionId = first.id,
+            filters = HomeFilters(statuses = setOf(AvailabilityStatus.AVAILABLE)),
+            homePreferences = HomePreferences(sectionsAtBottom = false, searchAtBottom = false)))
+        val keyboardVisible = java.util.concurrent.atomic.AtomicBoolean()
+        compose.setContent {
+            val density = LocalDensity.current
+            val ime = WindowInsets.ime.getBottom(density) > 0
+            SideEffect { keyboardVisible.set(ime) }
+            CompositionLocalProvider(LocalDensity provides Density(density.density, 2f),
+                LocalLayoutDirection provides LayoutDirection.Rtl) {
+                Box(Modifier.width(360.dp).fillMaxHeight().imePadding()) {
+                    AqaqeerTheme(ThemeChoice.LIGHT) {
+                        HomeScreen(CatalogState.Ready(catalog, false, admin = true), state, F.time,
+                            projection = homeProjection(catalog, state),
+                            actions = rememberHomeActions(HomeCallbacks(
+                                selectSection = { state = state.copy(sectionId = it) },
+                                setQuery = { state = state.copy(query = it, appliedQuery = it) },
+                                toggleStatus = {},
+                                toggleCategory = {},
+                                clearFilters = {},
+                                openMedication = {},
+                                openSettings = {},
+                                openAddMedication = {})))
+                    }
+                }
+            }
+        }
+        val search = compose.onNodeWithTag("search")
+        search.performClick().performTextInput("Fixture")
+        compose.waitUntil(10_000) { keyboardVisible.get() }
+        search.performSemanticsAction(SemanticsActions.SetSelection) { it(2, 2, false) }
+        val cursor = SemanticsMatcher.expectValue(SemanticsProperties.TextSelectionRange, TextRange(2))
+        search.assert(cursor)
+        compose.onNodeWithTag("section_${second.id}").assertIsDisplayed().performClick().assertIsSelected()
+        search.assertIsDisplayed().assertIsFocused().assertTextContains("Fixture", substring = true).assert(cursor)
+        assertTrue(keyboardVisible.get())
+        compose.onNodeWithContentDescription(uiText(R.string.navigation_add_medication_title))
+            .assertIsDisplayed().assertIsEnabled()
+        androidx.test.espresso.Espresso.closeSoftKeyboard()
+        compose.waitUntil(10_000) { !keyboardVisible.get() }
+        compose.onNodeWithTag("home").performScrollToNode(hasTestTag("med_Fixture medication"))
+        compose.onNodeWithTag("med_Fixture medication").assertIsDisplayed()
+    }
+
+    @Test fun groupedCrossSectionSearchReturnsToCurrentResultsAndCannotSelectStaleRows() {
+        val first = catalog.sections.first()
+        val other = catalog.medications.single()
+        val local = other.copy(id = newId(), nameEn = "Local medicine", genericEn = "Local medicine",
+            nameAr = null, genericAr = null)
+        val crossSectionMatches = (1..18).map { index ->
+            val name = "Fixture extra ${index.toString().padStart(2, '0')}"
+            local.copy(id = newId(), nameEn = name, genericEn = name)
+        }
+        val groupedCatalog = catalog.copy(medications = catalog.medications + local + crossSectionMatches,
+            availability = catalog.availability + Availability(local.id, first.id, AvailabilityStatus.AVAILABLE, F.time) +
+                crossSectionMatches.map { Availability(it.id, second.id, AvailabilityStatus.AVAILABLE, F.time) })
+        var state by mutableStateOf(AppUiState(sectionId = first.id, query = "Fixture", appliedQuery = "Fixture",
+            filters = HomeFilters(statuses = setOf(AvailabilityStatus.AVAILABLE)),
+            homePreferences = HomePreferences(groupingEnabled = true)))
+        var projectedQuery by mutableStateOf(state.appliedQuery)
+        compose.setContent {
+            AqaqeerTheme(ThemeChoice.LIGHT) {
+                HomeScreen(CatalogState.Ready(groupedCatalog, false, admin = true), state, F.time,
+                    projection = homeProjection(groupedCatalog, state.copy(appliedQuery = projectedQuery)),
+                    actions = rememberHomeActions(HomeCallbacks(
+                        selectSection = {},
+                        setQuery = { state = state.copy(query = it, appliedQuery = it); projectedQuery = it },
+                        toggleStatus = {},
+                        toggleCategory = {},
+                        clearFilters = {},
+                        openMedication = {},
+                        openSettings = {},
+                        saveBulk = { _, _, _ -> fail("This selection must never write a bulk change") })))
+            }
+        }
+        val grid = compose.onNodeWithTag("home")
+        val crossSection = compose.onNodeWithTag("med_Fixture medication")
+        val heading = hasText(first.nameAr) and hasAnyAncestor(hasTestTag("home"))
+        grid.performScrollToNode(hasTestTag("med_Fixture medication"))
+        crossSection.assertIsDisplayed().assert(SemanticsMatcher.keyNotDefined(SemanticsActions.OnLongClick))
+        grid.performScrollToNode(hasTestTag("med_Fixture extra 18"))
+        compose.onNode(heading).assertIsNotDisplayed()
+        compose.onNodeWithTag("search").performTextReplacement("Fixture medication")
+        compose.onNode(heading).assertIsDisplayed()
+        compose.onNodeWithTag("search").performTextClearance()
+        compose.onNode(heading).assertDoesNotExist()
+        val category = requireNotNull(groupedCatalog.categoriesById[local.categoryId]).nameAr
+        compose.onNode(hasText(category) and hasClickAction() and hasAnyAncestor(hasTestTag("home")))
+            .assertIsDisplayed()
+
+        val localTag = "med_Local medicine"
+        grid.performScrollToNode(hasTestTag(localTag))
+        compose.onNodeWithTag(localTag).performTouchInput { longClick() }
+        val selectVisible = compose.onNodeWithText(uiText(R.string.availability_select_visible_action))
+        selectVisible.assertIsEnabled()
+        compose.runOnIdle { state = state.copy(appliedQuery = "Fixture medication") }
+        compose.onNodeWithTag(localTag).assertExists()
+        selectVisible.assertIsNotEnabled()
+        compose.runOnIdle { projectedQuery = state.appliedQuery }
+        compose.onNodeWithTag(localTag).assertDoesNotExist()
+        selectVisible.assertIsNotEnabled()
     }
 
     @Test fun keyboardHidesBottomSectionsAndDismissalRestoresSelectionAndQuery() {

@@ -8,6 +8,28 @@ Use the [current hosted checkpoint](validation.md#hosted-completion-batch--2026-
 
 [Build](build.md#hosted-emulator-screenshots-and-recordings) owns the current workflow-07 selection and invocation counts. A selector is not a new pass count. Retain passes by revision and environment; the [backup/restore audit](validation.md#backuprestore-requirement-to-evidence-audit--2026-11-22) maps retained per-case results to current obligations and explicit limits.
 
+## Focused Android follow-up — 2026-11-27
+
+Workflow 07 selects 11 new Standard methods and retains the expanded backup reminder and splash assertions. The provider fixture delivers part of a real CSV stream before failing. The Home cases exercise an active IME at 2× RTL text and a deliberately retained stale projection. Backup coverage follows the live PIN across restore review and a separate publication, and challenges reuse of a maintenance receipt from another operation. Report picker results pass through the actual activity-result contract; the test inspects the new A5 PDF and workbook for the selected rows.
+
+The Reader cases use the real WorkManager scheduler with an offline snapshot transport. The emulator runner records a disconnected network, Battery Saver, the admitted attempt and killed PID, and the boot IDs around reboot. The retry test allows the normal five-to-seven-minute delay. Splash assertions check Compose frames and retain separate cold and warm native launch recordings with animations off and at normal scale. Inspect the recordings for a blank native handoff and confirm the routed screen.
+
+Run workflow 03 with `scope=all` and `coverage=false`, then workflow 07 on the default branch with `demo_checks=true`, `standard_functional=true` and the exact selectors below. The Demo selection runs the two splash methods on APIs 29 and 35. Standard runs the 13 new or modified methods on API 35. The 19 unchanged methods already passed in workflow 07 run 45901702010.
+
+`demo_retry_methods`
+
+```text
+LaunchSplashUiTest#readyDestinationTakesOverDuringSplashWithNormalAnimationScale,LaunchSplashUiTest#readyDestinationTakesOverDuringSplashWithCurrentAnimationSetting
+```
+
+`retry_methods`
+
+```text
+ReaderWorkManagerInstrumentedTest#dueReaderWorkerWaitsForNetworkThenCommitsAndSchedulesNextCheck,ReaderWorkManagerInstrumentedTest#interruptedReaderAttemptSurvivesProcessDeathWithoutImmediateDuplicate,ReaderWorkManagerInstrumentedTest#pendingReaderWorkResumesAfterEmulatorReboot,ReaderWorkManagerInstrumentedTest#verifiedWorkerCheckClearsVisibleForegroundErrorForSamePharmacy,BackupRestoreInstrumentedTest#restoreReviewAndRepublicationRequireEachCurrentLivePin,BackupRestoreInstrumentedTest#successfulCloseAdvancesReminderButFailedExportDoesNot,MaintenanceInstrumentedTest#completedBackupReceiptCannotAuthorizeAnotherMaintenanceOperation,ViewModelInstrumentedTest#reportPickerRejectsLateResultAndBothFormatsExportTheCurrentSelection,HomeBarPlacementUiTest#switchingTopSectionsWithKeyboardOpenPreservesQueryAndCursorAtLargeRtlText,HomeBarPlacementUiTest#groupedCrossSectionSearchReturnsToCurrentResultsAndCannotSelectStaleRows,CsvReportsInstrumentedTest#interruptedProviderReadLeavesCatalogUntouchedAndRetryCreatesEachRowOnce,LaunchSplashUiTest#readyDestinationTakesOverDuringSplashWithNormalAnimationScale,LaunchSplashUiTest#readyDestinationTakesOverDuringSplashWithCurrentAnimationSetting
+```
+
+Workflow 08 with `expected_certificate_sha256` blank passed the merged WorkManager manifest, runtime notice inspection and release startup on the published production revision. [Verification status](validation.md#focused-android-follow-up--2026-11-27)
+
 ## Reader refresh scheduling — 2026-11-25
 
 Twelve JVM cases exercise the Reader coordinator with in-memory preferences, a mocked WorkManager boundary and controlled transport. They cover foreground reopens before the deadline, rescheduling after unchanged data, the manual cooldown after coordinator recreation, offline and unvalidated networks, the single short retry, persisted Telegram 429 delays, shared foreground/worker requests, missing pins, revoked credentials, loss of Reader eligibility and required updates. They also verify that a cached 429 leaves the last request time alone and a verified check from another path replaces a pending retry. Three JVM transport cases check admission ordering and confirm that rejected admission and a cached Telegram cooldown send zero requests. Two JVM presentation cases verify that a newer verified check clears a foreground refresh error, unrelated state retains it and a different pharmacy never displays it. Three Python cases cover packaged permission policy with synthetic manifests. One Android case commits a verified snapshot between browse sessions and checks marker retention in the two subsequent sessions.

@@ -13,6 +13,7 @@ import kotlinx.coroutines.*
 import org.junit.*
 import org.junit.Assert.*
 import java.io.File
+import java.io.IOException
 import java.time.LocalDate
 import java.util.UUID
 
@@ -31,6 +32,22 @@ class CsvReportsInstrumentedTest {
     }
     private fun importer() = CsvImportRepository(p.admin, DocumentOutput(p.context), p.context)
     private fun reports() = ReportRepository(p.admin, DocumentOutput(p.context), PdfReports(p.context))
+    @Test fun interruptedProviderReadLeavesCatalogUntouchedAndRetryCreatesEachRowOnce(): Unit = runBlocking {
+        val source = document("genericEn,strength\nProvider first,10 mg\nProvider second,20 mg\n")
+        val interrupted = source.buildUpon().appendQueryParameter("read", "interrupt").build()
+        val repo = importer()
+        val before = p.admin.transaction { Triple(it.catalog(), it.pending(), it.historyCount()) }
+        val failure = assertThrows(IOException::class.java) { runBlocking { repo.load(interrupted) } }
+        assertTrue(failure.message.orEmpty().contains("Suite CSV read interrupted after 48 bytes"))
+        assertEquals(before, p.admin.transaction { Triple(it.catalog(), it.pending(), it.historyCount()) })
+
+        val session = repo.selectValid(repo.load(source))
+        val results = mutableListOf<CsvRowResult>()
+        repo.commit(session) { results += it }
+        assertEquals(listOf(CsvOutcome.CREATED, CsvOutcome.CREATED), results.map { it.outcome })
+        assertEquals(listOf("Provider first", "Provider second"),
+            p.ready().catalog.medications.mapNotNull { it.genericEn }.sorted())
+    }
     @Test fun contentProviderImportCommitsValidRowsAndRetainsFailedRowResults(): Unit = runBlocking {
         val repo = importer(); val session = repo.selectValid(repo.load(document("genericEn,strength\nGood,10 mg\nBad,")))
         val results = mutableListOf<CsvRowResult>(); repo.commit(session) { results += it }

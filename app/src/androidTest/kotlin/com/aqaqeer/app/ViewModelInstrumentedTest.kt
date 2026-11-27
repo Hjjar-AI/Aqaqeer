@@ -2,7 +2,9 @@ package com.aqaqeer.app
 
 import android.app.Activity
 import android.content.Intent
+import android.graphics.pdf.PdfRenderer
 import android.net.Uri
+import android.os.Build
 import androidx.activity.compose.LocalActivityResultRegistryOwner
 import androidx.activity.result.ActivityResultRegistry
 import androidx.activity.result.ActivityResultRegistryOwner
@@ -36,6 +38,8 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.first
 import org.junit.*
 import org.junit.Assert.*
+import java.util.UUID
+import java.util.zip.ZipInputStream
 
 class ViewModelInstrumentedTest {
     @get:Rule val compose = createComposeRule()
@@ -176,6 +180,123 @@ class ViewModelInstrumentedTest {
         compose.onNodeWithText(uiText(R.string.admin_hub_connection_after_restore)).assertIsDisplayed()
         compose.runOnIdle { ready = shared }
         export.performScrollTo().assertIsEnabled()
+    }
+
+    @Test fun reportPickerRejectsLateResultAndBothFormatsExportTheCurrentSelection(): Unit = runBlocking {
+        Assume.assumeTrue(Build.VERSION.SDK_INT >= 35)
+        val labels = listOf("ALPHAMED", "BETAMED", "GAMMAMED")
+        suspend fun medicine(name: String): Medication {
+            val medication = p.medication(name).copy(genericAr = null)
+            p.admin.saveMedication(medication)
+            return medication
+        }
+        val published = labels.take(2).map { medicine(it) }
+        p.publish(remote)
+        val currentIds = setOf(published.last().id, medicine(labels.last()).id)
+        withTimeout(15_000) { vm.state.first { (it.catalog as? CatalogState.Ready)?.publishedAt != null } }
+        main { vm.navigate(Route.Reports); vm.loadReportSource() }
+        withTimeout(15_000) {
+            vm.reportSource.first { it != null }
+            vm.reportOptions.first { it != null }
+            vm.adminBusy.first { !it }
+        }
+
+        var launchedRequestCode = -1
+        var requestedMime: String? = null
+        val registry = object : ActivityResultRegistry() {
+            override fun <I, O> onLaunch(requestCode: Int, contract: ActivityResultContract<I, O>,
+                input: I, options: ActivityOptionsCompat?) {
+                val intent = contract.createIntent(p.context, input)
+                assertEquals(Intent.ACTION_CREATE_DOCUMENT, intent.action)
+                requestedMime = intent.type
+                launchedRequestCode = requestCode
+            }
+        }
+        val owner = object : ActivityResultRegistryOwner { override val activityResultRegistry = registry }
+        lateinit var launchReport: (ReportFormat) -> Unit
+        compose.setContent {
+            CompositionLocalProvider(LocalActivityResultRegistryOwner provides owner) {
+                val launcher = rememberReportDocumentPicker(vm)
+                SideEffect { launchReport = launcher }
+            }
+        }
+        val resolver = p.context.contentResolver
+        val documents = mutableListOf<Uri>()
+        val authority = InstrumentationRegistry.getInstrumentation().context.packageName + ".suite-documents"
+        fun destination(): Uri = Uri.parse("content://$authority/suite-${UUID.randomUUID()}").also { uri ->
+            documents += uri
+            resolver.openOutputStream(uri, "wt")!!.close()
+        }
+        fun dispatch(uri: Uri) {
+            compose.runOnIdle {
+                assertTrue(launchedRequestCode >= 0)
+                assertTrue(registry.dispatchResult(launchedRequestCode, Activity.RESULT_OK, Intent().setData(uri)))
+                launchedRequestCode = -1
+            }
+        }
+        suspend fun prepare(ids: Set<String>) {
+            main {
+                vm.reviseReport(vm.reportDraft.value.copy(medicationIds = ids))
+                if (vm.reportStep.value == ReportStep.SOURCE) vm.moveReportStep(true)
+                if (vm.reportStep.value == ReportStep.SCOPE) vm.moveReportStep(true)
+                vm.prepareReport(vm.reportDraft.value.copy(options = requireNotNull(vm.reportOptions.value)))
+            }
+            withTimeout(15_000) {
+                val preview = vm.reportSnapshot.first { it != null }!!
+                assertEquals(ids, preview.medications.map { it.id }.toSet())
+                vm.adminBusy.first { !it }
+            }
+        }
+        try {
+            prepare(setOf(published.first().id))
+            val stale = destination()
+            compose.runOnIdle {
+                launchReport(ReportFormat.PDF)
+                assertEquals("application/pdf", requestedMime)
+                vm.reviseReport(vm.reportDraft.value.copy(includeUnpublished = true, medicationIds = currentIds))
+            }
+            dispatch(stale)
+            assertEquals(-1, resolver.openInputStream(stale)!!.use { it.read() })
+
+            main { vm.loadReportSource() }
+            withTimeout(15_000) {
+                vm.reportSource.first { it?.includeUnpublished == true }
+                vm.adminBusy.first { !it }
+            }
+            prepare(currentIds)
+            val pdf = destination()
+            compose.runOnIdle {
+                launchReport(ReportFormat.PDF)
+                assertEquals("application/pdf", requestedMime)
+            }
+            dispatch(pdf)
+            withTimeout(15_000) { vm.adminBusy.first { !it } }
+            val pdfText = PdfRenderer(requireNotNull(resolver.openFileDescriptor(pdf, "r"))).use { renderer ->
+                (0 until renderer.pageCount).joinToString("\n") { index ->
+                    renderer.openPage(index).use { page -> page.textContents.joinToString("\n") { it.text } }
+                }
+            }
+            val workbook = destination()
+            compose.runOnIdle {
+                launchReport(ReportFormat.XLSX)
+                assertEquals("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", requestedMime)
+            }
+            dispatch(workbook)
+            withTimeout(15_000) { vm.adminBusy.first { !it } }
+            val sheet = ZipInputStream(resolver.openInputStream(workbook)!!).use { zip ->
+                generateSequence { zip.nextEntry }.first { it.name == "xl/worksheets/sheet2.xml" }
+                zip.readBytes().decodeToString()
+            }
+            assertFalse("The old selection leaked into PDF", labels.first() in pdfText)
+            assertFalse("The old selection leaked into XLSX", labels.first() in sheet)
+            labels.drop(1).forEach { label ->
+                assertTrue("The PDF is missing $label", label in pdfText)
+                assertTrue("The XLSX is missing $label", label in sheet)
+            }
+            assertEquals(-1, resolver.openInputStream(stale)!!.use { it.read() })
+        } finally {
+            documents.forEach { resolver.delete(it, null, null) }
+        }
     }
 
     @Test fun adminChecklistOpensSetupGuideAndBackReturnsToTools(): Unit = runBlocking {

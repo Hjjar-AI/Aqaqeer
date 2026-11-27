@@ -122,6 +122,35 @@ class MaintenanceInstrumentedTest {
         assertNull(flow.journal().receipt); assertEquals(MaintenancePhase.SOURCE_READY, flow.journal().phase)
         flow.cancel()
     }
+    @Test fun completedBackupReceiptCannotAuthorizeAnotherMaintenanceOperation(): Unit = runBlocking {
+        val flow = coordinator().apply { begin(MaintenanceKind.ROTATION); prepareSource(false) }
+        val first = flow.journal()
+        val file = File(p.root, "first-operation.aqbak")
+        flow.backup(Uri.fromFile(file), "exact passphrase".toCharArray(), "exact passphrase".toCharArray(), first.id)
+        val oldReceipt = requireNotNull(flow.journal().receipt)
+        assertEquals(first.id, oldReceipt.flowId)
+        flow.cancel()
+
+        val next = coordinator().apply { begin(MaintenanceKind.ROTATION); prepareSource(false) }
+        val journal = next.journal()
+        assertNotEquals(first.id, journal.id)
+        assertNull(journal.receipt)
+        assertEquals(journal.sourceId, oldReceipt.sourceId)
+        assertEquals(journal.stateDigest, oldReceipt.stateDigest)
+        val store = MaintenanceStore(p.secure)
+        store.write(journal.copy(phase = MaintenancePhase.BACKED_UP, receipt = oldReceipt))
+        val writes = remote.writes
+        val uploads = remote.uploads
+        try {
+            assertThrows(IllegalStateException::class.java) { runBlocking { next.revocationGuide() } }
+            assertEquals(MaintenancePhase.BACKED_UP, next.journal().phase)
+            assertEquals(writes, remote.writes)
+            assertEquals(uploads, remote.uploads)
+        } finally {
+            store.write(journal)
+            next.cancel()
+        }
+    }
     @Test fun candidateCannotActivateWithoutCommittedRoomCheckpoint(): Unit = runBlocking {
         val flow = coordinator(); flow.begin(MaintenanceKind.REPLACEMENT)
         val store = MaintenanceStore(p.secure); val j = flow.journal()

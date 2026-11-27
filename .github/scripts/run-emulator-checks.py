@@ -7,6 +7,8 @@ import os
 from pathlib import Path
 import re
 import subprocess
+import time
+import uuid
 
 from android_config import build_tools
 
@@ -15,6 +17,19 @@ ROOT = Path(__file__).resolve().parents[2]
 OUTPUT = ROOT / 'ci-output/emulator'
 SERIAL = 'emulator-5554'
 PACKAGE = 'com.aqaqeer.app.demo.debug'
+READER_NETWORK_CASE = 'ReaderWorkManagerInstrumentedTest#dueReaderWorkerWaitsForNetworkThenCommitsAndSchedulesNextCheck'
+READER_RETRY_CASE = 'ReaderWorkManagerInstrumentedTest#verifiedWorkerCheckClearsVisibleForegroundErrorForSamePharmacy'
+READER_LIFECYCLE_CASES = {
+    'ReaderWorkManagerInstrumentedTest#interruptedReaderAttemptSurvivesProcessDeathWithoutImmediateDuplicate': 'kill',
+    'ReaderWorkManagerInstrumentedTest#pendingReaderWorkResumesAfterEmulatorReboot': 'reboot',
+}
+ANIMATED_SPLASH_CASE = 'LaunchSplashUiTest#readyDestinationTakesOverDuringSplashWithNormalAnimationScale'
+SPLASH_CASES = {ANIMATED_SPLASH_CASE, 'LaunchSplashUiTest#readyDestinationTakesOverDuringSplashWithCurrentAnimationSetting'}
+ANIMATION_SETTINGS = ('window_animation_scale', 'transition_animation_scale', 'animator_duration_scale')
+KEYBOARD_CASES = {
+    'HomeBarPlacementUiTest#keyboardHidesBottomSectionsAndDismissalRestoresSelectionAndQuery',
+    'HomeBarPlacementUiTest#switchingTopSectionsWithKeyboardOpenPreservesQueryAndCursorAtLargeRtlText',
+}
 DEMO_CASES = (
     ('demo-HomeUiTest-searchIsReachableDoesNotAutofocusAndClearRestoresBrowsing', 'HomeUiTest#searchIsReachableDoesNotAutofocusAndClearRestoresBrowsing', False),
     ('demo-HomeUiTest-adminFilterSheetOffersOnlyThreeStatesAndAppliesOrWithinStatuses', 'HomeUiTest#adminFilterSheetOffersOnlyThreeStatesAndAppliesOrWithinStatuses', False),
@@ -32,9 +47,12 @@ DEMO_CASES = (
     ('public-vectors', 'EnvelopeInstrumentedTest#androidProviderReadsAllPublicVectorsIncludingExactUnicodePassphrase', False),
     ('authentication-rejection', 'EnvelopeInstrumentedTest#androidAuthenticationFailureLeavesNoStagingFileOrPayload', False),
     ('bottom-layout-settings', 'BottomPlacementSettingsUiTest#independentSwitchesPersistAcrossActivityRecreationAndNewPreferenceReader', True),
+    ('demo-LaunchSplashUiTest-readyDestinationTakesOverDuringSplashWithCurrentAnimationSetting', 'LaunchSplashUiTest#readyDestinationTakesOverDuringSplashWithCurrentAnimationSetting', False),
+    ('demo-LaunchSplashUiTest-readyDestinationTakesOverDuringSplashWithNormalAnimationScale', 'LaunchSplashUiTest#readyDestinationTakesOverDuringSplashWithNormalAnimationScale', False),
 )
 
 STANDARD_CASES = (
+    ('standard-CsvReportsInstrumentedTest-interruptedProviderReadLeavesCatalogUntouchedAndRetryCreatesEachRowOnce', 'CsvReportsInstrumentedTest#interruptedProviderReadLeavesCatalogUntouchedAndRetryCreatesEachRowOnce', False),
     ('Release-HomeGridRegressionUiTest-twoColumnsStartAt320DpIncludingPagePaddingAndGap', 'HomeGridRegressionUiTest#twoColumnsStartAt320DpIncludingPagePaddingAndGap', False),
     ('Release-HomeGridRegressionUiTest-largerFontsRaiseTheTwoColumnBoundary', 'HomeGridRegressionUiTest#largerFontsRaiseTheTwoColumnBoundary', False),
     ('Release-HomeGridRegressionUiTest-smallerFontsDoNotReduceTheMinimumCardWidth', 'HomeGridRegressionUiTest#smallerFontsDoNotReduceTheMinimumCardWidth', False),
@@ -142,6 +160,8 @@ STANDARD_CASES = (
 
 
 STORAGE_CASES = (
+    ('storage-MaintenanceInstrumentedTest-completedBackupReceiptCannotAuthorizeAnotherMaintenanceOperation', 'MaintenanceInstrumentedTest#completedBackupReceiptCannotAuthorizeAnotherMaintenanceOperation', False),
+    ('storage-BackupRestoreInstrumentedTest-restoreReviewAndRepublicationRequireEachCurrentLivePin', 'BackupRestoreInstrumentedTest#restoreReviewAndRepublicationRequireEachCurrentLivePin', False),
     ('storage-BackupRestoreInstrumentedTest-draftRoundTripRetainsHistoryPendingAndCatalogButExcludesIdentityAndAuthorization', 'BackupRestoreInstrumentedTest#draftRoundTripRetainsHistoryPendingAndCatalogButExcludesIdentityAndAuthorization', False),
     ('storage-BackupRestoreInstrumentedTest-wrongPassphraseCorruptionAndMissingConfirmationPreserveExistingData', 'BackupRestoreInstrumentedTest#wrongPassphraseCorruptionAndMissingConfirmationPreserveExistingData', False),
     ('storage-BackupRestoreInstrumentedTest-successfulCloseAdvancesReminderButFailedExportDoesNot', 'BackupRestoreInstrumentedTest#successfulCloseAdvancesReminderButFailedExportDoesNot', False),
@@ -183,6 +203,8 @@ STORAGE_CASES = (
 )
 
 SHARING_CASES = (
+    ('sharing-ReaderWorkManagerInstrumentedTest-dueReaderWorkerWaitsForNetworkThenCommitsAndSchedulesNextCheck', 'ReaderWorkManagerInstrumentedTest#dueReaderWorkerWaitsForNetworkThenCommitsAndSchedulesNextCheck', False),
+    ('sharing-ReaderWorkManagerInstrumentedTest-verifiedWorkerCheckClearsVisibleForegroundErrorForSamePharmacy', 'ReaderWorkManagerInstrumentedTest#verifiedWorkerCheckClearsVisibleForegroundErrorForSamePharmacy', False),
     ('sharing-ReaderActivationInstrumentedTest-activationRechecksLiveDataAndCommitsReaderBaselineWithoutImportedHistory', 'ReaderActivationInstrumentedTest#activationRechecksLiveDataAndCommitsReaderBaselineWithoutImportedHistory', False),
     ('sharing-ReaderActivationInstrumentedTest-existingObserverSeesAtomicActivationThroughSeparateDatabaseHandle', 'ReaderActivationInstrumentedTest#existingObserverSeesAtomicActivationThroughSeparateDatabaseHandle', False),
     ('sharing-ReaderActivationInstrumentedTest-futureSchemaObservationPersistsRestrictionWithoutApplyingCatalog', 'ReaderActivationInstrumentedTest#futureSchemaObservationPersistsRestrictionWithoutApplyingCatalog', False),
@@ -240,9 +262,14 @@ SHARING_CASES = (
     ('sharing-SnapshotRefreshInstrumentedTest-localStateChangedDuringNetworkCannotBeSilentlyOverwritten', 'SnapshotRefreshInstrumentedTest#localStateChangedDuringNetworkCannotBeSilentlyOverwritten', False),
     ('sharing-SnapshotRefreshInstrumentedTest-changedPinVerifierRevokesAuthorizationButPreservesDeviceIdentity', 'SnapshotRefreshInstrumentedTest#changedPinVerifierRevokesAuthorizationButPreservesDeviceIdentity', False),
     ('sharing-SnapshotRefreshInstrumentedTest-remoteDeletionReplacesAvailabilityAndTombstonesWhileKeepingPriorLocalHistory', 'SnapshotRefreshInstrumentedTest#remoteDeletionReplacesAvailabilityAndTombstonesWhileKeepingPriorLocalHistory', False),
+    ('sharing-ReaderWorkManager-process-death', 'ReaderWorkManagerInstrumentedTest#interruptedReaderAttemptSurvivesProcessDeathWithoutImmediateDuplicate', False),
+    ('sharing-ReaderWorkManager-reboot', 'ReaderWorkManagerInstrumentedTest#pendingReaderWorkResumesAfterEmulatorReboot', False),
 )
 
 UI_CASES = (
+    ('ui-HomeBarPlacementUiTest-switchingTopSectionsWithKeyboardOpenPreservesQueryAndCursorAtLargeRtlText', 'HomeBarPlacementUiTest#switchingTopSectionsWithKeyboardOpenPreservesQueryAndCursorAtLargeRtlText', False),
+    ('ui-HomeBarPlacementUiTest-groupedCrossSectionSearchReturnsToCurrentResultsAndCannotSelectStaleRows', 'HomeBarPlacementUiTest#groupedCrossSectionSearchReturnsToCurrentResultsAndCannotSelectStaleRows', False),
+    ('ui-ViewModelInstrumentedTest-reportPickerRejectsLateResultAndBothFormatsExportTheCurrentSelection', 'ViewModelInstrumentedTest#reportPickerRejectsLateResultAndBothFormatsExportTheCurrentSelection', False),
     ('ui-ReportControlsUiTest-sharedStepHeaderDisclosesProgressWithoutChangingTheCurrentStep', 'ReportControlsUiTest#sharedStepHeaderDisclosesProgressWithoutChangingTheCurrentStep', False),
     ('ui-ViewModelInstrumentedTest-reportAccordionRevealsOnlyTheCurrentStepActions', 'ViewModelInstrumentedTest#reportAccordionRevealsOnlyTheCurrentStepActions', False),
     ('ui-HomeBarPlacementUiTest-sectionSwitchKeepsAdminAddAndSearchBoundsStableInBothPlacements', 'HomeBarPlacementUiTest#sectionSwitchKeepsAdminAddAndSearchBoundsStableInBothPlacements', False),
@@ -254,7 +281,6 @@ UI_CASES = (
     ('ui-backup-backupExportRemainsDisabledWhileAnotherAdminCommandOwnsTheBusyGate', 'ViewModelInstrumentedTest#backupExportRemainsDisabledWhileAnotherAdminCommandOwnsTheBusyGate', False),
     ('ui-backup-ViewModelInstrumentedTest-restorePickerRequiresExactPharmacyAndAcknowledgmentAtLargeRtlText', 'ViewModelInstrumentedTest#restorePickerRequiresExactPharmacyAndAcknowledgmentAtLargeRtlText', False),
     ('ui-ViewModelInstrumentedTest-searchDebouncesAndNavigationFiltersPersistInSavedState', 'ViewModelInstrumentedTest#searchDebouncesAndNavigationFiltersPersistInSavedState', False),
-    ('ui-LaunchSplashUiTest-readyDestinationTakesOverDuringSplashWithCurrentAnimationSetting', 'LaunchSplashUiTest#readyDestinationTakesOverDuringSplashWithCurrentAnimationSetting', False),
     ('ui-ViewModelInstrumentedTest-busyCommandRejectsDuplicateAndImmediatelyErasesTransferredSecrets', 'ViewModelInstrumentedTest#busyCommandRejectsDuplicateAndImmediatelyErasesTransferredSecrets', False),
     ('ui-ViewModelInstrumentedTest-failingOrCancelledSecretCommandsEraseInputsAndReleaseBusyState', 'ViewModelInstrumentedTest#failingOrCancelledSecretCommandsEraseInputsAndReleaseBusyState', False),
     ('ui-ViewModelInstrumentedTest-presentationPreferenceEmitsAndPersistsWithoutChangingCatalog', 'ViewModelInstrumentedTest#presentationPreferenceEmitsAndPersistsWithoutChangingCatalog', False),
@@ -282,6 +308,8 @@ UI_CASES = (
     ('ui-AdminHistoryInstrumentedTest-pinChangeBindsOwnOperationAndErasesAllCallerSecrets', 'AdminHistoryInstrumentedTest#pinChangeBindsOwnOperationAndErasesAllCallerSecrets', False),
     ('ui-AdminHistoryInstrumentedTest-wrongPinAndMismatchedConfirmationLeaveCatalogAndHistoryUnchanged', 'AdminHistoryInstrumentedTest#wrongPinAndMismatchedConfirmationLeaveCatalogAndHistoryUnchanged', False),
     ('ui-HiltGraphInstrumentedTest-fullGraphUsesReplacementStorageClockAndTransportBindings', 'HiltGraphInstrumentedTest#fullGraphUsesReplacementStorageClockAndTransportBindings', False),
+    ('ui-LaunchSplashUiTest-readyDestinationTakesOverDuringSplashWithCurrentAnimationSetting', 'LaunchSplashUiTest#readyDestinationTakesOverDuringSplashWithCurrentAnimationSetting', False),
+    ('ui-LaunchSplashUiTest-readyDestinationTakesOverDuringSplashWithNormalAnimationScale', 'LaunchSplashUiTest#readyDestinationTakesOverDuringSplashWithNormalAnimationScale', False),
 )
 
 STANDARD_BATCHES = {'standard': STANDARD_CASES, 'storage': STORAGE_CASES,
@@ -304,6 +332,149 @@ def select_cases(suite, methods=''):
 
 def adb(*args, timeout=30, check=True):
     return subprocess.run(['adb', '-s', SERIAL, *args], capture_output=True, timeout=timeout, check=check)
+
+
+def instrumentation_passed(result, method):
+    transcript = result.stdout + result.stderr
+    expected_class, expected_method = method.split('#')
+    return (result.returncode == 0 and bool(re.search(rb'OK \(1 tests?\)', transcript))
+            and b'INSTRUMENTATION_CODE: -1' in transcript
+            and not re.search(rb'INSTRUMENTATION_STATUS_CODE: -(?:3|4)\b', transcript)
+            and ('INSTRUMENTATION_STATUS: class=com.aqaqeer.app.' + expected_class).encode() in transcript
+            and ('INSTRUMENTATION_STATUS: test=' + expected_method).encode() in transcript)
+
+
+def reader_lifecycle(command, name, method, owned):
+    phase = READER_LIFECYCLE_CASES[method]
+    namespace = 'suite_' + uuid.uuid4().hex
+    relative = f'no_backup/{namespace}/reader-lifecycle.txt'
+    phase_log = OUTPUT / f'{name}-prepare.log'
+    evidence_file = OUTPUT / f'{name}-lifecycle.json'
+    receipt = {'mode': phase, 'profile': namespace, 'verifiedBoundary': False}
+    evidence_file.write_text(json.dumps(receipt, indent=2) + '\n')
+
+    def phase_command(value):
+        return [*command[:-1], '-e', 'readerLifecyclePhase', value, '-e', 'readerLifecycleProfile', namespace, command[-1]]
+
+    def checkpoint():
+        result = adb('shell', 'run-as', PACKAGE, 'cat', relative, check=False)
+        match = re.fullmatch(rb'([1-9][0-9]*) ([0-9a-f-]{36}) ([0-9]+)\s*', result.stdout)
+        return match.groups() if result.returncode == 0 and match else None
+
+    def verify_installation():
+        if (adb('shell', 'getprop', 'ro.kernel.qemu').stdout.strip() != b'1'
+                or adb('shell', 'am', 'get-current-user').stdout.strip() != b'0'):
+            raise RuntimeError('Reader boundary requires the owned emulator and user 0.')
+        identity, _ = installation_identity(PACKAGE, observation=f'{name}-boundary')
+        if identity != owned:
+            raise RuntimeError('Reader boundary no longer owns its installation.')
+
+    if phase == 'kill':
+        with phase_log.open('wb') as log:
+            prepare = subprocess.Popen(['adb', '-s', SERIAL, *phase_command(phase)], stdout=log, stderr=subprocess.STDOUT)
+            try:
+                cutoff = time.monotonic() + 50
+                ready = checkpoint()
+                while ready is None and prepare.poll() is None and time.monotonic() < cutoff:
+                    time.sleep(0.25)
+                    ready = checkpoint()
+                if ready is None or prepare.poll() is not None:
+                    raise RuntimeError('Reader process-death fixture did not reach the admitted transport read.')
+                pid, work_id, _ = (part.decode() for part in ready)
+                verify_installation()
+                running = adb('shell', 'pidof', PACKAGE).stdout.decode().split()
+                uid = adb('shell', 'run-as', PACKAGE, 'id', '-u').stdout.decode().strip()
+                if running != [pid] or uid != owned['userId']:
+                    raise RuntimeError('Reader attempt does not belong to the expected PID and app UID.')
+                adb('shell', 'run-as', PACKAGE, 'kill', '-9', pid)
+                prepare_return = prepare.wait(timeout=20)
+                running = adb('shell', 'pidof', PACKAGE, check=False).stdout.decode().split()
+                if pid in running:
+                    raise RuntimeError('The admitted Reader process is still running after SIGKILL.')
+                receipt.update(pid=int(pid), uid=int(uid), workId=work_id, prepareExitCode=prepare_return)
+            finally:
+                if prepare.poll() is None:
+                    prepare.kill()
+                    prepare.wait(timeout=5)
+    else:
+        prepared = adb(*phase_command(phase), timeout=60, check=False)
+        phase_log.write_bytes(prepared.stdout + prepared.stderr)
+        ready = checkpoint()
+        if not instrumentation_passed(prepared, method) or ready is None:
+            raise RuntimeError('Reader reboot fixture did not persist an unfinished WorkManager request.')
+        pid, work_id, not_before = (part.decode() for part in ready)
+        verify_installation()
+        boot_id = adb('shell', 'cat', '/proc/sys/kernel/random/boot_id').stdout.decode().strip()
+        if not re.fullmatch(r'[a-f0-9-]{36}', boot_id):
+            raise RuntimeError('Could not establish the owned AVD boot identity.')
+        adb('reboot')
+        adb('wait-for-device', timeout=90)
+        cutoff = time.monotonic() + 90
+        while True:
+            complete = adb('shell', 'getprop', 'sys.boot_completed', check=False).stdout.strip() == b'1'
+            new_boot_id = adb('shell', 'cat', '/proc/sys/kernel/random/boot_id', check=False).stdout.decode().strip()
+            if complete and re.fullmatch(r'[a-f0-9-]{36}', new_boot_id) and new_boot_id != boot_id:
+                break
+            if time.monotonic() >= cutoff:
+                raise RuntimeError('The owned AVD did not return with a new, completed boot.')
+            time.sleep(1)
+        verify_installation()
+        receipt.update(pid=int(pid), workId=work_id, notBeforeMillis=int(not_before), bootIdBefore=boot_id, bootIdAfter=new_boot_id)
+
+    receipt['verifiedBoundary'] = True
+    evidence_file.write_text(json.dumps(receipt, indent=2) + '\n')
+    return adb(*phase_command('verify'), timeout=215 if phase == 'reboot' else 75, check=False)
+
+
+def capture_native_startups(name, owned):
+    current, _ = installation_identity(PACKAGE, observation=f'{name}-launch')
+    if current != owned:
+        raise RuntimeError('Native startup fixture no longer owns the application installation.')
+    adb('shell', 'am', 'force-stop', PACKAGE)
+    if adb('shell', 'pidof', PACKAGE, check=False).stdout.strip():
+        raise RuntimeError('The cold launch requires an absent app process.')
+    component = f'{PACKAGE}/com.aqaqeer.app.MainActivity'
+    cold_pid = None
+    for mode in ('cold', 'warm'):
+        remote = f'/sdcard/aqaqeer-launch-{uuid.uuid4().hex}.mp4'
+        with (OUTPUT / f'{name}-{mode}-recorder.log').open('wb') as log:
+            recorder = subprocess.Popen(['adb', '-s', SERIAL, 'shell', 'screenrecord', '--size', '360x640',
+                                         '--bit-rate', '1000000', '--time-limit', '12', remote],
+                                        stdout=log, stderr=subprocess.STDOUT)
+            try:
+                cutoff = time.monotonic() + 4
+                while adb('shell', 'test', '-f', remote, check=False).returncode != 0:
+                    if recorder.poll() is not None or time.monotonic() >= cutoff:
+                        raise RuntimeError('Native startup recorder did not start.')
+                    time.sleep(0.2)
+                result = adb('shell', 'am', 'start', '-W', '--activity-new-task', '--activity-clear-task',
+                             '-a', 'android.intent.action.MAIN', '-c', 'android.intent.category.LAUNCHER', '-n', component)
+                (OUTPUT / f'{name}-{mode}-launch.txt').write_bytes(result.stdout + result.stderr)
+                if b'Status: ok' not in result.stdout:
+                    raise RuntimeError(f'Native {mode} launch did not report success.')
+                pids = adb('shell', 'pidof', PACKAGE).stdout.decode().split()
+                if len(pids) != 1 or not pids[0].isdigit():
+                    raise RuntimeError(f'Native {mode} launch has an ambiguous application process.')
+                if mode == 'cold':
+                    cold_pid = pids[0]
+                elif pids[0] != cold_pid:
+                    raise RuntimeError('The warm activity launch did not retain the cold launch PID.')
+                if recorder.wait(timeout=20) != 0:
+                    raise RuntimeError(f'Native {mode} launch recorder failed.')
+                video = OUTPUT / f'{name}-{mode}.mp4'
+                adb('pull', remote, str(video))
+                with video.open('rb') as stream:
+                    if stream.read(8)[4:] != b'ftyp':
+                        raise RuntimeError(f'Native {mode} launch recording is invalid.')
+                (OUTPUT / f'{name}-{mode}-pid.txt').write_text(pids[0] + '\n')
+            finally:
+                try:
+                    # The guest recorder has a bounded limit even if capture or launch fails.
+                    recorder.wait(timeout=15)
+                except subprocess.TimeoutExpired:
+                    recorder.kill()
+                    recorder.wait(timeout=5)
+                adb('shell', 'rm', '-f', remote, check=False)
 
 
 def installation_identity(package, observation='current'):
@@ -421,17 +592,29 @@ def main():
             provenance['phase'] = 'instrumentation: ' + method
             recorder = None
             recorder_log = None
+            animation_scales = {}
             remote = f'/sdcard/aqaqeer-ci-{name}.mp4'
             try:
                 large_text = method.startswith('CiPresentationUiTest#')
                 adb('shell', 'settings', 'put', 'system', 'font_scale', '1.3' if large_text else '1.0')
-                if method == 'HomeBarPlacementUiTest#keyboardHidesBottomSectionsAndDismissalRestoresSelectionAndQuery':
+                if method in KEYBOARD_CASES:
                     # This helper already verified its fresh, owned emulator and user above.
                     adb('shell', 'settings', 'put', 'secure', 'show_ime_with_hard_keyboard', '1')
                     if adb('shell', 'settings', 'get', 'secure', 'show_ime_with_hard_keyboard').stdout.strip() != b'1':
                         raise RuntimeError('Soft-keyboard prerequisite could not be enabled on the owned AVD.')
                     provenance['showImeWithHardKeyboard'] = '1 (read back)'
                     (OUTPUT / 'provenance.json').write_text(json.dumps(provenance, indent=2) + '\n')
+                if method == ANIMATED_SPLASH_CASE:
+                    for setting in ANIMATION_SETTINGS:
+                        previous = adb('shell', 'settings', 'get', 'global', setting).stdout.decode().strip()
+                        if not re.fullmatch(r'null|\d+(?:\.\d+)?', previous):
+                            raise RuntimeError(f'Could not read owned AVD setting {setting}.')
+                        animation_scales[setting] = previous
+                        adb('shell', 'settings', 'put', 'global', setting, '1.0')
+                        if adb('shell', 'settings', 'get', 'global', setting).stdout.strip() != b'1.0':
+                            raise RuntimeError(f'Could not set normal scale for {setting}.')
+                if method in SPLASH_CASES:
+                    capture_native_startups(name, installations[PACKAGE])
                 if record:
                     recorder_log = (OUTPUT / f'{name}-recorder.log').open('wb')
                     recorder = subprocess.Popen(
@@ -443,16 +626,17 @@ def main():
                            'com.aqaqeer.app.' + method, '-e', 'ciEvidence', 'true']
                 if large_text:
                     command += ['-e', 'ciTheme', name.split('-')[0].upper()]
+                if method == READER_NETWORK_CASE:
+                    command += ['-e', 'ownedReaderNetworkFixture', 'true']
                 command += [PACKAGE + '.test/com.aqaqeer.app.SuiteRunner']
                 try:
-                    run = adb(*command, timeout=120 if flavor == 'demo' else 180, check=False)
+                    if method in READER_LIFECYCLE_CASES:
+                        run = reader_lifecycle(command, name, method, installations[PACKAGE])
+                    else:
+                        timeout = 525 if method == READER_RETRY_CASE else (120 if flavor == 'demo' else 180)
+                        run = adb(*command, timeout=timeout, check=False)
                     transcript = run.stdout + run.stderr
-                    passed = run.returncode == 0 and bool(re.search(rb'OK \(1 tests?\)', transcript))
-                    passed &= b'INSTRUMENTATION_CODE: -1' in transcript
-                    passed &= not bool(re.search(rb'INSTRUMENTATION_STATUS_CODE: -(?:3|4)\b', transcript))
-                    expected_class, expected_method = method.split('#')
-                    passed &= ('INSTRUMENTATION_STATUS: class=com.aqaqeer.app.' + expected_class).encode() in transcript
-                    passed &= ('INSTRUMENTATION_STATUS: test=' + expected_method).encode() in transcript
+                    passed = instrumentation_passed(run, method)
                     status = 'passed' if passed else 'failed / incomplete instrumentation'
                 except subprocess.TimeoutExpired as error:
                     transcript = (error.stdout or b'') + (error.stderr or b'')
@@ -506,6 +690,19 @@ def main():
                 if current != installations[PACKAGE]:
                     raise RuntimeError('Installation ownership changed; refusing delayed force-stop.')
                 adb('shell', 'am', 'force-stop', PACKAGE)
+                for setting, previous in animation_scales.items():
+                    if previous == 'null':
+                        adb('shell', 'settings', 'delete', 'global', setting)
+                    else:
+                        adb('shell', 'settings', 'put', 'global', setting, previous)
+                if method == READER_NETWORK_CASE:
+                    adb('shell', 'cmd', 'power', 'set-mode', '0')
+                    adb('shell', 'dumpsys', 'battery', 'reset')
+                    airplane = adb('shell', 'settings', 'get', 'global', 'airplane_mode_on').stdout.strip()
+                    if airplane == b'1':
+                        adb('shell', 'cmd', 'connectivity', 'airplane-mode', 'disable')
+                    if adb('shell', 'settings', 'get', 'global', 'airplane_mode_on').stdout.strip() not in {b'0', b'null'}:
+                        raise RuntimeError('Could not restore connectivity mode on the owned AVD.')
         provenance['phase'] = 'all selected invocations completed'
     except Exception as error:
         provenance['failure'] = {'type': type(error).__name__, 'message': str(error)}
