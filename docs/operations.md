@@ -58,7 +58,7 @@ After verified activation, confirm completion, issue/distribute replacement `.aq
 python3 local/verification/resolve_evidence.py 'runs/OLD-RUN/results.json'
 ```
 
-The lookup accepts original absolute paths, project-relative `local/verification/...` paths and manifest-relative paths. It only locates retained evidence; it does not run verification or access credential contents. Missing retired artifacts remain missing, with their identity/retirement receipts in the manifest. Keep the current preview, original failure/interruption evidence and reference mappings during future cleanup.
+The lookup accepts original absolute paths, project-relative `local/verification/...` paths and manifest-relative paths. For compressed evidence it returns the `.gz` file. The manifest records both the archive hash and the original content hash. For a retired file, consult the manifest’s retirement receipts. Keep the current preview, original failure/interruption evidence and reference mappings during future cleanup.
 
 The single private configuration is `local/verification/credentials/telegram-test-config.local.json`, Git-ignored and mode `0600`. Never log it, token-bearing URLs or credential hashes. Do not copy it into source/assets/APKs. Manifest (local-only: `../local/verification/manifest.json`) inventories retained public artifacts without exposing credentials.
 
