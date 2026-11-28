@@ -64,6 +64,7 @@ internal fun connectionVerificationMessage(error: Exception): String = when (err
         SnapshotReadError.RATE_LIMITED -> uiText(R.string.connection_import_rate_limit_error) +
             if (error.retryAfterSeconds > 0) uiText(R.string.logic_retry_after, MedicationPresentation.displayDigits(error.retryAfterSeconds.toString())) else ""
         SnapshotReadError.NETWORK -> uiText(R.string.connection_import_network_error)
+        SnapshotReadError.CERTIFICATE_TRUST -> uiText(R.string.shared_telegram_certificate_trust_error)
         SnapshotReadError.CHANGED_DURING_READ -> uiText(R.string.connection_import_snapshot_changed_error)
         SnapshotReadError.CAPTION_MISMATCH -> uiText(R.string.connection_import_caption_mismatch_error)
         SnapshotReadError.INVALID_RESPONSE -> uiText(R.string.connection_import_response_invalid_error)

@@ -47,7 +47,8 @@ internal class TelegramPublishing internal constructor(
         check(!com.aqaqeer.app.BuildConfig.IS_DEMO) { "Demo transport cannot contact Telegram" }
         require(token.length <= 1024 && token.matches(Regex("[0-9]+:[A-Za-z0-9_-]+"))) { "رمز البوت غير صالح" }
         require(method in setOf("getMe", "getChat", "getChatMember", "getWebhookInfo", "getUpdates", "sendDocument", "editMessageMedia", "pinChatMessage", "unpinChatMessage"))
-        val connection = openConnection(URL("https://api.telegram.org/bot$token/$method"))
+        val connection = try { openConnection(URL("https://api.telegram.org/bot$token/$method")) }
+            catch (error: IOException) { throw error.toTelegramFailure() }
         connection.instanceFollowRedirects = false; connection.connectTimeout = 15000; connection.readTimeout = 15000; connection.useCaches = false
         val started = System.nanoTime()
         fun check() { if (System.nanoTime() - started > 60_000_000_000L) throw TelegramFailure() }
@@ -102,7 +103,7 @@ internal class TelegramPublishing internal constructor(
             } finally { bytes.fill(0) }
         } catch (e: CancellationException) { throw e }
         catch (e: TelegramFailure) { throw e }
-        catch (_: IOException) { throw TelegramFailure() }
+        catch (error: IOException) { throw error.toTelegramFailure() }
         catch (_: SecurityException) { throw TelegramFailure() }
         finally { connection.disconnect() }
     }
@@ -160,3 +161,6 @@ internal class TelegramPublishing internal constructor(
         check(api(token, "unpinChatMessage", mapOf("chat_id" to group.toString(), "message_id" to message.toString())).jsonPrimitive.boolean)
     }
 }
+
+private fun IOException.toTelegramFailure(): Exception =
+    if (hasMissingTlsTrustAnchor()) TelegramCertificateTrustFailure() else TelegramFailure()

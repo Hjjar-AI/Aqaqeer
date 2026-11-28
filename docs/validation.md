@@ -4,7 +4,15 @@
 
 ## Android 6 preview source review — 2026-11-28
 
-Source changes start at `3c47a6d`. Static inspection confirmed the literal minimum SDK of 23, four shared PBKDF2 call sites, first-entry precedence in Demo history's medication options, valid resource references, four static font weights, 557 Arabic timezone entries, and matching upstream license bytes. Parsed CI policy passed for all 16 workflows, and all 20 focused Android method selectors resolve to source declarations. The 26 selections and their 28 instrumentation invocations remain unexecuted. Compilation, manifest merges, emulator results, and signed outputs are pending the [hosted preview sequence](plan.md#android-6-preview--p1).
+Source changes start at `3c47a6d`. Static inspection confirmed the literal minimum SDK of 23, four shared PBKDF2 call sites, first-entry precedence in Demo history's medication options, valid resource references, four static font weights, 557 Arabic timezone entries, and matching upstream license bytes. Parsed CI policy passed for all 16 workflows, and all 20 focused Android method selectors resolve to source declarations.
+
+Workflow 03 #26 at `c464397` on `Final`, attempt 1, passed release Kotlin compilation and the public JDK crypto vector check. Standard and Demo JVM jobs and debug/instrumentation compilation were blocked by two build failures: the manifest merger rejected the API 24 minimum of DataStore 1.3.0, and the resource merger rejected the capsule vector's theme color during PNG generation. [Workflow 03 #26](https://github.com/Hjjar-AI/Aqaqeer/actions/runs/46141581992)
+
+Workflow 07 #25 on the same revision, attempt 1, stopped the API 23 Standard and Demo jobs at manifest merge and the API 29/35 Demo jobs at packaging. The API 23 jobs did not boot an emulator. The build noted the same DataStore floor and vector color errors. One API 35 Standard batch also failed at packaging, and three Standard batches were still pending when checked. [Workflow 07 #25](https://github.com/Hjjar-AI/Aqaqeer/actions/runs/46141633200)
+
+The source repair pins DataStore 1.2.1 and selects runtime vector handling. All four published DataStore 1.2.1 Android AAR manifests declare minimum API 23. The cached desugaring 2.1.5 library contains `java.util.Base64` and the streaming encoder method used by backups. This is static evidence. Repaired manifest merges, Android results and signed APKs remain pending the [hosted preview sequence](plan.md#android-6-preview--p1). [Google desugaring changelog](https://github.com/google/desugar_jdk_libs/blob/master/CHANGELOG.md#version-204-2023-11-01)
+
+Static review traced the Telegram missing-trust-anchor outcome through both transports, Reader refresh, connection setup and publication. The Android 6 branch matches Conscrypt's missing-anchor reason and the later branch guards the API 24 PKIX reason check. The Arabic guide documents background delays and foreground refresh. Compilation and live TLS behavior are pending.
 
 ## Repository, Home and branding follow-up — 2026-11-27
 

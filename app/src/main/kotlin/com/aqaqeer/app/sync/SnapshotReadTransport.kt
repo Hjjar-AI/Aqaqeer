@@ -8,6 +8,7 @@ import java.util.UUID
 enum class SnapshotReadError {
     INVALID_CREDENTIALS, ACCESS_DENIED, SNAPSHOT_UNAVAILABLE, INVALID_RESPONSE,
     RESPONSE_TOO_LARGE, RESOURCE_LIMIT, RATE_LIMITED, NETWORK, CHANGED_DURING_READ, CAPTION_MISMATCH,
+    CERTIFICATE_TRUST,
 }
 class SnapshotReadException(val error: SnapshotReadError, val retryAfterSeconds: Int = 0) : Exception(error.name)
 

@@ -87,6 +87,8 @@ android {
         applicationId = "com.aqaqeer.app"
         minSdk = 23
         targetSdk = 37
+        // Compose resolves the illustration colors from the selected theme at runtime.
+        vectorDrawables.useSupportLibrary = true
         versionCode = currentBuildCode
         versionName = "0.0.$currentBuildCode"
         testInstrumentationRunner = "com.aqaqeer.app.SuiteRunner"

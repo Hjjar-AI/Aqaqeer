@@ -144,7 +144,7 @@ class TelegramSnapshotReadTransport internal constructor(private val openConnect
         catch (error: kotlinx.coroutines.CancellationException) { throw error }
         catch (error: SnapshotReadException) { throw error }
         catch (_: java.nio.charset.CharacterCodingException) { invalidResponse() }
-        catch (_: IOException) { throw SnapshotReadException(SnapshotReadError.NETWORK) }
+        catch (error: IOException) { throw error.toSnapshotReadFailure() }
         catch (_: SecurityException) { throw SnapshotReadException(SnapshotReadError.NETWORK) }
         catch (_: SerializationException) { invalidResponse() }
         catch (_: EnvelopeException) { invalidResponse() }
@@ -178,7 +178,8 @@ class TelegramSnapshotReadTransport internal constructor(private val openConnect
                 return block().also { check() }
             } catch (error: Throwable) {
                 runCatching { close() }
-                if (error is IOException || error is SecurityException) throw SnapshotReadException(SnapshotReadError.NETWORK)
+                if (error is IOException) throw error.toSnapshotReadFailure()
+                if (error is SecurityException) throw SnapshotReadException(SnapshotReadError.NETWORK)
                 throw error
             }
         }
@@ -186,7 +187,7 @@ class TelegramSnapshotReadTransport internal constructor(private val openConnect
             if (closed) return
             closed = true
             try { input.close() }
-            catch (_: IOException) { throw SnapshotReadException(SnapshotReadError.NETWORK) }
+            catch (error: IOException) { throw error.toSnapshotReadFailure() }
             catch (_: SecurityException) { throw SnapshotReadException(SnapshotReadError.NETWORK) }
             finally { connection.disconnect() }
         }
@@ -265,3 +266,7 @@ class TelegramSnapshotReadTransport internal constructor(private val openConnect
         private fun unavailable(): Nothing = throw SnapshotReadException(SnapshotReadError.SNAPSHOT_UNAVAILABLE)
     }
 }
+
+private fun IOException.toSnapshotReadFailure() = SnapshotReadException(
+    if (hasMissingTlsTrustAnchor()) SnapshotReadError.CERTIFICATE_TRUST else SnapshotReadError.NETWORK,
+)

@@ -24,6 +24,7 @@ import androidx.lifecycle.viewModelScope
 import com.aqaqeer.app.data.*
 import com.aqaqeer.app.reports.*
 import com.aqaqeer.app.maintenance.*
+import com.aqaqeer.app.sync.isTelegramCertificateTrustFailure
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -235,14 +236,22 @@ class CatalogViewModel @Inject constructor(
             try { action(); if (queueOffline && !online) markReconnectSafely(); if (destination != null) navigate(destination) }
             catch (e: CancellationException) { throw e }
             catch (e: MaintenanceReview) { maintenance.conflicts.value = e.conflicts; adminMessage.value = uiText(R.string.maintenance_review_choices_error) }
-            catch (e: Exception) { adminMessage.value = (e as? com.aqaqeer.app.admin.AdminProblem)?.reason ?: (e as? MaintenanceProblem)?.reason ?: (e as? CsvProblem)?.reason ?: when ((e as? com.aqaqeer.app.security.files.EnvelopeException)?.error) {
-                com.aqaqeer.app.security.files.EnvelopeError.AUTHENTICATION -> uiText(R.string.backup_operation_authentication_error)
-                com.aqaqeer.app.security.files.EnvelopeError.TOO_LARGE -> uiText(R.string.backup_operation_size_error)
-                com.aqaqeer.app.security.files.EnvelopeError.RESOURCE_LIMIT -> uiText(R.string.backup_operation_resources_error)
-                com.aqaqeer.app.security.files.EnvelopeError.UNSUPPORTED_FORMAT -> uiText(R.string.backup_operation_format_unsupported_error)
-                com.aqaqeer.app.security.files.EnvelopeError.INVALID_CREDENTIAL -> uiText(R.string.backup_operation_passphrase_error)
-                else -> uiText(R.string.shared_operation_failed_message)
-            } }
+            catch (e: Exception) {
+                adminMessage.value = when {
+                    e.isTelegramCertificateTrustFailure -> uiText(R.string.shared_telegram_certificate_trust_error)
+                    e is AdminProblem -> e.reason
+                    e is MaintenanceProblem -> e.reason
+                    e is CsvProblem -> e.reason
+                    else -> when ((e as? com.aqaqeer.app.security.files.EnvelopeException)?.error) {
+                        com.aqaqeer.app.security.files.EnvelopeError.AUTHENTICATION -> uiText(R.string.backup_operation_authentication_error)
+                        com.aqaqeer.app.security.files.EnvelopeError.TOO_LARGE -> uiText(R.string.backup_operation_size_error)
+                        com.aqaqeer.app.security.files.EnvelopeError.RESOURCE_LIMIT -> uiText(R.string.backup_operation_resources_error)
+                        com.aqaqeer.app.security.files.EnvelopeError.UNSUPPORTED_FORMAT -> uiText(R.string.backup_operation_format_unsupported_error)
+                        com.aqaqeer.app.security.files.EnvelopeError.INVALID_CREDENTIAL -> uiText(R.string.backup_operation_passphrase_error)
+                        else -> uiText(R.string.shared_operation_failed_message)
+                    }
+                }
+            }
             finally {
                 if (route.value == origin) adminMessage.value?.let { feedback.value = UiFeedback(it, origin) }
                 else adminMessage.value = null

@@ -44,11 +44,14 @@ Project-independent workstation references are indexed in `/mnt/Common/General P
 | KSP / Hilt | 2.3.13 / 2.60.1 |
 | Compose BOM / Room | 2026.09.00 / 2.8.5 |
 | SQLCipher Community | 4.20.0 |
+| DataStore Preferences | 1.2.1 |
 | Compile / target / minimum SDK | 37 / 37 / 23 |
 | Core library desugaring | 2.1.5 |
 | Build JDK / Java bytecode target | 21 / 17 |
 
 Use the pinned [catalog](../gradle/libs.versions.toml) and AGP built-in Kotlin; do not add the deprecated Android Kotlin plugin. The root buildscript explicitly selects patched KGP 2.4.21 using [AGP’s supported override](https://developer.android.com/build/releases/agp-9-0-0-release-notes#runtime-dependency-on-kotlin-gradle-plugin), aligned with Compose/serialization. KSP 2.3.13 retains shared Room/Hilt processor declarations through `ksp.allow.all.target.configuration=true`. Reviewed buildscript and processor constraints address reported transitive advisories; fresh resolved advisory status still needs a dependency scan. Compilation evidence is in [validation](validation.md). Commands below require applicable authorization; [plan](plan.md) records stops, [validation](validation.md) executed evidence.
+
+DataStore 1.2.1 declares API 23 in the published Android manifests. The 1.3.0 Android core declares API 24. Gradle's vector support setting keeps themed illustrations as XML so Compose resolves their colors from the selected app theme. [DataStore releases](https://developer.android.com/jetpack/androidx/releases/datastore#1.2.1) · [Vector drawable compatibility](https://developer.android.com/develop/ui/views/graphics/vector-drawable-resources#backward-compatibility-solution)
 
 ## Setup and commands
 

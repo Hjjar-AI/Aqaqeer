@@ -59,6 +59,7 @@
     <string name="shared_secret_hide_description">"إخفاء %1$s"</string>
     <string name="shared_secret_show_description">"إظهار %1$s"</string>
     <string name="shared_telegram_group_id_error" formatted="false">"أدخل معرّف المجموعة السالب الصحيح"</string>
+    <string name="shared_telegram_certificate_trust_error">تعذّر التحقق من شهادة تيليغرام. قد تكون شهادات الأمان الموثوقة على هذا الهاتف قديمة. حدّث نظام الهاتف إن توفر تحديث.</string>
     <string name="shared_timezone_invalid_error" formatted="false">"أدخل منطقة زمنية صحيحة مثل Asia/Damascus"</string>
     <string name="shared_timezone_label" formatted="false">"المنطقة الزمنية"</string>
     <string name="shared_timezone_no_matches_help" formatted="false">"لا توجد منطقة مطابقة؛ جرّب اسم مدينة بالإنجليزية مثل Damascus."</string>

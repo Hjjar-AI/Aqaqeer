@@ -112,6 +112,9 @@ class PharmacySharing @Inject internal constructor(private val admin: AdminRepos
                 else SharingStatus(message = "لا توجد تعديلات للنشر")
         } catch (e: CancellationException) { throw e }
         catch (e: ReviewRequired) { mutable.value = SharingStatus(message = "راجع التعارضات ثم أعد النشر", conflicts = e.conflicts) }
+        catch (_: TelegramCertificateTrustFailure) {
+            mutable.value = SharingStatus(message = uiText(R.string.shared_telegram_certificate_trust_error))
+        }
         catch (e: TelegramFailure) {
             retryAt = android.os.SystemClock.elapsedRealtime() + maxOf(2, e.retryAfter) * 1000L
             mutable.value = SharingStatus(message = "تعذر إتمام النشر؛ احتُفظ بالعمل. تحقق من الاتصال وصلاحيات البوت ثم أعد المحاولة.",
@@ -120,11 +123,13 @@ class PharmacySharing @Inject internal constructor(private val admin: AdminRepos
             val retryable = e.error == SnapshotReadError.NETWORK || e.error == SnapshotReadError.RATE_LIMITED
             val seconds = if (retryable) maxOf(2, e.retryAfterSeconds) else 0
             if (retryable) retryAt = android.os.SystemClock.elapsedRealtime() + seconds * 1000L
-            mutable.value = SharingStatus(message = if (e.error == SnapshotReadError.RATE_LIMITED)
-                uiText(R.string.connection_import_rate_limit_error) + uiText(R.string.logic_retry_after,
-                    MedicationPresentation.displayDigits(seconds.toString()))
-                else uiText(R.string.publication_resume_failed_message),
-                retryable = retryable, retryAfterSeconds = seconds)
+            val message = when (e.error) {
+                SnapshotReadError.RATE_LIMITED -> uiText(R.string.connection_import_rate_limit_error) +
+                    uiText(R.string.logic_retry_after, MedicationPresentation.displayDigits(seconds.toString()))
+                SnapshotReadError.CERTIFICATE_TRUST -> uiText(R.string.shared_telegram_certificate_trust_error)
+                else -> uiText(R.string.publication_resume_failed_message)
+            }
+            mutable.value = SharingStatus(message = message, retryable = retryable, retryAfterSeconds = seconds)
         } catch (e: AdminProblem) {
             mutable.value = SharingStatus(message = e.reason)
         } catch (_: Exception) {
@@ -463,7 +468,11 @@ class PharmacySharing @Inject internal constructor(private val admin: AdminRepos
         } catch (e: CancellationException) { throw e }
         catch (e: ReviewRequired) { mutable.value = SharingStatus(message = "راجع الخيارات ثم أعد المصالحة", conflicts = e.conflicts) }
         catch (e: AdminProblem) { mutable.value = SharingStatus(message = e.reason) }
-        catch (_: Exception) { mutable.value = SharingStatus(message = "تعذرت المصالحة؛ احتُفظ بالعمل والنشر متوقف. تحقق من الاتصال ورمز الإدارة الحالي") }
+        catch (error: Exception) {
+            val message = if (error.isTelegramCertificateTrustFailure) uiText(R.string.shared_telegram_certificate_trust_error)
+                else "تعذرت المصالحة؛ احتُفظ بالعمل والنشر متوقف. تحقق من الاتصال ورمز الإدارة الحالي"
+            mutable.value = SharingStatus(message = message)
+        }
         finally { mutable.value = mutable.value.copy(busy = false) }
     }
 
