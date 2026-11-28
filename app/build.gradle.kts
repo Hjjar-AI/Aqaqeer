@@ -254,7 +254,7 @@ hilt { enableAggregatingTask = true }
 dependencies {
     coreLibraryDesugaring(libs.desugar.jdk.libs)
     constraints {
-        add("ksp", "com.google.guava:guava:33.7.2-jre") {
+        add("ksp", "com.google.guava:guava:33.8.0-jre") {
             because("Fix GHSA-xxph-c9ww-hj94 in Room/Hilt processor classpaths")
         }
     }
