@@ -1,5 +1,8 @@
 package com.aqaqeer.app
 
+import android.view.WindowManager
+import androidx.activity.ComponentActivity
+import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -8,7 +11,7 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.*
-import androidx.compose.ui.test.junit4.v2.createComposeRule
+import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
@@ -23,7 +26,7 @@ import org.junit.Rule
 import org.junit.Test
 
 class HomeBarPlacementUiTest {
-    @get:Rule val compose = createComposeRule()
+    @get:Rule val compose = createAndroidComposeRule<ComponentActivity>()
     private val second = Section(F.otherPharmacyId, "القسم الثاني")
     private val catalog = F.catalog().let { c -> c.copy(sections = c.sections + second,
         availability = c.availability.map { it.copy(status = AvailabilityStatus.OUT) } +
@@ -165,6 +168,11 @@ class HomeBarPlacementUiTest {
             homePreferences = HomePreferences(sectionsAtBottom = false, searchAtBottom = false)))
         var adds = 0
         val keyboardVisible = java.util.concurrent.atomic.AtomicBoolean()
+        compose.runOnUiThread {
+            // Match MainActivity so older Android releases dispatch IME insets to Compose.
+            compose.activity.window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
+            compose.activity.enableEdgeToEdge()
+        }
         compose.setContent {
             val density = LocalDensity.current
             val ime = WindowInsets.ime.getBottom(density) > 0

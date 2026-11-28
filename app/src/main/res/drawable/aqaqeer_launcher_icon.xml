@@ -1,10 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Uniform padding reduction keeps the selected bitmap and letter proportions unchanged. -->
+<!-- Before API 26, use the 3% inset of a nominal 48 dp launcher icon as a dimension. -->
 <inset xmlns:android="http://schemas.android.com/apk/res/android"
-    android:insetLeft="-3%"
-    android:insetTop="-3%"
-    android:insetRight="-3%"
-    android:insetBottom="-3%">
+    android:inset="-1.44dp">
     <bitmap
         android:src="@drawable/aqaqeer_launcher"
         android:gravity="fill"

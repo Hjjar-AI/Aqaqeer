@@ -3,6 +3,9 @@ package com.aqaqeer.app.backup
 import com.aqaqeer.app.maintenance.*
 import android.content.Context
 import android.net.Uri
+import android.os.Build
+import android.os.StatFs
+import android.os.storage.StorageManager
 import androidx.room.withTransaction
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.aqaqeer.app.BuildConfig
@@ -73,8 +76,13 @@ class BackupRepository @Inject constructor(@param:ApplicationContext private val
     private fun staging(): File {
         check(root.isDirectory || root.mkdirs())
         root.listFiles().orEmpty().forEach { check(it.isFile && it.delete()) }
-        val storage = context.getSystemService(android.os.storage.StorageManager::class.java)
-        check(storage.getAllocatableBytes(storage.getUuidForPath(root)) >= V1BackupEnvelope.LIMIT * 5) { "Insufficient private storage" }
+        val availableBytes = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val storage = context.getSystemService(StorageManager::class.java)
+            storage.getAllocatableBytes(storage.getUuidForPath(root))
+        } else {
+            StatFs(root.path).availableBytes
+        }
+        check(availableBytes >= V1BackupEnvelope.LIMIT * 5) { "Insufficient private storage" }
         return root
     }
     private suspend fun authorized(dao: CatalogDao) {

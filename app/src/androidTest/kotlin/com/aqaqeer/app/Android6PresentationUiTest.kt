@@ -56,7 +56,8 @@ class Android6PresentationUiTest {
 
         timezone.performClick()
         compose.onNode(hasSetTextAction()).performTextReplacement("Europe/Paris")
-        compose.onNodeWithText("Europe/Paris", substring = true).performClick()
+        compose.onNode(hasText("باريس") and hasText("Europe/Paris", substring = true))
+            .assertIsDisplayed().performClick()
         compose.runOnIdle { assertEquals("Europe/Paris", value) }
     }
 

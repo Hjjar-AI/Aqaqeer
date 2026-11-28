@@ -2,9 +2,9 @@
 
 The selected matte wordmark follows the user's Gemini reference and their chosen **Cobalt / silver** palette. It keeps the navy outlines, two horizontal capsule-shaped upper dots, empty hexagonal counters and lower split circular tablet. Palette targets are cobalt #3D5E98 and matte silver-grey #A9B2BE. Generated shades vary, and the approved preview is retained unchanged. [Selected wordmark](../assets/branding/aqaqeer-logo-matte.png)
 
-The Android build copies the sole 1254 × 1254 RGBA master byte-for-byte into the generated launcher/splash and in-app/PDF resources. Normal and round home icons use a [padding-only drawable](../app/src/main/res/drawable/aqaqeer_launcher_icon.xml) with equal −3% insets. This uniformly enlarges the existing bitmap nominally 6%, without changing letter proportions, pixel data or adding a backing/adaptive shape. The taller generated redraw was rejected and is not used.
+The Android build copies the sole 1254 × 1254 RGBA master byte-for-byte into the generated launcher/splash and in-app/PDF resources. Normal and round home icons use equal −3% insets on API 26+ or equal −1.44 dp insets on API 23–25, based on a nominal 48 dp icon. Both use the same transparent bitmap and preserve letter proportions. The taller generated redraw was rejected and is not used. [API 23–25 drawable](../app/src/main/res/drawable/aqaqeer_launcher_icon.xml) · [API 26+ drawable](../app/src/main/res/drawable-v26/aqaqeer_launcher_icon.xml)
 
-The native and Compose splash use the approved bitmap and framing. Android/OEM rendering remains unverified. [Provenance, exact prompts and hashes](../assets/branding/launcher-revision.md)
+The native and Compose splash use the approved bitmap and framing. API 23–25 use a fixed 49 dp splash inset for the 288 dp icon slot, leaving 190 dp for the artwork. Android/OEM rendering remains unverified. [Provenance, exact prompts and hashes](../assets/branding/launcher-revision.md)
 
 ## Splash artwork and motion
 

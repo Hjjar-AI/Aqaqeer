@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Uniform padding reduction keeps the selected bitmap and letter proportions unchanged. -->
+<inset xmlns:android="http://schemas.android.com/apk/res/android"
+    android:insetLeft="-3%"
+    android:insetTop="-3%"
+    android:insetRight="-3%"
+    android:insetBottom="-3%">
+    <bitmap
+        android:src="@drawable/aqaqeer_launcher"
+        android:gravity="fill"
+        android:filter="true"
+        android:mipMap="true" />
+</inset>

@@ -7,7 +7,8 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.ParcelFileDescriptor;
 import java.io.*;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -17,7 +18,15 @@ public final class RestoreCrashDocumentProvider extends ContentProvider {
         final CountDownLatch release = new CountDownLatch(1);
         volatile boolean paused;
     }
-    private final ConcurrentHashMap<String, Gate> gates = new ConcurrentHashMap<>();
+    // Android can start this provider in the test APK's own process without desugared classes.
+    private final Map<String, Gate> gates = new HashMap<>();
+
+    private Gate findGate(String name) {
+        synchronized (gates) {
+            return gates.get(name);
+        }
+    }
+
     private File file(String name) {
         if (name == null || !name.matches("crash-[a-f0-9]{32}")) throw new IllegalArgumentException("Invalid fixture ID");
         File root = new File(getContext().getCacheDir(), "restore-crash-documents");
@@ -32,9 +41,13 @@ public final class RestoreCrashDocumentProvider extends ContentProvider {
         if (!"r".equals(mode) || !"true".equals(uri.getQueryParameter("pause")))
             return ParcelFileDescriptor.open(source, ParcelFileDescriptor.parseMode(mode));
         try {
-            ParcelFileDescriptor[] pipe = ParcelFileDescriptor.createPipe();
+            ParcelFileDescriptor[] pipe;
             Gate gate = new Gate();
-            if (gates.putIfAbsent(name, gate) != null) throw new IOException("Fixture already active");
+            synchronized (gates) {
+                if (gates.containsKey(name)) throw new IOException("Fixture already active");
+                pipe = ParcelFileDescriptor.createPipe();
+                gates.put(name, gate);
+            }
             new Thread(() -> {
                 try (InputStream input = new FileInputStream(source);
                      OutputStream output = new ParcelFileDescriptor.AutoCloseOutputStream(pipe[1])) {
@@ -53,7 +66,11 @@ public final class RestoreCrashDocumentProvider extends ContentProvider {
                     while ((count = input.read(buffer)) >= 0) output.write(buffer, 0, count);
                 } catch (IOException | InterruptedException expectedAfterProcessDeath) {
                     // Broken pipe is expected when the target is killed. Never log fixture data.
-                } finally { gates.remove(name, gate); }
+                } finally {
+                    synchronized (gates) {
+                        if (gates.get(name) == gate) gates.remove(name);
+                    }
+                }
             }, "restore-crash-fixture").start();
             return pipe[0];
         } catch (IOException e) { throw new FileNotFoundException("Fixture pipe unavailable"); }
@@ -61,14 +78,14 @@ public final class RestoreCrashDocumentProvider extends ContentProvider {
     @Override public Bundle call(String method, String arg, Bundle extras) {
         file(arg);
         if (!"paused".equals(method)) throw new IllegalArgumentException("Unsupported fixture operation");
-        Gate gate = gates.get(arg);
+        Gate gate = findGate(arg);
         Bundle result = new Bundle();
         result.putBoolean("paused", gate != null && gate.paused);
         return result;
     }
     @Override public int delete(Uri uri, String selection, String[] args) {
         String name = uri.getLastPathSegment();
-        Gate gate = gates.get(name);
+        Gate gate = findGate(name);
         if (gate != null) gate.release.countDown();
         return file(name).delete() ? 1 : 0;
     }
