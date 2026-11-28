@@ -5,7 +5,7 @@ buildscript {
         // Compose/serialization compiler version. GHSA-r937-wjx7-w2jp.
         classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:2.4.21")
         constraints {
-            add("classpath", "com.google.guava:guava:33.7.2-jre") {
+            add("classpath", "com.google.guava:guava:33.8.0-jre") {
                 because("Fix GHSA-xxph-c9ww-hj94 in the build tooling")
             }
             add("classpath", "org.apache.commons:commons-lang3:3.18.0") {
