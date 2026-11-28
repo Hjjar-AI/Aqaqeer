@@ -74,10 +74,10 @@ def check(path):
                     if not isinstance(runs, dict) or runs.get('using') != 'composite':
                         problem(label, 'only local composite actions are allowed')
                     else:
+                        local_steps = runs.get('steps')
+                        if not isinstance(local_steps, list):
+                            local_steps = []
                         if directory.name == 'setup-android':
-                            local_steps = runs.get('steps')
-                            if not isinstance(local_steps, list):
-                                local_steps = []
                             setup = next((item for item in local_steps
                                           if isinstance(item, dict) and str(item.get('uses', '')).startswith('gradle/actions/setup-gradle@')), {})
                             if (local.get('inputs', {}).get('setup-gradle', {}).get('default') != 'true'
@@ -110,6 +110,12 @@ def check(path):
                                     or wrapper_stages[1].get('if') != WRAPPER_PROVISION_GUARD
                                     or not str(wrapper_stages[2].get('uses', '')).startswith('actions/cache/save@')):
                                 problem(label, 'restore, provision and save the verified wrapper in order before build tasks')
+                        elif directory.name == 'cache-system-image':
+                            image = next((item for item in local_steps
+                                          if isinstance(item, dict) and item.get('id') == 'image'), {})
+                            if not re.search(r'^\s*case "\$CI_IMAGE_API" in 23\|29\|35\)',
+                                             str(image.get('run', '')), re.MULTILINE):
+                                problem(label, 'system-image cache must accept API 23, 29 and 35')
                         steps_check(runs.get('steps'), str(candidates[0].relative_to(root)),
                                     (*stack, directory), checkout=True)
                 except (OSError, ValueError, yaml.YAMLError) as error:
