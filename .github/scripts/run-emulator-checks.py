@@ -11,6 +11,7 @@ import time
 import uuid
 
 from android_config import build_tools
+from emulator_compat import legacy_process_ids, legacy_single_owner
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -320,6 +321,43 @@ UI_CASES = (
 STANDARD_BATCHES = {'standard': STANDARD_CASES, 'storage': STORAGE_CASES,
                     'sharing': SHARING_CASES, 'ui': UI_CASES}
 
+NORMALIZATION_CASE = ('android6-normalization', 'Android6CompatibilityInstrumentedTest#arabicAndLatinSearchAndDuplicateKeysMatchExpectedSpellings', False)
+PIN_BOUNDARY_CASE = ('android6-pin-boundary', 'Android6CompatibilityInstrumentedTest#pinDelayAcrossProcessAndReboot', False)
+EXCHANGE_CASE = ('android6-backup-exchange', 'Android6CompatibilityInstrumentedTest#exchangeFreshBackupAndPin', False)
+ANDROID6_NETWORK_CASE = ('android6-validated-default-network', 'ViewModelInstrumentedTest#android6ViewModelFollowsValidatedDefaultNetwork', False)
+ANDROID6_CASE_NAMES = {
+    'demo': (
+        'demo-HomeUiTest-searchIsReachableDoesNotAutofocusAndClearRestoresBrowsing',
+        'demo-pdf-reports', 'demo-excel-reports',
+        'light-large-arabic', 'dark-large-arabic', 'amoled-large-arabic',
+        'public-vectors', 'authentication-rejection',
+        'demo-LaunchSplashUiTest-readyDestinationTakesOverDuringSplashWithCurrentAnimationSetting',
+        'demo-LaunchSplashUiTest-readyDestinationTakesOverDuringSplashWithNormalAnimationScale',
+    ),
+    'standard': (
+        'storage-StorageInstrumentedTest-encryptedRoomDatabaseReopensWithTheSameKeystoreWrappedKey',
+        'storage-StorageInstrumentedTest-secureStoreUsesFreshNoncesAndNeedsNoUserAuthentication',
+        'storage-BackupRestoreInstrumentedTest-draftRoundTripRetainsHistoryPendingAndCatalogButExcludesIdentityAndAuthorization',
+        'storage-BackupRestoreInstrumentedTest-wrongPassphraseCorruptionAndMissingConfirmationPreserveExistingData',
+        'storage-BackupReleaseRegressionInstrumentedTest-repeatedExportsUseFreshEncryptionAndBothAuthenticateWithExactUnicodePassphrase',
+        'ui-HomeBarPlacementUiTest-switchingTopSectionsWithKeyboardOpenPreservesQueryAndCursorAtLargeRtlText',
+        'ui-LaunchSplashUiTest-readyDestinationTakesOverDuringSplashWithCurrentAnimationSetting',
+    ),
+}
+
+
+def android6_cases(suite):
+    source = DEMO_CASES if suite == 'demo' else (*STORAGE_CASES, *UI_CASES)
+    by_name = {case[0]: case for case in source}
+    if len(by_name) != len(source):
+        raise ValueError('Ambiguous name in the Android 6 offline allowlist')
+    cases = tuple(by_name[name] for name in ANDROID6_CASE_NAMES[suite])
+    if suite == 'demo':
+        return (*cases, NORMALIZATION_CASE,
+                ('android6-calendar', 'Android6PresentationUiTest#arabicCalendarPreservesTypedEarlyDatesAndRoundTripsLeapDay', False),
+                ('android6-timezone', 'Android6PresentationUiTest#timezoneSearchAcceptsArabicCityAndTechnicalId', False))
+    return (*cases, ANDROID6_NETWORK_CASE, PIN_BOUNDARY_CASE)
+
 
 def select_cases(suite, methods=''):
     """Exact allowlist only; optional retry selects failed/unexecuted methods across batches."""
@@ -337,6 +375,105 @@ def select_cases(suite, methods=''):
 
 def adb(*args, timeout=30, check=True):
     return subprocess.run(['adb', '-s', SERIAL, *args], capture_output=True, timeout=timeout, check=check)
+
+
+def process_ids(name, api):
+    if api == 23:
+        return legacy_process_ids(adb('shell', 'ps').stdout.decode(), name)
+    return adb('shell', 'pidof', name, check=False).stdout.decode().split()
+
+
+def verify_android6_avd(api):
+    avd = adb('emu', 'avd', 'name').stdout.decode().splitlines()[:1]
+    if (avd != ['aqaqeer-android6']
+            or adb('shell', 'getprop', 'ro.kernel.qemu').stdout.strip() != b'1'
+            or adb('shell', 'getprop', 'ro.build.version.sdk').stdout.strip() != str(api).encode()):
+        raise RuntimeError(f'Expected the named, owned API {api} AVD and owner user')
+    owner = (legacy_single_owner(adb('shell', 'pm', 'list', 'users').stdout.decode()) if api == 23
+             else adb('shell', 'am', 'get-current-user').stdout.strip() == b'0')
+    if not owner:
+        raise RuntimeError('Expected owner user on the Android 6 compatibility AVD')
+
+
+def verify_android6_installations(api, installations):
+    verify_android6_avd(api)
+    for package, owned in installations.items():
+        identity, _ = installation_identity(package, observation='android6-phase')
+        if identity != owned:
+            raise RuntimeError('Android 6 phase no longer owns its installation')
+
+
+def pin_delay_boundary(command, installations):
+    owner = uuid.uuid4().hex
+    results = []
+    receipt = {}
+    for phase in ('arm', 'restart', 'reboot'):
+        verify_android6_installations(23, installations)
+        if phase == 'restart':
+            adb('shell', 'am', 'force-stop', PACKAGE)
+            if process_ids(PACKAGE, 23):
+                raise RuntimeError('PIN restart prerequisite failed: the app process is still running')
+            receipt['processAbsentBeforeRestart'] = True
+        elif phase == 'reboot':
+            old_boot = adb('shell', 'cat', '/proc/sys/kernel/random/boot_id').stdout.strip()
+            if not re.fullmatch(rb'[a-f0-9-]{36}', old_boot):
+                raise RuntimeError('Could not establish boot identity before the PIN reboot')
+            adb('reboot')
+            adb('wait-for-device', timeout=90)
+            deadline = time.monotonic() + 90
+            while True:
+                ready = adb('shell', 'getprop', 'sys.boot_completed', check=False).stdout.strip()
+                new_boot = adb('shell', 'cat', '/proc/sys/kernel/random/boot_id', check=False).stdout.strip()
+                if ready == b'1' and new_boot != old_boot and re.fullmatch(rb'[a-f0-9-]{36}', new_boot):
+                    break
+                if time.monotonic() >= deadline:
+                    raise RuntimeError('Owned Android 6 AVD did not complete a new boot')
+                time.sleep(1)
+            verify_android6_installations(23, installations)
+            receipt.update(bootIdBefore=old_boot.decode(), bootIdAfter=new_boot.decode())
+        phase_command = [*command[:-1], '-e', 'android6PinPhase', phase, '-e', 'android6PinOwner', owner, command[-1]]
+        result = adb(*phase_command, timeout=120, check=False)
+        passed = instrumentation_passed(result, PIN_BOUNDARY_CASE[1])
+        (OUTPUT / f'android6-pin-{phase}.log').write_bytes(result.stdout + result.stderr)
+        results.append({'phase': phase, 'passed': passed})
+        (OUTPUT / 'android6-pin-boundary.json').write_text(json.dumps({**receipt, 'phases': results}, indent=2) + '\n')
+        if not passed:
+            return result
+    return result
+
+
+def exchange_backup(phase, api, installations, *, after):
+    """Transfer only synthetic test backups between fresh AVDs in one runner job."""
+    outgoing = phase in ('export', 'peer') if after else False
+    incoming = phase in ('peer', 'return') if not after else False
+    if not (outgoing or incoming):
+        return None
+    verify_android6_installations(api, installations)
+    directory = Path(os.environ['RUNNER_TEMP']) / 'aqaqeer-android6-exchange'
+    directory.mkdir(mode=0o700, exist_ok=True)
+    if outgoing:
+        remote = 'files/android6-exchange-out.aqbak'
+        sample = adb('exec-out', 'run-as', PACKAGE, 'cat', remote).stdout
+        if not 0 < len(sample) <= 1_048_576:
+            raise RuntimeError('Missing or oversized Android 6 export fixture')
+        with (directory / f'from-api{api}.aqbak').open('xb') as target:
+            target.write(sample)
+        adb('shell', 'run-as', PACKAGE, 'rm', remote)
+    else:
+        remote = 'files/android6-exchange-in.aqbak'
+        source = directory / f'from-api{35 if api == 23 else 23}.aqbak'
+        sample = source.read_bytes()
+        if not 0 < len(sample) <= 1_048_576:
+            raise RuntimeError('Missing or oversized Android 6 import fixture')
+        adb('shell', 'run-as', PACKAGE, 'mkdir', '-p', 'files')
+        absence = adb('exec-out', 'run-as', PACKAGE, 'sh', '-c', f'if [ ! -e {remote} ]; then printf absent; fi')
+        if absence.stdout != b'absent':
+            raise RuntimeError('Expected a fresh Android 6 fixture destination')
+        subprocess.run(['adb', '-s', SERIAL, 'exec-in', 'run-as', PACKAGE, 'sh', '-c', f'cat > {remote}'],
+                       input=sample, capture_output=True, timeout=30, check=True)
+        if adb('exec-out', 'run-as', PACKAGE, 'cat', remote).stdout != sample:
+            raise RuntimeError('Android 6 fixture transfer failed byte verification')
+    return hashlib.sha256(sample).hexdigest()
 
 
 def instrumentation_passed(result, method):
@@ -431,9 +568,9 @@ def reader_lifecycle(command, name, method, owned):
     return adb(*phase_command('verify'), timeout=215 if phase == 'reboot' else 75, check=False)
 
 
-def capture_native_startups(name):
+def capture_native_startups(name, api):
     adb('shell', 'am', 'force-stop', PACKAGE)
-    if adb('shell', 'pidof', PACKAGE, check=False).stdout.strip():
+    if process_ids(PACKAGE, api):
         raise RuntimeError('The cold launch requires an absent app process.')
     component = f'{PACKAGE}/com.aqaqeer.app.MainActivity'
     cold_pid = None
@@ -456,7 +593,7 @@ def capture_native_startups(name):
                 (OUTPUT / f'{name}-{mode}-launch.txt').write_bytes(result.stdout + result.stderr)
                 if result.returncode != 0 or b'Status: ok' not in result.stdout:
                     raise RuntimeError(f'Native {mode} launch did not report success.')
-                pids = adb('shell', 'pidof', PACKAGE).stdout.decode().split()
+                pids = process_ids(PACKAGE, api)
                 if len(pids) != 1 or not pids[0].isdigit():
                     raise RuntimeError(f'Native {mode} launch has an ambiguous application process.')
                 if mode == 'cold':
@@ -517,12 +654,26 @@ def save_results(suite, cases, results, capture_errors):
 
 
 def main():
-    global PACKAGE
+    global OUTPUT, PACKAGE
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--suite', choices=('demo', 'standard', 'storage', 'sharing', 'ui'), default='demo')
+    parser.add_argument('--api23', action='store_true', help='Select the focused offline Android 6 profile')
+    parser.add_argument('--android6-exchange', choices=('none', 'export', 'peer', 'return'), default='none')
     parser.add_argument('--selection-only', action='store_true', help='Validate selectors and emit has_checks without Android tooling')
     args = parser.parse_args()
-    cases = select_cases(args.suite, os.environ.get('CI_DEMO_RETRY_METHODS' if args.suite == 'demo' else 'CI_RETRY_METHODS', ''))
+    if args.api23 and args.suite not in ANDROID6_CASE_NAMES:
+        parser.error('--api23 requires the demo or standard suite')
+    phase = args.android6_exchange
+    if phase != 'none' and (args.suite != 'standard' or args.api23 != (phase == 'export')):
+        parser.error('Backup exchange requires Standard, with the Android 6 profile for its first phase only')
+    if phase in ('peer', 'return'):
+        OUTPUT /= f'exchange-{phase}'
+        cases = (NORMALIZATION_CASE, EXCHANGE_CASE) if phase == 'peer' else (EXCHANGE_CASE,)
+    else:
+        cases = android6_cases(args.suite) if args.api23 else select_cases(
+            args.suite, os.environ.get('CI_DEMO_RETRY_METHODS' if args.suite == 'demo' else 'CI_RETRY_METHODS', ''))
+        if phase == 'export':
+            cases = (*cases, EXCHANGE_CASE)
     if args.selection_only:
         with Path(os.environ['GITHUB_OUTPUT']).open('a') as output:
             output.write('has_checks=' + ('true' if cases else 'false') + '\n')
@@ -542,7 +693,12 @@ def main():
         raise SystemExit('This helper only runs on ephemeral GitHub-hosted runners.')
     if adb('shell', 'getprop', 'ro.kernel.qemu').stdout.strip() != b'1':
         raise SystemExit('Expected the owned emulator; refusing another device.')
-    if adb('shell', 'am', 'get-current-user').stdout.strip() != b'0':
+    api = int(adb('shell', 'getprop', 'ro.build.version.sdk').stdout.strip())
+    if args.api23 or phase != 'none':
+        verify_android6_avd(35 if phase == 'peer' else 23)
+    elif api == 23:
+        raise SystemExit('Android 6 requires the focused offline profile.')
+    elif adb('shell', 'am', 'get-current-user').stdout.strip() != b'0':
         raise SystemExit('Expected user 0 on the owned fresh AVD.')
     OUTPUT.mkdir(parents=True, exist_ok=True)
     results = []
@@ -552,7 +708,7 @@ def main():
                   'suite': args.suite, 'runId': os.environ.get('GITHUB_RUN_ID'),
                   'attempt': os.environ.get('GITHUB_RUN_ATTEMPT'), 'job': os.environ.get('GITHUB_JOB'),
                   'selectedMethods': [method for _, method, _ in cases],
-                  'api': adb('shell', 'getprop', 'ro.build.version.sdk').stdout.decode().strip(),
+                  'api': str(api),
                   'user': 0, 'phase': 'APK inspection', 'apks': {}}
     save_results(args.suite, cases, results, capture_errors)
     try:
@@ -622,7 +778,7 @@ def main():
                     if current != installations[PACKAGE]:
                         raise RuntimeError('Native startup fixture no longer owns the application installation.')
                     try:
-                        capture_native_startups(name)
+                        capture_native_startups(name, api)
                     except (OSError, RuntimeError, subprocess.SubprocessError) as error:
                         capture_errors.append(f'{name}: native startup capture incomplete: {error}')
                 if record:
@@ -638,10 +794,17 @@ def main():
                     command += ['-e', 'ciTheme', name.split('-')[0].upper()]
                 if method == READER_NETWORK_CASE:
                     command += ['-e', 'ownedReaderNetworkFixture', 'true']
+                if method == ANDROID6_NETWORK_CASE[1]:
+                    command += ['-e', 'ownedAndroid6NetworkFixture', 'true']
+                if method == EXCHANGE_CASE[1]:
+                    command += ['-e', 'android6ExchangePhase', phase]
+                    provenance['importedSampleSha256'] = exchange_backup(phase, api, installations, after=False)
                 command += [PACKAGE + '.test/com.aqaqeer.app.SuiteRunner']
                 try:
                     if method in READER_LIFECYCLE_CASES:
                         run = reader_lifecycle(command, name, method, installations[PACKAGE])
+                    elif method == PIN_BOUNDARY_CASE[1]:
+                        run = pin_delay_boundary(command, installations)
                     else:
                         timeout = 525 if method == READER_RETRY_CASE else (120 if flavor == 'demo' else 180)
                         run = adb(*command, timeout=timeout, check=False)
@@ -653,6 +816,8 @@ def main():
                     status = 'timed out'
                     passed = False
                 (OUTPUT / f'{name}-instrumentation.log').write_bytes(transcript)
+                if passed and method == EXCHANGE_CASE[1]:
+                    provenance['exportedSampleSha256'] = exchange_backup(phase, api, installations, after=True)
                 results.append({'case': name, 'method': method, 'status': status,
                                 'instrumentationExitCode': run.returncode if status != 'timed out' else None})
                 save_results(args.suite, cases, results, capture_errors)
@@ -673,7 +838,7 @@ def main():
                 if recorder is not None:
                     try:
                         # Stop only the recorder whose command line contains our unique path.
-                        pids = adb('shell', 'pidof', 'screenrecord', check=False).stdout.decode().split()
+                        pids = process_ids('screenrecord', api)
                         for pid in pids:
                             if pid.isdigit():
                                 cmdline = adb('shell', 'cat', f'/proc/{pid}/cmdline', check=False).stdout
@@ -743,7 +908,8 @@ def main():
                  *(['Runner/setup failure: ' + provenance['failure']['message']] if 'failure' in provenance else []),
                  *[f'- {r["case"]}: {r["status"]}' for r in results],
                  *[f'- Capture limitation: {message}' for message in capture_errors], '',
-                 f'Download {"emulator-standard-functional" if flavor == "standard" else "emulator-evidence"} artifacts within one day; GitHub storage quota can block uploads.',
+                 ('Download emulator-android6 artifacts within one day.' if args.api23 else
+                  f'Download {"emulator-standard-functional" if flavor == "standard" else "emulator-evidence"} artifacts within one day; GitHub storage quota can block uploads.'),
                  ('Standard cases retain instrumentation logs and failure PNG/logcat fallbacks. Splash cases also retain cold and warm launch clips.' if flavor == 'standard' else 'Clips cover at most the first 45 seconds of each UI case. ui-screenshots holds live-activity captures; host failure PNGs are post-instrumentation fallbacks.')]
         (OUTPUT / 'results.md').write_text('\n'.join(lines) + '\n')
     if len(results) != len(cases) or any(r['status'] != 'passed' for r in results) or capture_errors:

@@ -24,6 +24,15 @@
 
 For the latest evidence, see [Home and branding](validation.md#repository-home-and-branding-follow-up--2026-11-27), [focused Android runs](validation.md#focused-android-follow-up--2026-11-27), and the [hosted completion checkpoint](validation.md#hosted-completion-batch--2026-11-24).
 
+## Android 6 preview / P1
+
+The source sets API 23 for Standard and Demo, with compatibility paths for encrypted files, PIN retries, network observation and Arabic presentation. This preview starts with a fresh installation and synthetic fixtures. Prior releases and Android runs remain evidence of their original source.
+
+1. Push the candidate to the default branch. Run workflow 03 with `scope=all` and `coverage=false` for JVM vectors and compilation. Run workflow 04 for production lint at the lower API floor. Run workflow 07 with `android6_checks=true` (default), `demo_checks=false`, `standard_functional=false`, and both retry fields blank. Confirm both app and instrumentation manifest merges, then review Android 6 results, PIN process/reboot receipts and the two directions of the backup/PIN exchange. A higher dependency minimum blocks the preview. [Exact selections and evidence](test-coverage.md#android-6-preview)
+2. Run workflow 08 with `android6_startup=true` (default) and blank `expected_certificate_sha256`. Review the minified launch and cleanup results, and compare per-ABI download sizes. After acceptance, run workflow 11 with `publication=draft` and blank `version_code`. Confirm the production certificate, API 23 v1 verification for each distributed APK, and APK selection guidance before publishing the same draft as a prerelease. [Build and signing guide](build.md#hosted-emulator-screenshots-and-recordings)
+3. Keep the manual UI review open for separate verification. Check navigation-bar icon contrast and splash appearance, Arabic PDF shaping and pagination, keyboard clearance in medication/PIN/search/password forms, all drawer routes, connection-file generation and clipboard warning, and spoken Arabic TalkBack. Keep automated Home keyboard, export, network availability and splash results scoped to their selected cases.
+4. On separately authorized low-memory physical ARM hardware, install the signed release, measure cold start, large-catalog scrolling and the largest realistic backup/restore with KDF and peak-heap observations. Verify Keystore reopen after reboot and a screen-lock change, rehearse an in-place update once a same-signer artifact pair exists, and check live Telegram fetch and publish. These remain beyond the emulator preview. Local builds, tests and lint are stopped for this work. The owner will push and run GitHub Actions.
+
 <a id="v1--deferred-backuprestore-validation-gate--p1"></a>
 
 ## V1 — Backup/restore verification gate / P1

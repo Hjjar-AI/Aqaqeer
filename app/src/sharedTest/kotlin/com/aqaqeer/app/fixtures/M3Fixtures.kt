@@ -1,6 +1,7 @@
 package com.aqaqeer.app.fixtures
 
 import com.aqaqeer.app.data.*
+import com.aqaqeer.app.security.Pbkdf2Sha256
 import com.aqaqeer.app.security.SecureStore
 import com.aqaqeer.app.security.StorageRecoveryRequired
 import com.aqaqeer.app.security.files.*
@@ -9,9 +10,7 @@ import kotlinx.serialization.json.*
 import java.time.Instant
 import java.util.Base64
 import javax.crypto.Cipher
-import javax.crypto.SecretKeyFactory
 import javax.crypto.spec.GCMParameterSpec
-import javax.crypto.spec.PBEKeySpec
 import javax.crypto.spec.SecretKeySpec
 
 /** Public fixtures included only in JVM/instrumentation source sets, never in the application. */
@@ -53,9 +52,9 @@ object M3Fixtures {
         // Fixed test-only nonce/salt/credentials are public and excluded from application artifacts.
         val nonce = ByteArray(12) { (64 + it).toByte() }; val salt = ByteArray(16)
         val derived = if (domain == EnvelopeDomain.SNAPSHOT) key else {
-            val spec = PBEKeySpec("123456".toCharArray(), salt, 200_000, 256)
-            try { SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256").generateSecret(spec).encoded }
-            finally { spec.clearPassword() }
+            val password = "123456".toCharArray()
+            try { Pbkdf2Sha256.derive(password, salt, 200_000) }
+            finally { password.fill('\u0000') }
         }
         try {
             val cipher = Cipher.getInstance("AES/GCM/NoPadding")

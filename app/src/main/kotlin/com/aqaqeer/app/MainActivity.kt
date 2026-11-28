@@ -1,6 +1,7 @@
 package com.aqaqeer.app
 
 import android.os.Bundle
+import android.os.Build
 import android.os.LocaleList
 import android.content.Context
 import android.content.Intent
@@ -23,15 +24,17 @@ import androidx.compose.ui.graphics.toArgb
 import com.aqaqeer.app.ui.AqaqeerApp
 import com.aqaqeer.app.ui.CatalogViewModel
 import dagger.hilt.android.AndroidEntryPoint
+import java.util.Locale
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     private val viewModel: CatalogViewModel by viewModels()
     private var appFrameReady = false
     override fun attachBaseContext(newBase: Context) {
+        val arabic = Locale.forLanguageTag("ar")
         val configuration = Configuration(newBase.resources.configuration).apply {
-            setLocales(LocaleList.forLanguageTags("ar"))
-            setLayoutDirection(java.util.Locale.forLanguageTag("ar"))
+            if (Build.VERSION.SDK_INT >= 24) setLocales(LocaleList(arabic)) else setLocale(arabic)
+            setLayoutDirection(arabic)
         }
         super.attachBaseContext(newBase.createConfigurationContext(configuration))
     }

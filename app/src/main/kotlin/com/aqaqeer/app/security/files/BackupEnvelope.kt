@@ -1,6 +1,7 @@
 package com.aqaqeer.app.security.files
 
 import com.aqaqeer.app.security.PasswordEnvelopeKdfV1
+import com.aqaqeer.app.security.Pbkdf2Sha256
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.sync.withLock
@@ -9,9 +10,7 @@ import java.nio.charset.CodingErrorAction
 import java.security.SecureRandom
 import java.util.Base64
 import javax.crypto.Cipher
-import javax.crypto.SecretKeyFactory
 import javax.crypto.spec.GCMParameterSpec
-import javax.crypto.spec.PBEKeySpec
 import javax.crypto.spec.SecretKeySpec
 
 /** Ephemeral, independently authenticated chunks. Plaintext never reaches a temporary file. */
@@ -167,7 +166,10 @@ internal class V1BackupEnvelope(private val workspace: () -> Long = {
         const val LIMIT = 67_108_864L
         fun validatePassword(password: CharArray) { if (Character.codePointCount(password, 0, password.size) < 8 || password.any { it.isSurrogate() } && !validSurrogates(password)) throw EnvelopeException(EnvelopeError.INVALID_CREDENTIAL) }
         private fun validSurrogates(chars: CharArray): Boolean { var i = 0; while (i < chars.size) { val c = chars[i++]; if (c.isHighSurrogate()) { if (i == chars.size || !chars[i++].isLowSurrogate()) return false } else if (c.isLowSurrogate()) return false }; return true }
-        private fun derive(password: CharArray, salt: ByteArray): ByteArray { validatePassword(password); val spec = PBEKeySpec(password, salt, PasswordEnvelopeKdfV1.ITERATIONS, 256); return try { SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256").generateSecret(spec).encoded } finally { spec.clearPassword() } }
+        private fun derive(password: CharArray, salt: ByteArray): ByteArray {
+            validatePassword(password)
+            return Pbkdf2Sha256.derive(password, salt, PasswordEnvelopeKdfV1.ITERATIONS)
+        }
         private fun cipher(mode: Int, key: ByteArray, salt: ByteArray, nonce: ByteArray): Cipher = Cipher.getInstance("AES/GCM/NoPadding").apply { init(mode, SecretKeySpec(key, "AES"), GCMParameterSpec(128, nonce)); updateAAD("aqbak:v1".toByteArray(Charsets.UTF_8) + salt + nonce) }
         private fun b64(bytes: ByteArray): String = Base64.getEncoder().encodeToString(bytes)
         private fun binary(s: String, size: Int): ByteArray = try { Base64.getDecoder().decode(s).also { if (it.size != size || b64(it) != s) invalid() } } catch (_: IllegalArgumentException) { invalid() }

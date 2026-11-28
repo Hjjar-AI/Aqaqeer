@@ -1,5 +1,6 @@
 package com.aqaqeer.app.ui
 
+import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -34,12 +35,21 @@ internal val MedicationHeadingFont = FontFamily(
     Font(R.font.noto_naskh_arabic_regular, FontWeight.Normal),
     Font(R.font.noto_naskh_arabic_bold, FontWeight.Bold),
 )
-private val ArabicFont = FontFamily(
-    Font(R.font.noto_sans_arabic, FontWeight.Normal, variationSettings = FontVariation.Settings(FontVariation.weight(400))),
-    Font(R.font.noto_sans_arabic, FontWeight.Medium, variationSettings = FontVariation.Settings(FontVariation.weight(500))),
-    Font(R.font.noto_sans_arabic, FontWeight.SemiBold, variationSettings = FontVariation.Settings(FontVariation.weight(600))),
-    Font(R.font.noto_sans_arabic, FontWeight.Bold, variationSettings = FontVariation.Settings(FontVariation.weight(700))),
-)
+private val ArabicFont = if (Build.VERSION.SDK_INT >= 26) {
+    FontFamily(
+        Font(R.font.noto_sans_arabic, FontWeight.Normal, variationSettings = FontVariation.Settings(FontVariation.weight(400))),
+        Font(R.font.noto_sans_arabic, FontWeight.Medium, variationSettings = FontVariation.Settings(FontVariation.weight(500))),
+        Font(R.font.noto_sans_arabic, FontWeight.SemiBold, variationSettings = FontVariation.Settings(FontVariation.weight(600))),
+        Font(R.font.noto_sans_arabic, FontWeight.Bold, variationSettings = FontVariation.Settings(FontVariation.weight(700))),
+    )
+} else {
+    FontFamily(
+        Font(R.font.noto_sans_arabic_400, FontWeight.Normal),
+        Font(R.font.noto_sans_arabic_500, FontWeight.Medium),
+        Font(R.font.noto_sans_arabic_600, FontWeight.SemiBold),
+        Font(R.font.noto_sans_arabic_700, FontWeight.Bold),
+    )
+}
 private val BaseTypography = Typography()
 internal object AppShapeTokens {
     val extraSmall = RoundedCornerShape(Radius.xs)

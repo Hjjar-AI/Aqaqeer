@@ -12,7 +12,7 @@
 
 Aqaqeer is an Android app with an Arabic RTL interface and support for Arabic and English medication names. Each phone holds one pharmacy, with independent availability states across 1–5 sections. Browsing and local administration work offline; connected phones exchange encrypted snapshots through a dedicated private Telegram group and bot.
 
-The app tracks availability, not quantities or inventory transactions. It does not manage patients, prescribing or billing. Requires **Android 8.0 / API 26 or later**.
+The app tracks availability, not quantities or inventory transactions. It does not manage patients, prescribing or billing. The upcoming **Android 6.0 / API 23 preview** is pending emulator verification. When available, choose the universal APK if you are unsure which ARM version your phone uses.
 
 ## What you can do
 

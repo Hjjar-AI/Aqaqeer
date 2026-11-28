@@ -8,6 +8,10 @@ on:
         type: string
         required: false
         default: ''
+      android6_startup:
+        description: "Options: false = run the API 35 release startup check only; true = also check minified release startup on API 23. Default: true."
+        type: boolean
+        default: true
 
 permissions:
   contents: read
@@ -77,10 +81,18 @@ jobs:
           if-no-files-found: error
 
   startup:
+    name: Release startup on API ${{ matrix.api }}
     needs: release
     if: ${{ github.event.repository.private == false && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
     runs-on: ubuntu-24.04
     timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        api: ${{ fromJSON(inputs.android6_startup && '[35,23]' || '[35]') }}
+    env:
+      CI_SMOKE_API: ${{ matrix.api }}
     permissions:
       contents: read
       actions: read
@@ -108,12 +120,12 @@ jobs:
       - name: Cache downloaded system image
         uses: ./.github/actions/cache-system-image
         with:
-          api-level: 35
+          api-level: ${{ matrix.api }}
 
       - name: Open minified release on the owned emulator
         uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d
         with:
-          api-level: 35
+          api-level: ${{ matrix.api }}
           target: default
           arch: x86_64
           force-avd-creation: 'true'
@@ -126,7 +138,7 @@ jobs:
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
-          name: release-startup-${{ github.run_id }}
+          name: release-startup-${{ github.run_id }}${{ matrix.api == 23 && '-api23' || '' }}
           path: ci-output/release-smoke/
           retention-days: 1
           if-no-files-found: error

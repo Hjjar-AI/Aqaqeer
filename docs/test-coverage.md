@@ -6,11 +6,19 @@
 
 Use [validation](validation.md) for run outcomes and [build](build.md#hosted-emulator-screenshots-and-recordings) for current workflow selections and commands. The [backup/restore audit](validation.md#backuprestore-requirement-to-evidence-audit--2026-11-22) maps retained cases to specific acceptance boundaries.
 
+## Android 6 preview
+
+The JVM comparison uses independent wire keys, including an exact Unicode passphrase, against both PBKDF2 implementations. The Android provider already reads the public vectors and rejects a wrong password. The shared fixture key derivation follows the application's API floor. The splash assertions retain their raster comparisons using an API 23 device screenshot cropped to the measured node bounds.
+
+Workflow 07 `android6_checks=true` (default) selects 13 Demo cases on API 23 (11 methods) and 13 Standard cases (11 methods) across the initial API 23, API 35 exchange, and final API 23 exchange legs. The 26 selections span 20 distinct methods. The PIN case has three instrumentation phases (arm, fresh process, and reboot), for 28 instrumentation invocations when the selection completes. The existing API 29/35 profiles still select 289 cases across 267 methods when both are enabled.
+
+The focused profile checks native splash, theme and Arabic text, search and duplicates, timezone city/ID, leap-day and early-date handling, keyboard, PDF/XLSX, active network changes, Keystore/SQLCipher reopen, wrong passwords and same-API backup. The Standard exchange transfers freshly exported synthetic archives containing PIN verifiers in both directions, with byte hashes, correct/wrong PIN checks and restored medication identity. The PIN boundary records process absence, changed boot ID and unchanged failure count. Physical device, low-memory, visual acceptance and live Telegram evidence remain separate. [Exact hosted inputs](build.md#hosted-emulator-screenshots-and-recordings)
+
 ## Pre-production risk regressions — 2026-11-27
 
 Five added Standard Android methods cover both outcomes of an uncertain publication in a restored archive, separately exercise a higher minimum app version and unsupported schema with successful backup export and restore, and verify an over-limit PDF fails before touching an existing document. The restore fixtures exercise encrypted backups and offline authenticated read-back, compare exact pending and history changes, and assert upload and write counts before review and after separate publication. The PDF fixture measures forced-line spacing to establish the 1,000-page precondition and checks the real document provider's previous bytes.
 
-After an authorized workflow **03 - Checks - Tests and compilation** run with `scope=all` and `coverage=false`, select **07 - Verify - Emulator with visual evidence** on the default branch containing the tests. Set `demo_checks=false`, `standard_functional=true` and this exact `retry_methods` value. This selects four storage methods and one Standard report method on API 35. The earlier Home and branding retry remains separately selectable below.
+After an authorized workflow **03 - Checks - Tests and compilation** run with `scope=all` and `coverage=false`, select **07 - Verify - Emulator with visual evidence** on the default branch containing the tests. Set `android6_checks=false` for this targeted retry, then set `demo_checks=false`, `standard_functional=true` and this exact `retry_methods` value. This selects four storage methods and one Standard report method on API 35. The earlier Home and branding retry remains separately selectable below.
 
 ```text
 BackupRestoreInstrumentedTest#restoreAcknowledgesAnAcceptedUncertainPinPublicationWithoutReplayingIt,BackupRestoreInstrumentedTest#restoreArchivesAnUnacceptedAttemptAndDropsItsPendingPinBeforeSeparatePublication,BackupReleaseRegressionInstrumentedTest#higherRequiredAppVersionBlocksEditsAndPublicationButKeepsBackupExport,BackupReleaseRegressionInstrumentedTest#unsupportedRequiredSchemaBlocksEditsAndPublicationButKeepsBackupExport,ReportExportsInstrumentedTest#pdfOverPageCapLeavesTheUserSelectedDestinationUntouched
@@ -22,7 +30,7 @@ An eligible release artifact pair and an owned emulator are required for the sep
 
 One JVM method checks that rebinding the search index after a stock-only edit updates Reader results, section markers, and stock sort order. Three offline Python methods cover Git ignoring backups, redacted rejection after force-add, and the full versus source-only public fixture contract. Four existing Android methods now check query and cursor restoration through activity recreation, the default and saved accent mappings with rendered tabs and artwork, the PDF and Excel stock palettes, and both generated logo drawables. The existing Android selectors and counts are unchanged.
 
-For compilation, the JVM suites, and the offline helpers, run **03 - Checks - Tests and compilation** with `scope=all` and `coverage=false`. For the targeted Android batch, use **07 - Verify - Emulator with visual evidence** on the default branch containing the changes. Set `demo_checks=true` and `standard_functional=true`. The two Demo methods run on both API 29 and 35, and the three Standard methods run on API 35.
+For compilation, the JVM suites, and the offline helpers, run **03 - Checks - Tests and compilation** with `scope=all` and `coverage=false`. For the targeted Android batch, use **07 - Verify - Emulator with visual evidence** on the default branch containing the changes. Set `android6_checks=false`, `demo_checks=true` and `standard_functional=true`. The two Demo methods run on both API 29 and 35, and the three Standard methods run on API 35.
 
 `demo_retry_methods`
 

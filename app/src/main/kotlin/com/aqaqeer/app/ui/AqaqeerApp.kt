@@ -173,7 +173,7 @@ import kotlinx.coroutines.flow.collect
     val backAllowed by rememberUpdatedState(!adminBusy && !homeModalOpen && !dataTimesOpen && !drawerState.isOpen)
     PredictiveBackHandler(enabled = state.destination != Route.Home && backAllowed) { progress ->
         val origin = viewModel.state.value.destination
-        val animate = android.animation.ValueAnimator.areAnimatorsEnabled()
+        val animate = animationsEnabled(context)
         try {
             progress.collect { backProgress = if (animate) it.progress else 0f }
             if (backAllowed && viewModel.state.value.destination == origin) back()

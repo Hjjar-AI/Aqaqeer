@@ -1,5 +1,6 @@
 package com.aqaqeer.app.ui
 
+import android.os.Build
 import com.aqaqeer.app.uiText
 import com.aqaqeer.app.R
 
@@ -40,11 +41,14 @@ import kotlinx.serialization.json.*
             }) { Text(uiText(R.string.logic_generate_password)) }
             if (generated && password.isNotEmpty()) AppButton(variant = AppButtonVariant.QUIET, enabled = !busy, onClick = {
                 val clip = android.content.ClipData.newPlainText("Aqaqeer", password)
-                if (android.os.Build.VERSION.SDK_INT >= 33) clip.description.extras = android.os.PersistableBundle().apply {
+                if (Build.VERSION.SDK_INT >= 33) clip.description.extras = android.os.PersistableBundle().apply {
                     putBoolean(android.content.ClipDescription.EXTRA_IS_SENSITIVE, true)
                 }
                 clipboard.setPrimaryClip(clip)
             }) { Text(uiText(R.string.logic_copy_password)) }
+        }
+        if (generated && password.isNotEmpty() && Build.VERSION.SDK_INT < 29) {
+            NoticeStrip(Notice(uiText(R.string.connection_export_legacy_clipboard_warning), NoticeSeverity.WARNING))
         }
         AppButton(enabled = shared && !busy && outgoing == null && FormGuidance.pin(password) == null, onClick = {
             outgoing = password.toCharArray(); password = ""; generated = false

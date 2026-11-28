@@ -292,11 +292,13 @@ def check(path):
             if path.name == 'emulator.yml':
                 steps = job.get('steps', [])
                 selectors = [step for step in steps if step.get('id') == 'selection']
-                suite = 'demo' if name == 'emulator' else '"$CI_STANDARD_SUITE"'
+                suite = {'emulator': 'demo', 'standard-functional': '"$CI_STANDARD_SUITE"',
+                         'android6': '"$CI_ANDROID6_SUITE" --api23 --android6-exchange "$CI_ANDROID6_EXCHANGE"'}.get(name)
                 if len(selectors) != 1 or selectors[0].get('run') != f'python3 .github/scripts/run-emulator-checks.py --suite {suite} --selection-only':
                     problem(name, 'emulator selection must be validated before Android tooling')
                 for step in steps:
-                    guarded = (step.get('name', '').startswith(('Set up Android', 'Package ', 'Enable runner KVM', 'Run selected tests', 'Run offline standard')))
+                    guarded = step.get('name', '').startswith(('Set up Android', 'Package ', 'Enable runner KVM',
+                                                               'Cache downloaded system image', 'Run selected tests', 'Run offline standard'))
                     if guarded and step.get('if') != "${{ steps.selection.outputs.has_checks == 'true' }}":
                         problem(name, 'empty emulator batches must skip Android tooling and device setup')
             if path.name == 'emulator.yml' and name == 'emulator':
@@ -317,6 +319,35 @@ def check(path):
                     'type': 'boolean', 'default': False,
                 } or job.get('needs') != 'emulator':
                     problem(name, 'standard functional checks must be opt-in and wait for the demo emulators')
+            if path.name == 'emulator.yml' and name == 'android6':
+                expected_guard = "${{ inputs.android6_checks && github.event.repository.private == false && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}"
+                input_spec = triggers['workflow_dispatch']['inputs'].get('android6_checks')
+                if input_spec != {
+                    'description': 'Options: false = omit Android 6 checks; true = run the focused offline Standard and Demo profiles on API 23. Default: true.',
+                    'type': 'boolean', 'default': True,
+                } or job.get('strategy') != {'fail-fast': False, 'max-parallel': 1, 'matrix': {'include': [
+                    {'suite': 'demo', 'variant': 'DemoDebug'}, {'suite': 'standard', 'variant': 'StandardDebug'},
+                ]}}:
+                    problem(name, 'Android 6 offline checks must default on and serialize the two flavor profiles')
+                runner = next((step for step in job.get('steps', []) if step.get('id') == 'emulator'), {}).get('with', {})
+                if (runner.get('api-level') != 23 or runner.get('avd-name') != 'aqaqeer-android6'
+                        or runner.get('script') != 'python3 .github/scripts/run-emulator-checks.py --suite "$CI_ANDROID6_SUITE" --api23 --android6-exchange "$CI_ANDROID6_EXCHANGE"'):
+                    problem(name, 'Android 6 checks require the named API 23 AVD and focused offline selection')
+                exchange = [step for step in job.get('steps', []) if '--android6-exchange ' in step.get('with', {}).get('script', '')]
+                if ([step['with'].get('api-level') for step in exchange] != [23, 35, 23]
+                        or any(step['with'].get('avd-name') != 'aqaqeer-android6' for step in exchange)
+                        or [step['with']['script'].split()[-1] for step in exchange[1:]] != ['peer', 'return']
+                        or job.get('env', {}).get('CI_ANDROID6_EXCHANGE') != "${{ matrix.suite == 'standard' && 'export' || 'none' }}"):
+                    problem(name, 'Android 6 backup exchange must run Standard on fresh API 23/35/23 AVDs in order')
+            if path.name == 'release.yml' and name == 'startup':
+                input_spec = triggers['workflow_dispatch']['inputs'].get('android6_startup')
+                if input_spec != {
+                    'description': 'Options: false = run the API 35 release startup check only; true = also check minified release startup on API 23. Default: true.',
+                    'type': 'boolean', 'default': True,
+                } or job.get('strategy') != {'fail-fast': False, 'max-parallel': 1, 'matrix': {
+                    'api': "${{ fromJSON(inputs.android6_startup && '[35,23]' || '[35]') }}",
+                }} or job.get('env', {}).get('CI_SMOKE_API') != '${{ matrix.api }}':
+                    problem(name, 'release startup must default to both serialized API 35 and 23 runs')
             if job.get('if') != expected_guard:
                 problem(name, 'exact public/default-branch guard required')
             if job.get('runs-on') != 'ubuntu-24.04':

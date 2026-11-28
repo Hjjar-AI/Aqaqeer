@@ -162,9 +162,11 @@ jobs:
           (cd "$directory" && sha256sum --check SHA256SUMS.txt)
           {
             printf 'Signed standard release APKs (universal, ARM32, ARM64) for com.aqaqeer.app. Version 0.0.%s (code %s).\n\n' "$CI_RELEASE_CODE" "$CI_RELEASE_CODE"
+            printf 'Android 6.0 (API 23) preview. Use the universal APK if unsure, armeabi-v7a for 32-bit ARM, or arm64-v8a for 64-bit ARM. Physical Android 6 and live Telegram validation are tracked separately.\n\n'
             printf 'Source: %s\nTemporary build-run link: %s/%s/actions/runs/%s\n\n' "$GITHUB_SHA" "$GITHUB_SERVER_URL" "$GITHUB_REPOSITORY" "$GITHUB_RUN_ID"
             python3 -c 'import json,sys; print("Signing certificate SHA-256: " + json.load(open(sys.argv[1]))["certificateSha256"])' "$directory/release-info.json"
-            printf '\nVerify: apksigner verify --print-certs <downloaded.apk>\n\n'
+            printf '\nVerify: apksigner verify --print-certs <downloaded.apk>\n'
+            printf 'Android 6 signature: apksigner verify --verbose --min-sdk-version 23 --max-sdk-version 23 <downloaded.apk>\n\n'
             printf 'Signature/certificate, package/version, non-debuggable manifest, shrinker evidence, resources and native alignment inspected. Runtime and installed-update acceptance are separate.\n'
           } > release-notes.md
           gh release create "v0.0.$CI_RELEASE_CODE" "$directory"/* \

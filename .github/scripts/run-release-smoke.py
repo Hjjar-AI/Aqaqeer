@@ -10,6 +10,7 @@ import tempfile
 import time
 
 from android_config import build_tools
+from emulator_compat import legacy_process_ids, legacy_single_owner
 
 PACKAGE = 'com.aqaqeer.app'
 SERIAL = 'emulator-5554'
@@ -32,8 +33,16 @@ def adb(*arguments, binary=False):
 def emulator_identity():
     if (os.environ.get('GITHUB_ACTIONS') != 'true' or os.environ.get('RUNNER_ENVIRONMENT') != 'github-hosted'
             or adb('shell', 'getprop', 'ro.kernel.qemu').strip() != '1'
-            or adb('emu', 'avd', 'name').splitlines()[0] != AVD):
+            or adb('emu', 'avd', 'name').splitlines()[:1] != [AVD]):
         raise ValueError('Owned GitHub-hosted emulator required; physical/local devices forbidden')
+    api = int(adb('shell', 'getprop', 'ro.build.version.sdk').strip())
+    if api not in (23, 35) or str(api) != os.environ.get('CI_SMOKE_API', '35'):
+        raise ValueError('Unexpected API level for release smoke')
+    owner = (legacy_single_owner(adb('shell', 'pm', 'list', 'users')) if api == 23
+             else adb('shell', 'am', 'get-current-user').strip() == '0')
+    if not owner:
+        raise ValueError('Expected only the owner user on the release smoke AVD')
+    return api
 
 
 def package_paths():
@@ -59,20 +68,42 @@ def progress(value):
         'run': os.environ.get('GITHUB_RUN_ID'), 'sourceCommit': os.environ.get('GITHUB_SHA')}, indent=2) + '\n')
 
 
-def installed_identity():
+def installed_identity(api):
     paths = package_paths()
     if len(paths) != 1 or not paths[0].startswith('package:/data/app/'):
         raise ValueError('Unexpected installed APK path/set')
-    uid = adb('shell', 'cmd', 'package', 'list', 'packages', '-U', PACKAGE).strip()
-    if not re.fullmatch(r'package:com\.aqaqeer\.app uid:[0-9]+', uid):
+    if api == 23:
+        dump = adb('shell', 'dumpsys', 'package', PACKAGE)
+        package_name = re.escape(PACKAGE)
+        if not re.search(rf'^\s*Package \[{package_name}\] ', dump, re.MULTILINE):
+            raise ValueError('Package dump did not identify the installed package')
+        uids = set(re.findall(r'^\s*userId=([0-9]+)[ \t]*$', dump, re.MULTILINE))
+    else:
+        listed = adb('shell', 'cmd', 'package', 'list', 'packages', '-U', PACKAGE).strip()
+        uids = set(re.findall(r'^package:com\.aqaqeer\.app uid:([0-9]+)$', listed, re.MULTILINE))
+    if len(uids) != 1 or int(next(iter(uids))) < 10000:
         raise ValueError('Unexpected package UID identity')
-    return dict(path=paths[0], uid=uid, sha256=hashlib.sha256(adb('exec-out', 'cat', paths[0][8:], binary=True)).hexdigest())
+    return dict(path=paths[0], uid=next(iter(uids)), sha256=hashlib.sha256(adb('exec-out', 'cat', paths[0][8:], binary=True)).hexdigest())
+
+
+def app_process(api):
+    if api == 23:
+        return ' '.join(legacy_process_ids(adb('shell', 'ps'), PACKAGE))
+    return adb('shell', 'pidof', PACKAGE).strip()
+
+
+def app_logs(api, pid):
+    if api > 23:
+        return adb('logcat', '-d', '--pid=' + pid, '-v', 'threadtime')
+    # Marshmallow logcat lacks --pid. Match the process column in threadtime format.
+    process = re.compile(rf'^\d\d-\d\d \d\d:\d\d:\d\d\.\d+\s+{pid}\s+\d+\s')
+    return '\n'.join(line for line in adb('logcat', '-d', '-v', 'threadtime').splitlines() if process.match(line)) + '\n'
 
 
 def main():
     OUTPUT.mkdir(parents=True, exist_ok=True)
     progress('verify owned emulator')
-    emulator_identity()
+    api = emulator_identity()
     progress('verify package absence before installation')
     if package_paths():
         raise ValueError('Existing installation must be preserved')
@@ -82,7 +113,7 @@ def main():
         raise ValueError('Expected one universal release APK')
     source = candidates[0]
     tools = build_tools()
-    receipt = dict(serial=SERIAL, avd=AVD, package=PACKAGE, sourceCommit=os.environ['GITHUB_SHA'],
+    receipt = dict(serial=SERIAL, avd=AVD, api=api, package=PACKAGE, sourceCommit=os.environ['GITHUB_SHA'],
                    run=os.environ['GITHUB_RUN_ID'], attempt=os.environ['GITHUB_RUN_ATTEMPT'], startup='unexecuted', cleanup='unexecuted')
     installed = None
     with tempfile.TemporaryDirectory(dir=os.environ['RUNNER_TEMP'], prefix='release-smoke-') as temporary:
@@ -104,6 +135,12 @@ def main():
         if result.returncode:
             raise ValueError('Throwaway signing failed')
         signer = run([str(tools / 'apksigner'), 'verify', '--print-certs', str(signed)])
+        if api == 23:
+            verified = run([str(tools / 'apksigner'), 'verify', '--verbose', '--min-sdk-version', '23',
+                            '--max-sdk-version', '23', str(signed)])
+            if 'Verified using v1 scheme (JAR signing): true' not in verified:
+                raise ValueError('Android 6 startup artifact requires v1 signing')
+            receipt['v1VerifiedAtApi23'] = True
         receipt['certificateSha256'] = re.findall(r'certificate SHA-256 digest: ([a-fA-F0-9]+)', signer)
         receipt['artifactSha256'] = hashlib.sha256(signed.read_bytes()).hexdigest()
         badging = run([str(tools / 'aapt'), 'dump', 'badging', str(signed)])
@@ -121,7 +158,7 @@ def main():
             receipt['cleanup'] = 'installation attempted; ownership verification pending'
             progress('install owned APK')
             adb('install', str(signed))
-            installed = installed_identity()
+            installed = installed_identity(api)
             if installed['sha256'] != receipt['artifactSha256']:
                 raise ValueError('Installed bytes differ from owned artifact')
             receipt['installation'] = installed
@@ -131,16 +168,16 @@ def main():
             (OUTPUT / 'launch.txt').write_text(launch)
             if 'Status: ok' not in launch or 'Error' in launch:
                 raise ValueError('Launch did not succeed')
-            pid = adb('shell', 'pidof', PACKAGE).strip()
+            pid = app_process(api)
             if not re.fullmatch(r'[0-9]+', pid):
                 raise ValueError('No single application process')
             observed_pid = pid
             progress('observe thirty-second startup survival')
             for _ in range(30):
                 time.sleep(1)
-                if adb('shell', 'pidof', PACKAGE).strip() != pid:
+                if app_process(api) != pid:
                     raise ValueError('Application exited/restarted during startup observation')
-            logs = adb('logcat', '-d', '--pid=' + pid, '-v', 'threadtime')
+            logs = app_logs(api, pid)
             (OUTPUT / 'startup.log').write_text(logs)
             (OUTPUT / 'startup.png').write_bytes(adb('exec-out', 'screencap', '-p', binary=True))
             if 'FATAL EXCEPTION' in logs:
@@ -152,9 +189,9 @@ def main():
         finally:
             # Capture failure evidence too, without clearing the shared log buffer.
             try:
-                current = observed_pid or adb('shell', 'pidof', PACKAGE).strip()
+                current = observed_pid or app_process(api)
                 if re.fullmatch(r'[0-9]+', current):
-                    (OUTPUT / 'startup.log').write_text(adb('logcat', '-d', '--pid=' + current, '-v', 'threadtime'))
+                    (OUTPUT / 'startup.log').write_text(app_logs(api, current))
                 if not (OUTPUT / 'startup.png').exists():
                     (OUTPUT / 'startup.png').write_bytes(adb('exec-out', 'screencap', '-p', binary=True))
             except Exception:
@@ -163,7 +200,7 @@ def main():
                 try:
                     progress('verify installation ownership before cleanup')
                     emulator_identity()
-                    if installed_identity() != installed or installed['sha256'] != receipt['artifactSha256']:
+                    if installed_identity(api) != installed or installed['sha256'] != receipt['artifactSha256']:
                         receipt['cleanup'] = 'refused: installation ownership differs'
                     else:
                         progress('uninstall owned APK and confirm absence')

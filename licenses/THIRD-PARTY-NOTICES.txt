@@ -27,6 +27,15 @@ SQLCipher Android and its native SQLite/SQLCipher component:
 See the original SQLCipher-Android-LICENSE.txt included alongside this file.
 https://github.com/sqlcipher/android-database-sqlcipher
 
+Android core library desugaring (desugar_jdk_libs 2.1.5):
+GNU General Public License version 2 with the Classpath Exception, as
+declared in the published Maven artifact. See upstream/Desugar-JDK-Libs-LICENSE.txt.
+https://github.com/google/desugar_jdk_libs
+
+Unicode CLDR 48 Arabic exemplar-city labels and timezone aliases:
+Unicode License v3. See upstream/Unicode-CLDR-LICENSE.txt.
+https://github.com/unicode-org/cldr/tree/release-48
+
 DataStore external Protocol Buffers:
 BSD-3-Clause; see upstream/DataStore-Protobuf-LICENSE.txt and
 upstream/Protobuf-LICENSE.txt, retained from the exact AndroidX artifact and
@@ -49,6 +58,7 @@ Noto Sans Arabic and Noto Naskh Arabic (regular/bold):
 Copyright 2022 The Noto Project Authors (Sans Arabic).
 Copyright 2019 The Noto Project Authors (Naskh Arabic).
 See assets/licenses/NotoSansArabic-OFL.txt inside the application.
+The Android 6–7 Sans Arabic resources are static instances of the bundled variable font.
 https://github.com/notofonts/arabic
 
 The project-owned source is licensed separately under Apache-2.0. Third-party

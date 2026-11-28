@@ -1,6 +1,9 @@
 package com.aqaqeer.app.ui
 
 import android.animation.ValueAnimator
+import android.content.Context
+import android.os.Build
+import android.provider.Settings
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearEasing
@@ -23,12 +26,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.isActive
 
+internal fun animationsEnabled(context: Context): Boolean = if (Build.VERSION.SDK_INT >= 26) {
+    ValueAnimator.areAnimatorsEnabled()
+} else {
+    Settings.Global.getFloat(context.contentResolver, Settings.Global.ANIMATOR_DURATION_SCALE, 1f) != 0f
+}
+
 @Composable
 internal fun LaunchSplash(waitingForStartup: Boolean, artwork: ImageBitmap, onDismiss: () -> Unit) {
-    val animate = ValueAnimator.areAnimatorsEnabled()
+    val animate = animationsEnabled(LocalContext.current)
     val scale = remember { Animatable(1f) }
     val opacity = remember { Animatable(1f) }
     var hasDrawn by remember { mutableStateOf(false) }

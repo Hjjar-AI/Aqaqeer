@@ -1,5 +1,6 @@
 package com.aqaqeer.app.ui
 
+import android.os.Build
 import com.aqaqeer.app.uiText
 import com.aqaqeer.app.R
 
@@ -9,17 +10,31 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import com.aqaqeer.app.data.MedicationPresentation
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.ZoneOffset
+import java.util.Locale
 
 @Composable internal fun TimezoneField(value: String, change: (String) -> Unit) {
     val uiText = rememberUiText()
     var open by rememberSaveable { mutableStateOf(false) }
-    fun city(zone: String): String = android.icu.text.TimeZoneNames.getInstance(java.util.Locale.forLanguageTag("ar"))
-        .getExemplarLocationName(zone) ?: zone.substringAfterLast('/').replace('_', ' ')
+    val resources = LocalContext.current.resources
+    val legacyCities = remember(resources) {
+        if (Build.VERSION.SDK_INT >= 24) emptyMap() else {
+            resources.openRawResource(R.raw.timezone_cities_ar).bufferedReader().useLines { lines ->
+                lines.associate { line -> line.substringBefore('\t') to line.substringAfter('\t') }
+            }
+        }
+    }
+    fun city(zone: String): String {
+        val localized = if (Build.VERSION.SDK_INT >= 24) {
+            android.icu.text.TimeZoneNames.getInstance(Locale.forLanguageTag("ar")).getExemplarLocationName(zone)
+        } else legacyCities[zone]
+        return localized ?: zone.substringAfterLast('/').replace('_', ' ')
+    }
     NavigationRow(uiText(R.string.shared_timezone_label), { open = true }, supporting = city(value) + " · " + bidi(value))
     if (open) {
         var query by rememberSaveable { mutableStateOf("") }
@@ -53,8 +68,13 @@ import java.time.ZoneOffset
             }
         })
     if (open) {
-        val initial = remember(value) { runCatching { LocalDate.parse(value.trim()).also { require(it.year in 1..9999) }.atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli() }.getOrNull() }
-        val picker = rememberDatePickerState(initialSelectedDateMillis = initial, yearRange = 1..9999)
+        // The legacy Material calendar has a Julian/Gregorian transition in 1582.
+        val years = if (Build.VERSION.SDK_INT < 26) 1583..9999 else 1..9999
+        val initial = remember(value, years) {
+            runCatching { LocalDate.parse(value.trim()) }.getOrNull()?.takeIf { it.year in years }
+                ?.atStartOfDay(ZoneOffset.UTC)?.toInstant()?.toEpochMilli()
+        }
+        val picker = rememberDatePickerState(initialSelectedDateMillis = initial, yearRange = years)
         DatePickerDialog(onDismissRequest = { open = false }, confirmButton = {
             AppButton(variant = AppButtonVariant.QUIET, enabled = picker.selectedDateMillis != null, onClick = {
                 picker.selectedDateMillis?.let { change(Instant.ofEpochMilli(it).atZone(ZoneOffset.UTC).toLocalDate().toString()) }

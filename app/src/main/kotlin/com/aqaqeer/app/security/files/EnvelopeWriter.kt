@@ -2,6 +2,7 @@
 package com.aqaqeer.app.security.files
 
 import com.aqaqeer.app.security.PasswordEnvelopeKdfV1
+import com.aqaqeer.app.security.Pbkdf2Sha256
 import com.aqaqeer.app.admin.PinSecurity
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.*
@@ -9,9 +10,7 @@ import java.io.ByteArrayOutputStream
 import java.security.SecureRandom
 import java.util.Base64
 import javax.crypto.Cipher
-import javax.crypto.SecretKeyFactory
 import javax.crypto.spec.GCMParameterSpec
-import javax.crypto.spec.PBEKeySpec
 import javax.crypto.spec.SecretKeySpec
 
 /** v1 production writer. Fixed crypto vectors are never sources of production randomness. */
@@ -30,9 +29,7 @@ internal object EnvelopeWriter {
             try {
                 com.aqaqeer.app.admin.adminRequire(digits.size >= 4) { "استخدم أربعة أرقام على الأقل لكلمة ملف الاتصال" }
                 val salt = ByteArray(16).also { SecureRandom().nextBytes(it) }
-                val spec = PBEKeySpec(digits, salt, PasswordEnvelopeKdfV1.ITERATIONS, 256)
-                val key = try { SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256").generateSecret(spec).encoded }
-                    finally { spec.clearPassword() }
+                val key = Pbkdf2Sha256.derive(digits, salt, PasswordEnvelopeKdfV1.ITERATIONS)
                 try {
                     val plain = encode(wire, ConnectionWire.serializer())
                     return try { encrypt(plain, key, salt, "aqz:v1") } finally { plain.fill(0) }

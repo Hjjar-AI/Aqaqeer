@@ -1,6 +1,7 @@
 package com.aqaqeer.app.security.files
 
 import com.aqaqeer.app.security.PasswordEnvelopeKdfV1
+import com.aqaqeer.app.security.Pbkdf2Sha256
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
@@ -13,9 +14,7 @@ import java.nio.charset.StandardCharsets
 import java.security.GeneralSecurityException
 import javax.crypto.AEADBadTagException
 import javax.crypto.Cipher
-import javax.crypto.SecretKeyFactory
 import javax.crypto.spec.GCMParameterSpec
-import javax.crypto.spec.PBEKeySpec
 import javax.crypto.spec.SecretKeySpec
 
 enum class EnvelopeDomain(val marker: String, val byteLimit: Long) {
@@ -211,9 +210,7 @@ class EnvelopeReader(private val stagingRoot: File,
                 if (char.isHighSurrogate() && (index == normalized.size || !normalized[index++].isLowSurrogate()))
                     throw EnvelopeException(EnvelopeError.INVALID_CREDENTIAL)
             }
-            val spec = PBEKeySpec(normalized, salt, PasswordEnvelopeKdfV1.ITERATIONS, 256)
-            return try { SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256").generateSecret(spec).encoded }
-            finally { spec.clearPassword() }
+            return Pbkdf2Sha256.derive(normalized, salt, PasswordEnvelopeKdfV1.ITERATIONS)
         } finally { normalized.fill('\u0000') }
     }
     private fun decrypt(parsed: Parsed, domain: EnvelopeDomain, key: ByteArray, check: () -> Unit): AuthenticatedJson {

@@ -21,6 +21,10 @@ on:
         description: "Options: false = omit standard batches; true = run 253 offline standard checks in four serialized API-35 batches after selected demo checks. Default: false."
         type: boolean
         default: false
+      android6_checks:
+        description: "Options: false = omit Android 6 checks; true = run the focused offline Standard and Demo profiles on API 23. Default: true."
+        type: boolean
+        default: true
 
 permissions:
   contents: read
@@ -206,6 +210,146 @@ jobs:
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: emulator-${{ matrix.suite }}-functional-api35-${{ github.run_number }}-${{ github.run_attempt }}
+          path: ci-output/emulator/
+          retention-days: 1
+          if-no-files-found: error
+
+  android6:
+    name: Android 6 ${{ matrix.suite }} preview checks
+    if: ${{ inputs.android6_checks && github.event.repository.private == false && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        include:
+          - suite: demo
+            variant: DemoDebug
+          - suite: standard
+            variant: StandardDebug
+    env:
+      CI_ANDROID6_SUITE: ${{ matrix.suite }}
+      CI_ANDROID6_VARIANT: ${{ matrix.variant }}
+      CI_ANDROID6_EXCHANGE: ${{ matrix.suite == 'standard' && 'export' || 'none' }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Prepare diagnostics
+        run: mkdir -p ci-output/emulator
+
+      - name: Validate selection before Android tooling
+        id: selection
+        run: python3 .github/scripts/run-emulator-checks.py --suite "$CI_ANDROID6_SUITE" --api23 --android6-exchange "$CI_ANDROID6_EXCHANGE" --selection-only
+
+      - name: Set up Android tooling
+        if: ${{ steps.selection.outputs.has_checks == 'true' }}
+        uses: ./.github/actions/setup-android
+        with:
+          diagnostics-directory: ci-output/emulator
+
+      - name: Package selected application and instrumentation
+        if: ${{ steps.selection.outputs.has_checks == 'true' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 .github/scripts/run-gradle-ci.py --log ci-output/emulator/gradle-package.log -- \
+            --no-daemon --console=plain --no-configuration-cache \
+            -Paqaqeer.exportApks=false ":app:process${CI_ANDROID6_VARIANT}MainManifest" \
+            ":app:process${CI_ANDROID6_VARIANT}AndroidTestManifest" \
+            ":app:package$CI_ANDROID6_VARIANT" ":app:package${CI_ANDROID6_VARIANT}AndroidTest"
+
+      - name: Enable runner KVM access
+        if: ${{ steps.selection.outputs.has_checks == 'true' }}
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Cache downloaded system image
+        if: ${{ steps.selection.outputs.has_checks == 'true' }}
+        uses: ./.github/actions/cache-system-image
+        with:
+          api-level: 23
+
+      - name: Run selected tests on Android 6
+        if: ${{ steps.selection.outputs.has_checks == 'true' }}
+        id: emulator
+        uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2.38.0
+        with:
+          api-level: 23
+          target: default
+          arch: x86_64
+          force-avd-creation: 'true'
+          profile: pixel_2
+          avd-name: aqaqeer-android6
+          emulator-port: 5554
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none -camera-front none -no-metrics
+          script: python3 .github/scripts/run-emulator-checks.py --suite "$CI_ANDROID6_SUITE" --api23 --android6-exchange "$CI_ANDROID6_EXCHANGE"
+
+      - name: Cache the API 35 exchange system image
+        if: ${{ matrix.suite == 'standard' && steps.emulator.outcome == 'success' }}
+        uses: ./.github/actions/cache-system-image
+        with:
+          api-level: 35
+
+      - name: Restore the API 23 sample and export the API 35 sample
+        if: ${{ matrix.suite == 'standard' && steps.emulator.outcome == 'success' }}
+        id: exchange-peer
+        uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2.38.0
+        with:
+          api-level: 35
+          target: default
+          arch: x86_64
+          force-avd-creation: 'true'
+          avd-name: aqaqeer-android6
+          emulator-port: 5554
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none -camera-front none -no-metrics
+          script: python3 .github/scripts/run-emulator-checks.py --suite standard --android6-exchange peer
+
+      - name: Cache the API 23 exchange system image
+        if: ${{ steps.exchange-peer.outcome == 'success' }}
+        uses: ./.github/actions/cache-system-image
+        with:
+          api-level: 23
+
+      - name: Restore the API 35 sample on a fresh Android 6 emulator
+        if: ${{ steps.exchange-peer.outcome == 'success' }}
+        uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2.38.0
+        with:
+          api-level: 23
+          target: default
+          arch: x86_64
+          force-avd-creation: 'true'
+          avd-name: aqaqeer-android6
+          emulator-port: 5554
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none -camera-front none -no-metrics
+          script: python3 .github/scripts/run-emulator-checks.py --suite standard --android6-exchange return
+
+      - name: Write run summary
+        if: ${{ !cancelled() }}
+        env:
+          CI_JOB_STATUS: ${{ job.status }}
+          CI_COMMAND_OUTCOME: ${{ steps.emulator.outcome }}
+        run: |
+          python3 .github/scripts/ci-summary.py emulator
+          for summary in ci-output/emulator/results.md ci-output/emulator/exchange-*/results.md; do
+            if [ -f "$summary" ]; then
+              cat "$summary" >> "$GITHUB_STEP_SUMMARY"
+            fi
+          done
+
+      - name: Retain Android 6 outcomes, visuals and logs
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: emulator-android6-${{ matrix.suite }}-api23-${{ github.run_number }}-${{ github.run_attempt }}
           path: ci-output/emulator/
           retention-days: 1
           if-no-files-found: error

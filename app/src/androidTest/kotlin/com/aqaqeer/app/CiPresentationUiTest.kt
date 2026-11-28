@@ -5,6 +5,7 @@ import android.graphics.drawable.ColorDrawable
 import android.view.View
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
+import androidx.core.os.ConfigurationCompat
 import androidx.test.platform.app.InstrumentationRegistry
 import com.aqaqeer.app.data.BuildSeed
 import com.aqaqeer.app.data.DisplayPreferences
@@ -39,7 +40,7 @@ class CiPresentationUiTest {
             compose.activityRule.scenario.recreate()
             compose.waitUntil(15_000) { compose.onAllNodesWithTag("home").fetchSemanticsNodes().isNotEmpty() }
             compose.runOnIdle {
-                assertEquals("ar", compose.activity.resources.configuration.locales[0].language)
+                assertEquals("ar", ConfigurationCompat.getLocales(compose.activity.resources.configuration)[0]?.language)
                 assertEquals(View.LAYOUT_DIRECTION_RTL, compose.activity.resources.configuration.layoutDirection)
                 assertTrue("Large font setting must actually be active", compose.activity.resources.configuration.fontScale >= 1.29f)
                 val background = (compose.activity.window.decorView.background as ColorDrawable).color

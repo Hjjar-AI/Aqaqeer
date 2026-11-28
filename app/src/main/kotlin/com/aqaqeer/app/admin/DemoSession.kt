@@ -146,7 +146,9 @@ internal object DemoSession {
                 historyPreview(entry.oldValue), historyPreview(entry.newValue), entry.editedAt, entry.observedAt, entry.publishedRevision, false)
         }
         val options = session.catalog.medications.associate { it.id to MedicationPresentation.identity(it, session.catalog.formsById[it.formId]?.nameAr) }.toMutableMap()
-        session.history.filter { it.entityType in setOf("medication", "availability") }.forEach { options.putIfAbsent(it.entityId.substringBefore('/'), it.entityName) }
+        session.history.filter { it.entityType in setOf("medication", "availability") }.forEach { entry ->
+            options.getOrPut(entry.entityId.substringBefore('/')) { entry.entityName }
+        }
         return HistoryPage(entries, offset.toLong() + 50 < filtered.size, options.map { HistoryOption(it.key, it.value) }.sortedBy { normalizedName(it.name) }, timezone)
     }
 }

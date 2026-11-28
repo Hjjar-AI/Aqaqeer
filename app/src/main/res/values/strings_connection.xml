@@ -10,6 +10,7 @@
     <string name="connection_discover_group_step_title" formatted="false">"3. اكتشاف المجموعة والتحقق"</string>
     <string name="connection_export_protection_title" formatted="false">"حماية ملف الاتصال"</string>
     <string name="connection_export_security_help" formatted="false">"يحصل المستورد على صلاحية القراءة. اختر أربعة أرقام على الأقل؛ يفضل توليد 16 رقماً عشوائياً؛ تجنب التواريخ والتسلسلات والأرقام المكررة. شارك الملف وكلمته عبر قناتين منفصلتين."</string>
+    <string name="connection_export_legacy_clipboard_warning">يمكن للتطبيقات الأخرى قراءة كلمة المرور عند نسخها على هذا الإصدار من أندرويد، حتى عندما تعمل في الخلفية.</string>
     <string name="connection_file_password_label" formatted="false">كلمة ملف الاتصال</string>
     <string name="connection_file_password_label_with_guidance" formatted="false">"كلمة ملف الاتصال — أربعة أرقام على الأقل؛ يفضل توليد 16 رقماً عشوائياً"</string>
     <string name="connection_file_password_rule" formatted="false">أربعة أرقام على الأقل؛ يفضل توليد 16 رقماً عشوائياً</string>

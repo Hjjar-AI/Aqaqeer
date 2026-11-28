@@ -68,7 +68,7 @@ Observed field JSON values carry revision/observation time, not invented origina
 
 ## Creation, edits and publication
 
-Current `local_control` stores lifecycle, PIN failure/observed/authorized verifier identities, reconnect intent, restore/reminder flags and resumable leave state. Protected `pin-delay` stores the shared promotion/current-PIN-change failure count, boot count and elapsed-time deadline; wall-clock changes do not bypass it. Process restarts preserve it; a reboot conservatively restarts the outstanding delay. Successful verification resets it, confirmed leave clears it, and backups never export it. Legacy wall-clock retry values are no longer used.
+Current `local_control` stores lifecycle, PIN failure/observed/authorized verifier identities, reconnect intent, restore/reminder flags and resumable leave state. Protected `pin-delay` stores the shared promotion/current-PIN-change failure count, boot identity and elapsed-time deadline. It uses the platform boot count when available and the kernel boot ID on Android 6. If boot identity is unavailable, a new process conservatively rearms the delay and retains the failure count. Wall-clock adjustments never shorten it. A reboot rearms the outstanding delay, successful verification resets it, confirmed leave clears it, and backups never export it.
 
 Creation atomically writes pharmacy/seeds/admin authorization; normalized salted PBKDF2-HMAC-SHA256/200,000 PINs are not retained. Accepted creation resets validation and a PIN-input session key, clears transferred secrets and uses collected/synchronous busy guards; failures restore untouched empty PIN inputs, invalid submissions retain entered text. Leave persists intent before protected/local cleanup, including the pharmacy-scoped selected-section preference; startup resumes it.
 
@@ -268,6 +268,8 @@ Result CSV preserves business columns plus rowNumber/outcome/warning/error, neut
 <a id="dates-prices-tips-and-freshness"></a>
 
 ## Dates, tips, and freshness
+
+On API 23, the timezone picker reads a sorted UTF-8 table of 557 zone IDs. It contains the 419 explicit Arabic exemplar cities and fills empty aliases from the first labeled ID in each CLDR alias group. Offsets come from `ZoneId`. The Material calendar on API 23–25 offers years 1583–9999. Direct Gregorian date entry handles earlier dates. [Pinned Arabic cities](https://raw.githubusercontent.com/unicode-org/cldr-json/48.0.0/cldr-json/cldr-dates-full/main/ar/timeZoneNames.json) · [CLDR 48 aliases](https://raw.githubusercontent.com/unicode-org/cldr/release-48/common/bcp47/timezone.xml) · [Bundled license](../licenses/upstream/Unicode-CLDR-LICENSE.txt)
 
 The civil Hijri converter uses integer arithmetic, epoch 622-07-19 = 1 Muharram 1 AH, alternating 30/29 months and leap years 2, 5, 7, 10, 13, 16, 18, 21, 24, 26, 29 in a 10,631-day/30-year cycle. Pre-epoch dates get an unavailable explanation; civil midnight differs from moon-sighting/sunset conventions. Local `secondaryHijri` defaults off and adds detail/history labels without changing Gregorian inputs/business rules/shared dates/exports; history instants first use pharmacy timezone.
 

@@ -131,10 +131,14 @@ def main():
             names = set(apk.namelist())
             required = {'AndroidManifest.xml', 'classes.dex', 'resources.arsc',
                         'assets/licenses/NotoSansArabic-OFL.txt', 'assets/SQLCipher-Android-LICENSE.txt',
-                        'assets/Apache-2.0.txt', 'assets/THIRD-PARTY-NOTICES.txt', 'assets/runtime-components.txt'}
+                        'assets/Apache-2.0.txt', 'assets/THIRD-PARTY-NOTICES.txt', 'assets/runtime-components.txt',
+                        'assets/upstream/Desugar-JDK-Libs-LICENSE.txt', 'assets/upstream/Unicode-CLDR-LICENSE.txt'}
             if not required <= names:
                 raise ValueError('Release is missing required code/resources/license entries')
-            (directory / 'runtime-components.txt').write_bytes(apk.read('assets/runtime-components.txt'))
+            runtime_components = apk.read('assets/runtime-components.txt')
+            if not re.search(rb'^com\.android\.tools:desugar_jdk_libs:[^\r\n]+$', runtime_components, re.MULTILINE):
+                raise ValueError('Release runtime inventory is missing core library desugaring')
+            (directory / 'runtime-components.txt').write_bytes(runtime_components)
             if any('telegram-test-config' in name or name.endswith('/v1-vectors.json') for name in names):
                 raise ValueError('Verification-only fixture/credential file in release APK')
             for name in sorted(names):
@@ -165,6 +169,14 @@ def main():
             if 'Android Debug' in signer.stdout or not expected or fingerprints != [expected]:
                 raise ValueError('Signed release requires the original expected non-debug signing certificate')
             lines.append('APK signature verified and certificate matches CI_RELEASE_CERT_SHA256.')
+            if config['minimum'] == 23:
+                legacy = subprocess.run([str(tools / 'apksigner'), 'verify', '--verbose', '--min-sdk-version', '23',
+                                         '--max-sdk-version', '23', str(path)],
+                                        capture_output=True, text=True, timeout=30, check=True).stdout
+                if 'Verified using v1 scheme (JAR signing): true' not in legacy:
+                    raise ValueError('Android 6 distribution requires a verified v1 signature')
+                result['v1VerifiedAtApi23'] = True
+                lines.append('APK v1 (JAR) signature independently verified at API 23.')
         else:
             if 'DOES NOT VERIFY' not in signer.stderr + signer.stdout:
                 raise ValueError('Signature inspection failed unexpectedly')

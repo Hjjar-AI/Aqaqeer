@@ -85,7 +85,7 @@ android {
     }
     defaultConfig {
         applicationId = "com.aqaqeer.app"
-        minSdk = 26
+        minSdk = 23
         targetSdk = 37
         versionCode = currentBuildCode
         versionName = "0.0.$currentBuildCode"
@@ -147,6 +147,7 @@ android {
     sourceSets["test"].kotlin.directories += "src/sharedTest/kotlin"
     sourceSets["androidTest"].kotlin.directories += "src/sharedTest/kotlin"
     compileOptions {
+        isCoreLibraryDesugaringEnabled = true
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
@@ -172,7 +173,7 @@ require(apkExportDirectory.isAbsolute) { "APK export directory must be absolute.
 val exportApks = providers.gradleProperty("aqaqeer.exportApks").orNull != "false"
 
 val runtimeNoticeInventory = tasks.register<RuntimeNoticeInventory>("generateRuntimeNoticeInventory") {
-    coordinates.set(configurations.named("standardReleaseRuntimeClasspath")
+    val runtime = configurations.named("standardReleaseRuntimeClasspath")
         .flatMap { it.incoming.resolutionResult.rootComponent }
         .map { root ->
             val seen = mutableSetOf<org.gradle.api.artifacts.component.ComponentIdentifier>()
@@ -192,7 +193,10 @@ val runtimeNoticeInventory = tasks.register<RuntimeNoticeInventory>("generateRun
                 }
             }
             values.toList()
-        })
+        }
+    coordinates.set(runtime.zip(libs.desugar.jdk.libs) { modules, desugar ->
+        (modules + "${desugar.module.group}:${desugar.module.name}:${desugar.versionConstraint.requiredVersion}").distinct().sorted()
+    })
     outputDirectory.set(layout.buildDirectory.dir("generated/runtime-notices"))
 }
 
@@ -248,6 +252,7 @@ ksp { arg("room.schemaLocation", "$projectDir/schemas") }
 hilt { enableAggregatingTask = true }
 
 dependencies {
+    coreLibraryDesugaring(libs.desugar.jdk.libs)
     constraints {
         add("ksp", "com.google.guava:guava:33.7.2-jre") {
             because("Fix GHSA-xxph-c9ww-hj94 in Room/Hilt processor classpaths")

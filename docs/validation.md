@@ -2,6 +2,10 @@
 
 [Requirements](requirements.md) define acceptance. [Plan](plan.md) lists remaining work. Results apply to the recorded revision and environment. Older entries describe what was reviewed at the time. See [evidence custody](#evidence-custody-and-remaining-limits) for local availability.
 
+## Android 6 preview source review — 2026-11-28
+
+Source changes start at `3c47a6d`. Static inspection confirmed the literal minimum SDK of 23, four shared PBKDF2 call sites, first-entry precedence in Demo history's medication options, valid resource references, four static font weights, 557 Arabic timezone entries, and matching upstream license bytes. Parsed CI policy passed for all 16 workflows, and all 20 focused Android method selectors resolve to source declarations. The 26 selections and their 28 instrumentation invocations remain unexecuted. Compilation, manifest merges, emulator results, and signed outputs are pending the [hosted preview sequence](plan.md#android-6-preview--p1).
+
 ## Repository, Home and branding follow-up — 2026-11-27
 
 Source changes start at `af59c23`. The integrity checker protects pharmacy backups and checks that the allowlisted public fixture is tracked and present in full mode. In an isolated Git repository with synthetic files, the backup and fixture were ignored, the full check detected both untracked and missing fixtures, and the source-only check rejected a force-added backup with a redacted diagnostic.

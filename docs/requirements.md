@@ -495,7 +495,7 @@ Maintenance starts with all task accordions closed and allows one open at a time
 
 ### Connection issuance and rotation
 
-Issue connection file: admin-only, after first confirmed publication; require a numeric file password of at least four digits, offer secure generation of 16 random digits with an explicit copy action, validate inline and show guidance to avoid dates, repetition and sequences (file and password via separate channels). Existing valid numeric passwords remain usable; reissuing does not strengthen or revoke earlier copies.
+Issue connection file: admin-only, after first confirmed publication; require a numeric file password of at least four digits, offer secure generation of 16 random digits with an explicit copy action, validate inline and show guidance to avoid dates, repetition and sequences (file and password via separate channels). On Android 6–9, warn beside Copy that other apps can read the clipboard. Existing valid numeric passwords remain usable; reissuing does not strengthen or revoke earlier copies.
 
 Reissue/change file password: does not revoke old files or imported devices. Reimport is required only for recipients who need the new file, not every functioning device.
 
@@ -547,7 +547,7 @@ Group admin tools by catalog, activity, sharing, data protection and device acti
 
 Publication-review counts filter the visible review only, not publication scope. Conflict comparisons adapt between columns and stacked labeled values. Copy actions target eligible non-secret IDs with feedback. Help/About contains a status/marker legend.
 
-Kotlin, Compose/Material 3, MVVM with immutable UiState, Repository, Room/SQLCipher, Hilt, DataStore, WorkManager, OkHttp, kotlinx.serialization, Android PDF/text layout. minSdk 26; choose current supported stable compile/target SDK and compatible dependencies at implementation time. Package `com.aqaqeer.app`. Permissions INTERNET, ACCESS_NETWORK_STATE, RECEIVE_BOOT_COMPLETED and WAKE_LOCK for network and work scheduling. SAF only. Reader background refresh uses deferrable Android jobs without a foreground service or notification.
+Kotlin, Compose/Material 3, MVVM with immutable UiState, Repository, Room/SQLCipher, Hilt, DataStore, WorkManager, OkHttp, kotlinx.serialization, Android PDF/text layout. Minimum SDK 23 for Standard and Demo, with Android 6 initially offered as a preview after focused offline emulator and signed APK checks. Choose current supported stable compile/target SDK and compatible dependencies at implementation time. Package `com.aqaqeer.app`. Permissions INTERNET, ACCESS_NETWORK_STATE, RECEIVE_BOOT_COMPLETED and WAKE_LOCK for network and work scheduling. SAF only. Reader background refresh uses deferrable Android jobs without a foreground service or notification.
 
 ## 14. Milestones and acceptance
 

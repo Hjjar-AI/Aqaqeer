@@ -1,22 +1,18 @@
 package com.aqaqeer.app.admin
 
 import com.aqaqeer.app.security.AdminPinKdfV1
+import com.aqaqeer.app.security.Pbkdf2Sha256
 import com.aqaqeer.app.data.PinVerifier
 import java.security.MessageDigest
 import java.security.SecureRandom
 import java.util.Base64
-import javax.crypto.SecretKeyFactory
-import javax.crypto.spec.PBEKeySpec
 
 internal object PinSecurity {
     fun digits(input: CharArray): CharArray = input.map { c ->
         val n = Character.digit(c, 10); adminRequire(n in 0..9) { "أدخل أرقاماً فقط" }; ('0'.code + n).toChar()
     }.toCharArray()
-    private fun derive(pin: CharArray, salt: ByteArray): ByteArray {
-        val spec = PBEKeySpec(pin, salt, AdminPinKdfV1.ITERATIONS, 256)
-        return try { SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256").generateSecret(spec).encoded }
-        finally { spec.clearPassword() }
-    }
+    private fun derive(pin: CharArray, salt: ByteArray): ByteArray =
+        Pbkdf2Sha256.derive(pin, salt, AdminPinKdfV1.ITERATIONS)
     fun create(input: CharArray): PinVerifier {
         val pin = digits(input)
         try {

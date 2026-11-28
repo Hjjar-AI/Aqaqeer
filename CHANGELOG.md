@@ -4,6 +4,7 @@ User-visible changes are recorded here. Executed verification and its limits rem
 
 ## Unreleased
 
+- Android 6.0 (API 23) preview support is pending emulator verification. The universal APK covers both ARM variants. Use `armeabi-v7a` for 32-bit ARM or `arm64-v8a` for 64-bit ARM for a smaller download. Android 6–9 show a warning beside the generated-password Copy button.
 - Home keeps search/filter controls pinned in their chosen position, shows What’s new as a compact inline toggle when space is tight, and places admin Add beside search. Reader cards open details; editable-admin cards open Edit and long press starts bulk selection.
 - New medications support per-section initial availability; existing-medication availability saves immediately. Bulk controls adapt to narrow/large-text layouts, read-only badges use compact height, and steps/checklists expose localized accessibility states.
 - Notices/card tips can be dismissed for the session; snackbars include Close and finite timeouts. Home retains completed rows while matching results recompute, without loading skeletons; splash uses whole-logo growth and fade.

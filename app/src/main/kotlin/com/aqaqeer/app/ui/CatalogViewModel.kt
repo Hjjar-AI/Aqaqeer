@@ -5,10 +5,16 @@ import com.aqaqeer.app.R
 import com.aqaqeer.app.BuildConfig
 
 import android.net.Uri
+import android.content.BroadcastReceiver
 import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
 import android.net.ConnectivityManager
 import android.net.Network
 import android.net.NetworkCapabilities
+import android.net.NetworkRequest
+import android.os.Build
+import androidx.core.content.ContextCompat
 import dagger.hilt.android.qualifiers.ApplicationContext
 import com.aqaqeer.app.admin.*
 import kotlinx.coroutines.delay
@@ -81,7 +87,7 @@ class CatalogViewModel @Inject constructor(
     internal val backups: com.aqaqeer.app.backup.BackupRepository,
     internal val maintenance: MaintenanceCoordinator,
     internal val pinChanges: PinChanges,
-    @ApplicationContext context: Context,
+    @param:ApplicationContext private val context: Context,
 
 ) : ViewModel() {
     internal val demoFiles = com.aqaqeer.app.admin.DemoFiles(context)
@@ -164,26 +170,56 @@ class CatalogViewModel @Inject constructor(
         exchangeController.saveReport(uri.takeIf { canHandleReport() }, ::currentReportOptions)
 
     private val connectivity = context.getSystemService(ConnectivityManager::class.java)
-    private var online = connectivity.getNetworkCapabilities(connectivity.activeNetwork)?.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED) == true
+    private fun defaultNetworkValidated(): Boolean = connectivity.activeNetwork?.let {
+        connectivity.getNetworkCapabilities(it)?.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
+    } == true
+
+    private var online = defaultNetworkValidated()
     private var foreground = false
     private var reconnectJob: Job? = null
     private val networkObserver = object : ConnectivityManager.NetworkCallback() {
-        override fun onCapabilitiesChanged(network: Network, capabilities: NetworkCapabilities) {
-            viewModelScope.launch {
-                val available = capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
-                val recovered = available && !online
-                val lost = !available && online
-                online = available
-                onlineState.value = online
-                if (lost && readyForReconnect()) markReconnectSafely()
-                if (recovered) resumeReconnect()
-            }
+        override fun onAvailable(network: Network) {
+            if (Build.VERSION.SDK_INT < 24) reconcileConnectivity()
         }
-        override fun onLost(network: Network) { viewModelScope.launch {
-            online = connectivity.getNetworkCapabilities(connectivity.activeNetwork)?.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED) == true
-            onlineState.value = online
-            if (!online && readyForReconnect()) markReconnectSafely()
-        } }
+        override fun onCapabilitiesChanged(network: Network, capabilities: NetworkCapabilities) {
+            if (Build.VERSION.SDK_INT < 24) reconcileConnectivity()
+            else viewModelScope.launch { updateConnectivity(capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)) }
+        }
+        override fun onLost(network: Network) { reconcileConnectivity() }
+    }
+    private val legacyNetworkReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) { reconcileConnectivity() }
+    }
+
+    private fun reconcileConnectivity() {
+        viewModelScope.launch { updateConnectivity(defaultNetworkValidated()) }
+    }
+
+    private suspend fun updateConnectivity(available: Boolean) {
+        if (available == online) return
+        online = available
+        onlineState.value = available
+        if (available) resumeReconnect()
+        else if (readyForReconnect()) markReconnectSafely()
+    }
+
+    @Suppress("DEPRECATION") // API 23 delivers default route changes through this protected system broadcast.
+    private fun observeConnectivity() {
+        if (Build.VERSION.SDK_INT >= 24) {
+            connectivity.registerDefaultNetworkCallback(networkObserver)
+            return
+        }
+        ContextCompat.registerReceiver(context, legacyNetworkReceiver, IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION),
+            ContextCompat.RECEIVER_EXPORTED)
+        try {
+            connectivity.registerNetworkCallback(NetworkRequest.Builder()
+                .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+                .removeCapability(NetworkCapabilities.NET_CAPABILITY_NOT_VPN)
+                .build(), networkObserver)
+        } catch (error: RuntimeException) {
+            context.unregisterReceiver(legacyNetworkReceiver)
+            throw error
+        }
     }
     private var adminJob: Job? = null
     internal fun cancelAdminOperation() { adminJob?.cancel() }
@@ -247,6 +283,10 @@ class CatalogViewModel @Inject constructor(
     internal fun onForeground(active: Boolean) {
         foreground = active
         if (active) {
+            if (Build.VERSION.SDK_INT < 24) {
+                online = defaultNetworkValidated()
+                onlineState.value = online
+            }
             if (!online && readyForReconnect()) viewModelScope.launch { markReconnectSafely() }
             resumeReconnect()
         }
@@ -278,7 +318,11 @@ class CatalogViewModel @Inject constructor(
             catch (_: Exception) { feedback.value = UiFeedback(uiText(R.string.publication_resume_failed_message), "home") }
         }
     }
-    override fun onCleared() { connectivity.unregisterNetworkCallback(networkObserver); super.onCleared() }
+    override fun onCleared() {
+        if (Build.VERSION.SDK_INT < 24) context.unregisterReceiver(legacyNetworkReceiver)
+        connectivity.unregisterNetworkCallback(networkObserver)
+        super.onCleared()
+    }
     private val refreshState = MutableStateFlow(RefreshProgress())
     private val connectionController = ConnectionImportController(connectionImports, viewModelScope) { navigate(it) }
     val connectionImport: StateFlow<ConnectionImportUiState> = connectionController.connectionImport
@@ -521,7 +565,7 @@ class CatalogViewModel @Inject constructor(
     fun back() = navigation.back()
 
     init {
-        connectivity.registerDefaultNetworkCallback(networkObserver)
+        observeConnectivity()
         viewModelScope.launch {
             // Required catalog recovery owns first storage access. Housekeeping and pending
             // connection discovery can start after it resolves, independently of each other.

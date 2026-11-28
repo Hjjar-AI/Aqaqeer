@@ -1,11 +1,15 @@
 package com.aqaqeer.app
 
 import android.app.Activity
+import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Color
 import android.graphics.pdf.PdfRenderer
 import android.net.Uri
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
+import android.os.Build
 import android.os.ParcelFileDescriptor
 import androidx.activity.compose.LocalActivityResultRegistryOwner
 import androidx.activity.result.ActivityResultRegistry
@@ -72,6 +76,35 @@ class ViewModelInstrumentedTest {
         withTimeout(15000) { vm.state.first { it.catalog is CatalogState.Ready } }
     }
     @After fun cleanup() { if (::vm.isInitialized) main { models.clear() }; if (::p.isInitialized) p.close() }
+
+    @Test fun android6ViewModelFollowsValidatedDefaultNetwork(): Unit = runBlocking {
+        Assume.assumeTrue(InstrumentationRegistry.getArguments().getString("ownedAndroid6NetworkFixture") == "true")
+        assertEquals(23, Build.VERSION.SDK_INT)
+        val instrumentation = InstrumentationRegistry.getInstrumentation()
+        val connectivity = p.context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        fun validated(): Boolean = connectivity.activeNetwork?.let {
+            connectivity.getNetworkCapabilities(it)?.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
+        } == true
+        fun shell(command: String): String = ParcelFileDescriptor.AutoCloseInputStream(
+            instrumentation.uiAutomation.executeShellCommand(command)).bufferedReader().use { it.readText().trim() }
+        suspend fun awaitNetwork(available: Boolean) = withTimeout(30_000) {
+            while (validated() != available || vm.state.value.online != available) delay(100)
+        }
+
+        val wifi = shell("settings get global wifi_on")
+        val data = shell("settings get global mobile_data")
+        check(wifi in setOf("0", "1") && data in setOf("0", "1"))
+        awaitNetwork(true)
+        try {
+            shell("svc wifi disable")
+            shell("svc data disable")
+            awaitNetwork(false)
+        } finally {
+            shell("svc wifi ${if (wifi == "1") "enable" else "disable"}")
+            shell("svc data ${if (data == "1") "enable" else "disable"}")
+            awaitNetwork(true)
+        }
+    }
 
     @Test fun reportAccordionRevealsOnlyTheCurrentStepActions(): Unit = runBlocking {
         val medication = p.medication("Report accordion fixture")

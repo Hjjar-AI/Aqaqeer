@@ -19,6 +19,8 @@ gradle.projectsEvaluated {
             if (processors.isEmpty()) throw new GradleException('No resolvable KSP configurations found')
             def scopes = []
             runtime.each { scopes.add([name: ":app:runtime:${it.name}", configuration: it]) }
+            def desugar = application.configurations.getByName('coreLibraryDesugaring')
+            scopes.add([name: ':app:runtime:coreLibraryDesugaring', configuration: desugar])
             processors.each { scopes.add([name: ":app:processor:${it.name}", configuration: it]) }
             gradle.rootProject.allprojects.sort { it.path }.each { project ->
                 project.buildscript.configurations.findAll {
@@ -50,6 +52,9 @@ gradle.projectsEvaluated {
                 if (modules > 0) populated.add(scope.name)
             }
             if (packages.isEmpty()) throw new GradleException('Dependency inventory is empty')
+            if (!populated.contains(':app:runtime:coreLibraryDesugaring')) {
+                throw new GradleException('Core library desugaring inventory is empty')
+            }
             if (!populated.any { it.contains(':processor:') } || !populated.any { it.contains(':buildscript:') }) {
                 throw new GradleException('Processor/build-plugin inventory is empty; coverage is incomplete')
             }
